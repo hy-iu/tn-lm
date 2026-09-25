@@ -7,7 +7,7 @@
 <style>
 :root{
   --bg:#ece4d9; --surface:#f4f0ea; --card:#fffbf5;
-  --ink:#4f483e; --muted:#8a7d6b; --accent:#f54001; --tint:#ffc198;
+  --ink:#4f483e; --muted:#6b5f4e; --accent:#b82a00; --tint:#ffc198;
   --serif:"Georgia","Times New Roman","Songti SC","SimSun",serif;
   --sans:"Inter","Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
   --mono:"JetBrains Mono","SF Mono","Courier New",monospace;
@@ -15,13 +15,19 @@
 [data-theme="dark"]{--bg:#1a1713; --surface:#221e18; --card:#28231c; --ink:#e8e0d2; --muted:#9a8f7c; --accent:#ff6b33; --tint:#8a4426;}
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.75;transition:background .3s,color .3s}
-#side{position:fixed;left:0;top:0;bottom:0;width:52px;background:#4f483e;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:38px;z-index:50}
-#side a{writing-mode:vertical-rl;color:#f4f0ea;text-decoration:none;font-size:12px;letter-spacing:.25em;opacity:.65;transition:opacity .3s}
-#side a:hover{opacity:1;color:var(--tint)}
+#side{position:fixed;left:0;top:0;bottom:0;width:56px;background:#4f483e;display:flex;flex-direction:column;align-items:center;z-index:50;padding:16px 0;gap:18px;overflow-y:auto}
+#side .pgroup,#side .toc{display:flex;flex-direction:column;align-items:center;gap:18px}
+#side a{writing-mode:vertical-rl;color:#f4f0ea;text-decoration:none;font-size:12px;letter-spacing:.25em;opacity:.85;transition:opacity .3s,color .3s}
+#side .toc a{color:#d8cebe;font-size:11px;opacity:1}
+#side a:hover{opacity:1;color:#ffab80}
+#side a.cur{opacity:1;color:#ffab80;font-weight:700}
+#side .toc a.on{opacity:1;color:#ffab80;font-weight:700}
+#side hr{border:none;width:22px;border-top:1px solid rgba(244,240,234,.35);flex:none;margin:2px 0}
 #side .dot{width:6px;height:6px;background:var(--accent);border-radius:50%}
+@media(max-width:760px){#side{gap:12px;padding:12px 0}#side .pgroup,#side .toc{gap:12px}}
 #themeBtn{position:fixed;right:18px;top:18px;z-index:60;font-family:var(--mono);font-size:11px;letter-spacing:.15em;background:var(--card);color:var(--ink);border:1px solid var(--muted);padding:8px 14px;cursor:pointer;border-radius:999px}
 #themeBtn:hover{border-color:var(--accent);color:var(--accent)}
-main{margin-left:52px}
+main{margin-left:56px}
 .wrap{max-width:880px;margin:0 auto;padding:0 48px}
 header{border-bottom:2px solid var(--ink);padding:42px 0 26px}
 .mast-meta{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:18px}
@@ -47,16 +53,36 @@ footer{margin-top:70px;border-top:2px solid var(--ink);padding:26px 0 60px;font-
 </style>
 </head>
 <body>
-<nav id="side"><span class="dot"></span><a href="index.html">返回主页</a></nav>
+<nav id="side">
+  <div class="pgroup">
+    <a href="index.html">研究备忘</a>
+    <a href="figures.html" class="cur">图解路线</a>
+    <a href="library.html">论文库</a>
+  </div>
+  <hr>
+  <div class="toc">
+    <a href="#sA" title="A · 起点：uMPS 序列模型">A</a>
+    <a href="#sB" title="B · 数据侧的墙：文本互信息体积律">B</a>
+    <a href="#sC" title="C · 压缩路线：MPO 重写 LLM">C</a>
+    <a href="#sD" title="D · 逃生梯：TTN 与 MERA">D</a>
+    <a href="#sF" title="F · 张量的图形语言">F</a>
+    <a href="#sG" title="G · MPS 详解">G</a>
+    <a href="#sH" title="H · TEBD">H</a>
+    <a href="#sI" title="I · TTN 详解">I</a>
+    <a href="#sJ" title="J · MERA 详解">J</a>
+    <a href="#sK" title="K · PEPS 详解">K</a>
+    <a href="#sL" title="L · 一图总结">L</a>
+  </div>
+</nav>
 <button id="themeBtn" onclick="t()">◐ 主题</button>
 <main><div class="wrap">
 <header>
-  <div class="mast-meta"><span>Vol. 02 — 附图集</span><span>2026-09-24</span><span><a class="back" href="index.html">← 主页</a></span></div>
+  <div class="mast-meta"><span>Vol. 02 — 附图集</span><span>2026-09-24</span><span><a class="back" href="index.html">← 研究备忘</a></span></div>
   <h1>图解发展路线：<br><em>从 MPS 到 TTN / MERA / PEPS</em></h1>
   <p class="subtitle">本页图片均为论文 TeX 源码中提取的原始插图（arXiv e-print），每图注明出处。按「χ 撞墙后的逃生梯」组织：一维链（MPS/uMPS）→ 压缩应用（MPO）→ 层级结构（TTN/MERA 去纠缠器）→ 数据侧证据（文本互信息体积律）；F–K 节为从物理综述提取的详细结构图（腿的指标、收缩规则、读取规则）。</p>
 </header>
 
-<section>
+<section id="sA">
   <div class="sec-label">A · 起点：uMPS 序列模型</div>
   <h2>均匀 MPS 的收缩代数</h2>
   <p>uMPS 的序列概率通过沿链收缩核张量 A 得到；图中 (d)–(f) 给出从转移矩阵到配分函数 Z<sub>n</sub> 的收缩规则——这是一切「MPS 作语言模型」工作的机械基础。</p>
@@ -68,7 +94,7 @@ footer{margin-top:70px;border-top:2px solid var(--ink);padding:26px 0 60px;font-
   <span class="src">图引自：同上，AISTATS 2021 · <a href="https://arxiv.org/abs/2003.01039">arXiv:2003.01039</a></span></figcaption></figure>
 </section>
 
-<section>
+<section id="sB">
   <div class="sec-label">B · 数据侧的墙</div>
   <h2>文本互信息的体积律（I(L) ~ L^0.82）</h2>
   <p>MINE 与 kNN 两种估计器在 WikiText-2 上独立给出互信息随子区域长度的幂律增长（图 b2 的对数坐标拟合），而 MPS 任意切面只能携带 log₂χ 比特——这是「一维张量网络无法高效描述文本」的原始证据，也是 χ*(W) 标度律选题的理论地基。</p>
@@ -77,7 +103,7 @@ footer{margin-top:70px;border-top:2px solid var(--ink);padding:26px 0 60px;font-
   <span class="src">图引自：Lu, Kanász-Nagy, Kukuljan &amp; Cirac, "Tensor networks for quantum-inspired machine learning: mutual information of text and images", PRA 111, 032409 (2025) · <a href="https://arxiv.org/abs/2103.06872">arXiv:2103.06872</a></span></figcaption></figure>
 </section>
 
-<section>
+<section id="sC">
   <div class="sec-label">C · 压缩路线</div>
   <h2>MPO 重写 LLM 权重（CompactifAI）</h2>
   <p>(a) 权重矩阵 W 经 reshape 为高阶张量后以逐次 SVD 截断为 MPO（键维 χ 控制压缩率）；(b) LLaMA decoder block 中 SA 与 MLP 层被 MPO 替换的整体结构。注意：此 χ 约束的是<b>权重相关结构</b>，不是历史状态维度——两条路线在此分岔。</p>
@@ -86,7 +112,7 @@ footer{margin-top:70px;border-top:2px solid var(--ink);padding:26px 0 60px;font-
   <span class="src">图引自：Tomut et al. (Multiverse Computing), "CompactifAI: Extreme Compression of Large Language Models using Quantum-Inspired Tensor Networks", Fig. 1 · <a href="https://arxiv.org/abs/2401.14109">arXiv:2401.14109</a></span></figcaption></figure>
 </section>
 
-<section>
+<section id="sD">
   <div class="sec-label">D · 逃生梯：层级结构</div>
   <h2>TTN 与 MERA 式去纠缠器</h2>
   <p>树张量网络把链换成无环树：叶子挂物理指标，内部节点逐层粗粒化，收缩仍精确且多项式。对层级关联数据，MPS 需指数 χ 的任务 TTN 只需多项式 χ——这是「MPS 撞墙后的下一篇」的候选结构。</p>
@@ -103,7 +129,7 @@ footer{margin-top:70px;border-top:2px solid var(--ink);padding:26px 0 60px;font-
 </section>
 
 
-<section>
+<section id="sF">
   <div class="sec-label">F · 图解基础：张量的图形语言（物理综述原图）</div>
   <h2>每条腿 = 一个指标，每条连线 = 一次求和</h2>
   <p>张量网络图解的通用规则：标量无腿、向量一腿、矩阵两腿、三阶张量三腿；两个张量之间的连线表示对共享指标求和（收缩）。后面所有结构图都遵循这套记号。</p>
@@ -112,7 +138,7 @@ footer{margin-top:70px;border-top:2px solid var(--ink);padding:26px 0 60px;font-
   <span class="src">图引自：Orús, "A Practical Introduction to Tensor Networks: Matrix Product States and Projected Entangled Pair States", Annals of Physics 349, 117 (2014), Fig. 5 · <a href="https://arxiv.org/abs/1306.2164">arXiv:1306.2164</a>（e-print TeX 源码提取）</span></figcaption></figure>
 </section>
 
-<section>
+<section id="sG">
   <div class="sec-label">G · MPS 详解：指标、收缩与读取</div>
   <h2>MPS：每条腿的维数与转移矩阵读取规则</h2>
   <p>MPS 核 Γ 有三条腿：左/右键指标（维数 χ，即 bond dimension）与物理腿（维数 d，对语言模型即词表大小）。<b>读取规则</b>：所有观测量归结为「转移矩阵」E——把 A 与其复共轭沿物理腿收缩得到的 χ² 维矩阵；两点关联函数衰减由 E 的次大本征值决定，关联长度 ξ = −1/ln|λ₂/λ₁|（这正是 §3.6 选题中提议在训练好的文本模型上实测的量）。</p>
@@ -124,7 +150,7 @@ footer{margin-top:70px;border-top:2px solid var(--ink);padding:26px 0 60px;font-
   <span class="src">图引自：同上, Fig. 19 · <a href="https://arxiv.org/abs/1306.2164">arXiv:1306.2164</a></span></figcaption></figure>
 </section>
 
-<section>
+<section id="sH">
   <div class="sec-label">H · TEBD：算法而非态</div>
   <h2>TEBD 的三种门作用模式</h2>
   <p>时间演化算符 U(δτ) 经 Trotter 分解为两体门后，可按 (a) 并行、(b) 顺序、(c) MPO 三种方式作用到 MPS 上；每步 = 两站点合并 → 门作用 → SVD 按 χ 截断。机器学习中 MPS 分类器的 DMRG 式扫描训练与此同构。</p>
@@ -133,13 +159,13 @@ footer{margin-top:70px;border-top:2px solid var(--ink);padding:26px 0 60px;font-
   <span class="src">图引自：Orús, Annals of Physics 349, 117 (2014), Fig. 43 · <a href="https://arxiv.org/abs/1306.2164">arXiv:1306.2164</a></span></figcaption></figure>
 </section>
 
-<section>
+<section id="sI">
   <div class="sec-label">I · TTN 详解</div>
   <h2>树张量网络：无环 ⇒ 精确收缩</h2>
   <p>TTN（结构图见上方 D 节）把链换成无环二叉树：叶子挂物理指标 i₁…iₙ，内部三阶张量逐层合并，根张量输出标量（概率/振幅）。<b>收缩规则</b>：从叶子向根动态规划，每层并行，深度 O(log n)，总成本多项式。<b>读取规则</b>：任意张量的「环境」由树的唯一路径决定，规范形与 DMRG 式训练都逐字沿用 MPS 版本——这是 TTN 相对 PEPS 最大的工程优势，也是「文本 TTN-LM 空白」值得填的原因。</p>
 </section>
 
-<section>
+<section id="sJ">
   <div class="sec-label">J · MERA 详解：两种张量、因果锥与读取规则</div>
   <h2>二元 MERA 的分层结构</h2>
   <p>MERA = TTN + 每层粗粒化前插入 <b>disentangler u</b>（两进两出的酉门，绿色方块）先去纠缠，再由 <b>isometry w</b>（三腿等距张量，红色三角，两腿进一腿出）把两个格点并成一个。深度 ~log N；顶端 top tensor 输出最终标量。</p>
@@ -157,7 +183,7 @@ footer{margin-top:70px;border-top:2px solid var(--ink);padding:26px 0 60px;font-
   <span class="src">图引自：同上, Fig.（causal cone）· <a href="https://arxiv.org/abs/0707.1454">arXiv:0707.1454</a></span></figcaption></figure>
 </section>
 
-<section>
+<section id="sK">
   <div class="sec-label">K · PEPS 详解：网格、双指数指标与近似收缩</div>
   <h2>PEPS：每点五腿，收缩 #P-hard</h2>
   <p>PEPS 每个格点的张量有<b>五条腿</b>：上下左右四条键（各维 χ）加一条物理腿（维 d）。二维面积律纠缠由此而来，代价是精确收缩 #P-hard。</p>
@@ -174,7 +200,7 @@ footer{margin-top:70px;border-top:2px solid var(--ink);padding:26px 0 60px;font-
   <span class="src">图引自：同上, Fig. 41 · <a href="https://arxiv.org/abs/1306.2164">arXiv:1306.2164</a>（KARIPAP 压缩 LLaMA 用的正是此收缩）</span></figcaption></figure>
 </section>
 
-<section>
+<section id="sL">
   <div class="sec-label">L · 一图总结</div>
   <h2>χ 的逃生梯</h2>
   <table>
@@ -192,5 +218,9 @@ footer{margin-top:70px;border-top:2px solid var(--ink);padding:26px 0 60px;font-
 <script>
 function t(){const r=document.documentElement;const cur=r.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');const n=cur==='dark'?'light':'dark';r.setAttribute('data-theme',n);localStorage.setItem('tn-theme',n);}
 (function(){const s=localStorage.getItem('tn-theme');if(s)document.documentElement.setAttribute('data-theme',s);else if(matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.setAttribute('data-theme','dark');})();
+/* TOC scrollspy */
+(function(){const ls=[...document.querySelectorAll('#side .toc a')];if(!('IntersectionObserver'in window)||!ls.length)return;
+const spy=new IntersectionObserver(es=>{es.forEach(en=>{if(en.isIntersecting)ls.forEach(l=>l.classList.toggle('on',l.getAttribute('href')==='#'+en.target.id));});},{rootMargin:'-30% 0px -60% 0px'});
+document.querySelectorAll('section[id]').forEach(s=>spy.observe(s));})();
 </script>
 </body></html>
