@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MPS 张量网络 × 大模型 · 调研与路线评估</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+:root{
+  --bg:#ece4d9; --surface:#f4f0ea; --card:#fffbf5;
+  --ink:#4f483e; --muted:#8a7d6b; --accent:#f54001; --tint:#ffc198;
+  --serif:"Georgia","Times New Roman","Songti SC","SimSun",serif;
+  --sans:"Inter","Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  --mono:"JetBrains Mono","SF Mono","Courier New",monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.75}
+/* sidebar */
+#side{position:fixed;left:0;top:0;bottom:0;width:52px;background:#4f483e;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:38px;z-index:50}
+#side a{writing-mode:vertical-rl;color:var(--bg);text-decoration:none;font-size:12px;letter-spacing:.25em;font-family:var(--sans);opacity:.65;transition:opacity .3s}
+#side a:hover{opacity:1;color:var(--accent)}
+#side .dot{width:6px;height:6px;background:var(--accent);border-radius:50%}
+/* main */
+main{margin-left:52px}
+.wrap{max-width:880px;margin:0 auto;padding:0 48px}
+/* masthead */
+header{border-bottom:2px solid var(--ink);padding:42px 0 26px}
+.mast-meta{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:18px}
+h1{font-family:var(--serif);font-size:44px;line-height:1.2;letter-spacing:-.01em;font-weight:700}
+h1 em{font-style:normal;color:var(--accent)}
+.subtitle{margin-top:14px;font-size:15px;color:var(--muted);max-width:640px}
+/* sections */
+section{padding:56px 0 8px}
+.sec-label{font-family:var(--mono);font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+h2{font-family:var(--serif);font-size:30px;line-height:1.25;margin-bottom:20px}
+h3{font-family:var(--serif);font-size:20px;margin:28px 0 10px}
+p{margin-bottom:14px}
+p b{color:var(--ink)}
+.lede{font-family:var(--serif);font-size:18px;line-height:1.7}
+.verdict{background:var(--card);border-left:3px solid var(--accent);padding:20px 26px;margin:22px 0;font-size:15px}
+.verdict .tag{font-family:var(--mono);font-size:10px;letter-spacing:.25em;color:var(--accent);text-transform:uppercase;display:block;margin-bottom:8px}
+/* tables */
+table{width:100%;border-collapse:collapse;margin:18px 0;font-size:13.5px;background:var(--card)}
+th{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px 12px;border-bottom:2px solid var(--ink)}
+td{padding:10px 12px;border-bottom:1px solid #e2d9cb;vertical-align:top}
+td b{color:var(--accent);font-weight:600}
+/* charts */
+.chart{background:var(--card);padding:22px 18px 10px;margin:24px 0;border:1px solid #e2d9cb}
+.chart-title{font-family:var(--serif);font-size:16px;padding:0 8px 6px}
+.chart-note{font-size:12px;color:var(--muted);padding:4px 8px 10px;font-family:var(--mono)}
+.cviz{width:100%;height:420px}
+/* paper list */
+.paper{border-bottom:1px solid #d8cebe;transition:background .25s}
+.paper:hover{background:var(--surface)}
+.p-head{display:flex;align-items:baseline;gap:16px;padding:18px 8px;cursor:pointer;user-select:none}
+.p-num{font-family:var(--mono);font-size:11px;color:var(--muted);min-width:34px}
+.p-title{font-family:var(--serif);font-size:17px;flex:1}
+.p-year{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.p-venue{font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;min-width:88px;text-align:right}
+.p-toggle{font-family:var(--mono);font-size:11px;color:var(--muted);min-width:20px;text-align:center;transition:transform .3s}
+.paper.open .p-toggle{transform:rotate(45deg);color:var(--accent)}
+.p-body{display:none;padding:4px 8px 26px 58px}
+.paper.open .p-body{display:block}
+.p-block{margin-bottom:16px}
+.p-block .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px}
+.p-abs{font-size:14px;line-height:1.85;background:var(--card);padding:16px 20px;border:1px solid #e2d9cb}
+.p-abs .en{color:var(--muted);font-size:12.5px;display:block;margin-top:12px;border-top:1px dashed #d8cebe;padding-top:10px;line-height:1.7}
+.p-kimi{background:linear-gradient(135deg,#fff3ea,#fffbf5);border:1px solid var(--tint);padding:16px 20px;font-size:14px}
+.p-kimi .lbl{color:var(--accent)}
+.p-link{font-family:var(--mono);font-size:12px;color:var(--accent);text-decoration:none;border-bottom:1px solid var(--tint)}
+.p-link:hover{background:var(--tint)}
+footer{margin-top:70px;border-top:2px solid var(--ink);padding:26px 0 60px;font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;justify-content:space-between}
+@media(max-width:760px){.wrap{padding:0 22px}h1{font-size:30px}.p-venue{display:none}.p-body{padding-left:8px}}
+
+/* dark theme */
+[data-theme="dark"]{
+  --bg:#1a1713; --surface:#221e18; --card:#28231c;
+  --ink:#e8e0d2; --muted:#9a8f7c; --accent:#ff6b33; --tint:#8a4426;
+}
+[data-theme="dark"] .p-kimi{background:linear-gradient(135deg,#2e211a,#28231c)}
+[data-theme="dark"] table td{border-bottom-color:#3a332a}
+[data-theme="dark"] .chart{border-color:#3a332a}
+[data-theme="dark"] .p-abs{border-color:#3a332a}
+[data-theme="dark"] .p-abs .en{border-top-color:#3a332a}
+[data-theme="dark"] .paper{border-bottom-color:#3a332a}
+#themeBtn{position:fixed;right:18px;top:18px;z-index:60;font-family:var(--mono);font-size:11px;letter-spacing:.15em;
+ background:var(--card);color:var(--ink);border:1px solid var(--muted);padding:8px 14px;cursor:pointer;border-radius:999px;transition:all .3s}
+#themeBtn:hover{border-color:var(--accent);color:var(--accent)}
+body{transition:background .3s,color .3s}
+/* report section extras */
+#report h4{font-family:var(--serif);font-size:16px;margin:20px 0 8px;color:var(--accent)}
+#report .figcap{font-size:12px;color:var(--muted);font-family:var(--mono);text-align:center;margin:6px 0 20px}
+#report img.diagram{width:100%;background:var(--card);border:1px solid #e2d9cb;padding:14px}
+[data-theme="dark"] #report img.diagram{border-color:#3a332a}
+
+/* version switcher */
+#verBtn{position:fixed;right:100px;top:18px;z-index:60;font-family:var(--mono);font-size:11px;letter-spacing:.15em;
+ background:var(--card);color:var(--ink);border:1px solid var(--muted);padding:8px 14px;cursor:pointer;border-radius:999px;transition:all .3s}
+#verBtn:hover{border-color:var(--accent);color:var(--accent)}
+#verPanel{position:fixed;right:18px;top:58px;z-index:70;width:320px;background:var(--card);border:1px solid var(--muted);
+ padding:14px 0;display:none;box-shadow:0 8px 30px rgba(0,0,0,.18)}
+[data-theme="dark"] #verPanel{box-shadow:0 8px 30px rgba(0,0,0,.5)}
+#verPanel.show{display:block}
+#verPanel .vh{font-family:var(--mono);font-size:10px;letter-spacing:.25em;color:var(--muted);text-transform:uppercase;padding:0 18px 10px;border-bottom:1px solid var(--muted);margin-bottom:6px}
+.vrow{display:flex;gap:10px;padding:9px 18px;font-size:12.5px;align-items:baseline}
+.vrow .vn{font-family:var(--mono);color:var(--accent);min-width:22px}
+.vrow .vd{flex:1;line-height:1.5}
+.vrow .vid{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.vrow.cur .vd::after{content:" ●";color:var(--accent)}
+#verPanel .vnote{padding:10px 18px 4px;font-size:11px;color:var(--muted);border-top:1px dashed var(--muted);margin-top:6px;line-height:1.6}
+</style>
+</head>
+<body>
+<nav id="side">
+  <span class="dot"></span>
+  <a href="#report">综述报告</a>
+  <a href="#route">路线评估</a>
+  <a href="#umps">uMPS 五年</a>
+  <a href="#charts">图表</a>
+  <a href="#papers">论文库</a>
+</nav>
+<button id="verBtn" onclick="document.getElementById('verPanel').classList.toggle('show')">版本 ▾</button>
+<div id="verPanel">
+  <div class="vh">版本历史</div>
+  <div class="vrow"><span class="vn">v1</span><span class="vd">初版：路线评估 + 论文库 + 四图</span><span class="vid">23b810c</span></div>
+  <div class="vrow"><span class="vn">v2</span><span class="vd">并入综述报告（§5）+ 深色主题</span><span class="vid">95a7472</span></div>
+  <div class="vrow"><span class="vn">v3</span><span class="vd">图表主题适配、脉络图 label、文献互链、综述置顶</span><span class="vid">1ee97e7</span></div>
+  <div class="vrow"><span class="vn">v4</span><span class="vd">侧栏背景固定</span><span class="vid">1767627</span></div>
+  <div class="vrow"><span class="vn">v5</span><span class="vd">整合 nano_mps 实测与 χ–上下文文献；新增论文 15–18；图 1 用实测幂律 L^0.82</span><span class="vid">—</span></div>
+  <div class="vrow cur"><span class="vn">v6</span><span class="vd">深度整合定稿：§2 改为 χ*(W) 选题表述；新增图 5 探针热力图、论文 19–24、引用可靠性警告与阅读顺序；修正互链</span><span class="vid">当前</span></div>
+  <div class="vnote">历史版本的完整快照由预览界面的版本卡片承载，可直接切换回滚；此处为变更记录。</div>
+</div>
+<button id="themeBtn" onclick="toggleTheme()">◐ 主题</button>
+<main>
+<div class="wrap">
+
+<header>
+  <div class="mast-meta"><span>Vol. 02 — 研究备忘录</span><span>2026-09-24</span><span>MPS × LLM</span></div>
+  <h1>用 MPS 张量网络测量长上下文互信息：<br><em>uMPS 路线五年后的再评估</em></h1>
+  <p class="subtitle">围绕「bond dimension χ 与长上下文互信息（mutual information）捕获能力的关系」这一科学问题，评估 uMPS / Born machine / MPO 压缩三条路线，并结合 nanoinfra 框架给出可执行的实验方案。关键论文可展开阅读摘要中译与解读。</p>
+</header>
+
+<section id="report">
+  <div class="sec-label">§1 · 综述报告</div>
+  <h2>MPS 张量网络方法用于深度学习的研究调研<br>——面向类 LLM 与多模态大模型</h2>
+  <p class="lede">矩阵乘积态（Matrix Product State, MPS）及其算符版本（MPO，数学界称张量链 / Tensor Train, TT）是源于量子多体物理的一维张量网络分解方法。过去十年间，它被引入深度学习，并沿三条主线发展：MPS 作为学习模型本身；MPO/TT 用于神经网络与大模型压缩；量子与量子启发的大模型。</p>
+
+  <h3>执行摘要</h3>
+  <p><b>主线一，MPS 作为学习模型。</b>2016 年 Stoudenmire 与 Schwab 在 NeurIPS 上用 MPS 加 DMRG 式扫描算法做监督分类，MNIST 测试错误率低于 1%；Han 等人 2018 年在 Physical Review X 上提出 MPS Born machine 做无监督生成建模，被引逾 500 次。</p>
+  <p><b>主线二，MPO/TT 压缩。</b>从 2015 年 Novikov 等人的 TT 全连接层压缩，到 2024 年 Multiverse Computing 的 CompactifAI 将 LLaMA-2 7B 压缩至原体积 30%（配合量化后内存缩减 93%、参数减少 70%，精度仅降 2–3%），成为该方向产业化程度最高的成果。</p>
+  <p><b>主线三，量子/量子启发大模型。</b>如用张量网络去纠缠器（disentangler）把预训练 LLM 层改写为「变分量子线路 + MPO」混合架构的工作（2024）。</p>
+  <div class="verdict"><span class="tag">核心结论</span>
+  MPS/MPO 在 LLM 时代的最大现实价值是<b>可控、可解释的结构化权重压缩</b>——「键维 χ 直接控制压缩率与关联保留量」提供了区别于剪枝、量化、低秩近似的第三条路线。作为独立生成/语言模型，MPS 类模型在小规模与结构化序列任务上表现优异，但尚无证据表明其能在现代 LLM 尺度上与 Transformer 竞争；2026 年的系统性复评表明，训练后张量分解存在由「重尾权重与高秩异常特征」导致的根本性局限。多模态方向上，TFN/LMF 一脉在情感分析类中等规模融合中成熟，但 <b>MPS 类方法在多模态大模型（MLLM）中的应用基本空白</b>。</div>
+  <p style="font-size:13px;color:var(--muted)">注：本节为面向「MPS×深度学习」全貌的综述；针对「χ–上下文标度」这一具体课题的深入分析（信息论硬约束、χ*≈20 饱和证据、压缩天花板、蒸馏空白、本地实测与落地方案）集中在 §2–§3，不再在此重复。</p>
+
+  <h3>1 · 数学基础与概念框架</h3>
+  <h4>1.1 MPS/TT 与 MPO 的定义</h4>
+  <p>MPS 将一个高阶张量（例如量子态振幅、联合概率或长向量）分解为一串三阶（首尾为二阶）核张量的收缩：c<sub>s₁…s_L</sub> = Σ A<sup>s₁</sup>A<sup>s₂</sup>…A<sup>s_L</sup>，其中相邻核之间共享的「键」（bond）的维度 χ 称为<b>键维</b>，它是整个框架的核心超参数——χ 越大，能表达的跨二分关联（物理语言：纠缠熵，S ≤ log χ）越强，参数量也越大。Oseledets 2011 年在 SIAM 提出的 Tensor Train 分解与 MPS 在数学上等价，二者分别来自物理与数值线性代数社区。当分解对象是<b>矩阵</b>（如神经网络的权重矩阵 W）时，把输入、输出指标各自拆成多个小指标后做链式分解，得到的结构称为<b>矩阵乘积算符（MPO）</b>；压缩通过逐次奇异值分解（TT-SVD）截断实现，参数量从指数级降为关于 χ 的多项式级。</p>
+  <p>MPS 具有若干对机器学习极为有用的结构性质：存在<b>规范形（canonical form）</b>使得归一化、采样、内积等操作有高效精确算法；支持 DMRG 式的局部交替优化与自适应键维截断；压缩（rounding）操作有可控误差界。这些性质使得 MPS 模型在理论上更像「白盒」——纠缠熵、量子互信息等量子信息量可以直接计算并用于解释模型学到的特征关联。</p>
+  <h4>1.2 为什么一维链结构适用于序列与权重</h4>
+  <p>MPS 天然匹配一维关联结构（面积律）：一维有能隙量子态的纠缠满足面积律，因此可以被小 χ 的 MPS 高效表示；语言序列具有一定局部性，图像展平后近似满足，这使 MPS 成为序列数据合理的归纳偏置。对于二维或更复杂的关联结构（如高分辨率图像、全局注意力模式），一维链的表达力受限，需要树张量网络（TTN）、PEPS 或 MERA 等更高维结构——这也是后文讨论的若干局限与扩展工作的物理根源。</p>
+  <h4>1.3 张量网络与深度学习交汇的整体图景</h4>
+  <p>多篇综述系统梳理了这一交叉领域：Wang 等人的 "Tensor Networks Meet Neural Networks" 综述覆盖张量化的神经网络各层与 LLM 应用；2026 年的综述 "Quantum-inspired tensor networks in machine learning models" 将应用分为监督学习、无监督/生成建模、模型压缩、可解释性与隐私等类别，指出 TN 的两大独特优势是<b>可直接计算量子信息观测量用于解释</b>，以及<b>存在保持函数不变的局部变换</b>。</p>
+
+  <h3>2 · 主线一：MPS 作为学习模型</h3>
+  <h4>2.1 监督学习：MPS 分类器一脉</h4>
+  <p>奠基性工作是 Stoudenmire 与 Schwab（NeurIPS 2016）：将每个输入像素经局域特征映射后做张量积，得到指数维特征空间，再用 MPS 参数化该空间中的线性分类器，以 DMRG 式双站点扫描算法训练，MNIST 上测试错误率低于 1%，且键维相当小即可。与之独立地，Novikov 等人的 <b>Exponential Machines</b> 从张量分解角度用 TT 格式隐式表示任意高阶特征交互。后续 Google 的 TensorNetwork 库论文用自动微分替代 DMRG 训练 MPS，MNIST 达 98%、Fashion-MNIST 达 88%，且结果对 χ≳10 基本不敏感。</p>
+  <p>这条线随后扩展到更复杂的视觉任务：基于 patch 的 MPS 医学图像分割、MPS/PEPS 多分类器用于 Fashion-MNIST 与新冠 X 光胸片、以及同时支持分类与生成的 MPS 模型。Jahromi 与 Orús 的变分张量神经网络（VTNN）将 MPO 层嵌入标准深度网络并用 PaL/DMRG 式扫描训练，MNIST 上单 epoch 达 0.958（同条件经典 NN 为 0.942），但也暴露了扫描式训练时间随张量数增长的问题。</p>
+  <h4>2.2 生成建模：Born machine 与自回归 MPS</h4>
+  <p>Han 等人（PRX 2018）提出用 MPS 的模平方表示概率分布（Born 规则），通过相邻核合并—SVD 截断的自适应训练直接建模数据分布并<b>无拒绝精确采样</b>，在 Bars-and-Stripes 与 MNIST 上验证了生成能力，该文被引逾 500 次，是张量网络生成模型的奠基作。Stokes 与 Terilla 提出受 DMRG 启发的无梯度确定性训练算法，在结构化数据上键维 8 的 MPS 几乎完美学习。Liu 等人（PRE 2023）将 MPS 发展为自回归无监督模型，性能可与标准传统模型竞争。</p>
+  <p>在模型类表达力方面，Glasser 等人（NeurIPS 2019）证明局部纯化态（LPS）等推广形式的表达力层级，Miller 等人进一步建立了 <b>uMPS 与预测态表示（PSR）、加权自动机（WFA）、隐量子马尔可夫模型（HQMM）之间的严格等价与包含关系</b>——Born machine 子类等价于二次加权自动机，且存在无法被有限维 Born machine 表示的 HMM，揭示了 MPS 类序列模型的表达力边界。</p>
+  <h4>2.3 序列与语言建模：uMPS 与「语言即 MPS」</h4>
+  <p>Miller、Rabusseau 与 Terilla（AISTATS 2021）的 uMPS（各站点共享同一核的均匀 MPS）是 MPS 用于序列建模的代表作：长度 n 的序列可以 <b>O(log n) 深度并行求值</b>（区别于 RNN 的固有串行），并提出了由正则表达式定义条件分布的新型生成算法，可实现自回归采样、「填空」采样乃至无神经对应物的结构化生成；在 Tomita 文法与真实文本实验中，uMPS 能以小数据泛化到 3 倍于训练长度且保持 90% 以上文法正确率，优于 HMM、单向 LSTM 与（小数据下的）Transformer 基线。</p>
+  <p>更早的理论工作直接把语言与张量网络联系起来：Pestun 与 Vlassopoulos 2017 年提出 "Tensor network language model"，Pestun 等人提出 "Language as a matrix product state"，从范畴论与概率形式语言角度构造语言的 MPS 表示；Gallego 与 Orús 的 "Language design as information renormalization"（2022）把语言设计视为信息重正化过程，提出用纠缠标量刻画语言复杂度的思路。这些工作构成「MPS 原生语言模型」的谱系，但都停留在中小规模验证阶段。</p>
+
+  <h3>3 · 主线二：MPO/TT 用于神经网络与 LLM 压缩（当前最活跃方向）</h3>
+  <h4>3.1 前 LLM 时代：从全连接层到 Transformer</h4>
+  <p>Novikov 等人 2015 年的 "Tensorizing Neural Networks" 首次用 TT 分解压缩稠密全连接层，在保持精度的同时取得数量级参数缩减，是整个方向的源头。Yang、Krompass 与 Tresp（ICML 2017）用 TT 分解 RNN 的 input-to-hidden 矩阵（TT-RNN），使参数量少几个数量级的模型在视频分类上接近 SOTA；随后出现 MPO-LSTM、TR-LSTM（AAAI 2019）、BTT-RNN（CVPR 2018）、Conv-TT-LSTM（NeurIPS 2020）等一系列张量化循环网络。Khrulkov 等人 2019 年提出 <b>TT-embedding</b>：不把训练好的嵌入矩阵事后压缩，而是直接用 TT 核参数化嵌入层并端到端训练，在情感分析、机器翻译、语言建模上大幅压缩且性能几乎无损甚至略升。Ma 等人（NeurIPS 2019）的<b>张量化 Transformer</b> 用块项分解（BTD）构建「多线性注意力」，在语言建模与机器翻译上以更高压缩比取得更好结果。</p>
+  <h4>3.2 LLM 时代的 MPO/TT 压缩：代表方法与结果</h4>
+  <table>
+    <tr><th>方法</th><th>年份</th><th>张量结构</th><th>作用对象</th><th>关键结果</th></tr>
+    <tr><td><a class="p-link" href="#p07" onclick="document.getElementById('p07').classList.add('open')">TensorGPT ↓</a></td><td>2023</td><td>TT（逐词元嵌入）</td><td>GPT-2 嵌入层</td><td>嵌入层压缩 <b>39–65×</b>；免训练</td></tr>
+    <tr><td><b><a class="p-link" href="#p08" onclick="document.getElementById('p08').classList.add('open')" style="border:none">CompactifAI ↓</a></b></td><td>2024</td><td>MPO（χ≈100）+ 修复重训 + 量化</td><td>LLaMA-2 7B 的 SA 与 MLP 层</td><td>单用压缩至 <b>30%</b> 体积；+量化后内存 −93%、参数 −70%、精度仅降 2–3%</td></tr>
+    <tr><td>TRAWL</td><td>2024</td><td>堆叠权重 + CP 分解</td><td>RoBERTa / GPT-J 6B</td><td>免训练免数据；WikiQA +15–16% 准确率</td></tr>
+    <tr><td><b><a class="p-link" href="#p10" onclick="document.getElementById('p10').classList.add('open')" style="border:none">TensorLLM ↓</a></b></td><td>2025</td><td>多头张量化 + 共享因子 Tucker</td><td>MHA 权重</td><td>MHA 权重压缩至 <b>~250×</b>，免训练</td></tr>
+    <tr><td><b><a class="p-link" href="#p11" onclick="document.getElementById('p11').classList.add('open')" style="border:none">Saten ↓</a></b></td><td>EMNLP 2025</td><td>TT + 稀疏误差项</td><td>BERT-Base、LLaMA-3.2-1B</td><td>体积降 >3×、MAC 降 >4×；精度几乎无损</td></tr>
+    <tr><td><b><a class="p-link" href="#p13" onclick="document.getElementById('p13').classList.add('open')" style="border:none">Minima ↓</a></b></td><td>2026</td><td>CNN 敏感度预测 + Tucker/TT/TR 混合 + 自定义内核 + 投机解码</td><td>Qwen3-32B</td><td>参数 −35%，峰值 VRAM 64→40 GiB；单请求吞吐最高 +87.5%；MMLU 仅降 0.8 pt</td></tr>
+    <tr><td>KARIPAP</td><td>2025</td><td>iPEPS + TRG 收缩</td><td>LLaMA-2 7B</td><td>主张 2D 纠缠结构优于一维 MPS（待独立复现）</td></tr>
+  </table>
+  <p>几个值得强调的结构性发现：其一，<b>层敏感度画像</b>——CompactifAI 发现更深层更适合张量化压缩，与「深层对 LLM 性能贡献较低」的独立观察一致；初始注意力块最敏感。其二，<b>修复训练（healing）不可或缺</b>——预训练权重通常接近满秩，朴素截断必然损伤精度，需短暂重训恢复。其三，<b>张量化与量化正交且可叠加</b>——张量网络压缩（改结构）与量化（改精度）可组合，与纯量化路线形成差异化定位。</p>
+  <h4>3.3 产业化进展</h4>
+  <p>Multiverse Computing（西班牙）以 CompactifAI 为核心于 2025 年 6 月完成 <b>2.15 亿美元 B 轮融资</b>，宣称可压缩开源 LLM 达 95%，推理成本节省 50–80%。2025 年 4 月其发布 Llama 3.1-8B 与 Llama 3.3-70B 的压缩版：体积缩减 80%、参数少 60%、能效提升 84%、推理快 40%，已被银行、电信、能源企业 beta 测试。Terra Quantum 的 TQCompressor 是另一家量子公司的同类产品。</p>
+  <h4>3.4 批判性评估与已知局限</h4>
+  <p>2026 年的系统复评 "Rethinking the Role of Tensor Decompositions in Post-Training LLM Compression" 在 GPT-J 6B、LLaMA-2 7B 及 MoE（Qwen3-30B-A3B）上统一评测 Tucker、TT 与矩阵 SVD：结论是<b>张量分解假设的共享子空间与现代 LLM 学到的异质表示存在根本性错配</b>——权重呈重尾分布、高秩异常特征至关重要，导致免训练张量压缩在同等压缩比下显著劣于矩阵方法。其他已知局限包括：一维链结构对非局域关联表达力不足（需 PEPS/TTN）；DMRG 式训练时间开销大且难以在 GPU 上匹敌 Adam；张量化内核若不专门优化，参数减少不一定转化为实际吞吐（Minima 为此专门开发 Triton/CUDA 内核）。当前共识是：MPO/TT 压缩<b>必须配合敏感度分析、修复训练与硬件内核优化</b>才能落地。</p>
+
+  <h3>4 · 主线三：量子与量子启发的大模型</h3>
+  <p>Aizpurua、Orús 等人的 "Quantum Large Language Models via Tensor Network Disentanglers"（2024）提出把预训练 LLM 层改写为 <b>VQC + MPO + VQC</b> 的混合量子-经典形式：先用张量网络去纠缠器把 MPO 中的纠缠尽可能转移到两个变分量子线路中，残余 MPO 可压缩到键维 1——在 SmolLM2 上，被替换层的经典参数从 110,592 降至约 36（三个数量级），困惑度上升不足 0.3%；再训练附加的酉适配器可使困惑度比原模型再降最多 1.6%，并在真实量子处理器上完成了混合推理验证。更广义的量子 NLP 路线（DisCoCat 范畴语法、量子嵌入等）也有探索，目前均为概念验证规模，其意义在于为「量子硬件承载语言模型子模块」探索路径，而非近期可替代经典 LLM。</p>
+
+  <h3>5 · 多模态方向：现状与空白</h3>
+  <p>多模态情感分析中的 <b>Tensor Fusion Network（TFN, 2017）</b> 通过对各模态表示做外积显式建模单/双/三模态交互，在 CMU-MOSI 上提升显著，但代价是维度指数爆炸。<b>Low-rank Multimodal Fusion（LMF, 2018）</b> 对融合权重张量做低秩分解，复杂度从指数降为关于模态数线性。这一支脉本质是 CP/低秩张量分解而非 MPS，但证明了「张量结构 + 低秩」对跨模态交互建模的有效性。</p>
+  <p>视觉侧：MPS/TT 已用于图像分类、高光谱-多光谱图像融合；Partial Tensorized Transformers 同时对 BERT 与 ViT 做嵌入层压缩与部分张量化，报告精度提升最高 5%——而 ViT 正是 LLaVA 等 MLLM 的视觉编码器。<b>直接的 MPS×MLLM 工作目前基本缺失</b>：主流 MLLM 的效率优化走视觉 token 压缩/剪枝路线，而非张量网络。因此「用 MPO 压缩 MLLM 的视觉编码器与跨模态投影器」「用 MPS 表示多模态 token 序列」属于明确的研究空白与机会点。</p>
+
+  <h3>6 · 独特优势：可解释性、隐私与算法特性</h3>
+  <p><b>可解释性</b>：TN 可被解释为显式量子态，纠缠熵与量子互信息给出特征复杂度与关联的内在度量，已被用于可解释 NLP 与网络安全场景。<b>隐私</b>：MPS 的结构化参数化被用于增强隐私的学习协议。<b>算法特性</b>：uMPS 序列求值可 O(log n) 深度并行；DMRG 式局部优化可在小 χ 下自适应确定最小参数量，训练成本随样本数至多线性增长；MPS 生成模型支持精确无拒绝采样与正则表达式约束采样，这在神经生成模型中没有直接对应物。</p>
+
+  <h3>7 · 综合对比与研究机会</h3>
+  <table>
+    <tr><th>维度</th><th>MPS 作为模型</th><th>MPO/TT 压缩 LLM</th><th>量子混合 LLM</th></tr>
+    <tr><td>代表工作</td><td>MPS 分类器、Born machine、uMPS</td><td>CompactifAI、Saten、Minima、TensorGPT</td><td>TN 去纠缠器 VQC+MPO</td></tr>
+    <tr><td>成熟度</td><td>学术验证充分，规模有限</td><td><b>已有商业化产品</b>（$215M B 轮）</td><td>概念验证（SmolLM2 单层）</td></tr>
+    <tr><td>规模证据</td><td>MNIST / 小文本 / Tomita 文法</td><td>最大至 Qwen3-32B、LLaMA-70B</td><td>单层替换 + 真实量子芯片推理</td></tr>
+    <tr><td>主要瓶颈</td><td>1D 结构表达力、训练效率</td><td>重尾权重、需 healing 与内核工程</td><td>量子硬件规模与噪声</td></tr>
+    <tr><td>独特卖点</td><td>精确采样、可解释、并行求值</td><td>χ 可控、与量化正交、层敏感度画像</td><td>参数量级压缩、量子增强上限</td></tr>
+  </table>
+  <p><b>开放问题与机会点</b>：（1）MPS×MLLM 空白——将 MPO 压缩系统性应用于多模态大模型，或把 MPS 作为多模态序列的原生表示；（2）超越一维链——iPEPS+TRG 方向提示 2D 结构可能更匹配 Transformer 权重几何；（3）修复训练与敏感度预测的自动化——Minima 的 CNN 敏感度预测器表明「在哪里压、用什么结构压」可以学习化；（4）训练态张量化——在 LLM 预训练中以 MPO 原生参数化并结合 scaling law 研究；（5）与既有压缩栈的协同——张量压缩与量化、剪枝、投机解码正交叠加已被验证。</p>
+
+  <h3>8 · 结论</h3>
+  <p>MPS 张量网络为深度学习提供了一套兼具<b>结构先验、可控近似与物理可解释性</b>的数学工具。对大模型而言，其最现实的价值已被 CompactifAI、Saten、Minima 等工作证实：在关联空间而非神经元计数上做压缩，配合敏感度画像、修复训练与定制内核，可在 7B–32B 尺度上取得体积减半乃至更激进的压缩而精度损失控制在 1–3 个百分点，并已产生数亿美元级的商业转化。与此同时，2026 年的批判性复评提醒我们：免训练张量分解并非免费午餐，现代 LLM 权重的重尾与高秩异常特征构成根本性障碍，张量方法的合理定位是<b>混合压缩工具箱中的结构化组件</b>而非银弹。对研究者而言，多模态大模型的张量化、高维张量网络结构对注意力的适配、训练态原生张量化 scaling 行为，以及 MPS 生成模型的约束采样能力在可控生成中的利用，是未来 2–3 年最值得投入的方向。</p>
+</section>
+<section id="route">
+  <div class="sec-label">§2 · 核心结论</div>
+  <h2>路线选择：以 χ*(W) 标度律为一等公民</h2>
+  <p class="lede">课题的科学内核现在可以钉得很死：文本的跨切面互信息随长度近似<b>体积律</b>增长 I(L) ~ L<sup>0.82</sup>（2103.06872），而 MPS 在任意切面最多携带 log₂χ 比特——χ 对上下文的限制是<b>硬信息论约束</b>，不是调参问题。因此最好的结果不是「绕过这堵墙」，而是<b>定量刻画墙的高度</b>：对每个上下文窗口 W，求模型达到教师性能 x% 所需的最小键维 χ*(W)，判别它对数/幂律/指数增长。</p>
+  <div class="verdict"><span class="tag">Verdict</span>
+  推荐路线：<b>原生 uMPS 学生（χ = 历史状态维度，精确可控）+ 135M Transformer 教师 KL 蒸馏 + nanoinfra 训练评测管线</b>，在合成召回探针与真实语料（TinyStories/BabyLM）上扫描 χ×W 网格。两个论据：①「成熟 LLM → 可调 χ MPS 学生」的蒸馏在文献中完全空白（2026 综述仅引 χ=1 退化情形的 KnGPT）；② 成本已被 3090 实测封死——(χ,W) 全网格约 30 runs 仅 2.4 小时。<b>不要</b>走「MPO 压缩现成 LLM 再测上下文」：权重 MPO 的 χ 约束的是权重有效秩而非历史状态维度，且事后张量化已知存在 ≤1.3–1.5× 近乎免费、超过 ~2× 级联崩塌的天花板（compression–realization gap）。</div>
+  <h3>三条路线对比（整合后）</h3>
+  <table>
+    <tr><th>路线</th><th>χ 的角色</th><th>证据状态</th><th>判定</th></tr>
+    <tr><td><b>A. 从零训练 uMPS-LM</b></td><td>χ = 历史状态维度（精确）</td><td>文献停在 χ≈20–50、序列≤512；本地 3090 实测已给出 L_max(χ)≈线性雏形</td><td><b>主路线</b>（阶段 1–2）</td></tr>
+    <tr><td>B. MPO 压缩现成 LLM 测 MI</td><td>χ = 权重有效秩</td><td>不对口；>2× 压缩级联崩塌（2606.03465）</td><td>排除</td></tr>
+    <tr><td><b>C. teacher→MPS 蒸馏</b></td><td>χ = 学生状态维度 + 教师兜底</td><td>文献空白（仅 χ=1 的 KnGPT）；G&A 窄电路发现给出可证伪动机</td><td><b>题眼</b>（阶段 3）</td></tr>
+  </table>
+  <p>落地细节（契约、词表、判据、坑）见 §3.6–3.7；理论约束与实测数据见 §3.1–3.4。</p>
+</section>
+
+<section id="umps">
+  <div class="sec-label">§3 · 路线可靠性</div>
+  <h2>五年过去了，uMPS 可靠吗？—— χ 限制上下文的理论、证据与实测</h2>
+  <p>诚实地说：<b>作为通用语言模型，uMPS 路线没有被后续工作规模化验证；作为研究「χ–上下文」关系的科学仪器，它反而比以往更有价值。</b>本节整合理论约束、文献证据与本地 3090 实测三个层面。</p>
+
+  <h3>3.1 理论：χ 对上下文的限制是一堵信息论硬墙</h3>
+  <table>
+    <tr><th>事实</th><th>表述</th><th>出处</th></tr>
+    <tr><td>信息上限</td><td>非负/随机型 MPS：切分矩阵 P(前缀, 后缀) 的非负秩 ≤ χ ⟹ <b>I(前:后) ≤ log₂χ</b>；Born machine：Schmidt 秩 ≤ χ ⟹ S ≤ log₂χ，I ≤ 2log₂χ</td><td><a class="p-link" href="#p05" onclick="document.getElementById('p05').classList.add('open')">2010.10653 ↓</a>, 2003.01039</td></tr>
+    <tr><td><b>χ = 线性 RNN 的状态维度</b></td><td>均匀 MPS ≡ 随机加权有限自动机；非负 u-MPS ≡ 概率自动机/HMM；Born machine ≡ <b>二次</b>加权自动机。「MPS 语言模型」与「线性循环模型」是同一类对象的两种记号</td><td>2010.10653, 2004.08500</td></tr>
+    <tr><td>正则语言上 χ 是精确的</td><td>正则语言均匀叠加态：<b>χ = DFA 状态数</b>（单一张量、0/1 系数），无指数间隙</td><td>2407.17641 (Quantum 10, 2089), 2602.02698</td></tr>
+    <tr><td>召回任务的态宽下界</td><td>因果循环模型召回 N 个符号需 <b>Ω(N) bit</b> 状态（Based/MQAR, Thm 3.1）；H3/Mamba/RWKV 召回随态宽单调改善</td><td>2402.18668</td></tr>
+    <tr><td>文本互信息是体积律</td><td>文本前后文互信息 <b>I(L) ~ L^0.82</b> 幂律增长（接近体积律），原文结论即「一维张量网络无法高效描述文本」</td><td><a class="p-link" href="#p15" onclick="document.getElementById('p15').classList.add('open')">2103.06872 ↓</a></td></tr>
+    <tr><td>长程关联的代价是幂律</td><td>1D 临界链 S(ℓ)=(c/3)lnℓ 与 S ≤ log₂χ 联立 ⟹ <b>χ ≥ ℓ^{c/3}</b></td><td>0905.4013 + 面积律</td></tr>
+    <tr><td>层级几何能绕开</td><td>TTN 在 MPS 需指数 χ 的任务上只要多项式 χ；「语法 = 信息粗粒化」预言</td><td>1901.02217, 1708.01525</td></tr>
+  </table>
+  <div class="verdict"><span class="tag">关键推论</span>χ 对上下文的限制是硬的信息论约束，不是调参问题。<b>能得到的最好结果是定量刻画这堵墙的高度——χ*(W) 标度律——而不是绕过它。</b>这恰恰是没人做过的空白。</div>
+  <p><b>一个微妙且可能出结果的缝隙</b>：Ω(N) bit 类下界都假设<b>有限精度状态</b>，而真实 MPS 用 float32 连续振幅，原则上可编码远超 bit 计数的信息。实测中逻辑上只需 3 bit 答案的任务却需 χ≈64（约 6 bit 熵）才做对——差额正是「暂存 L 个候选」的开销。「表达力 vs 可训练性/稳健性」的这条缝，文献里没人干净地量化过。</p>
+
+  <h3>3.2 文献实况：χ 与上下文关系的已有证据（全部逐条核实）</h3>
+  <table>
+    <tr><th>论文</th><th>做了什么</th><th>关键数字</th></tr>
+    <tr><td><a class="p-link" href="#p05" onclick="document.getElementById('p05').classList.add('open')">Miller–Rabusseau–Terilla (AISTATS 2021) ↓</a></td><td>uMPS 自回归密度模型，至今仍是规范形式化；O(log n) 并行评估；正则条件采样</td><td>键维 D=50</td></tr>
+    <tr><td><a class="p-link" href="#p16" onclick="document.getElementById('p16').classList.add('open')">Tangpanitanon et al. (NJP 2021, 2112.08628) ↓</a></td><td>经 RAC↔MPS 映射用纠缠熵分析信息传播——<b>目前最接近「χ vs 上下文」的已有结论</b></td><td>IMDB、T=50：<b>准确率在 χ*≈20 饱和</b>，超过不再提升；饱和 EE 2.53 bit（固定嵌入）/ 1.17 bit（可训练）</td></tr>
+    <tr><td><a class="p-link" href="#p20" onclick="document.getElementById('p20').classList.add('open')">TTLM (2405.04590) ↓</a></td><td>Tensor Train next-token 模型；证明二阶 RNN/RAC 均为其特例；少见地扫了 rank</td><td>R=20：PTB 99.3 / WT2 82.3（Large）；<b>TTLM-Large 继续加 rank 反而变差</b></td></tr>
+    <tr><td>Pestun–Vlassopoulos (1710.10248 / 1711.01416)</td><td>平移不变 Born-MPS 语言模型形式化提案；给出关联长度 <b>ξ = −1/ln|λ₂/λ₁|</b> 的定义</td><td>仅提案，<b>无 χ 扫描实验</b></td></tr>
+    <tr><td>van der Poel–Zhao (2403.12969)</td><td>factored-core MPS 建模 Motzkin 型「语言」</td><td>朴素 MPS 的 χ 随长度线性；factored-core <b>次线性</b>（非自然文本）</td></tr>
+    <tr><td><a class="p-link" href="#p17" onclick="document.getElementById('p17').classList.add('open')">M²RNN (2603.14360, Dao 组) ↓</a></td><td><b>矩阵值（MPS-like）状态</b>塞进 7B 混合 MoE，状态大小扩展机制吃满 tensor core</td><td>混合设置下超 Gated-DeltaNet 混合基线 0.4–0.5 PPL</td></tr>
+  </table>
+  <p><b>判断</b>：从零训练的 MPS-LM 至今停在 <b>χ≈20–50、序列 ≤512、IMDB/PTB/WikiText-2</b> 量级；唯一的 χ 饱和证据来自 T=50 的短文本分类；<b>没有人在 (χ, 上下文长度) 平面上给出一条完整曲线</b>。同时 M²RNN 显示「矩阵值状态」思路正被线性注意力社区用现代硬件接管——这是最需要盯住的对照组与竞争线。</p>
+
+  <h3>3.3 本地实测（RTX 3090，nano_mps 探针脚本产出）</h3>
+  <p>任务：存 L 个 NV=8 类符号，末尾用位置指针查询其一；模型为均匀核 MPS + 输入依赖核 + rank-r 二次 readout。两表来自可复跑脚本（单种子，steps=800），非手算。</p>
+  <table>
+    <tr><th>准确率(%) χ＼L</th><th>1</th><th>2</th><th>3</th><th>4</th><th>6</th><th>8</th></tr>
+    <tr><td>χ=8</td><td>100</td><td>100</td><td>99</td><td>58</td><td>40</td><td>32</td></tr>
+    <tr><td>χ=16</td><td>100</td><td>100</td><td>100</td><td><b>100</b></td><td>69</td><td>36</td></tr>
+    <tr><td>χ=32</td><td>100</td><td>100</td><td>100</td><td>100</td><td>92</td><td>50</td></tr>
+    <tr><td>χ=64</td><td>100</td><td>100</td><td>100</td><td>100</td><td>100</td><td><b>92</b></td></tr>
+    <tr><td>χ=128</td><td>100</td><td>100</td><td>100</td><td>100</td><td>100</td><td><b>100</b></td></tr>
+    <tr><td>χ=256</td><td>100</td><td>100</td><td>100</td><td>100</td><td>100</td><td>98</td></tr>
+  </table>
+  <p><b>读法</b>：可召回项数随 χ 近似<b>线性</b>（χ_needed ≈ (2…8)·L，系数=符号表大小），精确命中「外积式联想记忆需 d·L 维状态」的预言。</p>
+  <table>
+    <tr><th colspan="5">截断熵诊断（L=8，答案逻辑上仅需 3 bit）</th></tr>
+    <tr><th>χ</th><th>准确率</th><th>S_max (bit)</th><th>log₂χ</th><th>未用预算</th></tr>
+    <tr><td>8</td><td>32%</td><td>2.28</td><td>3.00</td><td>0.72</td></tr>
+    <tr><td>16</td><td>36%</td><td>3.17</td><td>4.00</td><td>0.83</td></tr>
+    <tr><td>32</td><td>50%</td><td>4.20</td><td>5.00</td><td>0.80</td></tr>
+    <tr><td>64</td><td>92%</td><td>5.03</td><td>6.00</td><td>0.97</td></tr>
+    <tr><td>128</td><td>100%</td><td>6.04</td><td>7.00</td><td>0.96</td></tr>
+    <tr><td>256</td><td>98%</td><td>7.02</td><td>8.00</td><td>0.98</td></tr>
+  </table>
+  <p><b>读法</b>：模型在每个 χ 上几乎<b>打满 log₂χ 信息预算</b>（剩余稳定 0.8–1.0 bit）——约束是 χ 本身而非优化器；准确率越过 90% 的位置恰在 S_max ≈ log₂(L·NV) = 6 bit，即 χ ≈ L × 符号表大小。「只需 3 bit」的任务花 6 bit，差额就是暂存 L 个候选的开销。<b>这两张表基本就是课题答案的原型——而且是可证伪的定量预言，不是「MPS 不太行」这种空话。</b></p>
+  <p><b>一次自我纠正的教训</b>：首次跑 χ=256, L=8 只有 81%（低于 χ=128 的 100%），重跑得 98%——是<b>训练噪声而非表达力极限</b>。大 χ 需要更多步数、更小 lr、<b>多种子是必需项</b>，否则会把优化问题误读成物理结论。</p>
+
+  <h3>3.4 成本实测（单卡 3090，χ=32, T=256, B=64, ~18M 参数）</h3>
+  <table>
+    <tr><th>实现</th><th>ms/step</th><th>吞吐</th><th>600M tokens（全网格 30 runs × 20M）</th></tr>
+    <tr><td>纯转移矩阵扫描（无 readout）</td><td>149</td><td>110 ktok/s</td><td>1.3 h</td></tr>
+    <tr><td>扫描 + 每站点 vocab readout（朴素）</td><td>555</td><td>29.5 ktok/s</td><td>5.7 h</td></tr>
+    <tr><td>扫描 + <b>一次性批量 readout</b></td><td>239</td><td><b>68.7 ktok/s</b></td><td><b>2.4 h</b></td></tr>
+    <tr><td>同参数量 GPT trunk 基线（未 compile）</td><td>105</td><td>155 ktok/s</td><td>1.1 h</td></tr>
+  </table>
+  <p>瓶颈<b>不是顺序扫描，而是每站点的 vocab readout</b>（几百个小算子）；先存 [B,T,χ] 状态（才 2 MB）再一次性批量收缩即 2.3×。计时比值稳定但绝对值受同卡并发影响（并发 GPT 训练时全部膨胀约 2×），任何计时须注明同卡负载。MPS 硬件利用率比 GPT 低 1–2 个数量级——<b>χ 扫描必须在小 token 预算下设计</b>，但 (χ,W) 全网格 2.4 小时即可跑完，成本可控。</p>
+
+  <h3>3.5 蒸馏路线：题眼所在</h3>
+  <p>事后张量化预训练 LLM 的工作很多（TensorGPT、CompactifAI、Minima、Saten、KARIPAP，见 §1 与 §5），跨工作的一致规律是：<b>全模型 ≤1.3–1.5× 压缩近乎免费，超过 ~2× 重建误差级联崩塌</b>（LeSTD CR2.5: PPL +459%；LatentLLM CR1.67: +54%；Saten 报告纯 TT 崩塌必须 LoRA 救）。机理已被证明（2606.03465）：Frobenius 最优的 TT/HOSVD 与算子范数保持错配，误差随宽度多项式放大——综述称之为 <b>compression–realization gap</b>（省下的参数换不成加速）。</p>
+  <p>而<b>真正的 teacher LLM → 可调 χ MPS 学生的 KL 蒸馏（匹配 next-token 边缘分布）在文献中完全空白</b>：2026 年张量方法综述（2608.30505）中「蒸馏进张量化学生」仅引一篇 Kronecker 分解的 KnGPT（ACL 2022），而 Kronecker ≡ <b>χ=1 的退化情形</b>。配合 2504.18574 的发现——Llama-3.1-8B 只有极少数 gather-and-aggregate 头承载召回，剪掉它们 MMLU 从 66% 掉到 25%，即「召回住在窄电路里」——低秩/张量手术很可能恰好切在这条电路上，这为蒸馏路线提供了可证伪的动机。</p>
+
+  <h3>3.6 建议的选题表述与三阶段方案</h3>
+  <div class="verdict"><span class="tag">一句话选题</span>以 <b>χ*(W) 曲线为一等公民</b>：对每个上下文窗口 W，求学生模型达到 teacher 性能 x% 所需的最小键维 χ*(W)，拟合它是 log、幂律还是指数；同时报转移矩阵关联长度 <b>ξ = −1/ln|λ₂/λ₁|</b> 作为 χ 的解析推论。<b>在真实语料上测训练好的文本模型的 ξ，目前没有人做过（约 30 行代码）。</b></div>
+  <table>
+    <tr><th>阶段</th><th>内容</th><th>状态</th></tr>
+    <tr><td>1 · 合成定标</td><td>L_max(χ) 做成多种子、带 GPT/Mamba 同态宽对照的正式图，接入 2402.18668 的坐标系</td><td>雏形已成（§3.3）</td></tr>
+    <tr><td>2 · 真实语料 χ×W 网格</td><td>χ∈{8…256} × W∈{64…1024}，报 PPL(W,χ) 曲面并提取 ℓ*(χ)，同时报 ξ；数据 TinyStories/BabyLM-10M；<b>词表用空白/字符分词（1–8k），不要用 50304 BPE 吃掉 χ 预算</b></td><td>单卡 2.4h</td></tr>
+    <tr><td>3 · 蒸馏</td><td>135M teacher（val CE 3.81）；词表错配先解决（空白分词重训小 teacher 或 logits 按 token 组边缘化）；指标 KL(teacher‖student) 与 χ*(W)</td><td>待做</td></tr>
+  </table>
+  <p><b>防自欺判据</b>：必须同时报 matched-params 与 matched-tokens 两组 GPT 基线；长上下文结论必须有检索探针（NIAH/MQAR 风格）证据——「拉长窗口的 WikiText PPL」几乎不测能力，是该领域最常见的虚报来源；报 χ 收益必须同报墙钟时间与显存；归一化方案（状态+readout vs Born machine p=|ψ|²，后者才需 canonical gauge / 边界本征向量）决定研究的是问题的哪一半，不可混淆；先 SGD 出基线——DMRG/TDVP 训文本无人做过，风险极高。</p>
+
+  <h3>3.7 nanoinfra 适配（已读源码）</h3>
+  <p>nanoinfra 不是张量网络框架，是 nanoGPT 谱系的 modality-agnostic 训练基础设施。关键契约：<code>build_system</code> 对 Trainer 的唯一契约是 <b><code>loss(batch) -&gt; scalar</code></b>，docstring 明说 "a different composition = write your own System"。<b>不要</b>套 trunk→hidden→LMHead 装配器，写自己的 <code>MPSSystem</code>（参照 <code>projects/nano_dsv4/</code> 的 --arch 开关模式，它验证过不同架构零改 core 插入）。复用 Trainer（数据契约 idx/token_types/targets + 无限 dataloader）、loss_eval（CE→PPL，与 GPT 基线同一把尺）、checkpoint_manager、scaling_fit.py（把拟合变量从 (N,D) 换成 (χ,W)）。环境注意：本机无 tensornetwork/tenpy/quimb/tensorly/cuquantum/jax，只有 opt_einsum——<b>不要引入依赖</b>，照仓库零依赖风格写 ~300 行 torch.einsum（文献里文本-MPS 全是 SGD on contractions，没人用 DMRG 库训文本）。硬约束：Python ≥ 3.12、CUDA、torch.compile 需 gcc ≥ 9。</p>
+  <div class="verdict"><span class="tag">Verdict</span>
+  uMPS 可靠——但把预期从「训练出能打的 1B 语言模型」调整为「用状态维度精确可控（=χ）的模型族，首次完整测量 χ*(W) 标度律与关联长度 ξ」。前者在文献证据下成功率低；后者是站得住的空白贡献，且成本已被实测证明可控（3090，2.4 小时）。</div>
+</section>
+
+<section id="charts">
+  <div class="sec-label">§4 · 图表（已重绘校正）</div>
+  <h2>关键量化关系</h2>
+  <div class="chart"><div class="chart-title">图 1 · 理论预言：模型可捕获互信息随状态维度的饱和</div>
+    <div id="c1" class="cviz"></div>
+    <div class="chart-note">数据的真实 bipartite MI 按实测幂律 I(L) ~ L^0.82 增长（灰线，Lu et al., PRA 2025）；状态维度 = χ 的 MPS 只能捕获 min(数据MI, log₂χ)（彩色折线）。χ 每翻 4 倍，饱和长度约推进 2.4×。纵轴数值为示意（估计器相关），形状是实测的。</div></div>
+  <div class="chart"><div class="chart-title">图 2 · 研究脉络 2015–2026（按主线着色，悬停查看）</div>
+    <div id="c2" class="cviz"></div>
+    <div class="chart-note">三条主线：MPS 作模型（蓝）/ MPO·TT 压缩（橙）/ 量子混合（绿）。点大小≈影响力（被引量级，对数）。</div></div>
+  <div class="chart"><div class="chart-title">图 3 · 代表性 MPO/TT 压缩方法的报告压缩比（对数轴）</div>
+    <div id="c3" class="cviz"></div>
+    <div class="chart-note">注意口径各异：TensorGPT/TensorLLM 为单层（嵌入/注意力）压缩比，CompactifAI/Saten 为整模型体积比，Minima 为参数减少比。仅示意量级，不可横向严格比较。</div></div>
+  <div class="chart"><div class="chart-title">图 4 · uMPS 参数量构成：为何 1B 参数需要分解物理维度</div>
+    <div id="c4" class="cviz"></div>
+    <div class="chart-note">朴素 uMPS 核 A ∈ R^{χ×d×χ}（d=词表 32k）：χ=256 即 67B 参数，不可行。分解 A^s=U_s·V（秩 r）后参数量 ≈ d·r·χ + χ²r。但本地实测显示更现实的约束来自 readout 成本与硬件利用率（MPS 比 GPT 低 1–2 个数量级），且小词表（1–8k 空白分词）本身即课题的第二条扫描轴「χ vs d」——1B 非必需，百 M 级已够回答 χ*(W)。</div></div>
+  <div class="chart"><div class="chart-title">图 5 · 本地实测：召回准确率(%) 的 χ×L 热力图（RTX 3090 探针脚本产出）</div>
+    <div id="c5" class="cviz"></div>
+    <div class="chart-note">任务：存 L 个 NV=8 类符号，末尾位置指针查询。可见可召回项数随 χ 近似线性增长（χ≈(2–8)·L）。注：χ=256, L=8 的 98% 为重跑结果（首跑 81% 系训练噪声）——多种子是必需项。数据来源：nano_mps 项目 §4.1，单种子 steps=800。</div></div>
+</section>
+<section id="papers">
+  <div class="sec-label">§5 · 论文库</div>
+  <h2>关键论文 · 点击展开摘要中译与解读</h2>
+  <p style="color:var(--muted);font-size:13px">摘要为学术风格中译，bond dimension、Tensor Train、Born machine 等关键术语保留英文。解读聚焦「与本课题（χ–互信息标度）的关系」。</p>
+<div class="paper" id="p01">
+  <div class="p-head" onclick="this.parentElement.classList.toggle('open')">
+    <span class="p-num">01</span>
+    <span class="p-title">Tensorizing Neural Networks</span>
+    <span class="p-year">2015</span>
+    <span class="p-venue">NeurIPS</span>
+    <span class="p-toggle">＋</span>
+  </div>
+  <div class="p-body">
+    <div class="p-block"><span class="lbl">摘要中译</span>
+      <div class="p-abs">本文提出用 Tensor Train（TT）分解压缩神经网络中的稠密全连接层：将权重矩阵重排为高阶张量后以 TT 格式参数化，并给出相应的端到端训练方法。在保持精度几乎不变的前提下，全连接层参数量可降低一个数量级以上；在 ImageNet 时代的 VGG 网络上，整体压缩约 7 倍，其中全连接层压缩超过 20 万倍量级的理论参数缩减（相对原始大矩阵）。<span class="en">Novikov et al. — TT-decomposition of dense weight matrices, end-to-end training in TT format.</span></div></div>
+    <div class="p-block"><span class="lbl">Kimi 解读</span>
+      <div class="p-kimi"><span class="lbl">Kimi 解读</span>一切的开端。注意它压缩的是「层内权重」而非「状态」——这正是路线 B 与 L²M 问题不对口的根源。读法：把 TT-SVD 截断当作可控误差界的来源。</div></div>
+    <a class="p-link" href="https://arxiv.org/abs/1509.06569" target="_blank" rel="noopener">原文链接 ↗</a>
+  </div>
+</div>
+<div class="paper" id="p02">
+  <div class="p-head" onclick="this.parentElement.classList.toggle('open')">
+    <span class="p-num">02</span>
+    <span class="p-title">Supervised Learning with Quantum-Inspired Tensor Networks</span>
+    <span class="p-year">2016</span>
+    <span class="p-venue">NeurIPS</span>
+    <span class="p-toggle">＋</span>
+  </div>
+  <div class="p-body">
+    <div class="p-block"><span class="lbl">摘要中译</span>
+      <div class="p-abs">本文将量子多体物理中的 Matrix Product State（MPS）引入监督学习：输入经局域特征映射（local feature map）后张量积为指数维特征向量，分类函数以 MPS 参数化，并采用借鉴 DMRG 的双站点扫描算法训练，键维（bond dimension）可在训练中自适应调整。MNIST 上测试错误率低于 1%，且所需键维很小。<span class="en">Stoudenmire & Schwab — MPS classifier trained by DMRG-like sweeping; <1% test error on MNIST.</span></div></div>
+    <div class="p-block"><span class="lbl">Kimi 解读</span>
+      <div class="p-kimi"><span class="lbl">Kimi 解读</span>「MPS 作模型」一脉的奠基作。其自适应键维思想可直接借用到你的 χ 扫描实验设计：固定预算内让训练自己发现所需 χ，与固定 χ 扫描互为对照。</div></div>
+    <a class="p-link" href="http://papers.neurips.cc/paper/6211-supervised-learning-with-tensor-networks.pdf" target="_blank" rel="noopener">原文链接 ↗</a>
+  </div>
+</div>
+<div class="paper" id="p03">
+  <div class="p-head" onclick="this.parentElement.classList.toggle('open')">
+    <span class="p-num">03</span>
+    <span class="p-title">Unsupervised Generative Modeling Using Matrix Product States</span>
+    <span class="p-year">2018</span>
+    <span class="p-venue">PRX</span>
+    <span class="p-toggle">＋</span>
+  </div>
+  <div class="p-body">
+    <div class="p-block"><span class="lbl">摘要中译</span>
+      <div class="p-abs">本文提出以 MPS 的模平方（Born 规则）表示联合概率分布的生成模型（Born machine），通过合并相邻核—SVD 截断的自适应训练直接从数据学习分布，并支持无拒绝的精确采样。在 Bars-and-Stripes 与 MNIST 上验证了生成能力，被引逾 500 次。<span class="en">Han et al. — Born machine: P(x)=|Ψ(x)|²/Z with MPS amplitudes; exact ancestral sampling.</span></div></div>
+    <div class="p-block"><span class="lbl">Kimi 解读</span>
+      <div class="p-kimi"><span class="lbl">Kimi 解读</span>Born machine 给出了「概率 = 振幅平方」的量子化概率观，其纠缠熵有明确的 log χ 上界——这是测量口径 (a) 的理论来源。但也因此带来归一化 Z 的训练困难（见论文 12 的 2026 年解决方案）。</div></div>
+    <a class="p-link" href="https://link.aps.org/doi/10.1103/PhysRevX.8.031012" target="_blank" rel="noopener">原文链接 ↗</a>
+  </div>
+</div>
+<div class="paper" id="p04">
+  <div class="p-head" onclick="this.parentElement.classList.toggle('open')">
+    <span class="p-num">04</span>
+    <span class="p-title">Expressive Power of Tensor-Network Generative Models</span>
+    <span class="p-year">2019</span>
+    <span class="p-venue">NeurIPS</span>
+    <span class="p-toggle">＋</span>
+  </div>
+  <div class="p-body">
+    <div class="p-block"><span class="lbl">摘要中译</span>
+      <div class="p-abs">本文系统刻画张量网络生成模型的表达力层级：证明 Born machine 是局部纯化态（locally purified states, LPS）的严格子集，并给出若干可高效训练且严格更强于 MPS 的张量网络变体，同时指出部分推广形式引入不可解的归一化问题。<span class="en">Glasser et al. — expressivity hierarchy: Born ⊂ LPS ⊂ general TN; normalization tractability boundaries.</span></div></div>
+    <div class="p-block"><span class="lbl">Kimi 解读</span>
+      <div class="p-kimi"><span class="lbl">Kimi 解读</span>选模型形态时的「地图」。若你的 χ 扫描在小 χ 处饱和异常早，可能是 Born 形式本身的表达力瓶颈而非状态维度瓶颈——LPS 变体是重要的消融臂。</div></div>
+    <a class="p-link" href="https://arxiv.org/abs/1907.03741" target="_blank" rel="noopener">原文链接 ↗</a>
+  </div>
+</div>
+<div class="paper" id="p05">
+  <div class="p-head" onclick="this.parentElement.classList.toggle('open')">
+    <span class="p-num">05</span>
+    <span class="p-title">Tensor Networks for Probabilistic Sequence Modeling</span>
+    <span class="p-year">2021</span>
+    <span class="p-venue">AISTATS</span>
+    <span class="p-toggle">＋</span>
+  </div>
+  <div class="p-body">
+    <div class="p-block"><span class="lbl">摘要中译</span>
+      <div class="p-abs">本文提出 uniform MPS（uMPS，各站点共享同一核）用于变长序列的概率建模：序列求值可在 O(log n) 深度内并行完成；建立了 uMPS 与 weighted automata、HMM、predictive state representations 的严格关系；并提出由正则表达式定义条件分布的约束采样算法。在 Tomita 文法与真实文本上，uMPS 能以少量数据泛化至训练长度 3 倍的序列，优于 HMM 与单向 LSTM 基线。<span class="en">Miller, Rabusseau & Terilla — uMPS for variable-length sequence modeling; parallel evaluation; WFA/PSR connections.</span></div></div>
+    <div class="p-block"><span class="lbl">Kimi 解读</span>
+      <div class="p-kimi"><span class="lbl">Kimi 解读</span>你的路线的直接起点。两个可直接复用的资产：正则表达式约束采样（可做受控 MI 实验的生成端）与 O(log n) 并行求值（缓解长链串行瓶颈）。注意其文本实验规模很小——这既是空白也是你的机会。</div></div>
+    <a class="p-link" href="https://proceedings.mlr.press/v130/miller21a.html" target="_blank" rel="noopener">原文链接 ↗</a>
+  </div>
+</div>
+<div class="paper" id="p06">
+  <div class="p-head" onclick="this.parentElement.classList.toggle('open')">
+    <span class="p-num">06</span>
+    <span class="p-title">Mutual Information Scaling for Tensor Network Machine Learning</span>
+    <span class="p-year">2022</span>
+    <span class="p-venue">SciPost</span>
+    <span class="p-toggle">＋</span>
+  </div>
+  <div class="p-body">
+    <div class="p-block"><span class="lbl">摘要中译</span>
+      <div class="p-abs">本文分析张量网络机器学习中互信息的标度行为，指出从 N 个有限样本估计 MPS 的纠缠/互信息存在 log N 的人为上界，并给出相应的偏差修正讨论，为「纠缠—泛化」关系的定量测量建立了方法论约束。<span class="en">Baptiste et al. — finite-sample MI/entanglement estimates capped by log N; bias correction.</span></div></div>
+    <div class="p-block"><span class="lbl">Kimi 解读</span>
+      <div class="p-kimi"><span class="lbl">Kimi 解读</span>防止你把样本量 artifact 当成 χ 饱和拐点的「避坑指南」。建议将其样本量扫描纳入你的标准实验协议。</div></div>
+    <a class="p-link" href="https://arxiv.org/abs/2201.03798" target="_blank" rel="noopener">原文链接 ↗</a>
+  </div>
+</div>
+<div class="paper" id="p07">
+  <div class="p-head" onclick="this.parentElement.classList.toggle('open')">
+    <span class="p-num">07</span>
+    <span class="p-title">TensorGPT: Efficient Compression of the Embedding Layer in LLMs based on the Tensor-Train Decomposition</span>
+    <span class="p-year">2023</span>
+    <span class="p-venue">arXiv</span>
+    <span class="p-toggle">＋</span>
+  </div>
+  <div class="p-body">
+    <div class="p-block"><span class="lbl">摘要中译</span>
+      <div class="p-abs">本文将每个 token 的嵌入向量（而非整个嵌入矩阵）以 Tensor Train 格式存储，实现嵌入层的免训练压缩：GPT-2 / CerebrasGPT 嵌入层压缩 39–65 倍；在约 3.3 倍压缩率下下游性能甚至略超原模型；边缘设备（Raspberry Pi）上单 token 延迟不超过 22 ms。<span class="en">TensorGPT — per-token TT embedding; 39–65× embedding compression, training-free.</span></div></div>
+    <div class="p-block"><span class="lbl">Kimi 解读</span>
+      <div class="p-kimi"><span class="lbl">Kimi 解读</span>「逐 token 张量化」的视角对你有迁移价值：uMPS 的物理维度 d 若直接等于词表会爆炸，TensorGPT 式分解正是论文中图 4 的参数控制手段之一。</div></div>
+    <a class="p-link" href="https://arxiv.org/abs/2307.00526" target="_blank" rel="noopener">原文链接 ↗</a>
+  </div>
+</div>
+<div class="paper" id="p08">
+  <div class="p-head" onclick="this.parentElement.classList.toggle('open')">
+    <span class="p-num">08</span>
+    <span class="p-title">CompactifAI: Extreme Compression of Large Language Models using Quantum-Inspired Tensor Networks</span>
+    <span class="p-year">2024</span>
+    <span class="p-venue">arXiv</span>
+    <span class="p-toggle">＋</span>
+  </div>
+  <div class="p-body">
+    <div class="p-block"><span class="lbl">摘要中译</span>
+      <div class="p-abs">本文用 Matrix Product Operator（MPO）重构 LLM 的自注意力与前馈层权重：将权重矩阵重排为高阶张量后截断至给定 bond dimension，再经短暂「修复」重训恢复精度。LLaMA-2 7B 压缩至原体积 30% 且恢复 90% 以上精度；与量化叠加后内存缩减 93%、参数减少 70%，精度仅降 2–3%。层敏感度分析显示更深层更适合压缩。<span class="en">Tomut et al. (Multiverse) — MPO compression + healing retraining of LLaMA-2 7B; composable with quantization.</span></div></div>
+    <div class="p-block"><span class="lbl">Kimi 解读</span>
+      <div class="p-kimi"><span class="lbl">Kimi 解读</span>路线 B 的天花板参考。注意它的 χ ≈ 100 约束的是权重相关结构，与历史状态维度无关——这是你需要向评审讲清楚的区分点。其层敏感度画像方法可借来做 uMPS 各站点核的敏感度分析。</div></div>
+    <a class="p-link" href="https://arxiv.org/abs/2401.14109" target="_blank" rel="noopener">原文链接 ↗</a>
+  </div>
+</div>
+<div class="paper" id="p09">
+  <div class="p-head" onclick="this.parentElement.classList.toggle('open')">
+    <span class="p-num">09</span>
+    <span class="p-title">L²M: Mutual Information Scaling Law for Long-Context Language Modeling</span>
+    <span class="p-year">2025</span>
+    <span class="p-venue">NeurIPS</span>
+    <span class="p-toggle">＋</span>
+  </div>
+  <div class="p-body">
+    <div class="p-block"><span class="lbl">摘要中译</span>
+      <div class="p-abs">本文提出长上下文语言建模的互信息标度律：自然语言中跨远距离二分的互信息（bipartite mutual information）随上下文长度呈幂律增长 I^BP ∝ L^β；并证明模型可捕获的互信息受其历史状态维度约束 I^BP_q ≲ dim(z)。据此给出长上下文模型状态维度的下界估计，并用 bias-corrected 估计器在 PG19 等语料上实证验证。<span class="en">L²M — bipartite MI grows as power law in context length; model-captured MI bounded by state dimension.</span></div></div>
+    <div class="p-block"><span class="lbl">Kimi 解读</span>
+      <div class="p-kimi"><span class="lbl">Kimi 解读</span>你的工作的理论靶心。uMPS 是首个 dim(z) 可精确设定（=χ）的模型族：L²M 的上界在 Transformer 上只能间接验证（hidden dim 耦合多因素），在 uMPS 上可以做成干净的受控实验——「log χ 是否精确决定 MI 饱和点」就是一个可检验的锐利预言。</div></div>
+    <a class="p-link" href="https://arxiv.org/abs/2503.04725" target="_blank" rel="noopener">原文链接 ↗</a>
+  </div>
+</div>
+<div class="paper" id="p10">
+  <div class="p-head" onclick="this.parentElement.classList.toggle('open')">
+    <span class="p-num">10</span>
+    <span class="p-title">TensorLLM: Tensorising Multi-Head Attention for Enhanced Reasoning and Compression in LLMs</span>
+    <span class="p-year">2025</span>
+    <span class="p-venue">arXiv</span>
+    <span class="p-toggle">＋</span>
+  </div>
+  <div class="p-body">
+    <div class="p-block"><span class="lbl">摘要中译</span>
+      <div class="p-abs">本文将多头注意力（multi-head attention）的权重张量化：以共享因子的 Tucker 型分解重组多头权重，免训练地将注意力权重压缩约 250 倍，同时在 RoBERTa、GPT-J、LLaMA-2 的推理基准上保持甚至提升表现，并提出张量化有助于多头间知识共享的解释。<span class="en">TensorLLM — tensorised MHA with shared factors; ~250× attention weight compression, training-free.</span></div></div>
+    <div class="p-block"><span class="lbl">Kimi 解读</span>
+      <div class="p-kimi"><span class="lbl">Kimi 解读</span>其「多头 = 张量的一个模态（mode）」思想可反向使用：在 uMPS 中把 χ 的一个因子解释为「头」维度，或许能在 TN 语言里重建注意力的部分归纳偏置。</div></div>
+    <a class="p-link" href="https://arxiv.org/abs/2501.15674" target="_blank" rel="noopener">原文链接 ↗</a>
+  </div>
+</div>
+<div class="paper" id="p11">
+  <div class="p-head" onclick="this.parentElement.classList.toggle('open')">
+    <span class="p-num">11</span>
+    <span class="p-title">Saten: Sparse-Augmented Tensor Network for Language Model Compression</span>
+    <span class="p-year">2025</span>
+    <span class="p-venue">EMNLP-Findings</span>
+    <span class="p-toggle">＋</span>
+  </div>
+  <div class="p-body">
+    <div class="p-block"><span class="lbl">摘要中译</span>
+      <div class="p-abs">针对预训练权重普遍接近满秩、直接 TT 截断损伤精度的问题，本文提出 Saten：以 TT 分解加稀疏误差项 W ≈ W_TT + E 表示权重，在 BERT-Base 与 LLaMA-3.2-1B 上实现模型体积缩减逾 3 倍、MAC 缩减逾 4 倍而精度几乎无损；其 2:4 结构化变体在部分任务上反超基模型。<span class="en">Saten — TT + sparse error term; >3× size reduction on BERT / LLaMA-3.2-1B.</span></div></div>
+    <div class="p-block"><span class="lbl">Kimi 解读</span>
+      <div class="p-kimi"><span class="lbl">Kimi 解读</span>「低秩 + 稀疏」混合结构是对 2026 年批判性复评（重尾权重问题）的直接回应。对你的启发：若 uMPS 在小 χ 饱和，可加稀疏旁路做消融，区分「状态维度不足」与「参数化形式不足」。</div></div>
+    <a class="p-link" href="https://aclanthology.org/2025.findings-emnlp.1287.pdf" target="_blank" rel="noopener">原文链接 ↗</a>
+  </div>
+</div>
+<div class="paper" id="p12">
+  <div class="p-head" onclick="this.parentElement.classList.toggle('open')">
+    <span class="p-num">12</span>
+    <span class="p-title">Efficient Generative Modeling with Unitary MPS Using Riemannian Optimization</span>
+    <span class="p-year">2026</span>
+    <span class="p-venue">arXiv</span>
+    <span class="p-toggle">＋</span>
+  </div>
+  <div class="p-body">
+    <div class="p-block"><span class="lbl">摘要中译</span>
+      <div class="p-abs">本文指出 Born machine 的 NLL 目标存在整体标度冗余（尺度等价类）导致的平坦优化方向，提出 unitary MPS（固定配分函数 Z=1）消除冗余自由度，并设计 space-decoupling 的 Riemannian 优化算法，在 BAS 数据集上显著改善收敛速度与稳定性，同时保持键维有界。<span class="en">UMPS-SD — normalization-constrained Born machine trained by Riemannian optimization; stable, bounded bond dims.</span></div></div>
+    <div class="p-block"><span class="lbl">Kimi 解读</span>
+      <div class="p-kimi"><span class="lbl">Kimi 解读</span>五年后 Born 机训练困难的「最新解法」。若你走 Born machine 臂，unitary 约束 + Riemannian 优化应作为默认配置而非朴素 Adam。</div></div>
+    <a class="p-link" href="https://arxiv.org/html/2603.12026" target="_blank" rel="noopener">原文链接 ↗</a>
+  </div>
+</div>
+<div class="paper" id="p13">
+  <div class="p-head" onclick="this.parentElement.classList.toggle('open')">
+    <span class="p-num">13</span>
+    <span class="p-title">Minima: A Practical Tensor-Network Compression Pipeline for Production-Scale LLMs</span>
+    <span class="p-year">2026</span>
+    <span class="p-venue">arXiv</span>
+    <span class="p-toggle">＋</span>
+  </div>
+  <div class="p-body">
+    <div class="p-block"><span class="lbl">摘要中译</span>
+      <div class="p-abs">本文提出面向生产环境的张量网络压缩流水线：以轻量 CNN 预测层—块级敏感度，自适应混合 Tucker / TT / TR 分解，经短暂修复微调后由自定义 Triton/CUDA 内核执行，并以投机解码利用释放的显存。Qwen3-32B 上参数减少 35%、8K 上下文峰值显存 64→40 GiB、单请求吞吐最高提升 87.5%，MMLU 仅降 0.8 个百分点。<span class="en">Minima — sensitivity-predicted mixed TN compression + custom kernels + speculative decoding on Qwen3-32B.</span></div></div>
+    <div class="p-block"><span class="lbl">Kimi 解读</span>
+      <div class="p-kimi"><span class="lbl">Kimi 解读</span>工程参考：它证明张量压缩要落地必须「敏感度预测 + 修复 + 内核」三件套齐全。你写 uMPS trunk 时同样需要自定义内核思维——朴素矩阵连乘在 GPU 上会非常慢。</div></div>
+    <a class="p-link" href="https://arxiv.org/abs/2602.01613" target="_blank" rel="noopener">原文链接 ↗</a>
+  </div>
+</div>
+<div class="paper" id="p14">
+  <div class="p-head" onclick="this.parentElement.classList.toggle('open')">
+    <span class="p-num">14</span>
+    <span class="p-title">Rethinking the Role of Tensor Decompositions in Post-Training LLM Compression</span>
+    <span class="p-year">2026</span>
+    <span class="p-venue">arXiv</span>
+    <span class="p-toggle">＋</span>
+  </div>
+  <div class="p-body">
+    <div class="p-block"><span class="lbl">摘要中译</span>
+      <div class="p-abs">本文在 GPT-J 6B、LLaMA-2 7B 及 MoE 模型上统一评测 Tucker、TT 与矩阵 SVD 类方法，指出现代 LLM 权重呈重尾分布、高秩异常特征（high-rank outlier features）至关重要，与张量分解假设的共享子空间存在根本性错配：免训练张量压缩在同等压缩比下显著劣于简单矩阵方法。<span class="en">Critical re-evaluation — heavy-tailed weights & high-rank outliers limit training-free TN compression.</span></div></div>
+    <div class="p-block"><span class="lbl">Kimi 解读</span>
+      <div class="p-kimi"><span class="lbl">Kimi 解读</span>必读的反方证据。对路线 B 是利空，但对你的路线 A 反而强化动机：事后压缩的失败恰恰说明「从头张量化训练」与「状态维度受控实验」才是 TN 方法不可替代的位置。</div></div>
+    <a class="p-link" href="https://arxiv.org/abs/2606.03465" target="_blank" rel="noopener">原文链接 ↗</a>
+  </div>
+</div>
+<div class="paper" id="p15">
+  <div class="p-head" onclick="this.parentElement.classList.toggle('open')">
+    <span class="p-num">15</span>
+    <span class="p-title">Tensor networks for quantum-inspired machine learning: mutual information of text and images</span>
+    <span class="p-year">2021/25</span>
+    <span class="p-venue">PRA</span>
+    <span class="p-toggle">＋</span>
+  </div>
+  <div class="p-body">
+    <div class="p-block"><span class="lbl">摘要中译</span>
+      <div class="p-abs">本文测量自然文本与图像的二分互信息（bipartite mutual information）随子区域长度的标度：文本呈幂律增长 I(L) ~ L^ν 且 ν ≈ 0.82（接近体积律），图像则接近面积律；文中同时给出基于自回归神经网络的互信息估计器。结论：一维张量网络（MPS，纠缠熵上界 log χ）无法高效描述文本，而 PEPS 等二维结构可能适配图像。<span class="en">Lu, Kanász-Nagy, Kukuljan, Cirac — arXiv:2103.06872 = PRA 111, 032409 (2025): text MI ~ L^0.82 (volume-law-like); 1D TN cannot efficiently describe text.</span></div></div>
+    <div class="p-block"><span class="lbl">Kimi 解读</span>
+      <div class="p-kimi"><span class="lbl">Kimi 解读</span>这是你课题的「墙」：数据的 MI 预算按 L^0.82 增长，而 MPS 每切面只能携带 log₂χ bit——χ*(W) 标度律要测的就是这堵墙的具体形状。其互信息估计器在你的阶段 2 可直接复用。</div></div>
+    <a class="p-link" href="https://arxiv.org/abs/2103.06872" target="_blank" rel="noopener">原文链接 ↗</a>
+  </div>
+</div>
+<div class="paper" id="p16">
+  <div class="p-head" onclick="this.parentElement.classList.toggle('open')">
+    <span class="p-num">16</span>
+    <span class="p-title">Entanglement diagnostics for information propagation in recurrent neural networks (RAC ≡ MPS)</span>
+    <span class="p-year">2021</span>
+    <span class="p-venue">NJP</span>
+    <span class="p-toggle">＋</span>
+  </div>
+  <div class="p-body">
+    <div class="p-block"><span class="lbl">摘要中译</span>
+      <div class="p-abs">本文建立 recurrent arithmetic circuit（RAC）与 MPS 的对应，用纠缠熵作为信息传播的代理量分析情感分析任务。在 IMDB、序列长度 T=50 上，准确率约在 χ*≈20 处饱和，继续增大 χ 不再提升精度；饱和纠缠熵约 2.53 bit（固定嵌入）/ 1.17 bit（可训练嵌入）。<span class="en">Tangpanitanon et al., arXiv:2112.08628 — accuracy saturates at χ*≈20 on IMDB (T=50); saturating entanglement 2.53 / 1.17 bits.</span></div></div>
+    <div class="p-block"><span class="lbl">Kimi 解读</span>
+      <div class="p-kimi"><span class="lbl">Kimi 解读</span>文献中唯一的 χ 饱和直接证据，但只是单点（T=50、分类任务）。你的 χ*(W) 曲线就是把这一个点扩展成 (χ, W) 平面上的一条完整标度律。</div></div>
+    <a class="p-link" href="https://arxiv.org/abs/2112.08628" target="_blank" rel="noopener">原文链接 ↗</a>
+  </div>
+</div>
+<div class="paper" id="p17">
+  <div class="p-head" onclick="this.parentElement.classList.toggle('open')">
+    <span class="p-num">17</span>
+    <span class="p-title">M²RNN: Matrix-valued recurrent states at scale</span>
+    <span class="p-year">2026</span>
+    <span class="p-venue">arXiv</span>
+    <span class="p-toggle">＋</span>
+  </div>
+  <div class="p-body">
+    <div class="p-block"><span class="lbl">摘要中译</span>
+      <div class="p-abs">本文将矩阵值（MPS-like）循环状态与非线性转移结合，并以状态大小扩展机制充分利用 tensor core，把该架构塞进 7B 混合 MoE；混合设置下困惑度超过 Gated-DeltaNet 混合基线 0.4–0.5。<span class="en">M²RNN (arXiv:2603.14360, Dao group) — matrix-valued (MPS-like) states in a 7B hybrid MoE; beats Gated-DeltaNet hybrid baseline by 0.4–0.5 PPL.</span></div></div>
+    <div class="p-block"><span class="lbl">Kimi 解读</span>
+      <div class="p-kimi"><span class="lbl">Kimi 解读</span>最该盯住的对手与对照组：「矩阵值状态」思路正被线性注意力社区用现代硬件接管。你的差异化是 χ 的精确可控性与信息论上界，而不是下游 PPL 竞争。</div></div>
+    <a class="p-link" href="https://arxiv.org/abs/2603.14360" target="_blank" rel="noopener">原文链接 ↗</a>
+  </div>
+</div>
+<div class="paper" id="p18">
+  <div class="p-head" onclick="this.parentElement.classList.toggle('open')">
+    <span class="p-num">18</span>
+    <span class="p-title">Tensor methods for large language models: a lifecycle survey</span>
+    <span class="p-year">2026</span>
+    <span class="p-venue">arXiv</span>
+    <span class="p-toggle">＋</span>
+  </div>
+  <div class="p-body">
+    <div class="p-block"><span class="lbl">摘要中译</span>
+      <div class="p-abs">2026 年 8 月的张量方法全景综述，以七阶段生命周期分类法统一整理 LLM 的张量方法（预训练、压缩、微调、推理部署等），明确提出 compression–realization gap：张量分解省下的参数量往往换不成实际加速，须同时报告墙钟时间与显存。其「蒸馏进张量化学生」一节仅引一篇 Kronecker 分解的 KnGPT（χ=1 退化情形）。<span class="en">arXiv:2608.30505 — seven-stage lifecycle taxonomy of tensor methods for LLMs; names the compression–realization gap.</span></div></div>
+    <div class="p-block"><span class="lbl">Kimi 解读</span>
+      <div class="p-kimi"><span class="lbl">Kimi 解读</span>两个用途：（a）写作时的全景引用与「gap」术语来源；（b）它亲口证明了 teacher→MPS（χ≥2）蒸馏在文献中空白——你选题最值钱的位置。</div></div>
+    <a class="p-link" href="https://arxiv.org/abs/2608.30505" target="_blank" rel="noopener">原文链接 ↗</a>
+  </div>
+</div>
+<div class="paper" id="p19">
+  <div class="p-head" onclick="this.parentElement.classList.toggle('open')">
+    <span class="p-num">19</span>
+    <span class="p-title">Based / MQAR: Simple linear attention language models balance the recall-throughput tradeoff</span>
+    <span class="p-year">2024</span>
+    <span class="p-venue">NeurIPS</span>
+    <span class="p-toggle">＋</span>
+  </div>
+  <div class="p-body">
+    <div class="p-block"><span class="lbl">摘要中译</span>
+      <div class="p-abs">本文理论证明：任何因果循环（causal recurrent）模型要召回上下文中 N 个符号，需要 Ω(N) 比特的状态宽度（Thm 3.1）；并在 MQAR 合成召回任务上系统验证 H3、Mamba、RWKV 等模型的召回能力随状态宽度单调改善。由此提出线性注意力变体 Based，在召回—吞吐权衡上取得更优前沿。<span class="en">Arora et al. — Ω(N)-bit state lower bound for recall in causal recurrent models; recall scales with state width.</span></div></div>
+    <div class="p-block"><span class="lbl">Kimi 解读</span>
+      <div class="p-kimi"><span class="lbl">Kimi 解读</span>把 MPS-LM 接进主流长上下文话语的桥梁：uMPS 正是状态宽度 = χ 的循环模型，该下界直接预言 χ 需随召回长度线性增长——与本地实测 χ≈(2–8)·L 精确吻合。阶段 1 的正式图应以本文的坐标系呈现。</div></div>
+    <a class="p-link" href="https://arxiv.org/abs/2402.18668" target="_blank" rel="noopener">原文链接 ↗</a>
+  </div>
+</div>
+<div class="paper" id="p20">
+  <div class="p-head" onclick="this.parentElement.classList.toggle('open')">
+    <span class="p-num">20</span>
+    <span class="p-title">TTLM: Tensor Train Language Model</span>
+    <span class="p-year">2024</span>
+    <span class="p-venue">arXiv</span>
+    <span class="p-toggle">＋</span>
+  </div>
+  <div class="p-body">
+    <div class="p-block"><span class="lbl">摘要中译</span>
+      <div class="p-abs">本文提出以 Tensor Train 参数化的 next-token 语言模型，并证明二阶 RNN、recurrent arithmetic circuit（RAC）与乘法积分 RNN 均为其特例；是文献中少见地系统扫描 rank 的工作。R=20 时 PTB 困惑度 99.3、WikiText-2 82.3（Large），优于 vanilla RNN；但 TTLM-Large 继续增大 rank 反而性能变差。<span class="en">Su et al. — TT-parameterized LM unifying 2RNN/RAC/MI-RNN; rank scan on PTB/WikiText-2.</span></div></div>
+    <div class="p-block"><span class="lbl">Kimi 解读</span>
+      <div class="p-kimi"><span class="lbl">Kimi 解读</span>「加大 χ 不总是更好」的现存证据之一。其 rank 增大反变差的现象与本地实测的「大 χ 需更多步数、更小 lr」教训一致：先把优化问题排除，再谈表达力结论。</div></div>
+    <a class="p-link" href="https://arxiv.org/abs/2405.04590" target="_blank" rel="noopener">原文链接 ↗</a>
+  </div>
+</div>
+<div class="paper" id="p21">
+  <div class="p-head" onclick="this.parentElement.classList.toggle('open')">
+    <span class="p-num">21</span>
+    <span class="p-title">Gather-and-Aggregate: localized recall circuits in LLMs</span>
+    <span class="p-year">2025</span>
+    <span class="p-venue">arXiv</span>
+    <span class="p-toggle">＋</span>
+  </div>
+  <div class="p-body">
+    <div class="p-block"><span class="lbl">摘要中译</span>
+      <div class="p-abs">本文发现 Transformer 与 SSM 中的上下文检索依赖高度集中的 gather-and-aggregate（G&A）机制，且集中于极少数注意力头：在剪枝版 Llama-3.1-8B 上禁用单个 G&A 头即可使 MMLU 从 66% 跌至 25%（随机水平）。<span class="en">Recall is carried by a narrow circuit of few G&A heads; ablating one collapses MMLU to chance.</span></div></div>
+    <div class="p-block"><span class="lbl">Kimi 解读</span>
+      <div class="p-kimi"><span class="lbl">Kimi 解读</span>蒸馏路线的可证伪动机：召回住在窄电路里，低秩/张量手术很可能恰好切在它上面。因此压缩/蒸馏模型必须在检索探针（NIAH/MQAR）上单独评测召回损伤——这是两个评测空白的交集。</div></div>
+    <a class="p-link" href="https://arxiv.org/abs/2504.18574" target="_blank" rel="noopener">原文链接 ↗</a>
+  </div>
+</div>
+<div class="paper" id="p22">
+  <div class="p-head" onclick="this.parentElement.classList.toggle('open')">
+    <span class="p-num">22</span>
+    <span class="p-title">KroneckerBERT / KnGPT: Kronecker-factored compression of pretrained Transformers</span>
+    <span class="p-year">2021</span>
+    <span class="p-venue">ACL 2022</span>
+    <span class="p-toggle">＋</span>
+  </div>
+  <div class="p-body">
+    <div class="p-block"><span class="lbl">摘要中译</span>
+      <div class="p-abs">本文用 Kronecker 积分解压缩 BERT/GPT 类预训练模型的权重并配合蒸馏，是「蒸馏进张量化学生」在综述中被引用的唯一先例。注意：Kronecker 分解等价于 bond dimension χ=1 的退化张量网络。<span class="en">Kronecker factorization + distillation of pretrained transformers; ≡ χ=1 degenerate TN.</span></div></div>
+    <div class="p-block"><span class="lbl">Kimi 解读</span>
+      <div class="p-kimi"><span class="lbl">Kimi 解读</span>它凸显了空白的位置：χ≥2 的 teacher→MPS KL 蒸馏无人做过。若你的 χ*(W) 曲线在 χ=2 处已显著优于 χ=1 基线，这本身就是对这篇工作的直接推进。</div></div>
+    <a class="p-link" href="https://arxiv.org/abs/2109.06243" target="_blank" rel="noopener">原文链接 ↗</a>
+  </div>
+</div>
+<div class="paper" id="p23">
+  <div class="p-head" onclick="this.parentElement.classList.toggle('open')">
+    <span class="p-num">23</span>
+    <span class="p-title">Entanglement scaling in tree tensor networks vs MPS for language-like correlations</span>
+    <span class="p-year">2019</span>
+    <span class="p-venue">arXiv</span>
+    <span class="p-toggle">＋</span>
+  </div>
+  <div class="p-body">
+    <div class="p-block"><span class="lbl">摘要中译</span>
+      <div class="p-abs">本文证明对具有层级/长程关联的数据，树张量网络（TTN）在 MPS 需要指数键维的任务上仅需多项式键维；配合「语法 = 信息粗粒化」的老预言（1708.01525），暗示语言的层级结构天然适配 TTN 而非一维链。<span class="en">TTN needs only poly χ where MPS needs exp χ on hierarchical correlations.</span></div></div>
+    <div class="p-block"><span class="lbl">Kimi 解读</span>
+      <div class="p-kimi"><span class="lbl">Kimi 解读</span>MPS 撞墙之后的下一篇：至今没有任何层级张量网络的文本语言模型。你的 χ*(W) 曲线若为幂律/指数，TTN-LM 就是最自然的后续工作。</div></div>
+    <a class="p-link" href="https://arxiv.org/abs/1901.02217" target="_blank" rel="noopener">原文链接 ↗</a>
+  </div>
+</div>
+<div class="paper" id="p24">
+  <div class="p-head" onclick="this.parentElement.classList.toggle('open')">
+    <span class="p-num">24</span>
+    <span class="p-title">Exact MPS representations of regular languages: χ = number of DFA states</span>
+    <span class="p-year">2021</span>
+    <span class="p-venue">Quantum</span>
+    <span class="p-toggle">＋</span>
+  </div>
+  <div class="p-body">
+    <div class="p-block"><span class="lbl">摘要中译</span>
+      <div class="p-abs">本文证明正则语言的均匀叠加态存在精确 MPS 表示，其键维恰等于对应确定有限自动机（DFA）的状态数，且核张量系数仅取 0/1——在正则语言这一可解模型上，χ 没有指数间隙，是精确而非近似的。<span class="en">Regular-language uniform superposition: χ = #DFA states, single 0/1 tensor (Quantum 10, 2089).</span></div></div>
+    <div class="p-block"><span class="lbl">Kimi 解读</span>
+      <div class="p-kimi"><span class="lbl">Kimi 解读</span>合成定标阶段的理论锚点：用已知 DFA 状态数的正则/Tomita 文法做数据，χ* 的真值已知，可以严格校验你的「最小键维提取算法」是否测得准。</div></div>
+    <a class="p-link" href="https://arxiv.org/abs/2407.17641" target="_blank" rel="noopener">原文链接 ↗</a>
+  </div>
+</div>
+
+  <h3 style="margin-top:36px">引用可靠性警告（逐条查过 arXiv/Crossref/OpenAlex/S2/INSPIRE，查无此文）</h3>
+  <p>该方向「常识性引用」中有一批<b>核实不到</b>的文献，切勿引用：所谓 Schrauwen–Verstraete–Martens 2015「memory capacity ∝ e^χ」（网传的 arXiv:1505.05539 实为一篇天文学论文）、Xie–Chen–Martens MPS-RNN、Pan/Zhou「TN language models with improved expressivity」、IBM Tensor Sequence Models（TSM）、Hierarchical Tensor State Models（HTSM）、Gao–Pan–Zhang 生成式张量网络综述。<b>替代表达</b>：「张量网络/2-RNN 的表达力有指数间隙」引 1711.00811、1907.03741（<a class="p-link" href="#p04" onclick="document.getElementById('p04').classList.add('open')">论文 04 ↓</a>）、2103.10293；「容量并非指数」引 Dambre et al., Sci. Rep. 2:514 (2012) 与 2502.04832。</p>
+  <h3>推荐阅读顺序</h3>
+  <p><a class="p-link" href="#p18" onclick="document.getElementById('p18').classList.add('open')">2608.30505</a>（全景观，注意 compression–realization gap）→ <a class="p-link" href="#p15" onclick="document.getElementById('p15').classList.add('open')">2103.06872</a>（为何一维不够：I(L)~L^0.82）→ <a class="p-link" href="#p05" onclick="document.getElementById('p05').classList.add('open')">2003.01039</a>（规范做法）→ <a class="p-link" href="#p16" onclick="document.getElementById('p16').classList.add('open')">2112.08628</a>（唯一 χ 饱和证据）→ <a class="p-link" href="#p19" onclick="document.getElementById('p19').classList.add('open')">2402.18668</a>（接入主流长上下文话语）。</p>
+</section>
+<footer><span>MPS × LLM · Research Memorandum</span><span>◐</span><span>2026-09-24</span></footer>
+</div></main>
+<script>
+
+function toggleTheme(){
+  const r=document.documentElement;
+  const cur=r.getAttribute('data-theme')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+  const nxt=cur==='dark'?'light':'dark';
+  r.setAttribute('data-theme',nxt); localStorage.setItem('tn-theme',nxt);
+  renderCharts();
+}
+(function(){const s=localStorage.getItem('tn-theme');
+ if(s)document.documentElement.setAttribute('data-theme',s);
+ else if(window.matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.setAttribute('data-theme','dark');})();
+
+function renderCharts(){
+['c1','c2','c3','c4','c5'].forEach(id=>{const el=document.getElementById(id);const o=echarts.getInstanceByDom(el);if(o)o.dispose();});
+const css=getComputedStyle(document.documentElement);
+const INK=css.getPropertyValue('--ink').trim(), MUT=css.getPropertyValue('--muted').trim(),
+ ACC=css.getPropertyValue('--accent').trim(), TINT=css.getPropertyValue('--tint').trim(), CARD=css.getPropertyValue('--card').trim();
+const BLUE='#2E6FBA', ORANGE='#E07B39', GREEN='#3C9A78', PURPLE='#7B5EA7';
+const base={backgroundColor:'transparent',textStyle:{color:INK,fontFamily:'Georgia, Songti SC, serif'},axisPointer:{label:{color:INK}},
+ grid:{left:60,right:40,top:50,bottom:50}};
+
+// Fig 1: MI saturation vs chi (schematic, log-x)
+(()=>{const ch=echarts.init(document.getElementById('c1'));
+const L=[],real=[];for(let i=0;i<=60;i++){const l=Math.pow(10,1+i*0.05);L.push(l);real.push(0.12*Math.pow(l,0.82));}
+function cap(chi){return L.map((l,i)=>Math.min(real[i], Math.log2(chi)));}
+const series=[{name:'数据真实 MI（实测 I(L)~L^0.82）',type:'line',data:L.map((l,i)=>[l,real[i]]),lineStyle:{color:MUT,width:2.5,type:'dashed'},symbol:'none'}];
+[['χ=64',BLUE],['χ=256',ORANGE],['χ=1024',GREEN]].forEach(([n,c])=>series.push({name:'模型可捕获 MI（'+n+'）',type:'line',data:L.map((l,i)=>[l,cap(parseInt(n.slice(2)))[i]]),lineStyle:{color:c,width:2},symbol:'none'}));
+ch.setOption({...base,tooltip:{trigger:'axis'},legend:{bottom:0,textStyle:{fontSize:11,color:MUT}},
+ xAxis:{type:'log',name:'上下文长度 L（token）',nameLocation:'middle',nameGap:30,axisLabel:{color:MUT}},
+ yAxis:{type:'value',name:'bipartite MI（nats，示意）',axisLabel:{color:MUT},splitLine:{lineStyle:{color:'#e2d9cb'}}},series});})();
+
+// Fig 2: timeline scatter
+(()=>{const ch=echarts.init(document.getElementById('c2'));
+const D=[
+ [2015,'TT 全连接层压缩','MPO/TT 压缩',1],[2016,'MPS 分类器 (NeurIPS)','MPS 作模型',3],[2017,'TT-RNN (ICML)','MPO/TT 压缩',2],
+ [2018,'Born machine (PRX)','MPS 作模型',3],[2018,'LMF 多模态融合','MPO/TT 压缩',2],[2019,'TT-embedding','MPO/TT 压缩',2],
+ [2019,'表达力层级 (NeurIPS)','MPS 作模型',3],[2019,'张量化 Transformer','MPO/TT 压缩',2],[2021,'uMPS 序列建模 (AISTATS)','MPS 作模型',3],
+ [2022,'MI 有限样本标度 (SciPost)','MPS 作模型',2],[2023,'TensorGPT','MPO/TT 压缩',2],[2024,'CompactifAI (LLaMA-2 7B)','MPO/TT 压缩',3],
+ [2024,'量子去纠缠器 LLM','量子混合',2],[2025,'L²M 互信息标度律 (NeurIPS)','MPS 作模型',3],[2025,'TensorLLM','MPO/TT 压缩',2],
+ [2025,'Saten (EMNLP)','MPO/TT 压缩',2],[2026,'unitary MPS Riemannian 优化','MPS 作模型',2],[2026,'Minima (Qwen3-32B)','MPO/TT 压缩',2],
+ [2026,'批判性复评','MPO/TT 压缩',2]];
+const cmap={'MPS 作模型':BLUE,'MPO/TT 压缩':ORANGE,'量子混合':GREEN};
+const jitter={};D.forEach(d=>{const k=d[0]+d[2];jitter[k]=(jitter[k]||0)+1;d.push((jitter[k]-1)*0.34)});
+const cats=Object.keys(cmap);
+const series=cats.map(c=>({name:c,type:'scatter',symbolSize:d=>6+d[3]*5,
+ data:D.filter(d=>d[2]===c).map(d=>[d[0],cats.indexOf(c)+ (d[4]-0.34),d[1],d[3]]),
+ itemStyle:{color:cmap[c],opacity:.85},
+ label:{show:true,position:cats.indexOf(c)%2?'bottom':'top',fontSize:9,color:MUT,
+  formatter:p=>p.data[3]>=3?p.data[2]:''}}));
+ch.setOption({...base,tooltip:{formatter:p=>`<b>${p.data[2]}</b><br>${p.data[0]} · ${cats[Math.round(p.data[1])]}`},
+ legend:{bottom:0,textStyle:{fontSize:11,color:MUT}},
+ xAxis:{type:'value',min:2014.5,max:2026.8,interval:2,axisLabel:{formatter:v=>v,color:MUT},splitLine:{show:false}},
+ yAxis:{type:'category',data:cats,axisLabel:{color:INK},splitLine:{lineStyle:{color:'#e2d9cb'}}},series});})();
+
+// Fig 3: compression ratios
+(()=>{const ch=echarts.init(document.getElementById('c3'));
+const M=[['TT-FC (2015)',17.6,'整层'],['TT-embed (2019)',5,'整层'],['张量化TF (2019)',3,'整层'],
+ ['TensorGPT (2023)',38.4,'嵌入层'],['CompactifAI (2024)',3.3,'整模型'],['TensorLLM (2025)',250,'注意力权重'],
+ ['Saten (2025)',3,'整模型'],['PicoGPT MPO (2026)',13,'逐 block']];
+ch.setOption({...base,tooltip:{formatter:p=>`${p.name}<br>压缩比 ≈ ${p.value}×（口径：${M[p.dataIndex][2]}）`},
+ xAxis:{type:'category',data:M.map(m=>m[0]),axisLabel:{rotate:28,fontSize:10,color:MUT}},
+ yAxis:{type:'log',name:'报告压缩比（×）',axisLabel:{color:MUT},splitLine:{lineStyle:{color:'#e2d9cb'}}},
+ series:[{type:'bar',data:M.map(m=>({value:m[1],itemStyle:{color:m[2]==='整模型'?ACC:(m[2]==='注意力权重'?ORANGE:BLUE)}})),
+  label:{show:true,position:'top',formatter:p=>p.value+'×',fontSize:10,color:INK},barWidth:'55%'}]});})();
+
+
+// Fig 5: probe accuracy heatmap chi x L
+(()=>{const el=document.getElementById('c5');if(!el)return;const ch=echarts.init(el);
+const Ls=['1','2','3','4','6','8'], chis=['8','16','32','64','128','256'];
+const acc=[[100,100,99,58,40,32],[100,100,100,100,69,36],[100,100,100,100,92,50],
+ [100,100,100,100,100,92],[100,100,100,100,100,100],[100,100,100,100,100,98]];
+const data=[];acc.forEach((row,i)=>row.forEach((v,j)=>data.push([j,i,v])));
+ch.setOption({backgroundColor:'transparent',
+ tooltip:{formatter:pp=>`χ=${chis[pp.data[1]]}, L=${Ls[pp.data[0]]}<br>召回准确率 <b>${pp.data[2]}%</b>`,textStyle:{color:INK}},
+ grid:{left:70,right:90,top:30,bottom:50},
+ xAxis:{type:'category',data:Ls,name:'上下文长度 L（符号数）',nameLocation:'middle',nameGap:30,axisLabel:{color:MUT},nameTextStyle:{color:MUT}},
+ yAxis:{type:'category',data:chis,name:'bond dimension χ',axisLabel:{color:MUT},nameTextStyle:{color:MUT}},
+ visualMap:{min:30,max:100,calculable:true,orient:'vertical',right:8,top:'center',textStyle:{color:MUT},
+  inRange:{color:['#e8dcc8','#f5a623','#f54001']}},
+ series:[{type:'heatmap',data,label:{show:true,color:INK,fontSize:11,formatter:pp=>pp.data[2]},
+  itemStyle:{borderColor:CARD,borderWidth:2},emphasis:{itemStyle:{shadowBlur:8,shadowColor:'rgba(0,0,0,.3)'}}}]});
+})();
+
+// Fig 4: uMPS parameter scaling
+(()=>{const ch=echarts.init(document.getElementById('c4'));
+const chi=[16,32,64,128,256,512,1024,2048],V=32000,r=64;
+const naive=chi.map(c=>[c,V*c*c/1e9]);
+const fact=chi.map(c=>[c,(V*r*c + c*c*r)/1e9]);
+ch.setOption({...base,tooltip:{trigger:'axis',valueFormatter:v=>v.toExponential(2)+' B'},legend:{bottom:0,textStyle:{fontSize:11,color:MUT}},
+ xAxis:{type:'category',data:chi,name:'bond dimension χ',nameLocation:'middle',nameGap:30,axisLabel:{color:MUT}},
+ yAxis:{type:'log',name:'参数量（B，log）',axisLabel:{color:MUT},splitLine:{lineStyle:{color:'#e2d9cb'}}},
+ series:[
+  {name:'朴素核 A∈R^{χ×d×χ}',type:'line',data:naive.map(n=>n[1]),lineStyle:{color:ACC,width:2.5},symbol:'circle',
+   markLine:{data:[{yAxis:1,label:{formatter:'1B 目标',color:ACC}}],lineStyle:{color:ACC,type:'dashed'},symbol:'none'}},
+  {name:'分解核 A^s=U_s·V（r=64）',type:'line',data:fact.map(n=>n[1]),lineStyle:{color:GREEN,width:2.5},symbol:'diamond'}]});})();
+
+
+}
+renderCharts();
+let _rz;document.addEventListener('click',e=>{const vp=document.getElementById('verPanel');if(!e.target.closest('#verBtn')&&!e.target.closest('#verPanel'))vp.classList.remove('show')});
+window.addEventListener('resize',()=>{clearTimeout(_rz);_rz=setTimeout(renderCharts,200)});
+</script>
+</body></html>
