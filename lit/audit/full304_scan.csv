@@ -1,0 +1,305 @@
+row_no,title,year,verdict,authority,arxiv_id,doi,authority_abs_len,authority_tail40,stored_abs_len,has_ellipsis
+2,Mutual information functions of natural language texts,1989.0,no_identifier,,,,0,,661,N
+3,"Entanglement, quantum phase transitions, and density matrix renormalization",2002.0,truncated_snippet,arxiv,quant-ph/0109024,10.1023/a:1019601218492,749,ional numerical renormalization methods.,184,Y
+4,Entanglement entropy and quantum field theory,2004.0,zero_hit,arxiv,hep-th/0405152,10.1088/1742-5468/2004/06/p06002/meta,0,,185,Y
+5,Entanglement renormalization,2007.0,consistent,openalex,cond-mat/0512165,10.1103/physrevlett.99.220405,863,ribution to the entanglement of a block.,863,N
+6,Area laws for the entanglement entropy-a review,2008.0,consistent,arxiv,0808.3773,,1788,at need to be considered in simulations.,1788,N
+7,Entanglement renormalization and topological order,2008.0,zero_hit,arxiv;openalex,0712.0348,10.1103/physrevlett.100.070404,0,,185,Y
+8,Visualization of tree-structured data through generative topographic mapping,2008.0,no_identifier,,,,0,,189,Y
+9,Variational matrix-product-state approach to quantum impurity models,2009.0,zero_hit,arxiv;openalex,cond-mat/0504305,10.1103/physrevb.80.165117,0,,185,Y
+10,Colloquium: Area laws for the entanglement entropy,2010.0,consistent,openalex,,10.1103/revmodphys.82.277,1968,idered in simulations of quantum states.,1968,N
+11,Entanglement renormalization in noninteracting fermionic systems,2010.0,consistent,openalex,0710.0692,10.1103/physrevb.81.235102,659,tion operators and correlation matrices.,659,N
+12,Entanglement renormalization in free bosonic systems: real-space versus momentum-space renormalizati,2010.0,no_identifier,,,10.1088/1367-2630/12/2/025007/meta,0,,593,N
+13,Entanglement renormalization and gauge symmetry,2011.0,zero_hit,arxiv;openalex,1007.4145,10.1103/physrevb.83.115127,0,,181,Y
+14,Entanglement entropy of Fermi liquids via multidimensional bosonization,2012.0,zero_hit,openalex,,10.1103/physrevx.2.011012,0,,192,Y
+15,Multiscale entanglement renormalisation ansatz,2013.0,no_identifier,,,,0,,2283,N
+16,Matrix product state applications for the ALPS project,2014.0,zero_hit,arxiv,1407.0872,,0,,186,Y
+17,Matrix-product operators and states: NP-hardness and undecidability,2014.0,zero_hit,arxiv;openalex,1404.4466,10.1103/physrevlett.113.160503,0,,196,Y
+18,Renormalization of entanglement entropy and the gravitational effective action,2014.0,no_identifier,,,10.1007/jhep12(2014,0,,176,Y
+19,Tensorizing neural networks,2015.0,no_identifier,,,,0,,194,Y
+20,Entanglement-based machine learning on a quantum computer,2015.0,consistent,openalex,1409.7770,10.1103/physrevlett.114.110504,1100,ew route to accelerate machine learning.,1100,N
+21,Mutual information area laws for thermal free fermions,2015.0,zero_hit,arxiv,1301.5646,10.1088/1742-5468/2015/02/p02008/meta,0,,1223,N
+22,Holographic duality from random tensor networks,2016.0,no_identifier,,,10.1007/jhep11(2016,0,,180,Y
+23,Renormalized entanglement entropy,2016.0,no_identifier,,,10.1007/jhep08(2016,0,,190,Y
+24,Quantum entanglement growth under random unitary dynamics,2017.0,zero_hit,openalex,,10.1103/physrevx.7.031016,0,,185,Y
+25,Quantum entanglement in neural network states,2017.0,zero_hit,openalex,,10.1103/physrevx.7.021021,0,,182,Y
+26,Machine learning topological states,2017.0,partial,arxiv,1609.09060,10.1103/physrevb.96.195145,1685,ogical phases in generic lattice models.,188,Y
+27,Tensor networks for dimensionality reduction and large-scale optimizations part 2 applications and f,2017.0,consistent,arxiv,1708.09165,,1437,nsor networks and tensor decompositions.,1437,N
+28,Tensor-train recurrent neural networks for video classification,2017.0,no_identifier,,,,0,,179,Y
+29,Compressing recurrent neural network with tensor train,2017.0,zero_hit,arxiv,1705.08052,,0,,182,Y
+30,Neural networks compression for language modeling,2017.0,truncated_snippet,arxiv,1708.05963,10.1007/978-3-319-69900-4_44,638,size and suitability for fast inference.,179,Y
+31,Tensor network language model,2017.0,consistent,arxiv,1710.10248,,672,cations such as statistical translation.,672,N
+32,Language as a matrix product state,2017.0,consistent,arxiv,1711.01416,,319,nslation invariant matrix product state.,319,N
+33,Unsupervised generative modeling using matrix product states,2018.0,consistent,openalex,,10.1103/physrevx.8.031012,231, conventional neural network approaches.,231,N
+34,Entanglement entropy: holography and renormalization group,2018.0,consistent,openalex,1801.10352,10.1103/revmodphys.90.035007,331, illustrated with a variety of examples.,331,N
+35,Wide compression: Tensor ring nets,2018.0,no_identifier,,,,0,,1035,N
+36,Learning relevant features of data with multi-scale tensor networks,2018.0,consistent,arxiv,1801.00315,10.1088/2058-9565/aaba1a/meta,653,ertheless able to give good performance.,190,Y
+37,Experimental machine learning of quantum states,2018.0,truncated_snippet,arxiv,1712.00456,10.1103/physrevlett.120.240501,1173,tions in quantum information processing.,182,Y
+38,Information perspective to probabilistic modeling: Boltzmann machines versus born machines,2018.0,no_identifier,,,,0,,178,Y
+39,Machine learning spatial geometry from entanglement features,2018.0,consistent,openalex,1709.01223,10.1103/physrevb.97.045153,508, of ``geometry emerging from learning''.,508,N
+40,A tensor-based Bayesian probabilistic model for citywide personalized travel time estimation,2018.0,no_identifier,,,,0,,183,Y
+41,Matrix product operators for sequence to sequence learning,2018.0,consistent,arxiv,1803.10908,,1060,an readily perform classification tasks.,1060,N
+42,Tensor train neighborhood preserving embedding,2018.0,zero_hit,arxiv,1712.00828,,0,,640,N
+43,"Ergodicity, entanglement and many-body localization",2018.0,no_identifier,,,,0,,178,Y
+44,LTNN: A layerwise tensorized compression of multilayer neural network,2018.0,no_identifier,,,,0,,186,Y
+45,Tensorial neural networks: Generalization of neural networks and application to model compression,2018.0,consistent,arxiv,1805.10352,,1461,nce rates due to the efficiency of TNNs.,1461,N
+46,Entanglement-guided architectures of machine learning by quantum tensor network,2018.0,consistent,arxiv,1803.09111,,1308,/computations of machine learning tasks.,1308,N
+47,Renormalization of Entanglement Entropy from topological terms,2018.0,truncated_snippet,openalex,,10.1103/physrevd.97.106011,972,alization in asymptotically AdS gravity.,188,Y
+48,Compressing End-to-end ASR Networks by Tensor-Train Decomposition.,2018.0,no_identifier,,,,0,,178,Y
+49,Reconstructing quantum states with generative models,2019.0,zero_hit,arxiv,1810.10584,,0,,181,Y
+50,Quantum entanglement in deep learning architectures,2019.0,truncated_snippet,arxiv,1803.09780,10.1103/physrevlett.122.065301,1155,he state-of-the-art in machine learning.,190,Y
+51,Tree tensor networks for generative modeling,2019.0,zero_hit,arxiv;openalex,1901.02217,10.1103/physrevb.99.155131,0,,187,Y
+52,A tensorized transformer for language modeling,2019.0,no_identifier,,,,0,,1054,N
+53,Expressive power of tensor-network factorizations for probabilistic modeling,2019.0,no_identifier,,,,0,,1449,N
+54,Machine learning by unitary tensor network of hierarchical tree structure,2019.0,no_identifier,,,10.1088/1367-2630/ab31ef/meta,0,,195,Y
+55,Compressing recurrent neural networks with tensor ring for action recognition,2019.0,no_identifier,,,,0,,186,Y
+56,TIE: Energy-efficient tensor train-based inference engine for deep neural network,2019.0,zero_hit,openalex,,10.1145/3307650.3322258,0,,184,Y
+57,Matrix product state–based quantum classifier,2019.0,zero_hit,arxiv,1905.01426,,0,,190,Y
+58,Compression of recurrent neural networks for efficient language modeling,2019.0,zero_hit,arxiv,1902.02380,,0,,181,Y
+59,Probabilistic modeling with matrix product states,2019.0,no_identifier,,,,0,,193,Y
+60,Mutual information scaling and expressive power of sequence models,2019.0,consistent,arxiv,1905.04271,,1116,t on improving the architecture of them.,1116,N
+61,Entanglement at a scale and renormalization monotones,2019.0,no_identifier,,,10.1007/jhep01(2019,0,,183,Y
+62,Learning high-dimensional probability distributions using tree tensor networks,2019.0,consistent,arxiv,1912.07913,,1608,"bution, graphical models, Markov chain).",1608,N
+63,Variational quantum circuits for deep reinforcement learning,2020.0,no_identifier,,,,0,,1372,N
+64,Encoding of matrix product states into quantum circuits of one-and two-qubit gates,2020.0,consistent,openalex,1908.07958,10.1103/physreva.101.032310,1203,circuits on near-term quantum platforms.,193,Y
+65,An overview of neural network compression,2020.0,consistent,arxiv,2006.03669,,1567,at least one of these DNN architectures.,1567,N
+66,Convolutional tensor-train LSTM for spatio-temporal learning,2020.0,no_identifier,,,,0,,184,Y
+67,Compressing pre-trained language models by matrix decomposition,2020.0,no_identifier,,,,0,,179,Y
+68,From probabilistic graphical models to generalized tensor networks for supervised learning,2020.0,no_identifier,,,,0,,186,Y
+69,Generative tensor network classification model for supervised machine learning,2020.0,zero_hit,arxiv;openalex,1903.10742,10.1103/physrevb.101.075135,0,,189,Y
+70,Deep convolutional neural network compression via coupled tensor decomposition,2020.0,no_identifier,,,,0,,1566,N
+71,Compressing 3DCNNs based on tensor train decomposition,2020.0,consistent,arxiv,1912.03647,,1313,tions in extensive real world scenarios.,186,Y
+72,"Tensor train construction from tensor actions, with application to compression of large high order d",2020.0,zero_hit,arxiv;openalex,2002.06244,10.1137/20m131936x,0,,189,Y
+73,Residual matrix product state for machine learning,2020.0,consistent,arxiv,2012.11841,,1360, improve the performance of both models.,1360,N
+74,Tensorcoder: Dimension-wise attention via tensor representation for natural language modeling,2020.0,consistent,arxiv,2008.01547,,1022,erformance on machine translation tasks.,1022,N
+75,Tensorized transformer for dynamical systems modeling,2020.0,consistent,arxiv,2006.03445,,755,s of high-dimensional dynamical systems.,755,N
+76,Compressing lstm networks by matrix product operators,2020.0,consistent,arxiv,2012.11943,,1592,cantly outperforms the pruning approach.,1592,N
+77,Learning phase transition in Ising model with tensor-network Born machines,2020.0,no_identifier,,,,0,,183,Y
+78,Adaptive tensor-train decomposition for neural network compression,2020.0,no_identifier,,,10.1007/978-3-030-69244-5_6,0,,184,Y
+79,"Matrix product states and projected entangled pair states: Concepts, symmetries, theorems",2021.0,consistent,openalex,2011.12127,10.1103/revmodphys.93.045003,349, patterns and topological quantum order.,349,N
+80,Improving multimodal fusion with hierarchical mutual information maximization for multimodal sentime,2021.0,no_identifier,,,,0,,190,Y
+81,Is attention better than matrix decomposition?,2021.0,consistent,arxiv,2109.04553,,1228,ts over self-attention and its variants.,1228,N
+82,Probabilistic transformer for time series analysis,2021.0,no_identifier,,,,0,,181,Y
+83,Tt-rec: Tensor train compression for deep learning recommendation models,2021.0,no_identifier,,,,0,,1503,N
+84,Towards efficient tensor decomposition-based dnn model compression with optimization framework,2021.0,zero_hit,arxiv,2107.12422,,0,,1637,N
+85,Entangled datasets for quantum machine learning,2021.0,consistent,arxiv,2109.03400,,1244,etworks for quantum entanglement theory.,1244,N
+86,Supervised learning with projected entangled pair states,2021.0,consistent,openalex,2009.09932,10.1103/physrevb.103.125117,1419,nsor network models in machine learning.,1419,N
+87,Accurate simulation for finite projected entangled pair states in two dimensions,2021.0,consistent,openalex,1908.09359,10.1103/physrevb.103.235155,1054,y correlated quantum many-body problems.,1054,N
+88,Tensor networks for probabilistic sequence modeling,2021.0,no_identifier,,,,0,,1033,N
+89,Hybrid convolutional neural network and projected entangled pair states wave functions for quantum m,2021.0,zero_hit,arxiv;openalex,2009.14370,10.1103/physrevb.103.035138,0,,181,Y
+90,Generative machine learning with tensor networks: Benchmarks on near-term quantum computers,2021.0,consistent,openalex,,10.1103/physrevresearch.3.023010,1787,l performance using hardware simulators.,1787,N
+91,Direct sampling of projected entangled-pair states,2021.0,consistent,openalex,2109.07356,10.1103/physrevb.104.235141,1041, of two-dimensional quantum spin models.,1041,N
+92,Enabling lightweight fine-tuning for pre-trained language model compression based on matrix product ,2021.0,no_identifier,,,,0,,273,N
+93,Tree-tensor-network classifiers for machine learning: From quantum inspired to quantum assisted,2021.0,zero_hit,arxiv;openalex,2104.02249,10.1103/physreva.104.042408,0,,194,Y
+94,Skeleton of matrix-product-state-solvable models connecting topological phases of matter,2021.0,zero_hit,openalex,,10.1103/physrevresearch.3.033265,0,,186,Y
+95,"Free versus bound entanglement, a NP-hard problem tackled by machine learning",2021.0,no_identifier,,,,0,,187,Y
+96,Entanglement-based feature extraction by tensor network machine learning,2021.0,no_identifier,,,10.3389/fams.2021.716044/full,0,,184,Y
+97,Towards quantifying information flows: relative entropy in deep neural networks and the renormalizat,2021.0,consistent,arxiv,2107.06898,,1232,the flow of information in these models.,1232,N
+98,Nonlinear tensor train format for deep neural network compression,2021.0,no_identifier,,,,0,,192,Y
+99,Image search with text feedback by deep hierarchical attention mutual information maximization,2021.0,truncated_snippet,openalex,,10.1145/3474085.3475619,1748, state-of-the-art retrieval performance.,185,Y
+100,Computable Rényi mutual information: Area laws and correlations,2021.0,no_identifier,,,,0,,193,Y
+101,"Quantum tensor networks, stochastic processes, and weighted automata",2021.0,no_identifier,,,,0,,177,Y
+102,TENT: Tensorized encoder transformer for temperature forecasting,2021.0,consistent,arxiv,2106.14742,,1509, important cities for the target cities.,1509,N
+103,Unsupervised mapping of phase diagrams of 2D systems from infinite projected entangled-pair states v,2021.0,consistent,arxiv,2105.09089,,1101,"d, a simple geometric analysis suffices.",1101,N
+104,On the renormalization of entanglement entropy,2021.0,zero_hit,openalex,,10.1007/s43673-021-00032-1,0,,789,N
+105,Probabilistic graphical models and tensor networks: a hybrid framework,2021.0,consistent,arxiv,2106.15666,,1521,isting applications of graphical models.,1521,N
+106,TextTN: Probabilistic encoding of language on tensor network,2021.0,no_identifier,,,,0,,190,Y
+107,Matrix product states for inference in discrete probabilistic models,2021.0,no_identifier,,,,0,,187,Y
+108,A tensorized spectral attention mechanism for efficient natural language processing,2021.0,no_identifier,,,,0,,187,Y
+109,Matrix Product State Representations for Machine Learning,2021.0,no_identifier,,,10.1007/978-3-030-77445-5_43,0,,190,Y
+110,Enhancing generative models via quantum correlations,2022.0,consistent,openalex,,10.1103/physrevx.12.021037,1118, to improve purely classical algorithms.,1118,N
+111,Tensor program optimization with probabilistic programs,2022.0,no_identifier,,,,0,,183,Y
+112,Entanglement phase transitions in random stabilizer tensor networks,2022.0,partial,arxiv,2107.12376,10.1103/physrevb.105.104306,1791,irected polymer in a random environment.,191,Y
+113,Testing matrix product states,2022.0,consistent,openalex,2201.01824,10.1137/1.9781611977073.68,1762,re a constant number of copies suffices.,1762,Y
+114,A -Tensor-Aided Multiscale Transformer for Remaining Useful Life Prediction in IIoT,2022.0,no_identifier,,,,0,,182,Y
+115,Mutual information scaling for tensor network machine learning,2022.0,no_identifier,,,10.1088/2632-2153/ac44a9/meta,0,,185,Y
+116,Entanglement quantification from collective measurements processed by machine learning,2022.0,no_identifier,,,,0,,188,Y
+117,Generative modeling with projected entangled-pair states,2022.0,consistent,arxiv,2202.08177,,376,ation and sampling of the distributions.,376,N
+118,Born machine model based on matrix product state quantum circuit,2022.0,no_identifier,,,,0,,194,Y
+119,Conditional Born machine for Monte Carlo event generation,2022.0,zero_hit,openalex,,10.1103/physreva.106.022612,0,,180,Y
+120,Language design as information renormalization,2022.0,zero_hit,arxiv;openalex,1708.01525,10.1007/s42979-021-01002-y,0,,193,Y
+121,Toward compact transformers for end-to-end object detection with decomposed chain tensor structure,2022.0,no_identifier,,,,0,,190,Y
+122,Deeply tensor compressed transformers for end-to-end object detection,2022.0,no_identifier,,,,0,,1728,N
+123,Explainable natural language processing with matrix product states,2022.0,no_identifier,,,10.1088/1367-2630/ac6232/meta,0,,1524,N
+124,Heat: Hardware-efficient automatic tensor decomposition for transformer compression,2022.0,consistent,arxiv,2211.16749,,1433,than hand-tuned and heuristic baselines.,1433,N
+125,Convolutional neural network compression via tensor-train decomposition on permuted weight tensor wi,2022.0,no_identifier,,,10.1007/978-3-031-08757-8_54,0,,181,Y
+126,Urban tree generator: spatio-temporal and generative deep learning for urban tree localization and m,2022.0,no_identifier,,,10.1007/s00371-022-02526-x,0,,191,Y
+127,Ensemble of tensor train decomposition and quantization methods for deep learning model compression,2022.0,no_identifier,,,,0,,181,Y
+128,Learning generative models for active inference using tensor networks,2022.0,zero_hit,arxiv;openalex,2208.08713,10.1007/978-3-031-28719-0_20,0,,181,Y
+129,Entangling Solid Solutions: Machine Learning of Tensor Networks for Materials Property Prediction,2022.0,consistent,arxiv,2203.09613,,1457, compressing large input feature spaces.,1457,N
+130,Losparse: Structured compression of large language models based on low-rank and sparse approximation,2023.0,no_identifier,,,,0,,185,Y
+131,Tensor networks meet neural networks: A survey and future perspectives,2023.0,consistent,arxiv,2302.09019,,1808,tnbar/awesome-tensorial-neural-networks.,1808,N
+132,Tensorgpt: Efficient compression of large language models based on tensor-train decomposition,2023.0,consistent,arxiv,2307.00526,,1494,s in the embedding layers are redundant.,1494,N
+133,Verification of the area law of mutual information in a quantum field simulator,2023.0,zero_hit,arxiv,2206.10563,,0,,190,Y
+134,Tensor networks for unsupervised machine learning,2023.0,partial,arxiv,2106.12974,10.1103/physreve.107.l012103,1362, state-of-the-art neural network models.,185,Y
+135,Simulating quantum circuits using tree tensor networks,2023.0,no_identifier,,,,0,,192,Y
+136,Tensor decomposition for model reduction in neural networks: A review [feature],2023.0,zero_hit,arxiv,2304.13539,,0,,998,N
+137,Tensor networks for interpretable and efficient quantum-inspired machine learning,2023.0,consistent,openalex,,10.34133/icomputing.0061,928,ficial intelligence” in the near future.,928,N
+138,An introduction to infinite projected entangled-pair state methods for variational ground state simu,2023.0,consistent,arxiv,2308.12358,,1072, and demonstrative benchmarking results.,1072,N
+139,PROTES: probabilistic optimization with tensor sampling,2023.0,no_identifier,,,,0,,191,Y
+140,Detecting genuine multipartite entanglement via machine learning,2023.0,consistent,openalex,2311.17548,10.1103/physreva.108.052424,896,icantly improve the prediction accuracy.,896,N
+141,Typical correlation length of sequentially generated tensor network states,2023.0,partial,openalex,,10.1103/prxquantum.4.030330,1636,posite effect in two spatial dimensions.,190,Y
+142,Renormalization group for measurement and entanglement phase transitions,2023.0,zero_hit,arxiv;openalex,2303.07848,10.1103/physrevb.108.104203,0,,188,Y
+143,Symmetric tensor networks for generative modeling and constrained combinatorial optimization,2023.0,no_identifier,,,10.1088/2632-2153/ace0f5/meta,0,,194,Y
+144,ETTE: Efficient tensor-train-based computing engine for deep neural networks,2023.0,partial,openalex,,10.1145/3579371.3589103,511,s even the models are highly compressed.,184,Y
+145,Introducing nonlinear activations into quantum generative models,2023.0,truncated_snippet,arxiv,2205.14506,10.1103/physreva.107.012406,1689,nce and potential for quantum advantage.,179,Y
+146,Generative learning of continuous data by tensor networks,2023.0,consistent,arxiv,2310.20498,,1445,ly growing field of generative learning.,1445,N
+147,TT-Net: Tensorized Transformer Network for 3D medical image segmentation,2023.0,no_identifier,,,,0,,192,Y
+148,Generative modeling via tree tensor network states,2023.0,zero_hit,arxiv;openalex,2209.01341,10.1007/s40687-023-00381-3,0,,188,Y
+149,Tree-Invent: a novel multipurpose molecular generative model constrained with a topological tree,2023.0,consistent,openalex,,10.1021/acs.jcim.3c01626,1032,"scaffold hopping, and linker generation.",1032,N
+150,Multi-layered projected entangled pair states for image classification,2023.0,no_identifier,,,,0,,1719,N
+151,Sequence processing with quantum tensor networks,2023.0,consistent,arxiv,2308.07865,,1637, polynomial speed-up on quantum devices.,1637,N
+152,Undirected probabilistic model for tensor decomposition,2023.0,no_identifier,,,,0,,187,Y
+153,Distributive pre-training of generative modeling using matrix-product states,2023.0,consistent,arxiv,2306.14787,,898,the probability amplitude of input data.,898,N
+154,On Translation-Invariant Matrix Product States and advances in MPS representations of the -state,2023.0,consistent,arxiv,2306.16456,,1034,r the $n$-party $W$-state for small $n$.,1034,N
+155,An efficient tensor-based transformer for industrial Internet of Things,2023.0,no_identifier,,,,0,,183,Y
+156,Renormalized Von Neumann entropy with application to entanglement in genuine infinite dimensional sy,2023.0,consistent,openalex,,10.1007/s11128-023-04059-1,1010,"imensional, two-partite quantum systems.",1010,N
+157,Quantum generative modeling of sequential data with trainable token embedding,2023.0,consistent,arxiv,2311.05050,,1265,s in quantum inspired sequence modeling.,1265,N
+158,Partial Tensorized Transformers for Natural Language Processing,2023.0,consistent,arxiv,2310.20077,,751,nd in the field of tensor decomposition.,751,N
+159,Generative machine learning with tensor networks,2023.0,empty,,,,0,,0,N
+160,A survey on model compression for large language models,2024.0,no_identifier,,,10.1162/tacl_a_00704/125482,0,,780,N
+161,Decomposition of matrix product states into shallow quantum circuits,2024.0,zero_hit,arxiv,2209.00595,10.1088/2058-9565/ad04e6/meta,0,,2133,N
+162,Model compression and efficient inference for large language models: A survey,2024.0,consistent,arxiv,2402.09748,,1663,facilitating model deployment for users.,1663,N
+163,Hydra: Bidirectional state space models through generalized matrix mixers,2024.0,no_identifier,,,,0,,183,Y
+164,Tensor attention training: Provably efficient learning of higher-order transformers,2024.0,no_identifier,,,,0,,188,Y
+165,Transition role of entangled data in quantum machine learning,2024.0,no_identifier,,,,0,,1360,N
+166,A neural matrix decomposition recommender system model based on the multimodal large language model,2024.0,consistent,openalex,,10.1145/3696271.3696295,767,mproves the accuracy of recommendations.,767,N
+167,Temporal entanglement entropy as a probe of renormalization group flow,2024.0,no_identifier,,,10.1007/jhep05(2024,0,,189,Y
+168,Compactifai: extreme compression of large language models using quantum-inspired tensor networks,2024.0,consistent,arxiv,2401.14109,,1887,"zed, and do not need to be large at all.",1887,N
+169,"Machine learning with tree tensor networks, CP rank constraints, and tensor dropout",2024.0,zero_hit,arxiv,2305.19440,,0,,190,Y
+170,Tensor decomposition based attention module for spiking neural networks,2024.0,truncated_snippet,arxiv,2310.14576,,1380,ansformer-based and CNN-based backbones.,178,Y
+171,Enabling tensor language model to assist in generating {High-Performance} tensor programs for deep l,2024.0,no_identifier,,,,0,,178,Y
+172,Nuclear norm regularized loop optimization for tensor network,2024.0,zero_hit,openalex,,10.1103/physrevresearch.6.043102,0,,194,Y
+173,Quantum large language models via tensor network disentanglers,2024.0,consistent,arxiv,2410.17397,,1153,owards quantum-enhanced language models.,1153,N
+174,Neural network compression based on tensor ring decomposition,2024.0,no_identifier,,,,0,,187,Y
+175,Compressing multivariate functions with tree tensor networks,2024.0,consistent,arxiv,2410.03572,,962,"ensional, non-linear Fredholm equations.",962,N
+176,TNGPS: Discovering unknown tensor network structure search algorithms via large language models (LLM,2024.0,consistent,arxiv,2402.02456,,1031,to the current state-of-the-art methods.,1031,N
+177,Dual-isometric projected entangled pair states,2024.0,consistent,openalex,,10.1103/physrevlett.133.190401,897,ition from topological to trivial order.,184,Y
+178,Identification of quantum entanglement with Siamese convolutional neural networks and semisupervised,2024.0,partial,arxiv,2210.07410,10.1103/physrevapplied.22.014068,1201,tnesses for different classes of states.,181,Y
+179,Probabilistic inference in the era of tensor networks and differential programming,2024.0,zero_hit,openalex,,10.1103/physrevresearch.6.033261,0,,187,Y
+180,"Rényi mutual information in quantum field theory, tensor networks, and gravity",2024.0,no_identifier,,,10.1007/jhep06(2024,0,,891,N
+181,Accelerating large language model training with hybrid gpu-based compression,2024.0,zero_hit,arxiv,2409.02423,,0,,182,Y
+182,Higher order transformers: Efficient attention mechanism for tensor structured data,2024.0,no_identifier,,,,0,,189,Y
+183,Long sequence modeling with attention tensorization: From sequence to tensor learning,2024.0,no_identifier,,,,0,,1255,N
+184,Teaformers: Tensor-augmented transformers for multi-dimensional time series forecasting,2024.0,consistent,arxiv,2410.20439,,1526,or cutting-edge time series forecasting.,1526,N
+185,Quantum topic model: Topic modeling using variational quantum circuits,2024.0,no_identifier,,,,0,,184,Y
+186,Tensor-networks-based learning of probabilistic cellular automata dynamics,2024.0,zero_hit,openalex,,10.1103/physrevresearch.6.043202,0,,191,Y
+187,Leveraging pre-trained neural networks to enhance machine learning with variational quantum circuits,2024.0,consistent,arxiv,2411.08552,,1095,"cs, and various interdisciplinary areas.",1095,N
+188,Markov chain Monte Carlo in tensor network representation,2024.0,consistent,arxiv,2412.02974,,1229,ons in computational physics and beyond.,1229,N
+189,An adaptive tensor-train decomposition approach for efficient deep neural network compression,2024.0,consistent,arxiv,2408.01534,,1391, automatic tensor rank selection method.,1391,N
+190,Many-body localized hidden generative models,2024.0,zero_hit,openalex,,10.1103/physrevresearch.6.043041,0,,188,Y
+191,Beyond Boundaries: efficient Projected Entangled Pair States methods for periodic quantum systems,2024.0,consistent,arxiv,2407.15333,,1166,ning new light on numerous applications.,1166,N
+192,Enhancing Neural Language Models: A Comprehensive Approach With Tensorized Transformer and Over-Para,2024.0,no_identifier,,,,0,,184,Y
+193,Training Tensor Attention Efficiently: From Cubic to Almost Linear Time,2024.0,consistent,arxiv,2405.16411,,1104,tions of tensor attention architectures.,1104,N
+194,Deep Learning and Tensor-Based Multiple Clustering Approaches for Cyber-Physical-Social Applications,2024.0,no_identifier,,,,0,,190,Y
+195,Enhancing Generation Stability with Generative Matrix Product States in Adversarial Networks,2024.0,no_identifier,,,,0,,190,Y
+196,Generating Quantum Circuits with Finetuned Pretrained Large Language Models,2024.0,no_identifier,,,,0,,181,Y
+197,Tensor Mutual Information for Similarity Measurement of High-Dimensional Data: An Image Classificati,2024.0,no_identifier,,,10.1007/978-981-96-6606-5_19,0,,189,Y
+198,Quantum generative adversarial network based on the quantum Born machine,2025.0,no_identifier,,,,0,,180,Y
+199,Tensor networks and efficient descriptions of classical data,2025.0,zero_hit,openalex,,10.1103/physreva.111.032409,0,,190,Y
+200,Spin- Kagome Heisenberg Antiferromagnet: Machine Learning Discovery of the Spinon Pair-Density-Wave ,2025.0,truncated_snippet,openalex,,10.1103/physrevx.15.011047,1661,on group calculations and other methods.,194,Y
+201,Agent-q: fine-tuning large language models for quantum circuit generation and optimization,2025.0,zero_hit,arxiv,2504.11109,,0,,187,Y
+202,Entanglement and the density matrix renormalization group in the generalized Landau paradigm,2025.0,no_identifier,,,,0,,1625,N
+203,Thermalization from quantum entanglement: Jet simulations in the massive Schwinger model,2025.0,consistent,openalex,,10.1103/sgrx-jpp9,803,real time from unitary quantum dynamics.,803,N
+204,Direct entanglement detection of quantum systems using machine learning,2025.0,no_identifier,,,,0,,183,Y
+205,Tensor networks for explainable machine learning in cybersecurity,2025.0,no_identifier,,,,0,,182,Y
+206,A review of state-of-the-art techniques for large language model compression,2025.0,truncated_snippet,openalex,,10.1007/s40747-025-02019-z,1772,s and large-scale cloud infrastructures.,186,Y
+207,Compressing neural networks using tensor networks with exponentially fewer variational parameters,2025.0,zero_hit,openalex,,10.34133/icomputing.0123,0,,184,Y
+208,Fermionic born machines: Classical training of quantum generative models based on fermion sampling,2025.0,consistent,arxiv,2511.13844,,1408,ess of our model and training framework.,1408,N
+209,Quantum large language model fine-tuning,2025.0,consistent,arxiv,2504.08732,,1165,imulations based on noisy quantum gates.,1161,N
+210,A matrix product state model for simultaneous classification and generation,2025.0,truncated_snippet,openalex,,10.1007/s42484-025-00272-6,1352,ampling method from non-normalized MPSs.,187,Y
+211,Application of large language models to quantum state simulation,2025.0,no_identifier,,,10.1007/s11433-024-2598-y,0,,187,Y
+212,Simulating quantum circuits using the multi-scale entanglement renormalization ansatz,2025.0,zero_hit,openalex,,10.1103/physrevresearch.7.013063,0,,182,Y
+213,Steps: sequential probability tensor estimation for text-to-image hard prompt search,2025.0,no_identifier,,,,0,,1380,N
+214,Matrix product states as observations of entangled hidden Markov models: A. Souissi,2025.0,consistent,arxiv,2502.12641,10.1007/s10955-025-03472-3,827,"ons, and tensor network representations.",184,Y
+215,Sequence processing with quantum-inspired tensor networks,2025.0,no_identifier,,,,0,,183,Y
+216,Tensor tree learns hidden relational structures in data to construct generative models,2025.0,no_identifier,,,10.1088/2632-2153/adc2c7/meta,0,,185,Y
+217,Trawl: Tensor reduced and approximated weights for large language models,2025.0,zero_hit,arxiv;openalex,2406.17261,10.1007/978-981-96-8298-0_32,0,,182,Y
+218,Embedding of tree tensor networks into shallow quantum circuits,2025.0,consistent,arxiv,2501.18856,,1356, which have been challenging to utilize.,1356,N
+219,Optimizing ansatz design in quantum generative adversarial networks using large language models,2025.0,consistent,arxiv,2503.12884,,617,in a variety of quantum computing tasks.,617,N
+220,Bridging classical and quantum computing for next-generation language models,2025.0,no_identifier,,,,0,,191,Y
+221,Compact lossy compression of tensors via neural tensor-train decomposition: T. Kwon et al.,2025.0,zero_hit,openalex,,10.1007/s10115-024-02252-x,0,,188,Y
+222,Deep tree tensor networks,2025.0,consistent,arxiv,2502.09928,,1433,hub.com/NieCha/deep_tree_tensor_network.,1433,N
+223,Discrete generative diffusion models without stochastic differential equations: A tensor network app,2025.0,zero_hit,openalex,,10.1103/physreve.111.025302,0,,187,Y
+224,Efficient projected entangled pair states methods for periodic quantum systems,2025.0,consistent,openalex,,10.1103/fvq2-msr4,1250,de range of quantum many-body phenomena.,177,Y
+225,Fieldformer: Self-supervised reconstruction of physical fields via tensor attention prior,2025.0,partial,arxiv,2506.11629,,1636, compared to state-of-the-art baselines.,189,Y
+226,Improving the accuracy of the tree-tensor network approach by optimization of network structure,2025.0,zero_hit,arxiv;openalex,2501.15514,10.1103/ljj8-tkpc,0,,189,Y
+227,Programming quantum computers with large language models,2025.0,truncated_snippet,arxiv,2506.18125,10.1117/12.3049666.short,1534,es substantially better with the former.,183,Y
+228,Entanglement across scales: Quantics tensor trains as a natural framework for renormalization,2025.0,consistent,openalex,,10.1103/qlrs-6f8t,1366,on of the one-particle Green's function.,1366,N
+229,Deep tensor decomposition: A survey,2025.0,no_identifier,,,,0,,188,Y
+230,Scalable quantum state preparation via large-language-model-driven discovery,2025.0,consistent,arxiv,2505.06347,,1155,-guided discovery in quantum simulation.,1155,N
+231,Sequential learning on a tensor network Born machine with trainable token embedding,2025.0,no_identifier,,,10.1088/2632-2153/adde29/meta,0,,190,Y
+232,Regularized second-order optimization of tensor-network Born machines,2025.0,consistent,arxiv,2501.18691,,1407,zing quantum-inspired generative models.,1407,N
+233,TensorSLM: Energy-efficient embedding compression of sub-billion parameter language models on low-en,2025.0,consistent,arxiv,2506.13514,,1246,umption of a single query drops by half.,1246,N
+234,Tree Tensor Network Quantum-Classical Hybrid Neural Architecture for Efficient Data Classification,2025.0,no_identifier,,,,0,,190,Y
+235,Compositional Concept Generalization with Variational Quantum Circuits,2025.0,zero_hit,arxiv,2509.09541,,0,,193,Y
+236,Initialization and training of matrix product state probabilistic models,2025.0,consistent,arxiv,2505.06419,,1408,s rapid convergence to the ground truth.,1408,N
+237,Representation theorems for matrix product states,2025.0,truncated_snippet,openalex,2103.08277,10.1137/24m172010x,1272,s the model’s representational capacity.,186,Y
+238,Saten: Sparse Augmented Tensor Networks for Post-Training Compression of Large Language Models.,2025.0,no_identifier,,,,0,,182,Y
+239,Share Token Tensorized Attention Fusion: Enhancing Audio-Visual Emotion Recognition for Consumer Ele,2025.0,no_identifier,,,,0,,1091,N
+240,Tensorized attention for understanding multi-object relationships,2025.0,no_identifier,,,,0,,186,Y
+241,Towards robust scale-invariant mutual information estimators,2025.0,no_identifier,,,,0,,194,Y
+242,Circuit partitioning using large language models for quantum compilation and simulations,2025.0,consistent,arxiv,2505.07711,,1413,1-shot and few-shot training approaches.,1413,N
+243,Compression of Convolutional Neural Networks Employing Tensor Train and High Dimensional Model Repre,2025.0,no_identifier,,,,0,,181,Y
+244,Efficient Probabilistic Tensor Networks,2025.0,consistent,arxiv,2510.00382,,947,vailable at github.com/marawangamal/ptn.,947,N
+245,Hybrid quantum transformer for language generation,2025.0,consistent,arxiv,2511.10653,,955, large-scale generative language models.,955,N
+246,LLM-based code generation for optimized quantum circuits,2025.0,no_identifier,,,,0,,193,Y
+247,Multilingual machine translation with quantum encoder decoder attention-based convolutional variatio,2025.0,consistent,arxiv,2505.09407,,1271,i corpora for multilingual translations.,1271,N
+248,"Quantum Natural Language Processing: A Comprehensive Survey of Models, Architectures, and Evaluation",2025.0,no_identifier,,,,0,,186,Y
+249,Tensor-Based Compression of Neural Networks,2025.0,no_identifier,,,,0,,188,Y
+250,Efficient Deep Generative Models for Spatial Networks via Spanning Tree Sampler,2025.0,zero_hit,openalex,,10.1145/3774416,0,,186,Y
+251,KARIPAP: Quantum-Inspired Tensor Network Compression of Large Language Models Using Infinite Project,2025.0,consistent,arxiv,2510.21844,,1242,"ent, and quantum-aware AI architectures.",1242,N
+252,Tensor Train Recurrent Network Language Model Prediction,2025.0,zero_hit,openalex,,10.1002/sta4.70116,0,,187,Y
+253,TNSPC: Learning from Partially Observed Data Using Tensor Network Structured Probabilistic Circuits,2025.0,no_identifier,,,,0,,199,Y
+254,Tensor product attention is all you need,2026.0,no_identifier,,,,0,,180,Y
+255,A comprehensive survey of compression algorithms for language models,2026.0,zero_hit,openalex,,10.1145/3819816,0,,186,Y
+256,A comprehensive survey on large language model compression for artificial intelligence applications ,2026.0,no_identifier,,,,0,,171,Y
+257,LM: Mutual Information Scaling Law for Long-Context Language Modeling,2026.0,no_identifier,,,,0,,186,Y
+258,Entanglement detection and quantification through machine learning: A comprehensive review,2026.0,no_identifier,,,10.1007/s13538-025-01947-y,0,,186,Y
+259,Generative Model Predictive Control in Manufacturing Processes: A Review,2026.0,zero_hit,arxiv,2511.17865,,0,,185,Y
+260,Generative modeling with gaussian boson sampling: classically trainable bosonic born machines,2026.0,consistent,arxiv,2603.11195,,1329, for near-term photonic quantum devices.,1329,N
+261,On-device large language models: a survey of model compression and system optimization,2026.0,truncated_snippet,openalex,,10.1007/s10462-026-11538-1,1581, the complete references for Sects. 3–4.,173,Y
+262,Tensorlens: End-to-end transformer analysis via high-order attention tensors,2026.0,no_identifier,,,,0,,1296,N
+263,LeSTD: LLM Compression via Learning-based Sparse Tensor Decomposition,2026.0,no_identifier,,,,0,,177,Y
+264,Plastic tensor networks for interpretable generative modeling,2026.0,no_identifier,,,10.1088/2632-2153/ae3048/meta,0,,190,Y
+265,Information-Theoretic Scaling Laws of Neural Quantum States,2026.0,consistent,arxiv,2603.23468,,1055,equired for its faithful representation.,1055,N
+266,Quantum Circuit Generation via test-time learning with large language models,2026.0,consistent,arxiv,2602.03466,,1128,ng benchmark for test-time optimization.,1128,N
+267,Spectral Born machines: classically trainable quantum generative models for discrete data,2026.0,consistent,arxiv,2607.06675,,1160,"g, even in strongly data-scarce regimes.",1160,N
+268,AI Agents for Variational Quantum Circuit Design,2026.0,consistent,arxiv,2602.19387,,1229,ntermediate-Scale Quantum (NISQ) regime.,1229,N
+269,Compress large language models via collaboration between learning and matrix approximation,2026.0,no_identifier,,,,0,,179,Y
+270,Compressing Transformer Language Models via Matrix Product Operator Decomposition: A Case Study on P,2026.0,consistent,arxiv,2603.28534,,1572,red pruning for transformer compression.,1572,N
+271,Generative AI for quantum circuits and quantum code: A technical review and taxonomy,2026.0,consistent,arxiv,2603.16216,,1020,of quantum error-correcting codes (QEC).,1020,N
+272,Rethinking the Role of Tensor Decompositions in Post-Training LLM Compression,2026.0,consistent,arxiv,2606.03465,,917,://github.com/brain-lab-research/TT-LLM.,917,N
+273,A Practical Tensor-Network Compression Pipeline for Production-Scale Large Language Models,2026.0,consistent,arxiv,2602.01613,,1399, backbones with tiny per-layer adapters.,1399,N
+274,"Area Laws and Tensor Networks for Maximally Mixed Ground States: I. Arad, R. Firanko, R. Jain",2026.0,partial,openalex,,10.1007/s00220-026-05554-z,1681,e and locally-gapped local Hamiltonians.,188,Y
+275,Artificial entanglement in the fine-tuning of large language models,2026.0,consistent,arxiv,2601.06788,,1862,xhibits qualitatively similar behaviors.,1862,N
+276,A general tensor-structured compression scheme for efficient large language models,2026.0,consistent,arxiv,2605.25344,,1427, tolerance to structural simplification.,1427,N
+277,A multi-scale information geometry reveals the structure of mutual information in neural populations,2026.0,consistent,arxiv,2605.06304,,1508, characterising neural population codes.,1508,N
+278,ACCELERATING LARGE LANGUAGE MODEL TRAINING USING HYBRID QUANTUM-CLASSICAL VARIATIONAL AUTOENCODERS W,2026.0,no_identifier,,,,0,,181,Y
+279,An LLM System for Autonomous Variational Quantum Circuit Design,2026.0,consistent,arxiv,2606.13380,,1426,ion workflows across scientific domains.,1426,N
+280,Breaking the Entanglement-Structure Trade-off: Many-Body Localization Protects Emergent Holographic ,2026.0,zero_hit,arxiv,2604.04596,,0,,1695,N
+281,DATT: Dimension-Augmented Tensor-Train Decomposition for Neural Network Compression,2026.0,no_identifier,,,,0,,190,Y
+282,Efficient Generative Modeling with Unitary Matrix Product States Using Riemannian Optimization,2026.0,consistent,arxiv,2603.12026,,1013, efficiency and expressive power of MPS.,1013,N
+283,HVIA: A Hybrid Variational Ising Architecture for Quantum Language Modeling,2026.0,no_identifier,,,,0,,180,Y
+284,Meaning Representations as Variational Quantum Circuits,2026.0,no_identifier,,,,0,,184,Y
+285,Model Checking Matrix Product States Against Linear Chain Logic,2026.0,zero_hit,openalex,,10.1007/978-3-032-32537-2_17,0,,189,Y
+286,On the Approximation Complexity of Matrix Product Operator Born Machines,2026.0,consistent,arxiv,2605.11471,,995, when they become efficiently learnable.,995,N
+287,Quantum Circuit Vision: Cost-Aware Evaluation of Visual AI Agents for Quantum Code Generation,2026.0,zero_hit,arxiv,2607.10057,,0,,1672,N
+288,"Quantum Computing Meets Large Language Models: Insights, Challenges, and Future Directions",2026.0,zero_hit,openalex,,10.36227/techrxiv.177004376.69666864/v1,0,,184,Y
+289,Quantum-inspired tensor networks in machine learning models,2026.0,consistent,arxiv,2604.14287,,952,nd the challenges that must be overcome.,952,N
+290,Quantum2Prompt: Representing Quantum Circuits as Language Prompts for Linear System Solving,2026.0,no_identifier,,,,0,,186,Y
+291,Reduced Matrix Multiplication: Input-Adaptive Matrix-Product Reduction for LLM Inference,2026.0,consistent,arxiv,2608.13426,,1384,ut-adaptive inference-time optimization.,1384,N
+292,Sparse Tensor Attention for Hyperspectral Unmixing,2026.0,no_identifier,,,,0,,189,Y
+293,Stochastic Optimization of Tree Tensor Networks,2026.0,consistent,arxiv,2609.00870,,575,merically stable downstream compression.,575,N
+294,Surviving Resource-constraint Compression: Capability Retention under Tensor-train Decomposition for,2026.0,truncated_snippet,openalex,,10.1007/s11633-026-1653-x,2194,e complementary linguistic capabilities.,182,Y
+295,Tensor Brain: Structured Probabilistic Modeling for Neural Population Activity with Tensor Networks,2026.0,no_identifier,,,,0,,192,Y
+296,Tensor decomposition based lightweight residual fusion for Multimodal sentiment understanding,2026.0,no_identifier,,,10.1007/s10844-026-01039-6,0,,184,Y
+297,"Tensor Methods for Language Models: From Token Representation to Training, Adaptation, Inference, Co",2026.0,consistent,arxiv,2608.30505,,1672,ensor-methods-for-llms}{this https URL}.,1672,N
+298,Tensor-Network Markov-Chain Monte Carlo: Efficient Sampling of Three-Dimensional Spin Glasses,2026.0,zero_hit,openalex,,10.1103/96lr-z7tb,0,,185,Y
+299,Tensortrim: dynamic tensor-train decomposition for efficient neural network compression,2026.0,no_identifier,,,10.1007/s13042-025-02819-2,0,,187,Y
+300,A Born Machine Approach to Controllable Text Generation with Language Models,,no_identifier,,,,0,,176,Y
+301,A Renormalization Framework for the Qualitative Theory of Entangled Systems,,no_identifier,,,,0,,193,Y
+302,Supplemental Material to Tensor Networks for Probabilistic Sequence Modeling,,no_identifier,,,,0,,185,Y
+303,TensorSpike: Tractable Probabilistic Modeling for Neural Spike Trains with Tensor Networks,,no_identifier,,,,0,,181,Y
+304,Variational Algorithms in Quantum Artificial Intelligence,,no_identifier,,,,0,,188,Y
+305,Variational Quantum Circuits for Efficient Transformer Attention,,no_identifier,,,,0,,181,Y
