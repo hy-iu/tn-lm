@@ -1,12 +1,53 @@
 #!/usr/bin/env python3
 """Generate app/library.html: embeds bibliography.csv as JSON with local-PDF mapping."""
 import json, os, re, csv
+import urllib.parse
 
 LIT = "/Users/bjergsen/Documents/GitHub/tn-lm/lit"
 OUT = "/Users/bjergsen/Documents/GitHub/tn-lm/app/library.html"
 
 with open(os.path.join(LIT, "bibliography.csv"), encoding="utf-8") as f:
     bib = list(csv.DictReader(f))
+
+
+HOSTMAP = {
+    "link.aps.org": "APS",
+    "link.springer.com": "Springer",
+    "iopscience.iop.org": "IOP",
+    "dl.acm.org": "ACM",
+    "ieeexplore.ieee.org": "IEEE",
+    "linkinghub.elsevier.com": "Elsevier",
+    "sciencedirect.com": "Elsevier",
+    "epubs.siam.org": "SIAM",
+    "scipost.org": "SciPost",
+    "nature.com": "Nature",
+    "spj.science.org": "AAAS Science",
+    "emerald.com": "Emerald",
+    "frontiersin.org": "Frontiers",
+    "pubs.acs.org": "ACS",
+    "onlinelibrary.wiley.com": "Wiley",
+    "techrxiv.org": "TechRxiv",
+    "direct.mit.edu": "MIT Press",
+    "spiedigitallibrary.org": "SPIE",
+    "repository.hkust.edu.hk": "HKUST Repository",
+}
+
+
+def pub_label(v, src_url=""):
+    """发表版链接的显示名。依次尝试：DOI 实际落地域名、该行 url 列的域名，
+    两者都查平台映射表；再退到 OpenAlex 期刊名；最后退到原始域名（事实，不猜）。"""
+    cands = []
+    for h in ((v.get("published_host") or ""), urllib.parse.urlparse(src_url or "").netloc):
+        h = re.sub(r"^www\.", "", (h or "").lower().strip())
+        if h and h not in ("doi.org", "dx.doi.org") and h not in cands:
+            cands.append(h)
+    for h in cands:
+        if h in HOSTMAP:
+            return HOSTMAP[h]
+    ven = re.sub(r"\s*/.*$", "", (v.get("venue") or "").strip()).strip(" .")
+    if ven:
+        return ven[:28]
+    return cands[0] if cands else "发表版"
 
 
 def nn(x):
@@ -64,8 +105,13 @@ for i, r in enumerate(bib):
     if not full_abs:
         shown_abs = stored_abs
         vk = 0
-        abs_note = ("原表摘要为空，且未能取到权威摘要" if not stored_abs
-                    else "未取到权威摘要（该行既无 arXiv id 也无 DOI），以下为原表内容，未经核验")
+        has_id = bool((v.get("arxiv_id") or "").strip() or (v.get("doi") or "").strip())
+        if not stored_abs:
+            abs_note = "原表摘要为空，且未能取到权威摘要"
+        elif has_id:
+            abs_note = "已定位到该文献，但 arXiv 与 OpenAlex 记录里都没有摘要正文，下方为原表内容，未经核验"
+        else:
+            abs_note = "该行无 arXiv id 也无 DOI，无法定位权威源，下方为原表内容，未经核验"
     else:
         shown_abs = full_abs
         vk = 1
@@ -85,7 +131,7 @@ for i, r in enumerate(bib):
     if v.get("arxiv_abs"):
         links.append(["arXiv 预印本", v["arxiv_abs"]])
     if v.get("published"):
-        links.append(["发表版", v["published"]])
+        links.append([pub_label(v, sv(r.get("url"))), v["published"]])
     if v.get("oa_pdf"):
         links.append(["开放获取 PDF", v["oa_pdf"]])
     if v.get("github"):

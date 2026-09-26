@@ -18,7 +18,9 @@ import json
 import re
 import sys
 import time
+import urllib.error
 import urllib.parse
+import urllib.request
 
 sys.path.insert(0, 'lit/audit')
 from scan_abstracts import collect_arxiv, extract, fetch, norm_arxiv, sq  # noqa: E402
@@ -124,6 +126,37 @@ def find_links(*texts):
     return (gh.group(0).rstrip('.,;)') if gh else ''), hp
 
 
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+_HOSTCACHE = {}
+
+
+def resolve_host(doi_or_url):
+    """取 DOI 实际落地的一级域名，即平台名。不靠记忆猜出版社。"""
+    key = (doi_or_url or '').strip()
+    if not key or key in _HOSTCACHE:
+        return _HOSTCACHE.get(key, '')
+    url = key if key.startswith('http') else 'https://doi.org/' + key
+    host = ''
+    try:
+        op = urllib.request.build_opener(_NoRedirect)
+        resp = op.open(urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'}), timeout=20)
+        host = urllib.parse.urlparse(resp.geturl()).netloc
+        resp.close()
+    except urllib.error.HTTPError as e:
+        if e.code in (301, 302, 303, 307, 308):
+            host = urllib.parse.urlparse(e.headers.get('Location') or '').netloc
+    except Exception:
+        host = ''
+    host = re.sub(r'^www\.', '', host.lower()).strip('.')
+    _HOSTCACHE[key] = host
+    time.sleep(0.12)
+    return host
+
+
 def main():
     rows = list(csv.DictReader(open('lit/bibliography.csv', encoding='utf-8')))
     scan = {int(r['row_no']): r for r in csv.DictReader(open('lit/audit/full304_scan.csv', encoding='utf-8'))}
@@ -169,6 +202,7 @@ def main():
         arx = (a or {}).get('abs_url') or (('https://arxiv.org/abs/' + aid) if aid else '')
         gh, hp = find_links((a or {}).get('comment'), (a or {}).get('abs'),
                             best, (o or {}).get('landing'), (o or {}).get('oa_landing'))
+        pub_host = resolve_host(doi or published) if published else ''
         rec.append({
             'row_no': n,
             'title': re.sub(r'\s+', ' ', r['title'])[:120],
@@ -178,6 +212,7 @@ def main():
             'abs_authority': bsrc,
             'arxiv_abs': arx,
             'published': published,
+            'published_host': pub_host,
             'oa_pdf': oa_pdf,
             'github': gh,
             'homepage': hp,
@@ -189,7 +224,7 @@ def main():
         })
 
     cols = ['row_no', 'title', 'arxiv_id', 'doi', 'verdict', 'abs_authority', 'arxiv_abs',
-            'published', 'oa_pdf', 'github', 'homepage', 'jref', 'venue',
+            'published', 'published_host', 'oa_pdf', 'github', 'homepage', 'jref', 'venue',
             'full_abs_len', 'stored_abs_len', 'full_abstract']
     with open('lit/audit/paper_versions.csv', 'w', newline='', encoding='utf-8') as f:
         w = csv.DictWriter(f, fieldnames=cols)
