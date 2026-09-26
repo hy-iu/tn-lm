@@ -1,51 +1,129 @@
 #!/usr/bin/env python3
 """Generate app/library.html: embeds bibliography.csv as JSON with local-PDF mapping."""
-import json, os, re
-import pandas as pd
+import json, os, re, csv
 
 LIT = "/Users/bjergsen/Documents/GitHub/tn-lm/lit"
 OUT = "/Users/bjergsen/Documents/GitHub/tn-lm/app/library.html"
 
-bib = pd.read_csv(os.path.join(LIT, "bibliography.csv"))
+with open(os.path.join(LIT, "bibliography.csv"), encoding="utf-8") as f:
+    bib = list(csv.DictReader(f))
+
+
+def nn(x):
+    """等价于原 pandas 的 notna：空串/缺失/nan 一律视为无值"""
+    return x is not None and str(x).strip() not in ("", "nan", "NaN", "None")
+
+
+def sv(x):
+    return str(x) if nn(x) else ""
+
+
+def nvi(x, d=0):
+    try:
+        return int(float(x))
+    except (TypeError, ValueError):
+        return d
 
 def safe_name(t):
     return (re.sub(r"[^A-Za-z0-9]+", "_", str(t))[:60].strip("_") or "paper")
 
 def fname(row):
-    yr = int(row["year"]) if pd.notna(row["year"]) else "nd"
-    if isinstance(row.get("arxiv_id"), str) and row["arxiv_id"]:
-        return f"{yr}_arxiv_{row['arxiv_id']}.pdf"
-    return f"{yr}_{safe_name(row['title'])[:50]}.pdf"
+    """返回 lit/papers 下真实存在的 PDF 文件名，都不存在时回退标题命名。
+
+    download.py 实际用标题命名落盘；arxiv 命名只是历史备选，两种都要试，
+    不能依赖 pandas 把 "0808.3773" 猜成 float 才走对分支。
+    """
+    yr = nvi(row["year"], "nd") if nn(row.get("year")) else "nd"
+    cands = [f"{yr}_{safe_name(row['title'])[:50]}.pdf"]
+    aid = row.get("arxiv_id")
+    if isinstance(aid, str) and aid.strip():
+        cands.append(f"{yr}_arxiv_{aid.strip()}.pdf")
+    for f in cands:
+        if os.path.exists(os.path.join(LIT, "papers", f)):
+            return f
+    return cands[0]
 
 records = []
-for _, r in bib.iterrows():
+# 权威摘要与版本链接层（由 lit/audit/build_versions.py 生成，不改 bibliography.csv）
+VER = {}
+vp = os.path.join(LIT, "audit", "paper_versions.csv")
+if os.path.exists(vp):
+    with open(vp, encoding="utf-8") as f:
+        for v in csv.DictReader(f):
+            VER[int(v["row_no"])] = v
+else:
+    print("提示：缺少 lit/audit/paper_versions.csv，页面将只显示原表摘要且无版本链接")
+
+for i, r in enumerate(bib):
+    row_no = i + 2
+    v = VER.get(row_no, {})
+    stored_abs = sv(r.get("abstract")).strip()
+    full_abs = (v.get("full_abstract") or "").strip()
+    verdict = v.get("verdict", "")
+    srcname = {"arxiv": "arXiv ", "openalex": "OpenAlex 发表版"}.get(v.get("abs_authority"), "权威源 ")
+    if not full_abs:
+        shown_abs = stored_abs
+        vk = 0
+        abs_note = ("原表摘要为空，且未能取到权威摘要" if not stored_abs
+                    else "未取到权威摘要（该行既无 arXiv id 也无 DOI），以下为原表内容，未经核验")
+    else:
+        shown_abs = full_abs
+        vk = 1
+        if verdict == "consistent":
+            abs_note = "与 %s摘要逐字一致" % srcname
+        elif verdict == "truncated_snippet":
+            abs_note = "%s完整摘要（原表为 %d 字符截断 snippet）" % (srcname, len(stored_abs))
+        elif verdict in ("zero_hit", "partial"):
+            if len(stored_abs) > len(full_abs):
+                rel = "原表还多出 %d 字符，疑为摘要混入正文" % (len(stored_abs) - len(full_abs))
+            else:
+                rel = "已用权威摘要替换"
+            abs_note = "%s摘要（原表 %d 字符与该摘要不匹配，%s；建议人工复核）" % (srcname, len(stored_abs), rel)
+        else:
+            abs_note = "%s摘要（未做过逐字一致性核验）" % srcname
+    links = []
+    if v.get("arxiv_abs"):
+        links.append(["arXiv 预印本", v["arxiv_abs"]])
+    if v.get("published"):
+        links.append(["发表版", v["published"]])
+    if v.get("oa_pdf"):
+        links.append(["开放获取 PDF", v["oa_pdf"]])
+    if v.get("github"):
+        links.append(["GitHub", v["github"]])
+    if v.get("homepage"):
+        links.append(["项目主页", v["homepage"]])
     f = fname(r)
     local = os.path.join(LIT, "papers", f)
     pdf = f"../lit/papers/{f}" if os.path.exists(local) else None
-    authors = str(r["authors"]) if pd.notna(r["authors"]) else ""
+    authors = sv(r["authors"])
     if "·" in authors:
         authors = authors.split("·")[0].strip()
-    jr = str(r["journal_ref"]).strip() if pd.notna(r.get("journal_ref")) else ""
+    jr = sv(r.get("journal_ref")).strip()
     if jr:
         venue = jr
     else:
-        pub = str(r["publication_info"]) if pd.notna(r["publication_info"]) else ""
+        pub = sv(r["publication_info"])
         parts = [p.strip() for p in pub.split(" - ")]
         venue = parts[1] if len(parts) >= 2 else pub
     records.append({
         "t": str(r["title"]),
         "a": authors,
-        "y": int(r["year"]) if pd.notna(r["year"]) else None,
-        "c": int(r["citations"]) if pd.notna(r["citations"]) else 0,
+        "y": nvi(r["year"], None) if nn(r.get("year")) else None,
+        "c": nvi(r["citations"], 0),
         "v": venue,
-        "abs": str(r["abstract"]) if pd.notna(r["abstract"]) else "",
-        "u": str(r["url"]) if pd.notna(r["url"]) else "",
-        "cl": str(r["clusters"]) if pd.notna(r["clusters"]) else "",
+        "abs": shown_abs,
+        "absn": abs_note,
+        "vk": vk,
+        "lk": links,
+        "u": sv(r["url"]),
+        "cl": sv(r["clusters"]),
         "pdf": pdf,
     })
 
 data_js = json.dumps(records, ensure_ascii=False)
 n_pdf = sum(1 for r in records if r["pdf"])
+n_vk = sum(1 for r in records if r["vk"])
+n_unv = len(records) - n_vk
 tot_cit = sum(r["c"] for r in records)
 years = [r["y"] for r in records if r["y"]]
 yspan = f"{min(years)}–{max(years)}"
@@ -132,6 +210,13 @@ select,.yr{font-family:var(--mono);font-size:12px;padding:7px 10px;border:1px so
 .badge.pdf a{color:var(--accent);border:none}
 .grow .abs{display:none;margin-top:10px;font-size:13.5px;line-height:1.8;background:var(--card);border-left:3px solid var(--tint);padding:12px 16px;color:var(--ink)}
 .grow.open .abs{display:block}
+.ver{display:none;flex-wrap:wrap;gap:6px;margin-top:10px}
+.grow.open .ver{display:flex}
+.ver a{font-family:var(--mono);font-size:10.5px;padding:3px 9px;border:1px solid var(--tint);border-radius:2px;color:var(--accent);text-decoration:none;white-space:nowrap}
+.ver a:hover{background:var(--tint);color:var(--ink)}
+.ver a.gh{border-color:#4a7c59;color:#4a7c59}
+.absnote{font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:.04em;margin-top:8px;padding-top:8px;border-top:1px dashed var(--tint)}
+.absnote.fix{color:var(--accent)}
 /* sortable flat table */
 table.flat{width:100%;border-collapse:collapse;margin-top:8px;font-size:14px}
 table.flat th{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px 8px;border-bottom:2px solid var(--ink);cursor:pointer;user-select:none;white-space:nowrap}
@@ -165,7 +250,8 @@ footer{margin-top:70px;border-top:2px solid var(--ink);padding:26px 0 60px;font-
 
 <section id="overview">
   <div class="stats">
-    <div class="stat"><div class="num">__NPAPERS__</div><div class="lbl">去重论文</div></div>
+    <div class="stat"><div class="num">__NPAPERS__</div><div class="lbl">论文条目（含 __NUNV__ 条摘要未核验）</div></div>
+    <div class="stat"><div class="num">__NVK__</div><div class="lbl">已换权威完整摘要</div></div>
     <div class="stat"><div class="num">__NPDF__</div><div class="lbl">已下载全文</div></div>
     <div class="stat"><div class="num">__TOTCIT__</div><div class="lbl">被引合计</div></div>
     <div class="stat"><div class="num" style="font-size:20px;padding-top:8px">__YSPAN__</div><div class="lbl">年份跨度</div></div>
@@ -228,7 +314,11 @@ function rowEl(p,i){
  const meta=document.createElement("div");meta.className="rmeta";
  meta.textContent=(p.a?p.a+" · ":"")+(p.v||"")+(p.cl?" ｜ 命中："+p.cl:"");
  d.appendChild(meta);
+ const ver=document.createElement("div");ver.className="ver";
+ (p.lk||[]).forEach(([lb,url])=>{const a=document.createElement("a");a.href=url;a.target="_blank";a.rel="noopener";a.textContent=lb;if(lb==="GitHub")a.className="gh";ver.appendChild(a)});
+ if((p.lk||[]).length)d.appendChild(ver);
  const abs=document.createElement("div");abs.className="abs";abs.textContent=p.abs||"（无摘要）";
+ if(p.absn){const n=document.createElement("div");n.className="absnote"+(/不匹配|混入正文|未经核验|为空/.test(p.absn)?" fix":"");n.textContent=p.absn;abs.appendChild(n)}
  d.appendChild(abs);
  if(S.openAbs.has(i))d.classList.add("open");
  d.addEventListener("click",e=>{if(e.target.tagName==="A")return;d.classList.toggle("open");if(d.classList.contains("open"))S.openAbs.add(i);else S.openAbs.delete(i)});
@@ -323,6 +413,8 @@ document.querySelectorAll('section[id]').forEach(s=>spy.observe(s));})();
 html = (TEMPLATE
         .replace("__DATA__", data_js)
         .replace("__NPAPERS__", str(len(records)))
+        .replace("__NVK__", str(n_vk))
+        .replace("__NUNV__", str(n_unv))
         .replace("__NPDF__", str(n_pdf))
         .replace("__TOTCIT__", str(tot_cit))
         .replace("__YSPAN__", yspan))
