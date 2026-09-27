@@ -139,3 +139,59 @@ MPS 模型相对常规神经网络有几项差异化能力。**可解释性**：
 ## 8. 结论
 
 MPS 张量网络为深度学习提供了一套兼具**结构先验、可控近似与物理可解释性**的数学工具。对大模型而言，其最现实的价值已被 CompactifAI、Saten、Minima 等工作证实：在关联空间而非神经元计数上做压缩，配合敏感度画像、修复训练与定制内核，可在 7B–32B 尺度上取得体积减半乃至更激进的压缩而精度损失控制在 1–3 个百分点，并已产生数亿美元级的商业转化。与此同时，2026 年的批判性复评提醒我们：免训练张量分解并非免费午餐，现代 LLM 权重的重尾与高秩异常特征构成根本性障碍，张量方法的合理定位是**混合压缩工具箱中的结构化组件**而非银弹。对研究者而言，多模态大模型的张量化、高维张量网络结构（TTN/PEPS/MERA）对注意力的适配、训练态原生张量化 scaling 行为，以及 MPS 生成模型的约束采样能力在可控生成中的利用，是未来 2–3 年最值得投入的方向。
+
+---
+
+## 9. 经典教程网站、权威专著与前沿知识库导引（截至2026）
+
+为便于理论推导、算法复现与大模型工程实操，本节系统整理国际物理学界与计算科学界公认的顶级教程网站、权威综述、经典专著与开源知识库生态（同步收录于 Web 交互界面的 [工具与知识库页](app/toolboxes.html#portals)）。
+
+### 9.1 核心交互式学习平台与教程网站
+
+| 平台 / 网站 | 核心定位与特色 | 配套语言 / 工具 | 资源链接 |
+| :--- | :--- | :--- | :--- |
+| **Tensors.net** | 由 Glen Evenbly 维护。被学界公认为最经典、最直观的手把手实操教程，从零推导并实现 MPS、DMRG、TEBD、TRG、CTMRG、MERA 及 2D PEPS，包含丰富交互图解。 | Python (NumPy) / MATLAB / Julia | [tensors.net](https://www.tensors.net) |
+| **TensorNetwork.org** | 张量网络理论、算法与软件的社区综合枢纽（Miles Stoudenmire、Glen Evenbly、Frank Pollmann 等联合发起）。规范化 Penrose 图解记号（Graphical Notation），涵盖各类拟态数学定义与社区资源库。 | 概念图解 / 算法规范 / 综述索引 | [tensornetwork.org](https://tensornetwork.org) |
+| **TensorTutorials (UGent)** | 比利时根特大学量子物理组（Frank Verstraete、Jutho Haegeman 等，MPS/PEPS/VUMPS 算法源头）。深入讲解热力学极限基态算法（VUMPS）、切空间方法（Tangent Space）与 2D PEPS 模拟。 | Julia (TensorKit.jl / MPSKit.jl) | [tensor-networks.github.io](https://tensor-networks.github.io) |
+| **PennyLane Demos & TN** | Xanadu 维护的交互式开源教程库。系统讲解张量网络与量子线路（Quantum Circuits）的对偶映射、量子机器学习（QML）中 MPO/MPS 参数化及图张量网络收缩。 | Python (PennyLane / PyTorch / JAX) | [pennylane.ai/qml/demonstrations](https://pennylane.ai/qml/demonstrations/) |
+| **ITensor Docs & Tutorials** | Flatiron 研究所维护的现代顶级多体计算库官方文档。兼具严格的代数图解教程与现代高性能编程范式，原生覆盖 Abelian / 非 Abelian 量子数守恒与高效自适应 Lanczos DMRG。 | Julia (ITensors.jl) / C++ | [itensor.github.io](https://itensor.github.io/ITensors.jl/stable/) |
+
+### 9.2 权威理论与方法综述
+
+1. **Cirac, Pérez-García, Schuch, Verstraete (Rev. Mod. Phys. 2021)**
+   - *Matrix product states and projected entangled pair states: Concepts, symmetries, theorems* ([arXiv:2011.12127](https://arxiv.org/abs/2011.12127))
+   - **学术定位**：张量网络理论奠基团队联合撰写的 80+ 页公理化现代“圣经”。严格证明了 MPS 与 PEPS 的基本定理、规范形存在性、对称性分类（整体与规范局域对称性）以及拓扑序（Topological Order）表征，是理解张量态数学本质的必读文献。
+2. **Román Orús (Nature Reviews Physics 2019)**
+   - *Tensor networks for complex quantum systems* ([arXiv:1812.04011](https://arxiv.org/abs/1812.04011))
+   - **学术定位**：高引用全景导引。图文并茂地串联起 1D (MPS)、2D (PEPS)、临界标度 (MERA)、耗散开放体系以及张量网络在机器学习（TN in ML）与全息量子引力（AdS/CFT）中的早期渗透。
+3. **Shi-Ju Ran (冉仕举) 等 (Springer LNP 2020)**
+   - *Tensor Network Contractions: Methods and Applications to Quantum Many-Body Systems* ([arXiv:1708.09213](https://arxiv.org/abs/1708.09213))
+   - **学术定位**：专注“如何把网络变成高效数值收缩算法”。详述正交规范化、实空间 RG、粗粒化与 CTMRG 等数值算法的工程落地，对动手写代码极为实用。
+4. **Tarasov, Ahmadi-Asl, de Almeida, Cichocki (arXiv:2608.30505, 2026)**
+   - *Tensor Methods for Language Models: From Token Representation to Training, Adaptation, Compression, Inference, and Interpretability* ([arXiv:2608.30505](https://arxiv.org/abs/2608.30505))
+   - **学术定位**：截至 2026 年最新、最系统总结“张量方法用于语言大模型”的权威综述，涵盖 Token 嵌入、注意力与 FFN 的矩阵乘积算符重写、TeRA 等高秩适配、全生命周期压缩与量子信息可解释性。
+5. **Valverde et al. (arXiv:2604.14287, 2026)**
+   - *Quantum-inspired tensor networks in machine learning models* ([arXiv:2604.14287](https://arxiv.org/abs/2604.14287))
+   - **学术定位**：2026 年量子启发张量网络机器学习全景。涵盖监督学习、Born 机无监督生成、模型压缩，重点阐明了利用纠缠熵/量子互信息实现可解释性与隐私保护的数学优势。
+6. **Wang, Pan, Xu, Li, Yang, Mandic, Cichocki (arXiv:2302.09019, 2023/2026)**
+   - *Tensor Networks Meet Neural Networks: A Survey and Future Perspectives* ([arXiv:2302.09019](https://arxiv.org/abs/2302.09019))
+   - **学术定位**：系统梳理张量化神经网络各层设计（Conv、RNN、Transformer、LLM）以及软硬件协同加速方案的代表性综述。
+
+### 9.3 经典专著与现代高阶讲义
+
+1. **冉仕举、乐伟、彭程 等《张量网络态方法与应用》（科学出版社，2020）**
+   - **特点**：国内第一部系统讲解张量网络态的中文权威专著。从 SVD/MPS 入门，逐步进阶到 PEPS、MERA、热态张量网络，并配有详细 Python 算法实现思路与例程，中文学习首选。
+2. **Jacob Biamonte《Tensor Networks in a Nutshell》（2020 / arXiv:1912.10049）**
+   - **特点**：以 Penrose 简明图形语法为核心，串联起量子线路、张量收缩复杂性与凝聚态模型，风格生动精炼。
+3. **Les Houches Lecture Notes on Tensor Networks (2025/2026 / arXiv:2512.24390)**
+   - **特点**：法国莱苏什理论物理暑期学校最新高阶讲义集。汇集国际一流学者讲授的现代高阶数值技巧（纠缠哈密顿量、连续张量网络与拓扑相）。
+4. **Tensor Cookbook: Mastering Tensors through Diagrams (2026 / arXiv:2605.16610)**
+   - **特点**：2026 年最新发布的图解实战手册，专注于脱离繁杂指标下标记号的图解代数推导，提供大量工业界与学术界常见的复杂网络收缩优化模板。
+
+### 9.4 核心开源工具生态快速查阅
+
+针对大模型与高维张量网络收缩，结合本项目的工具库，形成以下技术栈建议：
+- **任意图网络收缩与线路模拟**：`quimb` + `cotengra`（支持超图划分、搜索近最优收缩路径，支撑谷歌悬铃木模拟）。
+- **物理模拟与凝聚态前沿**：`ITensors.jl`（Julia，多重对称性守恒与极速 Lanczos DMRG）与 `TeNPy`（Python，成熟的 1D/2D 多体算法）。
+- **通用张量代数与机器学习**：`TensorLy`（支持 PyTorch/JAX 后端，专注 CP/Tucker/TT 分解）。
+

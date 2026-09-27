@@ -38,15 +38,24 @@ H3_ZH = {
     "Quantum and Tensor-Network Simulation": "量子与 TN 模拟",
 }
 
-CAT_ORDER = ["basic", "layers", "quantum"]
+CAT_ORDER = ["basic", "layers", "quantum", "engine", "einsum"]
 CAT_NAME = {"basic": "基础张量运算与分解",
             "layers": "深度模型层实现",
-            "quantum": "张量网络与量子模拟"}
+            "quantum": "张量网络与量子模拟",
+            "engine": "通用张量网络引擎（清单外补充）",
+            "einsum": "广义 einsum 与收缩路径引擎"}
 CAT_DESC = {
     "basic": "张量代数、分解算法（CP / Tucker / TT / t-SVD）与后端抽象，本身不提供神经网络层。",
     "layers": "把张量分解封装成可训练的神经网络层，可直接嵌进 PyTorch / TensorFlow 模型。",
     "quantum": "任意几何张量网络的构造、收缩与量子线路模拟，是多体物理与 QNLP 的底座。",
+    "engine": "两份清单没有收录、但这个方向绕不开的通用引擎：凝聚态 DMRG/TDVP、对称扇区、"
+              "GPU 收缩与 2D/动力学求解器。选入理由逐条写在 audit/toolbox_extra.csv，"
+              "star、许可证、最后推送与归档状态仍由 GitHub 接口取得。",
+    "einsum": "不叫自己「张量网络库」的收缩引擎：einsum 路径优化、命名轴接口与编译式收缩。"
+              "本页把 cotengra 归在量子/TN，这一组是它的同族与前置基线。",
 }
+EXTRA_CSV = "toolbox_extra.csv"
+EXTRA_H3 = "清单外补充"
 
 # llms 表叫 "Tensor Toolbox for MATLAB"（指向 gitlab 官方仓库），tnn 表叫 "Tensor Toolbox"
 # （指向 tensortoolbox.org 官方站）：同一个 Sandia 产品的两个入口，应合并
@@ -212,8 +221,53 @@ def load_tools(links):
         }
         out.append(rec)
 
-    out.sort(key=lambda r: (CAT_ORDER.index(r["cat"]), -(r["st"] or 0), r["n"].lower()))
+    out.sort(key=sort_key)
     return out, hw, cases
+
+
+def sort_key(r):
+    return (CAT_ORDER.index(r["cat"]), -(r["st"] or 0), r["n"].lower())
+
+
+def load_extras(links):
+    """Toolboxes that the two lists never mentioned, selected in audit/toolbox_extra.csv.
+
+    Only 'which repo, and why' is hand-written here; the name, star count, license,
+    last push and archived flag all come from the same cached GitHub records as the
+    rest of the page, so a missing API record drops the entry rather than guessing.
+    """
+    path = os.path.join(AUD, EXTRA_CSV)
+    if not os.path.exists(path):
+        return []
+    out = []
+    for r in csv.DictReader(open(path, encoding="utf-8")):
+        repo = (r["repo"] or "").strip()
+        if not repo:
+            continue
+        g = rec_for(links, repo.lower())
+        if g.get("status") != 200 or not g.get("stars"):
+            print("WARN 清单外条目 %s 没有可用的 GitHub 记录（status=%s），跳过"
+                  % (repo, g.get("status")))
+            continue
+        full = g.get("full_name") or repo
+        name = (r.get("display") or "").strip() or full.split("/")[-1]
+        gd = (g.get("description") or "").strip()
+        lic = g.get("license")
+        rec = {
+            "n": name, "alt": [], "cat": r["group"].strip(),
+            "gh": full, "ghl": full.lower(),
+            "u": [["GitHub", g.get("html_url") or "https://github.com/" + full]],
+            "cap": [["仓库自述", gd]] if gd else [],
+            "fmt": [], "be": [g["language"]] if g.get("language") else [],
+            "lay": "", "st": g.get("stars"),
+            "lic": "" if lic in LIC_BLANK else lic,
+            "pu": (g.get("pushed_at") or "")[:10], "ar": bool(g.get("archived")),
+            "ok": True, "sr": [], "h3": [EXTRA_H3], "co": [],
+            "tier": (r.get("tier") or "").strip(),
+            "why": (r.get("why") or "").strip(),
+        }
+        out.append(rec)
+    return out
 
 
 def load_corpus():
@@ -252,6 +306,9 @@ def main():
     links = load_links()
     meta = json.load(open(os.path.join(AUD, "toolbox_meta.json"), encoding="utf-8"))
     tools, hw, cases = load_tools(links)
+    n_list = len(tools)
+    tools += load_extras(links)
+    tools.sort(key=sort_key)
     corpus = load_corpus()
 
     listed = {t["ghl"] for t in tools if t["ghl"]}
@@ -291,6 +348,9 @@ def emit(tools, hw, cases, corp_rows, meta):
     gloss = meta["llms"].get("glossary", [])
     n_tools = len(tools)
     n_both = sum(1 for t in tools if len(t["sr"]) == 2)
+    n_ex = sum(1 for t in tools if t.get("tier"))
+    n_eng = sum(1 for t in tools if t["cat"] == "engine")
+    n_ein = sum(1 for t in tools if t["cat"] == "einsum")
     n_stars = sum(t["st"] or 0 for t in tools)
     n_overlap = sum(1 for t in tools if t["co"])
     n_corp_papers = sum(len(c["p"]) for c in corp_rows)
@@ -336,11 +396,15 @@ def emit(tools, hw, cases, corp_rows, meta):
         for tag, m in meta.items())
 
     payload = {"tools": tools, "cat": CAT_ORDER, "catName": CAT_NAME,
-               "catDesc": CAT_DESC, "srcShort": SRC_SHORT}
+               "catDesc": CAT_DESC, "srcShort": SRC_SHORT, "extraCsv": EXTRA_CSV}
     html = (TEMPLATE
             .replace("__DATA__", js(payload))
             .replace("__NT__", str(n_tools))
             .replace("__NBOTH__", str(n_both))
+            .replace("__NEX__", str(n_ex))
+            .replace("__NENG__", str(n_eng))
+            .replace("__NEIN__", str(n_ein))
+            .replace("__NLIST__", str(n_tools - n_ex))
             .replace("__NSTAR__", "{:,}".format(n_stars))
             .replace("__NOVER__", str(n_overlap))
             .replace("__NCORP__", str(len(corp_rows)))
@@ -498,6 +562,7 @@ footer{margin-top:70px;border-top:2px solid var(--ink);padding:26px 0 60px;font-
   <div class="toc">
     <a href="#sources">来源</a>
     <a href="#tools">工具</a>
+    <a href="#portals">教程/知识库</a>
     <a href="#formats">格式</a>
     <a href="#hardware">硬件</a>
     <a href="#corpus">本库代码</a>
@@ -507,14 +572,14 @@ footer{margin-top:70px;border-top:2px solid var(--ink);padding:26px 0 60px;font-
 <main><div class="wrap">
 <header>
   <h1>工具<em>库</em></h1>
-  <div class="mast-meta"><span>Vol. 03 — 开源工具 __NT__ 个</span><span>两份社区清单交叉合并</span><span><a href="library.html">论文库 →</a></span></div>
+  <div class="mast-meta"><span>Vol. 03 — 开源工具 __NT__ 个</span><span>两份社区清单 __NLIST__ 个 · 清单外补充 __NEX__ 个</span><span><a href="library.html">论文库 →</a></span></div>
 </header>
 
 <section id="sources">
   <div class="sec-label">Provenance</div>
   <h2>数据来源与核验方式</h2>
   <div class="stats">
-    <div class="stat"><div class="num">__NT__</div><div class="lbl">工具（两表去重合并）</div></div>
+    <div class="stat"><div class="num">__NT__</div><div class="lbl">工具（清单内 __NLIST__ + 清单外 __NEX__）</div></div>
     <div class="stat"><div class="num">__NBOTH__</div><div class="lbl">两份清单共同收录</div></div>
     <div class="stat"><div class="num">__NSTAR__</div><div class="lbl">GitHub star 合计</div></div>
     <div class="stat"><div class="num">__NOVER__</div><div class="lbl">与本库论文代码重合</div></div>
@@ -524,10 +589,11 @@ footer{margin-top:70px;border-top:2px solid var(--ink);padding:26px 0 60px;font-
   <div class="srcs">__SRC_CARDS__</div>
   <details class="note" id="method">
     <summary>合并规则与核验方式 · 点击展开</summary>
-    <p>张量分解 / 张量网络方向可直接上手的开源实现。条目取自两份社区维护的清单，但数字不是转抄的：star 数、许可证、最后推送时间与归档状态逐个向 GitHub 请求取得，能力描述同时给出清单原文与仓库自述，两者不一致时并列呈现而不替读者裁决。</p>
+    <p>张量分解 / 张量网络方向可直接上手的开源实现。条目取自两份社区维护的清单，另有 __NEX__ 个是清单外补充，但数字不是转抄的：star 数、许可证、最后推送时间与归档状态逐个向 GitHub 请求取得，能力描述同时给出清单原文与仓库自述，两者不一致时并列呈现而不替读者裁决。</p>
     <p><b>合并规则：</b>两份清单的 Software / Toolboxes 小节按工具名合并；同名但指向不同仓库的<b>不</b>合并 —— TenDeC++ 就是这种情况，两份清单各指一个不同的 C++ 项目，页面上用 owner 消歧，能力描述也各自独立，不互相借用。</p>
     <p><b>核验：</b>star / 许可证 / 最后推送 / 归档状态取自 GitHub REST 接口；配额耗尽时退回抓仓库页面，此时许可证一栏留空而不是猜一个。__NNOGH__ 个条目没有 GitHub 仓库（只有 GitLab 或官网），按 HTTP 可达性判定。</p>
     <p><b>分类：</b>默认由源表的章节结构与「NN layers」列推出；quimb、cotengra、TorchMPS 三条推不准，在 <span style="font-family:var(--mono)">lit/gen_toolboxes.py</span> 的 CAT_OVERRIDE 里手工指定并写了理由。</p>
+    <p><b>清单外补充（__NEX__）：</b>两份清单的 Software / Toolboxes 表只覆盖「张量网络 × 神经网络」这一侧，凝聚态谱系的通用引擎与收缩路径优化的前置基线都不在其中——例如 TeNPy 与 cuQuantum 在两份清单的 README 里出现 0 次。补充条目按 GitHub 主题检索（<span style="font-family:var(--mono)">tensor-networks</span> / <span style="font-family:var(--mono)">tensor-decomposition</span> / <span style="font-family:var(--mono)">einsum</span> 等）取 star 排序的候选，再由人挑：哪一条属于哪个分类、为什么加、属于「必加 / 次一级 / 可选」哪一级，全部逐条写在 <span style="font-family:var(--mono)">lit/audit/toolbox_extra.csv</span> 里，卡片展开可见。级别是主观取舍，不是质量评测；star 与推送时间由 <span style="font-family:var(--mono)">lit/audit/fetch_extra.py</span> 走同一份 GitHub 接口缓存取得，取不到记录的条目直接跳过而不补写。</p>
     <p><b>不一致：</b>清单描述与仓库自述冲突时两条都留着，不替读者裁决。例如 TeD-Q 被清单描述为「可微分量子机器学习与 TN 模拟」，而仓库自述说它是 TED-Q <i>数据集</i>；google/TensorNetwork 已被 GitHub 标记为归档（只读），页面上打了标记而不是照抄清单的现在时描述。</p>
   </details>
 </section>
@@ -541,6 +607,8 @@ footer{margin-top:70px;border-top:2px solid var(--ink);padding:26px 0 60px;font-
     <button class="chip" data-g="basic">基础运算</button>
     <button class="chip" data-g="layers">模型层</button>
     <button class="chip" data-g="quantum">量子/TN</button>
+    <button class="chip" data-g="engine" title="两份清单没收但绕不开的通用引擎">清单外引擎 __NENG__</button>
+    <button class="chip" data-g="einsum" title="广义 einsum 与收缩路径引擎">einsum __NEIN__</button>
     <button class="chip" data-g="both" title="只看在两份清单里都出现的">双源</button>
     <button class="chip" data-g="live" title="只看未归档且 2025 年后有推送的">在维护</button>
     <select id="sortKey">
@@ -552,7 +620,124 @@ footer{margin-top:70px;border-top:2px solid var(--ink);padding:26px 0 60px;font-
     <span id="count"></span>
   </div>
   <div id="list"></div>
-  <p class="note" style="margin-top:18px">点开任意一行可看到：两份清单各自的原文描述、仓库自述、支持的分解格式与后端、源清单把它归在哪几节，以及本站论文库里链接到该仓库的论文。</p>
+  <p class="note" style="margin-top:18px">点开任意一行可看到：两份清单各自的原文描述、仓库自述、支持的分解格式与后端、源清单把它归在哪几节，以及本站论文库里链接到该仓库的论文。清单外的 __NEX__ 条还会给出选入级别（必加 / 次一级 / 可选）与一句话理由。</p>
+</section>
+
+<section id="portals">
+  <div class="sec-label">Learning &amp; Knowledge Bases</div>
+  <h2>教程网站、权威专著与前沿知识库</h2>
+  <p style="font-size:14px;color:var(--muted);line-height:1.8">系统收录国际物理与计算科学界公认的顶级张量网络交互学习网站、里程碑理论综述（涵盖公理化定理至 2026 年大模型前沿）以及权威专著与最新讲义，供理论推导与工程实战查阅。</p>
+
+  <h3>核心交互式教程网站（5）</h3>
+  <table class="plain">
+    <thead><tr><th>平台 / 网站</th><th>特色定位与核心内容</th><th>支持语言 / 体系</th><th>链接</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="tt"><b><a href="https://www.tensors.net" target="_blank" rel="noopener">Tensors.net</a></b></td>
+        <td>由 Glen Evenbly 创建。被学界公认为最经典、最直观的手把手实操教程，从零推导并实现 MPS、DMRG、TEBD、TRG、CTMRG、MERA 及 2D PEPS，包含丰富交互图解。</td>
+        <td class="term">Python (NumPy) / MATLAB / Julia</td>
+        <td class="num"><a href="https://www.tensors.net" target="_blank" rel="noopener">tensors.net</a></td>
+      </tr>
+      <tr>
+        <td class="tt"><b><a href="https://tensornetwork.org" target="_blank" rel="noopener">TensorNetwork.org</a></b></td>
+        <td>张量网络理论、算法与软件的社区核心枢纽（Miles Stoudenmire、Glen Evenbly、Frank Pollmann 等维护）。规范化 Penrose 图解记号（Graphical Notation），涵盖各类拟态数学定义与社区资源库。</td>
+        <td class="term">概念图解 / 算法规范 / 综述索引</td>
+        <td class="num"><a href="https://tensornetwork.org" target="_blank" rel="noopener">tensornetwork.org</a></td>
+      </tr>
+      <tr>
+        <td class="tt"><b><a href="https://tensor-networks.github.io" target="_blank" rel="noopener">TensorTutorials (UGent)</a></b></td>
+        <td>比利时根特大学量子物理组（Frank Verstraete、Jutho Haegeman 等，MPS/PEPS/VUMPS 算法源头）。深入讲解热力学极限基态算法（VUMPS）、切空间方法（Tangent Space）与 2D PEPS 模拟。</td>
+        <td class="term">Julia (TensorKit.jl / MPSKit.jl)</td>
+        <td class="num"><a href="https://tensor-networks.github.io" target="_blank" rel="noopener">github.io</a></td>
+      </tr>
+      <tr>
+        <td class="tt"><b><a href="https://pennylane.ai/qml/demonstrations/" target="_blank" rel="noopener">PennyLane Demos &amp; TN</a></b></td>
+        <td>Xanadu 维护的量子计算与机器学习交互教程。系统讲解张量网络与量子线路（Quantum Circuits）的对偶映射、量子机器学习中 MPO/MPS 参数化及图张量网络收缩。</td>
+        <td class="term">Python (PennyLane / PyTorch / JAX)</td>
+        <td class="num"><a href="https://pennylane.ai/qml/demonstrations/" target="_blank" rel="noopener">pennylane.ai</a></td>
+      </tr>
+      <tr>
+        <td class="tt"><b><a href="https://itensor.github.io/ITensors.jl/stable/" target="_blank" rel="noopener">ITensor Docs &amp; Tutorials</a></b></td>
+        <td>Flatiron 研究所维护的现代顶级多体计算库官方文档。兼具严格的代数图解教程与现代高性能编程范式，原生覆盖 Abelian / 非 Abelian 量子数守恒与高效自适应 Lanczos DMRG。</td>
+        <td class="term">Julia (ITensors.jl) / C++</td>
+        <td class="num"><a href="https://itensor.github.io/ITensors.jl/stable/" target="_blank" rel="noopener">itensor.github.io</a></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>权威理论与方法综述（6）</h3>
+  <table class="plain">
+    <thead><tr><th>综述文献</th><th>学术定位与主要贡献</th><th>年份 / 出处</th><th>标识与链接</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="tt"><b>Matrix product states and projected entangled pair states: Concepts, symmetries, theorems</b><br><span style="font-size:12px;color:var(--muted)">J. I. Cirac, D. Pérez-García, N. Schuch, F. Verstraete</span></td>
+        <td>张量网络领域的公理化现代“圣经”（80+ 页）。严格奠定了 MPS 与 PEPS 的规范形定理、基本定理、整体与规范对称性分类及拓扑序刻画。</td>
+        <td class="num">2021<br>Rev. Mod. Phys.</td>
+        <td class="num"><a href="https://arxiv.org/abs/2011.12127" target="_blank" rel="noopener">arXiv:2011.12127</a></td>
+      </tr>
+      <tr>
+        <td class="tt"><b>Tensor networks for complex quantum systems</b><br><span style="font-size:12px;color:var(--muted)">Román Orús</span></td>
+        <td>高引用全景导引。图文并茂梳理 1D (MPS)、2D (PEPS)、临界态 (MERA)、开放系统以及张量网络在机器学习（TN in ML）与全息对偶（AdS/CFT）中的应用。</td>
+        <td class="num">2019<br>Nat. Rev. Phys.</td>
+        <td class="num"><a href="https://arxiv.org/abs/1812.04011" target="_blank" rel="noopener">arXiv:1812.04011</a></td>
+      </tr>
+      <tr>
+        <td class="tt"><b>Tensor Network Contractions: Methods and Applications to Quantum Many-Body Systems</b><br><span style="font-size:12px;color:var(--muted)">S.-J. Ran, E. Tirrito, C. Peng, X. Chen, L. Tagliacozzo, G. Su, M. Lewenstein</span></td>
+        <td>聚焦“如何把网络变成高效数值收缩算法”。详述正交规范化、实空间 RG、粗粒化与 CTMRG 等数值算法的工程落地，对动手写代码极为实用。</td>
+        <td class="num">2020<br>Springer LNP</td>
+        <td class="num"><a href="https://arxiv.org/abs/1708.09213" target="_blank" rel="noopener">arXiv:1708.09213</a></td>
+      </tr>
+      <tr>
+        <td class="tt"><b>Tensor Methods for Language Models: From Token Representation to Training, Adaptation, Compression, Inference, and Interpretability</b><br><span style="font-size:12px;color:var(--muted)">M. Tarasov, S. Ahmadi-Asl, A. L. F. de Almeida, A. Cichocki</span></td>
+        <td>2026 最新大模型张量方法全景综述。系统覆盖 Token 嵌入、注意力与 FFN 的矩阵乘积算符重写、TeRA 等高秩适配、全生命周期压缩与量子信息可解释性。</td>
+        <td class="num">2026<br>arXiv e-print</td>
+        <td class="num"><a href="https://arxiv.org/abs/2608.30505" target="_blank" rel="noopener">arXiv:2608.30505</a></td>
+      </tr>
+      <tr>
+        <td class="tt"><b>Quantum-inspired tensor networks in machine learning models</b><br><span style="font-size:12px;color:var(--muted)">G. Valverde et al.</span></td>
+        <td>2026 量子启发张量网络机器学习全景。涵盖监督学习、Born 机无监督生成、模型压缩，重点阐明了利用纠缠熵/量子互信息实现可解释性与隐私保护的数学优势。</td>
+        <td class="num">2026<br>arXiv e-print</td>
+        <td class="num"><a href="https://arxiv.org/abs/2604.14287" target="_blank" rel="noopener">arXiv:2604.14287</a></td>
+      </tr>
+      <tr>
+        <td class="tt"><b>Tensor Networks Meet Neural Networks: A Survey and Future Perspectives</b><br><span style="font-size:12px;color:var(--muted)">M. Wang, Y. Pan, Z. Xu, G. Li, X. Yang, D. Mandic, A. Cichocki</span></td>
+        <td>张量网络与神经网络交叉的经典参考清单。系统分类了张量卷积、张量循环网络、张量化 Transformer 以及软硬件协同加速方案。</td>
+        <td class="num">2023 / 2026<br>arXiv e-print</td>
+        <td class="num"><a href="https://arxiv.org/abs/2302.09019" target="_blank" rel="noopener">arXiv:2302.09019</a></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>经典专著与现代高阶讲义（4）</h3>
+  <table class="plain">
+    <thead><tr><th>著作 / 讲义名称</th><th>作者 / 机构</th><th>特色说明</th><th>来源 / 预印</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="tt"><b>《张量网络态方法与应用》</b></td>
+        <td>冉仕举、乐伟、彭程 等</td>
+        <td>国内第一部系统讲解张量网络态的中文权威专著。从 SVD/MPS 入门，逐步进阶到 PEPS、MERA、热态张量网络，并配有详细 Python 算法实现思路与例程。</td>
+        <td class="num">科学出版社<br>2020</td>
+      </tr>
+      <tr>
+        <td class="tt"><b>Tensor Networks in a Nutshell</b></td>
+        <td>Jacob Biamonte</td>
+        <td>短小精悍，聚焦 Penrose 图形语法、图张量网络（Graph TN）以及量子计算线路与自旋玻璃的张量表示。配套开源讲义 [arXiv:1912.10049]。</td>
+        <td class="num"><a href="https://arxiv.org/abs/1912.10049" target="_blank" rel="noopener">arXiv:1912.10049</a><br>2020</td>
+      </tr>
+      <tr>
+        <td class="tt"><b>Les Houches Lecture Notes on Tensor Networks</b></td>
+        <td>Les Houches Summer School</td>
+        <td>法国莱苏什理论物理暑期学校最新高阶讲义。汇集国际一流专家讲授的高阶数值与理论方法（纠缠哈密顿量、连续张量网络与拓扑相）。</td>
+        <td class="num"><a href="https://arxiv.org/abs/2512.24390" target="_blank" rel="noopener">arXiv:2512.24390</a><br>2025/2026</td>
+      </tr>
+      <tr>
+        <td class="tt"><b>Tensor Cookbook: Mastering Tensors through Diagrams</b></td>
+        <td>Independent Researchers</td>
+        <td>2026 年最新发布的图解实战手册。专注于脱离繁杂指标下标记号的图解代数推导，提供大量工业界与学术界常见的复杂网络收缩优化模版。</td>
+        <td class="num"><a href="https://arxiv.org/abs/2605.16610" target="_blank" rel="noopener">arXiv:2605.16610</a><br>2026</td>
+      </tr>
+    </tbody>
+  </table>
 </section>
 
 <section id="formats">
@@ -583,7 +768,7 @@ footer{margin-top:70px;border-top:2px solid var(--ink);padding:26px 0 60px;font-
   <tbody>__CORP__</tbody></table>
 </section>
 
-<footer><span>MPS × LLM · Toolboxes</span><span>来源：ma-tt-a/awesome-tensor-methods-for-llms · tnbar/awesome-tensorial-neural-networks</span><span>核验于 __TODAY__</span></footer>
+<footer><span>MPS × LLM · Toolboxes</span><span>来源：ma-tt-a/awesome-tensor-methods-for-llms · tnbar/awesome-tensorial-neural-networks · 清单外补充见 lit/audit/toolbox_extra.csv</span><span>核验于 __TODAY__</span></footer>
 </div></main>
 <script>
 const D=__DATA__;
@@ -606,6 +791,7 @@ function toolEl(p,i){
  if(p.pu)add("推送 "+p.pu);
  if(p.ar)add("已归档","warn");
  if(p.sr.length>1)add("双源收录","c");
+ if(p.tier)add("清单外·"+p.tier,"c");
  if(p.co&&p.co.length)add("本库 "+p.co.length+" 篇","c");
  const ver=el("span","ver");
  (p.u||[]).forEach(([lb,url])=>ver.appendChild(link(url,lb,lb==="GitHub"?"gh":"")));
@@ -618,10 +804,12 @@ function toolEl(p,i){
   b.appendChild(el("span","s",s));b.appendChild(document.createTextNode(c));det.appendChild(b)});
  const bits=[];
  if(p.fmt&&p.fmt.length)bits.push("支持格式："+p.fmt.join("；"));
- if(p.be&&p.be.length)bits.push("后端 / 语言："+p.be.join("；"));
+ if(p.be&&p.be.length)bits.push((p.sr.length?"后端 / 语言：":"GitHub 主语言：")+p.be.join("；"));
  if(p.lay)bits.push("神经网络层："+(p.lay==="+ "?"提供":"不提供"));
  if(p.h3&&p.h3.length)bits.push("清单归类："+p.h3.join(" / "));
- bits.push("来源清单："+p.sr.map(s=>D.srcShort[s]||s).join(" + "));
+ if(p.sr.length)bits.push("来源清单："+p.sr.map(s=>D.srcShort[s]||s).join(" + "));
+ else bits.push("来源：两份社区清单之外，按 lit/audit/"+D.extraCsv+" 选入");
+ if(p.tier)bits.push("选入级别："+p.tier+(p.why?"｜理由："+p.why:""));
  if(p.gh)bits.push("仓库："+p.gh);
  det.appendChild(el("div","kv",bits.join("\n")));
  if(p.co&&p.co.length){

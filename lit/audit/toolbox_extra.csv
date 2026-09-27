@@ -1,0 +1,26 @@
+repo,group,tier,display,display_note,why
+tenpy/tenpy,engine,必加,TeNPy,GitHub 仓库名是小写 tenpy，页面用仓库自述「Tensor Network Python (TeNPy)」里的 TeNPy,凝聚态谱系（DMRG、TDVP、MPS/PEPS）的标准 Python 引擎，原 22 个条目里一个都没有
+NVIDIA/cuQuantum,engine,必加,,,含 cuTensorNet 的 GPU 收缩 SDK；页面有「硬件协同设计」小节却没有任何 GPU 收缩引擎
+QuantumKitHub/TensorKit.jl,engine,必加,,,带对称扇区（fusion sectors）的张量网络，Julia 侧与 ITensors.jl 并列的主力
+ITensor/ITensor,engine,必加,,,ITensor 的原版 C++ 实现，页面只收了它的 Julia 后继
+tencent-quantum-lab/tensorcircuit,engine,必加,,,张量网络式量子电路模拟 + 收缩路径优化，跨到 quantum 类
+jurajHasik/peps-torch,engine,次一级,,,2D 格点模型的 PEPS 有限温度求解，PyTorch 实现
+shuaigroup/Renormalizer,engine,次一级,,,多体动力学与耗散系统（MPS/MPO + HEOM）
+issp-center-dev/TeNeS,engine,次一级,,,平移不变 TN 自旋系统谱学求解器，C++/MPI
+GTorlai/PastaQ.jl,engine,次一级,,,量子计算器的模拟、层析与分析，MPS 驱动
+bsc-quantic/Tenet.jl,engine,次一级,,,可插拔的量子 TN 引擎，同组已在页面有 tn4ml
+wangleiphy/tensorgrad,engine,次一级,,,可微分 TN 编程的早期代表，与 layers 类主题契合
+emstoudenmire/TNML,engine,次一级,,,ITensor 作者的张量网络机器学习的第一个实现
+Haokai-Zhang/EasyMPS,engine,次一级,,,MPS 变分/演化算法集合
+under-Peter/TensorNetworkAD.jl,engine,次一级,,,Julia 侧可微分张量网络，Zygote 接口
+dgasmith/opt_einsum,einsum,必加,,,einsum 收缩路径优化的事实基线；页面收了它的后辈 cotengra 却没收本体
+mhauru/ncon,einsum,次一级,,,Evenbly 的 ncon 收缩函数的 Python 3 实现，文献里高频引用
+mhauru/NCon.jl,einsum,次一级,,,同一 ncon 约定的 Julia 实现
+mcabbott/Tullio.jl,einsum,可选,,,把 einsum 表达式编译成循环的 Julia 引擎，广义张量收缩
+under-Peter/OMEinsum.jl,einsum,可选,,,Julia 的符号 einsum 与收缩表示，TensorNetworkAD 的底座
+mcabbott/TensorCast.jl,einsum,可选,,,带命名轴的 einsum 接口
+Einsums/Einsums,einsum,可选,,,C++/CUDA einsum 引擎，GPU 后端
+TensorBFS/OMEinsumContractionOrders.jl,einsum,可选,,,OMEinsum 的收缩顺序优化器
+TensorBFS/TropicalTensors.jl,einsum,可选,,,半环上的张量收缩（最短路径类问题）
+google-research/tnco,einsum,可选,TNCO,仓库自述开头即「TNCO is a heuristic tool…」，取 TNCO 而非小写 tnco,收缩顺序的 RL/启发式搜索基线
+jcmgray/cotengrust,einsum,可选,,,cotengra 的 Rust 收缩排序内核
