@@ -1,0 +1,30 @@
+{
+ "n_candidates": 1686,
+ "n_on_topic": 182,
+ "on_topic_by_year": {
+  "2009": 1,
+  "2010": 1,
+  "2012": 1,
+  "2013": 4,
+  "2014": 1,
+  "2015": 1,
+  "2016": 2,
+  "2017": 3,
+  "2018": 7,
+  "2019": 9,
+  "2020": 13,
+  "2021": 13,
+  "2022": 22,
+  "2023": 20,
+  "2024": 23,
+  "2025": 22,
+  "2026": 39
+ },
+ "tn4ml_in_missing_set": true,
+ "tn4ml": {
+  "id": "2502.13090",
+  "title": "tn4ml: Tensor Network Training and Customization for Machine Learning",
+  "year": "2025",
+  "families": "x1_tn_ml,x2_tn_opt,x3_tn_software"
+ }
+}

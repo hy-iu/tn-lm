@@ -1,0 +1,328 @@
+arxiv_id,year,title,primary,rule,families
+1712.05689,2017,BT-Nets: Simplifying Deep Neural Networks via Block Term Decomposition,stat.ML,A,q03_tt_nn
+1711.00811,2017,Expressive power of recurrent neural networks,cs.LG,A,q03_tt_nn
+1907.01384,2019,A machine learning approach to dynamical properties of quantum many-body systems,quant-ph,A,x1_tn_ml
+1908.10778,2019,Classical versus Quantum Models in Machine Learning: Insights from a Finance Application,quant-ph,A,q05_born
+1906.10155,2019,Machine Learning Phase Transitions with a Quantum Processor,quant-ph,A,x1_tn_ml
+1906.10175,2019,Machine learning methods in quantum computing theory,quant-ph,A,x1_tn_ml
+2008.00691,2020,Quantum versus Classical Generative Modelling in Finance,quant-ph,A,q05_born
+2004.13747,2020,Quantum-inspired Machine Learning on high-energy physics data,stat.ML,A,x1_tn_ml
+2010.08689,2020,Towards Compact Neural Networks via End-to-End Training: A Bayesian Tensor Approach with Automatic Rank Determination,cs.LG,A,q03_tt_nn
+2102.01828,2021,Analyzing the barren plateau phenomenon in training quantum neural networks with the ZX-calculus,quant-ph,A,q08_ttn
+2109.14710,2021,Convolutional Neural Network Compression through Generalized Kronecker Product Decomposition,cs.CV,A,q03_tt_nn
+2110.04253,2021,F-Divergences and Cost Function Locality in Generative Modelling with Quantum Circuits,quant-ph,A,q05_born
+2101.06250,2021,GEO: Enhancing Combinatorial Optimization with Classical and Quantum Generative Models,quant-ph,A,q05_born
+2109.06315,2021,Generative Quantum Learning of Joint Probability Distribution Functions,quant-ph,A,q05_born
+2110.03861,2021,QTN-VQC: An End-to-End Learning framework for Quantum Neural Networks,quant-ph,A,q03_tt_nn
+2112.02655,2021,Quantum Machine Learning for Radio Astronomy,quant-ph,A,q05_born
+2109.15200,2021,Semi-tensor Product-based TensorDecomposition for Neural Network Compression,cs.LG,A,q03_tt_nn
+2112.10239,2021,TensorLy-Quantum: Quantum Machine Learning with Tensor Methods,quant-ph,A,x1_tn_ml
+2208.00164,2022,Distilled Low Rank Neural Radiance Field with Quantization for Light Field Compression,cs.CV,A,q03_tt_nn
+2201.08770,2022,Generalization Metrics for Practical Quantum Advantage in Generative Models,cs.LG,A,q05_born
+2205.04878,2022,Hybrid quantum ResNet for car classification and its hyperparameter optimization,quant-ph,A,q03_tt_nn
+2205.09414,2022,Machine learning applications for noisy intermediate-scale quantum computers,quant-ph,A,q05_born
+2206.02171,2022,Near-Term Advances in Quantum Natural Language Processing,cs.CL,A,"q05_born,q12_ent_lang"
+2205.04730,2022,Power of Quantum Generative Learning,quant-ph,A,q05_born
+2206.03066,2022,Recent Advances for Quantum Neural Networks in Generative Learning,quant-ph,A,q05_born
+2207.11173,2022,Verifying Fairness in Quantum Machine Learning,quant-ph,A,x1_tn_ml
+2303.15626,2023,A Framework for Demonstrating Practical Quantum Advantage: Racing Quantum against Classical Generative Models,quant-ph,A,q05_born
+2301.09363,2023,A performance characterization of quantum generative models,quant-ph,A,q05_born
+2401.10748,2023,Fast gradient-free activation maximization for neurons in spiking neural networks,cs.NE,A,q03_tt_nn
+2308.08448,2023,Implementing Quantum Generative Adversarial Network (qGAN) and QCBM in Finance,quant-ph,A,q05_born
+2303.06815,2023,"On Model Compression for Neural Networks: Framework, Algorithm, and Convergence Guarantee",cs.LG,A,q03_tt_nn
+2303.16955,2023,Quantum Generative Modeling using Parameterized Quantum Circuits,quant-ph,A,q05_born
+2308.11269,2023,Quantum-Inspired Machine Learning: a Survey,cs.LG,A,x1_tn_ml
+2309.10310,2023,TensorCodec: Compact Lossy Compression of Tensors without Strong Data Assumptions,cs.LG,A,q03_tt_nn
+2402.11740,2024,Extraction of nonlinearity in neural networks with Koopman operator,cs.LG,A,q03_tt_nn
+2405.14072,2024,Problem-informed Graphical Quantum Generative Learning,quant-ph,A,q05_born
+2409.16346,2024,Scalable quantum dynamics compilation via quantum machine learning,quant-ph,A,x1_tn_ml
+2407.13533,2024,VeriQR: A Robustness Verification Tool for Quantum Machine Learning Models,quant-ph,A,x1_tn_ml
+2510.14099,2025,A review of quantum machine learning and quantum-inspired applied methods to computational fluid dynamics,quant-ph,A,x1_tn_ml
+2512.18995,2025,DeepQuantum: A PyTorch-based Software Platform for Quantum Machine Learning and Photonic Quantum Computing,quant-ph,A,"x1_tn_ml,x3_tn_software"
+2508.00048,2025,Dimension reduction with structure-aware quantum circuits for hybrid machine learning,quant-ph,A,x1_tn_ml
+2508.00024,2025,Embedding-Aware Quantum-Classical SVMs for Scalable Quantum Machine Learning,quant-ph,A,x1_tn_ml
+2506.14569,2025,Enhancing Symbolic Machine Learning by Subsymbolic Representations,cs.AI,A,x1_tn_ml
+2511.11346,2025,Fast and Expressive Multi-Byte Prediction with Probabilistic Circuits,cs.LG,A,q04_tn_llm
+2509.05051,2025,QCA-MolGAN: Quantum Circuit Associative Molecular GAN with Multi-Agent Reinforcement Learning,quant-ph,A,q05_born
+2510.11773,2025,Qiboml: towards the orchestration of quantum-classical machine learning,quant-ph,A,"x1_tn_ml,x3_tn_software"
+2512.22672,2025,Quantum Generative Models for Computational Fluid Dynamics: A First Exploration of Latent Space Learning in Lattice Boltzmann Simulations,cs.LG,A,q05_born
+2507.01235,2025,Quantum Machine Learning in Transportation: A Case Study of Pedestrian Stress Modelling,cs.LG,A,x1_tn_ml
+2503.12790,2025,Quantum-Enhanced LLM Efficient Fine Tuning,quant-ph,A,"q04_tn_llm,q09_qllm"
+2502.12384,2025,Scalable Back-Propagation-Free Training of Optical Physics-Informed Neural Networks,cs.LG,A,q03_tt_nn
+2510.15366,2025,Sequence Modeling with Spectral Mean Flows,cs.LG,A,q02_tn_seq
+2511.01845,2025,The Born Ultimatum: Conditions for Classical Surrogation of Quantum Generative Models with Correlators,quant-ph,A,q05_born
+2505.03399,2025,Typical Machine Learning Datasets as Low-Depth Quantum Circuits,quant-ph,A,x1_tn_ml
+2510.08476,2025,"Universality and kernel-adaptive training for classically trained, quantum-deployed generative models",quant-ph,A,q05_born
+2609.23050,2026,"A Coherent Memory Register for Sequential Quantum Generative Modeling, with Application to Calorimeter Showers",quant-ph,A,q05_born
+2601.10194,2026,Autonomous Quantum Simulation through Large Language Model Agents,quant-ph,A,"q04_tn_llm,q09_qllm"
+2608.14169,2026,Classical Limits of Spectral Filtering in Quantum Generative Models,quant-ph,A,q05_born
+2609.28229,2026,Distilling Datasets into Shallow Circuits for Quantum Machine Learning,quant-ph,A,x1_tn_ml
+2607.08674,2026,Do Transformations Reveal the Truth? Generative Residual Learning for Generalized AI-Generated Image Detection,cs.CV,A,q10_tt_tf
+2605.19122,2026,Dual-Channel Tensor Neural Networks: Finite-Sample Theory and Conformal Structure Selection,stat.ML,A,q03_tt_nn
+2606.08565,2026,EinSort: Sorting is All We Need for Tensorizing LLM,cs.LG,A,q04_tn_llm
+2603.23407,2026,Encoding Numerical Data for Generative Quantum Machine Learning,quant-ph,A,q05_born
+2608.29612,2026,"LLMs Interpret, Embeddings Organize, Graphs Emerge: Agent-Driven Compilation of Scientific Knowledge",cs.AI,A,q04_tn_llm
+2603.24069,2026,Learning Quantum-Samplers for Stochastic Processes with Quantum Sequence Models,quant-ph,A,q05_born
+2604.05856,2026,Neural Network Pruning via QUBO Optimization,cs.CV,A,q03_tt_nn
+2605.10258,2026,Parity Supervision as a Driver of Generalization in Quantum Generative Modeling,quant-ph,A,q05_born
+2609.05313,2026,SAR and InSAR Change Detection with Quantum Generative Models,quant-ph,A,q05_born
+2603.11014,2026,"Universality of Classically Trainable, Quantum-Deployed Boson-Sampling Generative Models",quant-ph,A,q05_born
+0904.1925,2009,Concatenated tensor network states,quant-ph,T,q08_ttn
+1006.3095,2010,Simulating Strongly Correlated Quantum Systems with Tree Tensor Networks,cond-mat.str-el,T,q08_ttn
+1201.3974,2012,Perfect Sampling with Unitary Tensor Networks,cond-mat.str-el,T,q08_ttn
+1302.2298,2013,Efficient Tree Tensor Network States (TTNS) for Quantum Chemistry: Generalizations of the Density Matrix Renormalization Group Algorithm,cond-mat.str-el,T,q08_ttn
+1304.6112,2013,Faster identification of optimal contraction sequences for tensor networks,cond-mat.str-el,T,q02_tn_seq
+1310.7605,2013,Fourier transform of fermionic systems and the spectral tensor network,quant-ph,T,q10_tt_tf
+1307.1522,2013,Global symmetries in tensor network states: symmetric tensors versus minimal bond dimension,cond-mat.str-el,T,q08_ttn
+1406.2666,2014,Unconstrained Tree Tensor Network: An adaptive gauge picture for enhanced performance,cond-mat.stat-mech,T,q08_ttn
+1510.00689,2015,Local scale transformations on the lattice with tensor network renormalization,cond-mat.str-el,T,q10_tt_tf
+1602.07966,2016,"Classical stochastic dynamics and continuous matrix product states: gauge transformations, conditioned and driven processes, and equivalence of trajectory ensembles",cond-mat.stat-mech,T,q10_tt_tf
+1605.05775,2016,Supervised Learning with Quantum-Inspired Tensor Networks,stat.ML,T,q07_qiml_review
+1711.03357,2017,Compact Neural Networks based on the Multiscale Entanglement Renormalization Ansatz,cs.NE,T,q03_tt_nn
+1705.10186,2017,Implementing the sine transform of fermionic modes as a tensor network,quant-ph,T,q10_tt_tf
+1712.05134,2017,Learning Compact Recurrent Neural Networks with Block-Term Tensor Decomposition,cs.LG,T,q03_tt_nn
+1710.07324,2017,Scalable Gaussian Processes with Billions of Inducing Inputs via Tensor Train Decomposition,cs.LG,T,q03_tt_nn
+1812.01171,2018,Beyond Toy Models: Distilling Tensor Networks in Full AdS/CFT,hep-th,T,q08_ttn
+1807.07099,2018,Comparative study of Discrete Wavelet Transforms and Wavelet Tensor Train decomposition to feature extraction of FTIR data of medicinal plants,eess.SP,T,q10_tt_tf
+1812.02622,2018,Convolutional Neural Networks with Transformed Input based on Robust Tensor Network Decomposition,cs.LG,T,"q03_tt_nn,q10_tt_tf"
+1804.04168,2018,Differentiable Learning of Quantum Circuit Born Machine,quant-ph,T,q05_born
+1804.02398,2018,Quantum Machine Learning Tensor Network States,quant-ph,T,x1_tn_ml
+1802.10410,2018,Tensor Decomposition for Compressing Recurrent Neural Network,cs.LG,T,q03_tt_nn
+1805.12524,2018,Tensor networks as conformal transformations,cond-mat.str-el,T,q10_tt_tf
+1803.11537,2018,Towards Quantum Machine Learning with Tensor Networks,quant-ph,T,x1_tn_ml
+1912.12923,2019,Bayesian Tensor Network with Polynomial Complexity for Probabilistic Machine Learning,stat.ML,T,x1_tn_ml
+1909.13831,2019,Computing vibrational eigenstates with tree tensor network states (TTNS),physics.chem-ph,T,q08_ttn
+1903.09650,2019,Differentiable Programming Tensor Networks,cond-mat.str-el,T,q11_peps
+1907.03741,2019,"Expressive power of tensor-network factorizations for probabilistic modeling, with applications from hidden Markov models to quantum machine learning",cs.LG,T,"q05_born,x1_tn_ml"
+1901.07448,2019,"Matrix Product States: Entanglement, symmetries, and state transformations",quant-ph,T,q10_tt_tf
+1907.10290,2019,Quantum Compressed Sensing with Unsupervised Tensor-Network Machine Learning,stat.ML,T,x1_tn_ml
+1906.06329,2019,TensorNetwork for Machine Learning,cs.LG,T,x1_tn_ml
+1905.01330,2019,TensorNetwork: A Library for Physics and Machine Learning,physics.comp-ph,T,"x1_tn_ml,x3_tn_software"
+1901.10787,2019,Tensorized Embedding Layers for Efficient Model Compression,cs.CL,T,q03_tt_nn
+1904.02214,2019,The Born Supremacy: Quantum Advantage and Training of an Ising Born Machine,quant-ph,T,q05_born
+2011.00904,2020,A Continuous Variable Born Machine,quant-ph,T,q05_born
+2010.04196,2020,A Fully Tensorized Recurrent Neural Network,cs.LG,T,q03_tt_nn
+2010.10029,2020,"Connecting Weighted Automata, Tensor Networks and Recurrent Neural Networks through Spectral Learning",cs.LG,T,q03_tt_nn
+2007.06968,2020,Deep composition of tensor-trains using squared inverse Rosenblatt transports,stat.ML,T,q03_tt_nn
+2007.00017,2020,Dynamic Portfolio Optimization with Real Datasets Using Quantum Processors and Quantum-Inspired Tensor Networks,quant-ph,T,q07_qiml_review
+2003.08729,2020,Dynamic Spatiotemporal Graph Neural Network with Tensor Network,cs.CV,T,q11_peps
+2003.08551,2020,Experimental realization of a quantum image classifier via tensor-network-based machine learning,quant-ph,T,x1_tn_ml
+2006.15938,2020,Hybrid Tensor Decomposition in Neural Network Compression,cs.CV,T,q03_tt_nn
+2008.11414,2020,Low Tensor Train- and Low Multilinear Rank Approximations for De-speckling and Compression of 3D Optical Coherence Tomography Images,math.NA,T,q03_tt_nn
+2010.00520,2020,On the Compression of Translation Operator Tensors in FMM-FFT-Accelerated SIE Simulators via Tensor Decompositions,eess.SP,T,q03_tt_nn
+2005.09428,2020,Quantum-Classical Machine learning by Hybrid Tensor Networks,cs.LG,T,x1_tn_ml
+2012.12953,2020,Ranks of Tensor Networks for Eigenspace Projections and the Curse of Dimensionality,math.NA,T,q08_ttn
+2009.08727,2020,Recurrent Graph Tensor Networks: A Low-Complexity Framework for Modelling High-Dimensional Multi-Way Sequence,cs.LG,T,q02_tn_seq
+2001.04029,2020,Tangent-Space Gradient Optimization of Tensor Network for Machine Learning,cs.LG,T,x1_tn_ml
+2006.10619,2020,Tensor Decompositions in Recursive Neural Networks for Tree-Structured Data,cs.LG,T,q03_tt_nn
+2004.11038,2020,Tensor network based machine learning of non-Markovian quantum processes,quant-ph,T,x1_tn_ml
+2002.00544,2020,Tensor-to-Vector Regression for Multi-channel Speech Enhancement based on Tensor-Train Network,eess.AS,T,q03_tt_nn
+2104.13436,2021,Active learning of tree tensor networks using optimal least-squares,math.NA,T,q08_ttn
+2112.01474,2021,Approximation by tree tensor networks in high dimensions: Sobolev and compositional functions,math.NA,T,q08_ttn
+2112.05326,2021,Born Machines for Periodic and Open XY Quantum Spin Chains,quant-ph,T,q05_born
+2106.05742,2021,Matrix Product State Pre-Training for Quantum Machine Learning,quant-ph,T,x1_tn_ml
+2111.14046,2021,Neural Tangent Kernel of Matrix Product States: Convergence and Applications,stat.ML,T,q05_born
+2108.00031,2021,On the closedness and geometry of tensor network state sets,quant-ph,T,q08_ttn
+2101.03154,2021,Quantum Tensor Network in Machine Learning: An Application to Tiny Object Classification,cs.CV,T,x1_tn_ml
+2111.02457,2021,Symmetries and local transformations of translationally invariant Matrix Product States,quant-ph,T,q10_tt_tf
+2104.05018,2021,TedNet: A Pytorch Toolkit for Tensor Decomposition Networks,cs.LG,T,q03_tt_nn
+2108.04029,2021,Tensor Yard: One-Shot Algorithm of Hardware-Friendly Tensor-Train Decomposition for Convolutional Neural Networks,cs.CV,T,q03_tt_nn
+2105.04983,2021,Tensor-Train Recurrent Neural Networks for Interpretable Multi-Way Financial Forecasting,cs.LG,T,q03_tt_nn
+2108.08312,2021,The Presence and Absence of Barren Plateaus in Tensor-network Based Machine Learning,quant-ph,T,x1_tn_ml
+2103.05545,2021,Tree tensor-network real-time multiorbital impurity solver: Spin-orbit coupling and correlation functions in Sr$_2$RuO$_4$,cond-mat.str-el,T,q08_ttn
+2209.11058,2022,A practical overview of image classification with variational tensor-network quantum circuits,quant-ph,T,x3_tn_software
+2203.15246,2022,A quantum-inspired tensor network method for constrained combinatorial optimization problems,cs.DS,T,q07_qiml_review
+2201.04107,2022,Computing time-periodic steady-state currents via the time evolution of tensor network states,cond-mat.stat-mech,T,q08_ttn
+2209.01195,2022,Decohering Tensor Network Quantum Machine Learning Models,quant-ph,T,x1_tn_ml
+2207.13645,2022,Do Quantum Circuit Born Machines Generalize?,quant-ph,T,q05_born
+2203.06031,2022,Exploiting Low-Rank Tensor-Train Deep Neural Networks Based on Riemannian Gradient Descent With Illustrations of Speech Processing,cs.LG,T,q03_tt_nn
+2208.04372,2022,Generalization and Overfitting in Matrix Product State Machine Learning Architectures,cs.LG,T,x1_tn_ml
+2203.03366,2022,Improvements to Gradient Descent Methods for Quantum Tensor Network Machine Learning,cs.LG,T,x1_tn_ml
+2210.11130,2022,"Investigating Quantum Many-Body Systems with Tensor Networks, Machine Learning and Quantum Computers",quant-ph,T,x1_tn_ml
+2207.07417,2022,Near-Linear Time and Fixed-Parameter Tractable Algorithms for Tensor Decompositions,cs.DS,T,q08_ttn
+2209.12332,2022,"On the Optimal Linear Contraction Order of Tree Tensor Networks, and Beyond",quant-ph,T,q08_ttn
+2202.12319,2022,Privacy-preserving machine learning with tensor networks,cs.CR,T,x1_tn_ml
+2203.17089,2022,Quantum-Aided Meta-Learning for Bayesian Binary Neural Networks via Born Machines,quant-ph,T,q05_born
+2209.02964,2022,Quaternion Tensor Train Rank Minimization with Sparse Regularization in a Transformed Domain for Quaternion Tensor Completion,eess.IV,T,q10_tt_tf
+2206.01273,2022,Reconstructing Quantum States Using Basis-Enhanced Born Machines,quant-ph,T,q05_born
+2211.10418,2022,Sample-efficient Quantum Born Machine through Coding Rate Reduction,quant-ph,T,q05_born
+2205.15296,2022,Tensor Network States with Low-Rank Tensors,cond-mat.str-el,T,"q08_ttn,q11_peps"
+2207.02851,2022,Tensor networks in machine learning,quant-ph,T,x1_tn_ml
+2210.08399,2022,Tensor-Train Compression of Discrete Element Method Simulation Data,math.NA,T,q03_tt_nn
+2212.10421,2022,Tensor-network-assisted variational quantum algorithm,quant-ph,T,q08_ttn
+2202.09925,2022,Tuning the entanglement growth in matrix-product-state evolution of quantum systems by nonunitary similarity transformations,quant-ph,T,q10_tt_tf
+2207.06031,2022,Unsupervised Recognition of Informative Features via Tensor Network Machine Learning and Quantum Entanglement Variations,quant-ph,T,x1_tn_ml
+2201.03531,2022,Using tensor network states for multi-particle Brownian ratchets,cond-mat.stat-mech,T,q08_ttn
+2311.17798,2023,Adaptive Circuit Learning of Born Machine: Towards Realization of Amplitude Embedding and Quantum Data Loading,quant-ph,T,q05_born
+2302.03886,2023,Approximately Optimal Core Shapes for Tensor Decompositions,cs.DS,T,q08_ttn
+2304.03606,2023,Deep Ising Born Machine,quant-ph,T,q05_born
+2311.11091,2023,Deep Tensor Network,cs.LG,T,q02_tn_seq
+2309.15761,2023,Density matrix representation of hybrid tensor networks for noisy quantum devices,quant-ph,T,q08_ttn
+2307.06937,2023,Dequantizing quantum machine learning models using tensor networks,quant-ph,T,x1_tn_ml
+2312.16432,2023,Derivation of Hamiltonians from time propagations using Born machines,quant-ph,T,q05_born
+2309.06577,2023,Efficient Finite Initialization with Partial Norms for Tensorized Neural Networks and Tensor Networks Algorithms,cs.LG,T,q03_tt_nn
+2308.06900,2023,Efficient Quantum Mixed-State Tomography with Unsupervised Tensor Network Machine Learning,quant-ph,T,x1_tn_ml
+2305.03160,2023,Efficient tensor-network simulation for the few-atom multimode Dicke model via coupling-matrix transformation,quant-ph,T,q10_tt_tf
+2311.01960,2023,Hardness of Low Rank Approximation of Entrywise Transformed Matrix Products,cs.DS,T,q10_tt_tf
+2307.03292,2023,Identifying overparameterization in Quantum Circuit Born Machines,quant-ph,T,q05_born
+2303.06340,2023,Intelligent diagnostic scheme for lung cancer screening with Raman spectra data by tensor network machine learning,q-bio.QM,T,x1_tn_ml
+2306.03741,2023,Pre-training Tensor-Train Networks Facilitates Machine Learning with Variational Quantum Circuits,quant-ph,T,x1_tn_ml
+2301.07528,2023,Quantum-inspired tensor network for Earth science,physics.geo-ph,T,q07_qiml_review
+2304.01751,2023,"Simulating the quantum Fourier transform, Grover's algorithm, and the quantum counting algorithm with limited entanglement using tensor-networks",quant-ph,T,q10_tt_tf
+2304.05342,2023,TT-SDF2PC: Registration of Point Cloud and Compressed SDF Directly in the Memory-Efficient Tensor Train Domain,cs.RO,T,q03_tt_nn
+2312.12556,2023,Tensor Train Decomposition for Adversarial Attacks on Computer Vision Models,math.NA,T,q03_tt_nn
+2303.11735,2023,Tensor networks for quantum machine learning,quant-ph,T,x1_tn_ml
+2306.08595,2023,TensorKrowch: Smooth integration of tensor networks in machine learning,cs.LG,T,"x1_tn_ml,x3_tn_software"
+2303.16214,2023,Tetra-AML: Automatic Machine Learning via Tensor Networks,cs.LG,T,x1_tn_ml
+2412.00858,2024,A parallel Basis Update and Galerkin Integrator for Tree Tensor Networks,math.NA,T,q08_ttn
+2404.16580,2024,An Efficient Two-Sided Sketching Method for Large-Scale Tensor Decomposition Based on Transformed Domains,math.OC,T,q10_tt_tf
+2406.09769,2024,Approximate Contraction of Arbitrary Tensor Networks with a Flexible and Efficient Density Matrix Algorithm,quant-ph,T,q08_ttn
+2404.03182,2024,Direct interpolative construction of the discrete Fourier transform as a matrix product operator,quant-ph,T,q10_tt_tf
+2404.11715,2024,Entanglement Renormalization for Quantum Field Theories with Discrete Wavelet Transforms,hep-th,T,q10_tt_tf
+2403.12969,2024,Entangling Machine Learning with Quantum Tensor Networks,cs.LG,T,x1_tn_ml
+2405.02277,2024,Error-mitigated photonic quantum circuit Born machine,quant-ph,T,q05_born
+2412.00923,2024,Fractal decompositions and tensor network representations of Bethe wavefunctions,quant-ph,T,q08_ttn
+2408.13101,2024,Functional Tensor Decompositions for Physics-Informed Neural Networks,cs.LG,T,q03_tt_nn
+2404.05784,2024,Hybrid Tree Tensor Networks for quantum simulation,quant-ph,T,q08_ttn
+2405.09952,2024,Low-rank Tree Tensor Network Operators for Long-Range Pairwise Interactions,math.NA,T,q08_ttn
+2410.21417,2024,Nearly tight bounds for testing tree tensor network states,quant-ph,T,q08_ttn
+2412.05674,2024,No-Free-Lunch Theories for Tensor-Network Machine Learning Models,quant-ph,T,"q11_peps,x1_tn_ml"
+2410.11785,2024,On the learning abilities of photonic continuous-variable Born machines,quant-ph,T,q05_born
+2407.13249,2024,PyTreeNet: A Python Library for easy Utilisation of Tree Tensor Networks,quant-ph,T,q08_ttn
+2402.06455,2024,Quantum Computing and Tensor Networks for Laminate Design: A Novel Approach to Stacking Sequence Retrieval,quant-ph,T,q02_tn_seq
+2412.06111,2024,Randomized algorithms for streaming low-rank approximation in tree tensor network format,math.NA,T,q08_ttn
+2401.08001,2024,TT-SNN: Tensor Train Decomposition for Efficient Spiking Neural Network Training,cs.NE,T,q03_tt_nn
+2403.10481,2024,Tensor Star Tensor Decomposition and Its Applications to Higher-order Compression and Completion,eess.IV,T,q03_tt_nn
+2407.07242,2024,Tensor network approximation of Koopman operators,math.DS,T,q08_ttn
+2410.04462,2024,Tensor-Train Point Cloud Compression and Efficient Approximate Nearest-Neighbor Search,cs.CV,T,q03_tt_nn
+2405.12301,2024,Tensor-Train WENO Scheme for Compressible Flows,math.NA,T,q03_tt_nn
+2412.12067,2024,The State Preparation of Multivariate Normal Distributions using Tree Tensor Network,quant-ph,T,q08_ttn
+2410.10728,2024,Towards LLM-guided Efficient and Interpretable Multi-linear Tensor Network Rank Selection,cs.LG,T,q04_tn_llm
+2410.09703,2024,Universal scaling laws in quantum-probabilistic machine learning by tensor network towards interpreting representation and generalization powers,quant-ph,T,x1_tn_ml
+2405.02630,2024,Validating Large-Scale Quantum Machine Learning: Efficient Simulation of Quantum Support Vector Machines Using Tensor Networks,quant-ph,T,x1_tn_ml
+2501.19135,2025,A Tensor-Train Decomposition based Compression of LLMs on Group Vector Systolic Accelerator,cs.AR,T,q03_tt_nn
+2512.18059,2025,Approximation and learning with compositional tensor trains,math.NA,T,q03_tt_nn
+2506.05477,2025,"Compression, simulation, and synthesis of turbulent flows with tensor trains",physics.flu-dyn,T,q03_tt_nn
+2505.23537,2025,Domain-Aware Tensor Network Structure Search,cs.LG,T,q04_tn_llm
+2504.06474,2025,FETTA: Flexible and Efficient Hardware Accelerator for Tensorized Neural Network Training,cs.AR,T,q03_tt_nn
+2510.13386,2025,Functional tensor train neural network for solving high-dimensional PDEs,math.NA,T,q03_tt_nn
+2503.10483,2025,Grokking as an entanglement transition in tensor network machine learning,quant-ph,T,x1_tn_ml
+2506.11711,2025,Knapsack and Shortest Path Problems Generalizations From A Quantum-Inspired Tensor Network Perspective,quant-ph,T,q07_qiml_review
+2509.08385,2025,LLM-Guided Ansätze Design for Quantum Circuit Born Machines in Financial Generative Modeling,quant-ph,T,"q05_born,q09_qllm"
+2509.09463,2025,Minimality of Tree Tensor Network Ranks,math.NA,T,q08_ttn
+2509.20105,2025,PEPS: Quantum-Inspired Reinforcement Learning for Coherent Reasoning Traces in LLMs,cs.AI,T,"q09_qllm,q11_peps"
+2506.22340,2025,QuKAN: A Quantum Circuit Born Machine approach to Quantum Kolmogorov Arnold Networks,quant-ph,T,q05_born
+2511.02413,2025,Quantum Circuit Implementation of Two Matrix Product Operations and Elementary Column Transformations,quant-ph,T,q10_tt_tf
+2507.05222,2025,Quantum-Inspired Tensor-Network Fractional-Step Method for Incompressible Flow in Curvilinear Coordinates,physics.flu-dyn,T,q07_qiml_review
+2507.21726,2025,Riemannian Optimization on Tree Tensor Networks with Application in Machine Learning,math.OC,T,x1_tn_ml
+2509.03234,2025,TeRA: Vector-based Random Tensor Network for High-Rank Adaptation of Large Language Models,cs.LG,T,q04_tn_llm
+2506.23560,2025,Tensor Train Quantum State Tomography using Compressed Sensing,quant-ph,T,q03_tt_nn
+2505.07612,2025,Time evolution of the quantum Ising model in two dimensions using Tree Tensor Networks,quant-ph,T,q08_ttn
+2501.08727,2025,Transformed Low-rank Adaptation via Tensor Decomposition and Its Applications to Text-to-image Models,cs.LG,T,q10_tt_tf
+2512.15875,2025,Tree Tensor Networks Methods for Efficient Calculation of Molecular Vibrational Spectra,physics.chem-ph,T,q08_ttn
+2505.00126,2025,Tree tensor network hierarchical equations of motion based on time-dependent variational principle for efficient open quantum dynamics in structured thermal environments,quant-ph,T,q08_ttn
+2503.15460,2025,pyTTN: An Open Source Toolbox for Open and Closed System Quantum Dynamics Simulations Using Tree Tensor Networks,quant-ph,T,q08_ttn
+2603.09789,2026,A Hybrid Quantum Circuit Born Machine Framework for Financial Volatility Forecasting: Quantum-Assisted Training and Classical Inference,cs.LG,T,q05_born
+2606.06093,2026,A tensor-train multidimensional inverse Laplace transform,math.NA,T,q10_tt_tf
+2606.01975,2026,Algorithmic algorithm development with LLMs: A Case Study on LLM-Usage for Contraction Order Optimization in Tensor Networks,cs.AI,T,q04_tn_llm
+2605.27735,2026,An IQP Born Machine for Calorimeter Image Generation at 64 Qubits with Compiled-IQP Deployment,quant-ph,T,q05_born
+2606.00130,2026,Automatically Differentiable Nonlinear Tensor Networks (ADNTNs) for Exponential Parameter Compression of Deep Neural Networks,cs.LG,T,q08_ttn
+2608.16994,2026,Basis-update and Galerkin time integration in canonical matrix-product-state form,quant-ph,T,q08_ttn
+2602.11042,2026,Characterizing Trainability of Instantaneous Quantum Polynomial Circuit Born Machines,quant-ph,T,q05_born
+2607.28435,2026,Classical Tensor Network and Quantum Fourier Transform Approaches for Large-Scale Carr-Madan Option Pricing,quant-ph,T,q10_tt_tf
+2605.01494,2026,Completely Positive and Trace Preserving Schemes with Tensor Train Compression for the Lindblad Equation,math.NA,T,q03_tt_nn
+2604.28008,2026,Compressibility of micromagnetic solutions in tensor train format,cond-mat.mes-hall,T,q03_tt_nn
+2603.12851,2026,Continuous unitary transformations using tensor network representations access the full many-body localized spectrum,cond-mat.dis-nn,T,q10_tt_tf
+2603.11658,2026,"Coupling Tensor Trains with Graph of Convex Sets: Effective Compression, Exploration, and Planning in the C-Space",cs.RO,T,q03_tt_nn
+2601.19650,2026,Efficient Application of Tensor Network Operators to Tensor Network States,quant-ph,T,q08_ttn
+2608.19071,2026,Equations of Tree Tensor Network Varieties,math.AG,T,q08_ttn
+2603.27856,2026,Hierarchical Search of Tree Tensor Networks for High-Dimensional Data,cs.CE,T,q08_ttn
+2603.23106,2026,High-Resolution Tensor-Network Fourier Methods for Exponentially Compressed Non-Gaussian Aggregate Distributions,stat.ML,T,q03_tt_nn
+2603.14576,2026,IQP Born Machines under Data-dependent and Agnostic Initialization Strategies,quant-ph,T,q05_born
+2606.26900,2026,Incremental Tensor-Train Compression from Streaming TT-Formatted Data: Applications to Reduced-Order Modeling,math.NA,T,q03_tt_nn
+2608.17135,2026,Iterative tensor network transformations for element-wise evaluation of elementary and filtering functions,cs.LG,T,q10_tt_tf
+2609.25384,2026,Lattice in Line: Optimized DMRG ordering for complex lattice geometries,cond-mat.str-el,T,q04_tn_llm
+2601.12375,2026,LiQSS: Post-Transformer Linear Quantum-Inspired State-Space Tensor Networks for Real-Time 6G,cs.NI,T,"q02_tn_seq,q10_tt_tf"
+2607.07857,2026,Multi-agent Autoformalization of Tensor Network Theory,quant-ph,T,q04_tn_llm
+2604.18776,2026,Multiscale Structural Reliability Analysis in high dimensions with Tensor Trains and Physics-Augmented Neural Networks,cs.CE,T,q03_tt_nn
+2608.00194,2026,Multiscale passive scalar turbulence in a compressed subspace via tensor trains,physics.flu-dyn,T,q03_tt_nn
+2602.01996,2026,Optimizing Tensor Train Decomposition in DNNs for RISC-V Architectures Using Design Space Exploration and Compiler Optimizations,cs.LG,T,q03_tt_nn
+2602.17281,2026,Quantum Scrambling Born Machine,quant-ph,T,q05_born
+2607.09113,2026,Quantum-Enhanced Synthetic Data Generation Using Quantum Circuit Born Machines for Imbalanced Tabular Learning,quant-ph,T,q05_born
+2604.06541,2026,Quantum-Inspired Tensor Network Autoencoders for Anomaly Detection: A MERA-Based Approach,hep-ph,T,q07_qiml_review
+2602.15906,2026,Quantum-Inspired Tensor Networks for Approximating PDE Flow Maps,math.NA,T,q07_qiml_review
+2603.28065,2026,"Quantum-inspired Tensor Network for QUBO, QUDO and Tensor QUDO Problems with k-neighbors",cs.DS,T,q07_qiml_review
+2601.20026,2026,Semantic Uncertainty Quantification of Hallucinations in LLMs: A Quantum Tensor Network Based Method,cs.CL,T,"q04_tn_llm,q09_qllm"
+2603.17711,2026,TENSO: Software Package for Numerically Exact Open Quantum Dynamics Based on Efficient Tree Tensor Network Decomposition of the Hierarchical Equations of Motion,physics.chem-ph,T,q08_ttn
+2608.19789,2026,TT-net: Quantum Inspired Tensor Network Denoising in Conditional GANs,cs.AI,T,q07_qiml_review
+2609.28029,2026,Tensor Decomposition of Transformer Key-Value Caches: Spectral Structure and Format Comparison,math.NA,T,q10_tt_tf
+2602.20175,2026,Tensor Network Generator-Enhanced Optimization for Traveling Salesman Problem,cs.LG,T,q05_born
+2608.07043,2026,Tensor Network Kernel Machines: A JAX Framework for Machine Learning and Nonlinear System Identification,cs.MS,T,"x1_tn_ml,x3_tn_software"
+2607.19503,2026,Tensor Network Machine Learning for Wildfire Susceptibility Mapping: from Grokking Dynamics to Quantum Mixedness of Class Representations,physics.soc-ph,T,x1_tn_ml
+2606.17064,2026,Tensor network compression using fluid dynamics as a testbed: Analytical foundations in one dimension,physics.comp-ph,T,q03_tt_nn
+2606.10179,2026,Trainability of IQP Quantum Circuit Born Machines Under Gaussian Initialization,quant-ph,T,q05_born
+2608.23366,2026,Transform-Based Multilinear Algebra via Tensor Decomposition,math.NA,T,q10_tt_tf
+2601.03035,2026,Who can compete with quantum computers? Lecture notes on quantum inspired tensor networks computational techniques,quant-ph,T,q07_qiml_review
+2606.08347,2026,Tensorizing Engram: Sharing Latents Across N-Gram Embeddings is Beneficial in LLMs,cs.CL,W,awesome-A
+2210.15379,2022,MorphTE: Injecting Morphology in Tensorized Embeddings,cs.CL,W,awesome-A
+2405.14377,2024,CoMERA: Computing- and Memory-Efficient Training via Rank-Adaptive Tensor Optimization,cs.LG,W,awesome-A
+2306.02697,2023,Efficient GPT Model Pre-training using Tensor Train Matrix Representation,cs.AI,W,awesome-A
+2503.05431,2025,Quantum-PEFT: Ultra parameter-efficient fine-tuning,cs.LG,W,awesome-A
+2506.09105,2025,MetaTT: A Global Tensor-Train Adapter for Parameter-Efficient Fine-Tuning,cs.LG,W,awesome-A
+2412.20891,2024,DoTA: Weight-Decomposed Tensor Adaptation for Large Language Models,cs.CL,W,awesome-A
+2406.00132,2024,QuanTA: Efficient High-Rank Fine-Tuning of LLMs with Quantum-Informed Tensor Adaptation,cs.LG,W,awesome-A
+2408.01008,2024,Tensor Train Low-rank Approximation (TT-LoRA): Democratizing AI with Accelerated LLMs,cs.LG,W,awesome-A
+2402.11417,2024,LoRETTA: Low-Rank Economic Tensor-Train Adaptation for Ultra-Low-Parameter Fine-Tuning of Large Language Models,cs.CL,W,awesome-A
+2410.04060,2024,LoRTA: Low Rank Tensor Adaptation of Large Language Models,cs.CL,W,awesome-A
+2402.01376,2024,LoTR: Low Tensor Rank Weight Adaptation,cs.CL,W,awesome-A
+2212.10650,2022,KronA: Parameter Efficient Tuning with Kronecker Adapter,cs.CL,W,awesome-A
+2501.15674,2025,TensorLLM: Tensorising Multi-Head Attention for Enhanced Reasoning and Compression in LLMs,cs.CL,W,awesome-A
+2505.18413,2025,LatentLLM: Attention-Aware Joint Tensor Compression,cs.LG,W,awesome-A
+2401.16367,2024,TQCompressor: improving tensor decomposition methods in neural networks via permutations,cs.LG,W,awesome-A
+2110.08152,2021,Kronecker Decomposition for GPT Compression,cs.CL,W,awesome-A
+2603.30033,2026,Tucker Attention: A generalization of approximate attention mechanisms,cs.LG,W,awesome-A
+2405.12591,2024,Unlocking Data-free Low-bit Quantization with Matrix Decomposition for KV Cache Compression,cs.CL,W,awesome-A
+2602.01322,2026,PolySAE: Modeling Feature Interactions in Sparse Autoencoders via Polynomial Decoding,cs.LG,W,awesome-A
+2410.08417,2024,Bilinear MLPs enable weight-based mechanistic interpretability,cs.LG,W,awesome-A
+2402.01790,2024,An introduction to graphical tensor notation for mechanistic interpretability,cs.LG,W,awesome-A
+2501.06663,2025,Ultra Memory-Efficient On-FPGA Training of Transformers via Tensor-Compressed Optimization,cs.LG,W,awesome-A
+2601.19694,2026,Self-Supervised Weight Templates for Scalable Vision Model Initialization,cs.CV,W,awesome-B
+2409.07953,2024,What is the Relationship between Tensor Factorizations and Circuits (and How Can We Exploit it)?,cs.LG,W,awesome-B
+2606.01540,2026,TN-SHAP-G: Graph-Structured Tensor Network Surrogates for Shapley Values and Interactions,cs.LG,W,awesome-B
+2405.04671,2024,Interpretable Tensor Fusion,cs.LG,W,awesome-B
+1909.11874,2019,Compact Trilinear Interaction for Visual Question Answering,cs.CV,W,awesome-B
+1806.00064,2018,Efficient Low-rank Multimodal Fusion with Modality-Specific Factors,cs.AI,W,awesome-B
+1705.06676,2017,MUTAN: Multimodal Tucker Fusion for Visual Question Answering,cs.CV,W,awesome-B
+1707.07250,2017,Tensor Fusion Network for Multimodal Sentiment Analysis,cs.CL,W,awesome-B
+1606.01847,2016,Multimodal Compact Bilinear Pooling for Visual Question Answering and Visual Grounding,cs.CV,W,awesome-B
+1806.05952,2019,TTHRESH: Tensor Compression for Multidimensional Visual Data,,W,awesome-B
+1605.06391,2016,Deep Multi-task Representation Learning: A Tensor Factorisation Approach,cs.LG,W,awesome-B
+2304.01996,2023,ANTN: Bridging Autoregressive Neural Networks and Tensor Networks for Quantum Many-Body Simulation,quant-ph,W,awesome-B
+2205.15307,2022,A Unified Weight Initialization Paradigm for Tensorial Convolutional Neural Networks,cs.LG,W,awesome-B
+1906.06196,2019,Factorized Higher-Order CNNs with an Application to Spatio-Temporal Emotion Estimation,cs.LG,W,awesome-B
+2406.05045,2024,A Tensor Decomposition Perspective on Second-order RNNs,cs.LG,W,awesome-B
+2104.05758,2021,Towards Extremely Compact RNNs for Video Recognition with Fully Decomposed Hierarchical Tucker Structure,cs.CV,W,awesome-B
+1705.10142,2017,Kronecker Recurrent Units,cs.LG,W,awesome-B
+2310.10699,2023,Reusing Pretrained Models by Multi-linear Operators for Efficient Training,cs.LG,W,awesome-B
+2205.10036,2022,Exploring Extreme Parameter Compression for Pre-trained Language Models,cs.CL,W,awesome-B
+2205.11691,2022,High-Order Pooling for Graph Neural Networks with Tensor Decomposition,cs.LG,W,awesome-B
+2206.10581,2022,Nimble GNN Embedding with Tensor-Train Decomposition,cs.LG,W,awesome-B
+1603.00162,2016,Convolutional Rectifier Networks as Generalized Tensor Decompositions,cs.NE,W,awesome-B
+1509.05009,2015,On the Expressive Power of Deep Learning: A Tensor Analysis,cs.NE,W,awesome-B
+2107.03436,2021,Tensor Methods in Computer Vision and Deep Learning,,W,awesome-B
+2206.06597,2022,Permutation Search of Tensor Network Structures via Local Sampling,cs.LG,W,awesome-B
+2205.12961,2022,Position: Tensor Networks are a Valuable Asset for Green AI,cs.LG,W,awesome-B
+2204.09052,2022,Optimizing Tensor Network Contraction Using Reinforcement Learning,quant-ph,W,awesome-B
+2501.06300,2025,Tensorization of neural networks for improved privacy and interpretability,math.NA,W,awesome-B
+2506.00102,2025,Tensor Network for Anomaly Detection in the Latent Space of Proton Collision Events at the LHC,,W,awesome-B
+1808.07452,2020,Generalized Canonical Polyadic Tensor Decomposition,,W,awesome-B
+1505.03027,2015,Geometric Structures in Tensor Representations (Final Release),math.NA,W,awesome-B
+1708.00006,2017,Tensor Networks in a Nutshell,quant-ph,W,awesome-B
+doi:10.18653/v1/2022.emnlp-main.475,2022,Hypoformer: Hybrid Decomposition Transformer for Edge-friendly Neural Machine Translation,,W,awesome-A
+doi:10.1109/tnnls.2025.3609797,2025,Coupled Tensor Decomposition for Compact Network Representation,,W,awesome-B
+doi:10.1145/3543507.3583226,2023,NeuKron: Constant-Size Lossy Compression of Sparse Reorderable Matrices and Tensors,,W,awesome-B
+doi:10.1109/tkde.2022.3142179,2022,Multi-View Tensor Graph Neural Networks Through Reinforced Aggregation,,W,awesome-B
+doi:10.1103/prxquantum.4.010317,2023,Density Matrix Renormalization Group with Tensor Processing Units,,W,awesome-B
+doi:10.1609/aaai.v40i31.39840,2026,Renormalization Group Guided Tensor Network Structure Search,,W,awesome-B
+doi:10.1609/aaai.v33i01.33019151,2019,Tensor Ring Decomposition with Rank Minimization on Latent Space: An Efficient Approach for Tensor Completion,,W,awesome-B
+doi:10.1103/physrevx.14.011009,2024,Hyperoptimized Approximate Contraction of Tensor Networks with Arbitrary Geometry,,W,awesome-B

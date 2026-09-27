@@ -59,6 +59,7 @@ def openalex_bulk(dois):
                 out[d] = {
                     'title': re.sub(r'\s+', ' ', (w.get('title') or '')).strip(),
                     'abs': ab,
+                    'cited': w.get('cited_by_count'),
                     'landing': pl.get('landing_page_url'),
                     'pdf': pl.get('pdf_url'),
                     'oa_landing': bo.get('landing_page_url'),

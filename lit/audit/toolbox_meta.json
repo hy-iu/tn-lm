@@ -1,0 +1,54 @@
+{
+ "llms": {
+  "arxiv": "2608.30505",
+  "title": "Tensor Methods for Language Models: From Token Representation to Training, Adaptation, Compression, Inference, and Interpretability",
+  "authors": "Tarasov, Matvei and Ahmadi-Asl, Salman and de Almeida, André L. F. and Cichocki, Andrzej",
+  "key": "tarasov2026tensorsforllms",
+  "path": "/Users/bjergsen/mnt/u26/research/tnlm/repos/awesome-tensor-methods-for-llms/README.md",
+  "repo": "https://github.com/ma-tt-a/awesome-tensor-methods-for-llms",
+  "local": "/Users/bjergsen/mnt/u26/research/tnlm/repos/awesome-tensor-methods-for-llms",
+  "glossary": [
+   {
+    "term": "CP (Canonical Polyadic)",
+    "text": "sum of R canonical rank-one tensors"
+   },
+   {
+    "term": "Tucker",
+    "text": "a dense core tensor contracted with one factor matrix per mode"
+   },
+   {
+    "term": "TT (Tensor Train)",
+    "text": "a chain of third-order cores"
+   },
+   {
+    "term": "TTM (Tensor Train Matrix)",
+    "text": "TT applied to a matrix with input and output modes paired"
+   },
+   {
+    "term": "MPS (Matrix Product State)",
+    "text": "the physics name for TT"
+   },
+   {
+    "term": "MPO (Matrix Product Operator)",
+    "text": "the physics name for TTM"
+   },
+   {
+    "term": "BT (Block Term)",
+    "text": "sum of K Tucker terms"
+   },
+   {
+    "term": "Kronecker",
+    "text": "matrix written as a sum of R Kronecker products"
+   }
+  ]
+ },
+ "tnn": {
+  "arxiv": "2302.09019",
+  "title": "Tensor Networks Meet Neural Networks: A Survey and Future Perspectives",
+  "authors": "Maolin Wang and Yu Pan and Zenglin Xu and Guangxi Li and Xiangli Yang and Danilo Mandic and Andrzej Cichocki",
+  "key": "wang2026tensor_networks_meet_neural_networks",
+  "path": "/Users/bjergsen/mnt/u26/research/tnlm/repos/awesome-tensorial-neural-networks/README.md",
+  "repo": "https://github.com/tnbar/awesome-tensorial-neural-networks",
+  "local": "/Users/bjergsen/mnt/u26/research/tnlm/repos/awesome-tensorial-neural-networks"
+ }
+}

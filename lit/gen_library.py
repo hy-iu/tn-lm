@@ -30,6 +30,14 @@ HOSTMAP = {
     "direct.mit.edu": "MIT Press",
     "spiedigitallibrary.org": "SPIE",
     "repository.hkust.edu.hk": "HKUST Repository",
+    # 下面 5 条是本轮新文献的发表版链接实际解析到的域名，逐条对着 resolve_host 的结果加的
+    "pubs.aip.org": "AIP",
+    "mdpi.com": "MDPI",
+    "quantum-journal.org": "Quantum",
+    "opg.optica.org": "Optica",
+    "royalsocietypublishing.org": "Royal Society",
+    "ojs.aaai.org": "AAAI",
+    "aclanthology.org": "ACL Anthology",
 }
 
 
@@ -45,7 +53,9 @@ def pub_label(v, src_url=""):
         if h in HOSTMAP:
             return HOSTMAP[h]
     ven = re.sub(r"\s*/.*$", "", (v.get("venue") or "").strip()).strip(" .")
-    if ven:
+    # OpenAlex 对预印本记录的 venue 就是 "arXiv (Cornell University)"，
+    # 拿它当"发表版"标签会把预印本说成期刊，宁可退回域名这个事实。
+    if ven and not re.match(r"arxiv", ven, re.I):
         return ven[:28]
     return cands[0] if cands else "发表版"
 
@@ -101,7 +111,8 @@ for i, r in enumerate(bib):
     stored_abs = sv(r.get("abstract")).strip()
     full_abs = (v.get("full_abstract") or "").strip()
     verdict = v.get("verdict", "")
-    srcname = {"arxiv": "arXiv ", "openalex": "OpenAlex 发表版"}.get(v.get("abs_authority"), "权威源 ")
+    srcname = {"arxiv": "arXiv ", "openalex": "OpenAlex 发表版",
+               "crossref": "Crossref 发表版"}.get(v.get("abs_authority"), "权威源 ")
     if not full_abs:
         shown_abs = stored_abs
         vk = 0
@@ -117,14 +128,27 @@ for i, r in enumerate(bib):
         vk = 1
         if verdict == "consistent":
             abs_note = "与 %s摘要逐字一致" % srcname
+            # OpenAlex 对少数出版记录只存了编辑部要点（Editor's briefness），不是摘要原文。
+            # 只有"非 arXiv 来源 + 单句 + 不足 300 字符"才触发，避免误伤真·短摘要。
+            if (v.get("abs_authority") != "arxiv" and len(full_abs) < 300
+                    and full_abs.rstrip().count(". ") == 0):
+                abs_note = ("%s记录里只有 %d 字符的单句出版方摘要，疑为编辑部要点而非摘要原文"
+                            % (srcname, len(full_abs)))
         elif verdict == "truncated_snippet":
             abs_note = "%s完整摘要（原表为 %d 字符截断 snippet）" % (srcname, len(stored_abs))
         elif verdict in ("zero_hit", "partial"):
-            if len(stored_abs) > len(full_abs):
-                rel = "原表还多出 %d 字符，疑为摘要混入正文" % (len(stored_abs) - len(full_abs))
+            s0 = re.sub(r"[^a-z0-9]", "", stored_abs.lower())
+            f0 = re.sub(r"[^a-z0-9]", "", full_abs.lower())
+            if s0[:60] and s0[:60] == f0[:60]:
+                # Same text, different typography: the stored copy is the same abstract
+                # with LaTeX markup or hyphenation flattened, not a wrong paper.
+                abs_note = "与 %s摘要内容一致，仅排版/LaTeX 记法有差异" % srcname
+            elif len(stored_abs) > len(full_abs):
+                abs_note = "%s摘要（原表 %d 字符比该摘要多 %d 字符，疑为摘要混入正文；建议人工复核）" % (
+                    srcname, len(stored_abs), len(stored_abs) - len(full_abs))
             else:
-                rel = "已用权威摘要替换"
-            abs_note = "%s摘要（原表 %d 字符与该摘要不匹配，%s；建议人工复核）" % (srcname, len(stored_abs), rel)
+                abs_note = "%s摘要（原表 %d 字符与该摘要不匹配，已用权威摘要替换；建议人工复核）" % (
+                    srcname, len(stored_abs))
         else:
             abs_note = "%s摘要（未做过逐字一致性核验）" % srcname
     links = []
@@ -179,7 +203,7 @@ TEMPLATE = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>论文库 · 全部文献 304 篇</title>
+<title>论文库 · 全部文献 __NPAPERS__ 篇</title>
 <style>
 :root{
   --bg:#ece4d9; --surface:#f4f0ea; --card:#fffbf5;
@@ -203,7 +227,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15p
 #themeBtn{position:fixed;right:18px;top:18px;z-index:60;font-family:var(--mono);font-size:11px;letter-spacing:.15em;background:var(--card);color:var(--ink);border:1px solid var(--muted);padding:8px 14px;cursor:pointer;border-radius:999px}
 #themeBtn:hover{border-color:var(--accent);color:var(--accent)}
 main{margin-left:56px}
-.wrap{max-width:1020px;margin:0 auto;padding:0 40px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 40px}
 @media(max-width:760px){.wrap{padding:0 22px}}
 header{border-bottom:2px solid var(--ink);padding:42px 0 26px}
 .mast-meta{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:18px}
@@ -216,7 +240,9 @@ h2{font-family:var(--serif);font-size:26px;margin-bottom:16px}
 p{margin-bottom:14px}
 a{color:var(--accent);text-decoration:none;border-bottom:1px solid var(--tint)}
 /* stats */
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0 8px}
+.stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin:18px 0 8px}
+@media(max-width:980px){.stats{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:620px){.stats{grid-template-columns:repeat(2,1fr)}}
 .stat{background:var(--card);border:1px solid #e2d9cb;padding:14px 16px}
 [data-theme="dark"] .stat{border-color:#3a332a}
 .stat .num{font-family:var(--serif);font-size:30px;color:var(--accent);line-height:1.1}
@@ -281,6 +307,7 @@ footer{margin-top:70px;border-top:2px solid var(--ink);padding:26px 0 60px;font-
     <a href="index.html">研究备忘</a>
     <a href="figures.html">图解路线</a>
     <a href="library.html" class="cur">论文库</a>
+    <a href="toolboxes.html">工具库</a>
   </div>
   <hr>
   <div class="toc">
@@ -297,7 +324,7 @@ footer{margin-top:70px;border-top:2px solid var(--ink);padding:26px 0 60px;font-
 <section id="overview">
   <div class="stats">
     <div class="stat"><div class="num">__NPAPERS__</div><div class="lbl">论文条目（含 __NUNV__ 条摘要未核验）</div></div>
-    <div class="stat"><div class="num">__NVK__</div><div class="lbl">已换权威完整摘要</div></div>
+    <div class="stat"><div class="num">__NVK__</div><div class="lbl">摘要取自权威源全文</div></div>
     <div class="stat"><div class="num">__NPDF__</div><div class="lbl">已下载全文</div></div>
     <div class="stat"><div class="num">__TOTCIT__</div><div class="lbl">被引合计</div></div>
     <div class="stat"><div class="num" style="font-size:20px;padding-top:8px">__YSPAN__</div><div class="lbl">年份跨度</div></div>

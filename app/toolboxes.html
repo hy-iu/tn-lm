@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>工具库 · 张量网络 / 张量分解开源工具 22 个</title>
+<style>
+:root{
+  --bg:#ece4d9; --surface:#f4f0ea; --card:#fffbf5;
+  --ink:#4f483e; --muted:#6b5f4e; --accent:#b82a00; --tint:#ffc198;
+  --serif:"Georgia","Times New Roman","Songti SC","SimSun",serif;
+  --sans:"Inter","Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  --mono:"JetBrains Mono","SF Mono","Courier New",monospace;
+}
+[data-theme="dark"]{--bg:#1a1713; --surface:#221e18; --card:#28231c; --ink:#e8e0d2; --muted:#9a8f7c; --accent:#ff6b33; --tint:#8a4426;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.75;transition:background .3s,color .3s}
+#side{position:fixed;left:0;top:0;bottom:0;width:56px;background:#4f483e;display:flex;flex-direction:column;align-items:center;z-index:50;padding:16px 0;gap:18px;overflow-y:auto}
+#side .pgroup,#side .toc{display:flex;flex-direction:column;align-items:center;gap:18px}
+#side a{writing-mode:vertical-rl;color:#f4f0ea;text-decoration:none;font-size:12px;letter-spacing:.25em;opacity:.85;transition:opacity .3s,color .3s}
+#side .toc a{color:#d8cebe;font-size:11px;opacity:1}
+#side a:hover{opacity:1;color:#ffab80}
+#side a.cur{opacity:1;color:#ffab80;font-weight:700}
+#side .toc a.on{opacity:1;color:#ffab80;font-weight:700}
+#side hr{border:none;width:22px;border-top:1px solid rgba(244,240,234,.35);flex:none;margin:2px 0}
+@media(max-width:760px){#side{gap:12px;padding:12px 0}#side .pgroup,#side .toc{gap:12px}}
+#themeBtn{position:fixed;right:18px;top:18px;z-index:60;font-family:var(--mono);font-size:11px;letter-spacing:.15em;background:var(--card);color:var(--ink);border:1px solid var(--muted);padding:8px 14px;cursor:pointer;border-radius:999px}
+#themeBtn:hover{border-color:var(--accent);color:var(--accent)}
+main{margin-left:56px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 40px}
+@media(max-width:760px){.wrap{padding:0 22px}}
+header{border-bottom:2px solid var(--ink);padding:42px 0 26px}
+.mast-meta{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin:18px 0 0;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--serif);font-size:38px;line-height:1.2}
+h1 em{font-style:normal;color:var(--accent)}
+.subtitle{margin-top:14px;color:var(--muted);max-width:760px}
+section{padding:52px 0 8px}
+.sec-label{font-family:var(--mono);font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+h2{font-family:var(--serif);font-size:26px;margin-bottom:16px}
+h3{font-family:var(--serif);font-size:18px;margin:26px 0 8px}
+p{margin-bottom:14px}
+a{color:var(--accent);text-decoration:none;border-bottom:1px solid var(--tint)}
+.note{font-size:13px;color:var(--muted);background:var(--card);border-left:3px solid var(--tint);padding:14px 18px;margin:16px 0;line-height:1.85}
+.note b{color:var(--accent);font-weight:600}
+.note summary{cursor:pointer;font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent)}
+.note p{margin:10px 0 0}
+.stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin:18px 0 8px}
+@media(max-width:980px){.stats{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:620px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--card);border:1px solid #e2d9cb;padding:14px 16px}
+[data-theme="dark"] .stat{border-color:#3a332a}
+.stat .num{font-family:var(--serif);font-size:30px;color:var(--accent);line-height:1.1}
+.stat .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.srcs{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;margin:18px 0}
+.src-card{background:var(--card);border:1px solid #e2d9cb;padding:16px 18px}
+[data-theme="dark"] .src-card{border-color:#3a332a}
+.src-h{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.src-t{font-family:var(--serif);font-size:16px;line-height:1.45}
+.src-a{font-size:12.5px;color:var(--muted);margin-top:8px}
+.src-l{font-family:var(--mono);font-size:11px;margin-top:10px;padding-top:10px;border-top:1px dashed #d8cebe}
+.toolbar{position:sticky;top:0;background:var(--bg);z-index:20;padding:14px 0 10px;border-bottom:1px solid #d8cebe;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+[data-theme="dark"] .toolbar{border-bottom-color:#3a332a}
+#q{flex:1;min-width:200px;font-family:var(--sans);font-size:14px;padding:8px 12px;border:1px solid var(--muted);background:var(--card);color:var(--ink);border-radius:2px}
+#q:focus{outline:none;border-color:var(--accent)}
+.chip{font-family:var(--sans);font-size:12px;padding:6px 12px;border:1px solid var(--muted);background:var(--card);color:var(--ink);cursor:pointer;border-radius:999px;transition:all .2s}
+.chip:hover{border-color:var(--accent)}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#fffbf5}
+select{font-family:var(--mono);font-size:12px;padding:7px 10px;border:1px solid var(--muted);background:var(--card);color:var(--ink);border-radius:2px}
+#count{font-family:var(--mono);font-size:11px;color:var(--muted);width:100%}
+.ghead{display:flex;align-items:baseline;gap:12px;padding:14px 8px 8px;cursor:pointer;user-select:none;border-bottom:2px solid var(--ink);margin-top:10px}
+.ghead .gname{font-family:var(--serif);font-size:19px}
+.ghead .gcount{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.ghead .gchev{font-family:var(--mono);font-size:12px;color:var(--muted);transition:transform .25s;flex:none}
+.ghead .gbar{flex:1;height:3px;background:var(--tint);align-self:center;max-width:120px}
+.ghead .gmean{margin-left:auto;font-size:12px;color:var(--muted);text-align:right;flex:0 1 auto;max-width:56%}
+.gblock.closed .grow,.gblock.closed .gdesc{display:none}
+.gblock.closed .gchev{transform:rotate(-90deg)}
+.gdesc{font-size:12.5px;color:var(--muted);padding:8px 8px 0}
+.grow{border-bottom:1px solid #e2d9cb;padding:13px 8px;cursor:pointer;transition:background .2s}
+[data-theme="dark"] .grow{border-bottom-color:#3a332a}
+.grow:hover{background:var(--surface)}
+.grow .r1{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.grow .rt{font-family:var(--serif);font-size:17px}
+.grow .rt .alt{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.grow .rt .own{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.badge{font-family:var(--mono);font-size:10.5px;padding:2px 8px;border:1px solid #d8cebe;color:var(--muted);border-radius:2px;white-space:nowrap}
+[data-theme="dark"] .badge{border-color:#3a332a}
+.badge.c,.badge.st{color:var(--accent);border-color:var(--tint)}
+.badge.lang{color:var(--ink);border-color:var(--muted)}
+.badge.warn{color:#8a1f00;border-color:#8a1f00;background:rgba(184,42,0,.08)}
+[data-theme="dark"] .badge.warn{color:#ffab80;border-color:#ffab80;background:rgba(255,107,51,.12)}
+.capline{font-size:13.5px;color:var(--muted);margin-top:5px;line-height:1.7}
+.ver{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.grow .r1 .ver{margin-left:auto;margin-top:0;justify-content:flex-end}
+.ver a{font-family:var(--mono);font-size:10.5px;padding:3px 9px;border:1px solid var(--tint);border-radius:2px;color:var(--accent);white-space:nowrap}
+.ver a:hover{background:var(--tint);color:var(--ink)}
+.ver a.gh{border-color:#4a7c59;color:#4a7c59}
+.detail{display:none;margin-top:11px;background:var(--card);border-left:3px solid var(--tint);padding:12px 16px}
+.grow.open .detail{display:block}
+.cap{font-size:13.5px;line-height:1.75;margin-bottom:8px}
+.cap .s{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:2px}
+.cap.repo .s{color:#4a7c59}
+.kv{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px dashed #d8cebe;line-height:1.95;white-space:pre-line}
+.corp{margin-top:9px}
+.corp .ch{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:5px}
+.corp li{font-size:13px;margin-left:18px;line-height:1.7}
+.corp .cy{font-family:var(--mono);font-size:11px;color:var(--muted)}
+table.plain{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px;background:var(--card)}
+table.plain th{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px 10px;border-bottom:2px solid var(--ink)}
+table.plain td{padding:9px 10px;border-bottom:1px solid #e2d9cb;vertical-align:top}
+[data-theme="dark"] table.plain td{border-bottom-color:#3a332a}
+table.plain td.num{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap}
+table.plain td.tt{font-family:var(--serif);font-size:14.5px}
+table.plain td.term{font-family:var(--mono);font-size:12px;color:var(--accent);white-space:nowrap}
+table.plain td.ghc{font-family:var(--mono);font-size:11.5px;border-right:1px solid #e2d9cb;width:230px}
+[data-theme="dark"] table.plain td.ghc{border-right-color:#3a332a}
+table.plain td.ghc a{word-break:break-all}
+.ghn{font-family:var(--mono);font-size:10px;color:var(--muted)}
+footer{margin-top:70px;border-top:2px solid var(--ink);padding:26px 0 60px;font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<nav id="side">
+  <div class="pgroup">
+    <a href="index.html">研究备忘</a>
+    <a href="figures.html">图解路线</a>
+    <a href="library.html">论文库</a>
+    <a href="toolboxes.html" class="cur">工具库</a>
+  </div>
+  <hr>
+  <div class="toc">
+    <a href="#sources">来源</a>
+    <a href="#tools">工具</a>
+    <a href="#formats">格式</a>
+    <a href="#hardware">硬件</a>
+    <a href="#corpus">本库代码</a>
+  </div>
+</nav>
+<button id="themeBtn" onclick="t()">◐ 主题</button>
+<main><div class="wrap">
+<header>
+  <h1>工具<em>库</em></h1>
+  <div class="mast-meta"><span>Vol. 03 — 开源工具 22 个</span><span>两份社区清单交叉合并</span><span><a href="library.html">论文库 →</a></span></div>
+</header>
+
+<section id="sources">
+  <div class="sec-label">Provenance</div>
+  <h2>数据来源与核验方式</h2>
+  <div class="stats">
+    <div class="stat"><div class="num">22</div><div class="lbl">工具（两表去重合并）</div></div>
+    <div class="stat"><div class="num">7</div><div class="lbl">两份清单共同收录</div></div>
+    <div class="stat"><div class="num">8,179</div><div class="lbl">GitHub star 合计</div></div>
+    <div class="stat"><div class="num">4</div><div class="lbl">与本库论文代码重合</div></div>
+    <div class="stat"><div class="num">43</div><div class="lbl">本库论文附带仓库</div></div>
+    <div class="stat"><div class="num">1</div><div class="lbl">已归档停止维护</div></div>
+  </div>
+  <div class="srcs"><div class="src-card"><div class="src-h">Tensor Methods for LLMs 清单</div><div class="src-t">Tensor Methods for Language Models: From Token Representation to Training, Adaptation, Compression, Inference, and Interpretability</div><div class="src-a">Tarasov, Matvei and Ahmadi-Asl, Salman and de Almeida, André L. F. and Cichocki, Andrzej</div><div class="src-l"><a href="https://arxiv.org/abs/2608.30505" target="_blank" rel="noopener">arXiv:2608.30505</a> · <a href="https://github.com/ma-tt-a/awesome-tensor-methods-for-llms" target="_blank" rel="noopener">清单仓库</a> · 本页收录其 15 个工具条目</div></div>
+<div class="src-card"><div class="src-h">Tensorial NN 清单</div><div class="src-t">Tensor Networks Meet Neural Networks: A Survey and Future Perspectives</div><div class="src-a">Maolin Wang and Yu Pan and Zenglin Xu and Guangxi Li and Xiangli Yang and Danilo Mandic and Andrzej Cichocki</div><div class="src-l"><a href="https://arxiv.org/abs/2302.09019" target="_blank" rel="noopener">arXiv:2302.09019</a> · <a href="https://github.com/tnbar/awesome-tensorial-neural-networks" target="_blank" rel="noopener">清单仓库</a> · 本页收录其 14 个工具条目</div></div></div>
+  <details class="note" id="method">
+    <summary>合并规则与核验方式 · 点击展开</summary>
+    <p>张量分解 / 张量网络方向可直接上手的开源实现。条目取自两份社区维护的清单，但数字不是转抄的：star 数、许可证、最后推送时间与归档状态逐个向 GitHub 请求取得，能力描述同时给出清单原文与仓库自述，两者不一致时并列呈现而不替读者裁决。</p>
+    <p><b>合并规则：</b>两份清单的 Software / Toolboxes 小节按工具名合并；同名但指向不同仓库的<b>不</b>合并 —— TenDeC++ 就是这种情况，两份清单各指一个不同的 C++ 项目，页面上用 owner 消歧，能力描述也各自独立，不互相借用。</p>
+    <p><b>核验：</b>star / 许可证 / 最后推送 / 归档状态取自 GitHub REST 接口；配额耗尽时退回抓仓库页面，此时许可证一栏留空而不是猜一个。1 个条目没有 GitHub 仓库（只有 GitLab 或官网），按 HTTP 可达性判定。</p>
+    <p><b>分类：</b>默认由源表的章节结构与「NN layers」列推出；quimb、cotengra、TorchMPS 三条推不准，在 <span style="font-family:var(--mono)">lit/gen_toolboxes.py</span> 的 CAT_OVERRIDE 里手工指定并写了理由。</p>
+    <p><b>不一致：</b>清单描述与仓库自述冲突时两条都留着，不替读者裁决。例如 TeD-Q 被清单描述为「可微分量子机器学习与 TN 模拟」，而仓库自述说它是 TED-Q <i>数据集</i>；google/TensorNetwork 已被 GitHub 标记为归档（只读），页面上打了标记而不是照抄清单的现在时描述。</p>
+  </details>
+</section>
+
+<section id="tools">
+  <div class="sec-label">Toolboxes</div>
+  <h2>工具总表</h2>
+  <div class="toolbar">
+    <input id="q" type="search" placeholder="搜索工具名 / 能力描述 / 后端 / 分解格式…">
+    <button class="chip on" data-g="all">全部</button>
+    <button class="chip" data-g="basic">基础运算</button>
+    <button class="chip" data-g="layers">模型层</button>
+    <button class="chip" data-g="quantum">量子/TN</button>
+    <button class="chip" data-g="both" title="只看在两份清单里都出现的">双源</button>
+    <button class="chip" data-g="live" title="只看未归档且 2025 年后有推送的">在维护</button>
+    <select id="sortKey">
+      <option value="st">排序：star</option>
+      <option value="pu">排序：最后推送</option>
+      <option value="n">排序：名称</option>
+    </select>
+    <button class="chip" id="sortDirBtn" title="点击切换升降序">▼ 降序</button>
+    <span id="count"></span>
+  </div>
+  <div id="list"></div>
+  <p class="note" style="margin-top:18px">点开任意一行可看到：两份清单各自的原文描述、仓库自述、支持的分解格式与后端、源清单把它归在哪几节，以及本站论文库里链接到该仓库的论文。</p>
+</section>
+
+<section id="formats">
+  <div class="sec-label">Glossary</div>
+  <h2>分解格式速查</h2>
+  <p style="font-size:13.5px;color:var(--muted)">下表照录 Tensor Methods for LLMs 清单的 Tensor Formats 图例，用来解读上面「支持格式」一栏。物理命名与数值线性代数命名指的是同一批对象：MPS 就是 TT，MPO 就是 TTM。</p>
+  <table class="plain"><thead><tr><th>格式</th><th>含义</th></tr></thead>
+  <tbody><tr><td class="term">CP (Canonical Polyadic)</td><td>sum of R canonical rank-one tensors</td></tr>
+<tr><td class="term">Tucker</td><td>a dense core tensor contracted with one factor matrix per mode</td></tr>
+<tr><td class="term">TT (Tensor Train)</td><td>a chain of third-order cores</td></tr>
+<tr><td class="term">TTM (Tensor Train Matrix)</td><td>TT applied to a matrix with input and output modes paired</td></tr>
+<tr><td class="term">MPS (Matrix Product State)</td><td>the physics name for TT</td></tr>
+<tr><td class="term">MPO (Matrix Product Operator)</td><td>the physics name for TTM</td></tr>
+<tr><td class="term">BT (Block Term)</td><td>sum of K Tucker terms</td></tr>
+<tr><td class="term">Kronecker</td><td>matrix written as a sum of R Kronecker products</td></tr></tbody></table>
+</section>
+
+<section id="hardware">
+  <div class="sec-label">Beyond software</div>
+  <h2>硬件协同设计与压缩案例</h2>
+  <p style="font-size:13.5px;color:var(--muted)">这两组不是能直接装的软件包，而是清单 Software 节里一并收录的专用硬件设计与端到端压缩实践，照录以免遗漏。链接为清单原文所给，<b>未</b>逐条核验可达性：ACM 与 IEEE 对脚本请求分别返回 403 和 202，属反爬拦截，不代表链接失效。</p>
+  <h3>硬件协同设计（4）</h3>
+  <table class="plain"><thead><tr><th>设计</th><th>说明</th><th>会议</th><th>年份</th></tr></thead>
+  <tbody><tr><td class="tt"><a href="https://dl.acm.org/doi/10.1145/3579371.3589103" target="_blank" rel="noopener">ETTE: Efficient Tensor-Train-based Computing Engine for Deep Neural Networks</a></td><td>TT-format DNN inference, algorithm/hardware co-design</td><td class="num">ISCA</td><td class="num">2023</td></tr>
+<tr><td class="tt"><a href="https://ieeexplore.ieee.org/document/11333282" target="_blank" rel="noopener">FETTA: Flexible and Efficient Hardware Accelerator for Tensorized Neural Network Training</a></td><td>Tensorized NN training, flexible contraction order</td><td class="num">IEEE</td><td class="num">2025</td></tr>
+<tr><td class="tt"><a href="https://arxiv.org/abs/2501.19135" target="_blank" rel="noopener">A Tensor-Train Decomposition based Compression of LLMs on Group Vector Systolic Accelerator</a></td><td>TT-compressed LLM inference</td><td class="num">Arxiv</td><td class="num">2025</td></tr>
+<tr><td class="tt"><a href="https://ieeexplore.ieee.org/document/11121368" target="_blank" rel="noopener">Ultra Memory-Efficient On-FPGA Training of Transformers via Tensor-Compressed Optimization</a></td><td>Memory-efficient tensorized Transformer training</td><td class="num">IEEE</td><td class="num">2025</td></tr></tbody></table>
+  <h3>压缩案例研究（2）</h3>
+  <table class="plain"><thead><tr><th>论文</th></tr></thead>
+  <tbody><tr><td class="tt"><a href="https://arxiv.org/abs/2603.28534" target="_blank" rel="noopener">Compressing Transformer Language Models via Matrix Product Operator Decomposition: A Case Study on PicoGPT</a></td></tr>
+<tr><td class="tt"><a href="https://arxiv.org/abs/2602.01613v1" target="_blank" rel="noopener">A Practical Tensor-Network Compression Pipeline for Production-Scale Large Language Models</a></td></tr></tbody></table>
+</section>
+
+<section id="corpus">
+  <div class="sec-label">Cross-reference</div>
+  <h2>本库论文附带的开源实现</h2>
+  <p style="font-size:13.5px;color:var(--muted)">下面 43 个仓库不是从社区清单抄来的，而是从本站 <a href="library.html">论文库</a> 里 45 篇论文的 GitHub 字段提出来的（一个仓库可能对应多篇论文）。链接可达性核验于 2026-09-27。标「本页已收录」的说明它同时出现在上面两份清单中 —— 只有 4 个，可见社区清单收的通用工具与单篇论文放出的代码基本是两个集合。</p>
+  <table class="plain"><thead><tr><th>仓库</th><th>论文标题</th><th>年份</th><th>被引</th></tr></thead>
+  <tbody><tr><td class="ghc" rowspan="2"><a href="https://github.com/google/tensornetwork" target="_blank" rel="noopener">google/tensornetwork</a><span class="badge c">本页已收录</span><br><span class="ghn">2 篇</span></td><td class="tt">TensorNetwork: A Library for Physics and Machine Learning</td><td class="num">2019.0</td><td class="num">70</td></tr>
+<tr><td class="tt">TensorNetwork for Machine Learning</td><td class="num">2019.0</td><td class="num">62</td></tr>
+<tr><td class="ghc" rowspan="2"><a href="https://github.com/kbrother/TensorCodec" target="_blank" rel="noopener">kbrother/tensorcodec</a><br><span class="ghn">2 篇</span></td><td class="tt">TensorCodec: Compact Lossy Compression of Tensors without Strong Data Assumptions</td><td class="num">2023.0</td><td class="num">0</td></tr>
+<tr><td class="tt">Compact lossy compression of tensors via neural tensor-train decomposition: T. Kwon et al.</td><td class="num">2025.0</td><td class="num">7</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/adaskin/structure-aware-circuits" target="_blank" rel="noopener">adaskin/structure-aware-circuits</a><br><span class="ghn">1 篇</span></td><td class="tt">Dimension reduction with structure-aware quantum circuits for hybrid machine learning</td><td class="num">2025.0</td><td class="num">0</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/AlbMLpy/tnkm" target="_blank" rel="noopener">albmlpy/tnkm</a><br><span class="ghn">1 篇</span></td><td class="tt">Tensor Network Kernel Machines: A JAX Framework for Machine Learning and Nonlinear System Identification</td><td class="num">2026.0</td><td class="num">0</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/androstj/tensor_rnn" target="_blank" rel="noopener">androstj/tensor_rnn</a><br><span class="ghn">1 篇</span></td><td class="tt">Tensor Decomposition for Compressing Recurrent Neural Network</td><td class="num">2018.0</td><td class="num">6</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/apozas/private-tn" target="_blank" rel="noopener">apozas/private-tn</a><br><span class="ghn">1 篇</span></td><td class="tt">Privacy-preserving machine learning with tensor networks</td><td class="num">2022.0</td><td class="num">5</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/ArneWulff/ssr-with-qc-and-tn" target="_blank" rel="noopener">arnewulff/ssr-with-qc-and-tn</a><br><span class="ghn">1 篇</span></td><td class="tt">Quantum Computing and Tensor Networks for Laminate Design: A Novel Approach to Stacking Sequence Retrieval</td><td class="num">2024.0</td><td class="num">0</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/brain-lab-research/TT-LLM" target="_blank" rel="noopener">brain-lab-research/tt-llm</a><br><span class="ghn">1 篇</span></td><td class="tt">Rethinking the Role of Tensor Decompositions in Post-Training LLM Compression</td><td class="num">2026.0</td><td class="num">2</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/BrianCoyle/IsingBornMachine" target="_blank" rel="noopener">briancoyle/isingbornmachine</a><br><span class="ghn">1 篇</span></td><td class="tt">The Born Supremacy: Quantum Advantage and Training of an Ising Born Machine</td><td class="num">2019.0</td><td class="num">1</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/bsc-quantic/tn4ml" target="_blank" rel="noopener">bsc-quantic/tn4ml</a><span class="badge c">本页已收录</span><br><span class="ghn">1 篇</span></td><td class="tt">tn4ml: Tensor Network Training and Customization for Machine Learning</td><td class="num">2025.0</td><td class="num">0</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/carrasqu/POVM_GENMODEL" target="_blank" rel="noopener">carrasqu/povm_genmodel</a><br><span class="ghn">1 篇</span></td><td class="tt">Reconstructing quantum states with generative models</td><td class="num">2019.0</td><td class="num">474</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/ChenyangLi-97/NN-BCD" target="_blank" rel="noopener">chenyangli-97/nn-bcd</a><br><span class="ghn">1 篇</span></td><td class="tt">On Model Compression for Neural Networks: Framework, Algorithm, and Convergence Guarantee</td><td class="num">2023.0</td><td class="num">0</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/ConstantijnvdP/eidolon" target="_blank" rel="noopener">constantijnvdp/eidolon</a><br><span class="ghn">1 篇</span></td><td class="tt">Entangling Machine Learning with Quantum Tensor Networks</td><td class="num">2024.0</td><td class="num">0</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/declare-lab/Multimodal-Infomax" target="_blank" rel="noopener">declare-lab/multimodal-infomax</a><br><span class="ghn">1 篇</span></td><td class="tt">Improving multimodal fusion with hierarchical mutual information maximization for multimodal sentiment analysis</td><td class="num">2021.0</td><td class="num">872</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/Drachier/PyTreeNet" target="_blank" rel="noopener">drachier/pytreenet</a><br><span class="ghn">1 篇</span></td><td class="tt">PyTreeNet: A Python Library for easy Utilisation of Tree Tensor Networks</td><td class="num">2024.0</td><td class="num">2</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/GiggleLiu/QuantumCircuitBornMachine" target="_blank" rel="noopener">giggleliu/quantumcircuitbornmachine</a><br><span class="ghn">1 篇</span></td><td class="tt">Differentiable Learning of Quantum Circuit Born Machine</td><td class="num">2018.0</td><td class="num">0</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/glivan/tensor_networks_for_probabilistic_modeling" target="_blank" rel="noopener">glivan/tensor_networks_for_probabilistic_modeling</a><br><span class="ghn">1 篇</span></td><td class="tt">Expressive power of tensor-network factorizations for probabilistic modeling</td><td class="num">2019.0</td><td class="num">206</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/guyuxuan9/TensorLLM" target="_blank" rel="noopener">guyuxuan9/tensorllm</a><br><span class="ghn">1 篇</span></td><td class="tt">TensorLLM: Tensorising Multi-Head Attention for Enhanced Reasoning and Compression in LLMs</td><td class="num">2025.0</td><td class="num">—</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/guyuxuan9/TeRA" target="_blank" rel="noopener">guyuxuan9/tera</a><br><span class="ghn">1 篇</span></td><td class="tt">TeRA: Vector-based Random Tensor Network for High-Rank Adaptation of Large Language Models</td><td class="num">2025.0</td><td class="num">—</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/gvalverde21/research-graph-TensorNetworks-MachineLearning" target="_blank" rel="noopener">gvalverde21/research-graph-tensornetworks-machinelearning</a><br><span class="ghn">1 篇</span></td><td class="tt">Quantum-inspired tensor networks in machine learning models</td><td class="num">2026.0</td><td class="num">0</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/joserapa98/tensorization-nns" target="_blank" rel="noopener">joserapa98/tensorization-nns</a><br><span class="ghn">1 篇</span></td><td class="tt">Tensorization of neural networks for improved privacy and interpretability</td><td class="num">2025.0</td><td class="num">0</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/joserapa98/tensorkrowch" target="_blank" rel="noopener">joserapa98/tensorkrowch</a><span class="badge c">本页已收录</span><br><span class="ghn">1 篇</span></td><td class="tt">TensorKrowch: Smooth integration of tensor networks in machine learning</td><td class="num">2023.0</td><td class="num">1</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/jqi41/Pytorch-Tensor-Train-Network" target="_blank" rel="noopener">jqi41/pytorch-tensor-train-network</a><br><span class="ghn">1 篇</span></td><td class="tt">Tensor-to-Vector Regression for Multi-channel Speech Enhancement based on Tensor-Train Network</td><td class="num">2020.0</td><td class="num">3</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/jw9730/spectral-mean-flow" target="_blank" rel="noopener">jw9730/spectral-mean-flow</a><br><span class="ghn">1 篇</span></td><td class="tt">Sequence Modeling with Spectral Mean Flows</td><td class="num">2025.0</td><td class="num">—</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/LionSR/TNLean" target="_blank" rel="noopener">lionsr/tnlean</a><br><span class="ghn">1 篇</span></td><td class="tt">Multi-agent Autoformalization of Tensor Network Theory</td><td class="num">2026.0</td><td class="num">0</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/LumosJiang/Awesome-On-Device-LLMs" target="_blank" rel="noopener">lumosjiang/awesome-on-device-llms</a><br><span class="ghn">1 篇</span></td><td class="tt">On-device large language models: a survey of model compression and system optimization</td><td class="num">2026.0</td><td class="num">5</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/ma-tt-a/awesome-tensor-methods-for-llms" target="_blank" rel="noopener">ma-tt-a/awesome-tensor-methods-for-llms</a><br><span class="ghn">1 篇</span></td><td class="tt">Tensor Methods for Language Models: From Token Representation to Training, Adaptation, Inference, Compression, and Interpretability</td><td class="num">2026.0</td><td class="num">0</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/NieCha/deep_tree_tensor_network" target="_blank" rel="noopener">niecha/deep_tree_tensor_network</a><br><span class="ghn">1 篇</span></td><td class="tt">Deep tree tensor networks</td><td class="num">2025.0</td><td class="num">7</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/pakoromilas/PolySAE" target="_blank" rel="noopener">pakoromilas/polysae</a><br><span class="ghn">1 篇</span></td><td class="tt">PolySAE: Modeling Feature Interactions in Sparse Autoencoders via Polynomial Decoding</td><td class="num">2026.0</td><td class="num">—</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/qiboteam/qiboml" target="_blank" rel="noopener">qiboteam/qiboml</a><br><span class="ghn">1 篇</span></td><td class="tt">Qiboml: towards the orchestration of quantum-classical machine learning</td><td class="num">2025.0</td><td class="num">0</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/Qottmann/anomaly-detection-PEPS" target="_blank" rel="noopener">qottmann/anomaly-detection-peps</a><br><span class="ghn">1 篇</span></td><td class="tt">Unsupervised mapping of phase diagrams of 2D systems from infinite projected entangled-pair states via deep anomaly detection</td><td class="num">2021.0</td><td class="num">20</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/ro-jefferson/entropy_dnn" target="_blank" rel="noopener">ro-jefferson/entropy_dnn</a><br><span class="ghn">1 篇</span></td><td class="tt">Towards quantifying information flows: relative entropy in deep neural networks and the renormalization group</td><td class="num">2021.0</td><td class="num">41</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/spinflip/lattice_in_line" target="_blank" rel="noopener">spinflip/lattice_in_line</a><br><span class="ghn">1 篇</span></td><td class="tt">Lattice in Line: Optimized DMRG ordering for complex lattice geometries</td><td class="num">2026.0</td><td class="num">0</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/tensorgi/TPA" target="_blank" rel="noopener">tensorgi/tpa</a><br><span class="ghn">1 篇</span></td><td class="tt">Tensor product attention is all you need</td><td class="num">2026.0</td><td class="num">57</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/tensorly/quantum" target="_blank" rel="noopener">tensorly/quantum</a><br><span class="ghn">1 篇</span></td><td class="tt">TensorLy-Quantum: Quantum Machine Learning with Tensor Methods</td><td class="num">2021.0</td><td class="num">5</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/timqqt/MERA_Image_Classification" target="_blank" rel="noopener">timqqt/mera_image_classification</a><br><span class="ghn">1 篇</span></td><td class="tt">Quantum Tensor Network in Machine Learning: An Application to Tiny Object Classification</td><td class="num">2021.0</td><td class="num">10</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/tnbar/awesome-tensorial-neural-networks" target="_blank" rel="noopener">tnbar/awesome-tensorial-neural-networks</a><br><span class="ghn">1 篇</span></td><td class="tt">Tensor networks meet neural networks: A survey and future perspectives</td><td class="num">2023.0</td><td class="num">88</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/tnbar/tednet" target="_blank" rel="noopener">tnbar/tednet</a><span class="badge c">本页已收录</span><br><span class="ghn">1 篇</span></td><td class="tt">TedNet: A Pytorch Toolkit for Tensor Decomposition Networks</td><td class="num">2021.0</td><td class="num">—</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/TuringQ/deepquantum" target="_blank" rel="noopener">turingq/deepquantum</a><br><span class="ghn">1 篇</span></td><td class="tt">DeepQuantum: A PyTorch-based Software Platform for Quantum Machine Learning and Photonic Quantum Computing</td><td class="num">2025.0</td><td class="num">0</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/twinkle0331/Xcompression" target="_blank" rel="noopener">twinkle0331/xcompression</a><br><span class="ghn">1 篇</span></td><td class="tt">Exploring Extreme Parameter Compression for Pre-trained Language Models</td><td class="num">2022.0</td><td class="num">—</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/wangleiphy/tensorgrad" target="_blank" rel="noopener">wangleiphy/tensorgrad</a><br><span class="ghn">1 篇</span></td><td class="tt">Differentiable Programming Tensor Networks</td><td class="num">2019.0</td><td class="num">1</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/xguo7/SND-VAE" target="_blank" rel="noopener">xguo7/snd-vae</a><br><span class="ghn">1 篇</span></td><td class="tt">Efficient Deep Generative Models for Spatial Networks via Spanning Tree Sampler</td><td class="num">2025.0</td><td class="num">0</td></tr>
+<tr><td class="ghc" rowspan="1"><a href="https://github.com/ziyangjoy/CoMERA" target="_blank" rel="noopener">ziyangjoy/comera</a><br><span class="ghn">1 篇</span></td><td class="tt">CoMERA: Computing- and Memory-Efficient Training via Rank-Adaptive Tensor Optimization</td><td class="num">2024.0</td><td class="num">—</td></tr></tbody></table>
+</section>
+
+<footer><span>MPS × LLM · Toolboxes</span><span>来源：ma-tt-a/awesome-tensor-methods-for-llms · tnbar/awesome-tensorial-neural-networks</span><span>核验于 2026-09-27</span></footer>
+</div></main>
+<script>
+const D={"tools": [{"n": "TensorNetwork", "alt": [], "cat": "basic", "gh": "google/TensorNetwork", "ghl": "google/tensornetwork", "u": [["GitHub", "https://github.com/google/TensorNetwork"]], "cap": [["Tensorial NN 清单", "General tensor-network construction and contraction"], ["仓库自述", "A library for easy and efficient manipulation of tensor networks."]], "fmt": [], "be": ["Python"], "lay": "", "st": 1869, "lic": "Apache-2.0", "pu": "2023-09-04", "ar": true, "ok": true, "sr": ["tnn"], "h3": ["基础张量运算", "量子与 TN 模拟"], "co": [[95, "TensorNetwork: A Library for Physics and Machine Learning", "2019.0", "70"], [96, "TensorNetwork for Machine Learning", "2019.0", "62"]]}, {"n": "TensorLy", "alt": [], "cat": "basic", "gh": "tensorly/tensorly", "ghl": "tensorly/tensorly", "u": [["GitHub", "https://github.com/tensorly/tensorly"], ["官网", "https://tensorly.org/"]], "cap": [["Tensor Methods for LLMs 清单", "General-purpose tensor toolbox: tensor algebra, tensor decompositions, tensor regression"], ["Tensorial NN 清单", "Tensor algebra, decomposition, regression, and backend abstraction"], ["仓库自述", "TensorLy: Tensor Learning in Python."]], "fmt": ["CP, Tucker, TT"], "be": ["NumPy, PyTorch, JAX, TensorFlow, CuPy or Paddle", "Python: NumPy, PyTorch, JAX, TensorFlow, CuPy"], "lay": "-", "st": 1693, "lic": "", "pu": "2026-09-02", "ar": false, "ok": true, "sr": ["llms", "tnn"], "h3": ["Python 张量库", "基础张量运算"], "co": []}, {"n": "ITensor", "alt": [], "cat": "basic", "gh": "ITensor/ITensors.jl", "ghl": "itensor/itensors.jl", "u": [["GitHub", "https://github.com/ITensor/ITensors.jl"], ["官网", "https://itensor.org/"]], "cap": [["Tensorial NN 清单", "Diagram-oriented tensor-network algorithms"], ["仓库自述", "A Julia library for efficient tensor computations and tensor network calculations. ITensors.jl is supported by the Simons Foundation's Flatiron Institute."]], "fmt": [], "be": ["Julia, C++", "C++ and Julia"], "lay": "", "st": 685, "lic": "Apache-2.0", "pu": "2026-09-26", "ar": false, "ok": true, "sr": ["llms", "tnn"], "h3": ["其他语言", "基础张量运算", "量子与 TN 模拟"], "co": []}, {"n": "tntorch", "alt": [], "cat": "basic", "gh": "rballester/tntorch", "ghl": "rballester/tntorch", "u": [["GitHub", "https://github.com/rballester/tntorch"]], "cap": [["Tensor Methods for LLMs 清单", "Unified interface over TN formats with cross-approximation, rank truncation and fancy indexing"], ["Tensorial NN 清单", "Differentiable TT, CP, and Tucker modeling"], ["仓库自述", "Tensor Network Learning with PyTorch"]], "fmt": ["CP, Tucker, TT, Hybrid formats"], "be": ["PyTorch"], "lay": "-", "st": 312, "lic": "LGPL-3.0", "pu": "2024-05-23", "ar": false, "ok": true, "sr": ["llms", "tnn"], "h3": ["Python 张量库", "基础张量运算"], "co": []}, {"n": "TT-Toolbox", "alt": [], "cat": "basic", "gh": "oseledets/TT-Toolbox", "ghl": "oseledets/tt-toolbox", "u": [["GitHub", "https://github.com/oseledets/TT-Toolbox"]], "cap": [["Tensorial NN 清单", "Core TT operations and algorithms"], ["仓库自述", "The git repository for the TT-Toolbox"]], "fmt": [], "be": ["MATLAB"], "lay": "", "st": 219, "lic": "", "pu": "2025-02-25", "ar": false, "ok": true, "sr": ["tnn"], "h3": ["基础张量运算"], "co": []}, {"n": "Scikit-TT", "alt": [], "cat": "basic", "gh": "PGelss/scikit_tt", "ghl": "pgelss/scikit_tt", "u": [["GitHub", "https://github.com/PGelss/scikit_tt"]], "cap": [["Tensorial NN 清单", "TT solvers, data-driven methods, and model construction"], ["仓库自述", "Tensor Train Toolbox"]], "fmt": [], "be": ["Python, NumPy", "Python"], "lay": "", "st": 131, "lic": "LGPL-3.0", "pu": "2025-10-24", "ar": false, "ok": true, "sr": ["llms", "tnn"], "h3": ["其他语言", "基础张量运算"], "co": []}, {"n": "TTAX", "alt": [], "cat": "basic", "gh": "fasghq/ttax", "ghl": "fasghq/ttax", "u": [["GitHub", "https://github.com/fasghq/ttax"]], "cap": [["仓库自述", "Tensor-Train toolbox in Jax"]], "fmt": [], "be": ["Python, JAX"], "lay": "", "st": 12, "lic": "MIT", "pu": "2021-09-27", "ar": false, "ok": true, "sr": ["llms"], "h3": ["其他语言"], "co": []}, {"n": "TenDeC++", "alt": [], "cat": "basic", "gh": "XiaoYangLiu-FinRL/TensorLet_in_C_C_PlusPlus", "ghl": "xiaoyangliu-finrl/tensorlet_in_c_c_plusplus", "u": [["GitHub", "https://github.com/XiaoYangLiu-FinRL/TensorLet_in_C_C_PlusPlus"]], "cap": [["Tensorial NN 清单", "CP, Tucker, t-SVD, and TT decomposition"], ["仓库自述", "J. Huang, L. Kong, X.-Y. Liu, W. Qu and G. Chen. A C++ library for tensor decomposition. International Performance Computing and Communications Conference (IPCCC), 2019. A C/C++ library for highly ..."]], "fmt": [], "be": ["C++"], "lay": "", "st": 5, "lic": "", "pu": "", "ar": false, "ok": true, "sr": ["tnn"], "h3": ["基础张量运算"], "co": []}, {"n": "TenDeC++", "alt": [], "cat": "basic", "gh": "osmint/TenDeC", "ghl": "osmint/tendec", "u": [["GitHub", "https://github.com/osmint/TenDeC"]], "cap": [["仓库自述", "TenDeC"]], "fmt": [], "be": ["C++"], "lay": "", "st": 3, "lic": "Apache-2.0", "pu": "2020-02-13", "ar": false, "ok": true, "sr": ["llms"], "h3": ["其他语言"], "co": []}, {"n": "Tensor Toolbox for MATLAB", "alt": ["Tensor Toolbox"], "cat": "basic", "gh": "", "ghl": "", "u": [["GitLab", "https://gitlab.com/tensors/tensor_toolbox"], ["官网", "https://www.tensortoolbox.org/"]], "cap": [["Tensorial NN 清单", "General multidimensional arrays and tensor decompositions"]], "fmt": [], "be": ["MATLAB"], "lay": "", "st": null, "lic": "", "pu": "", "ar": false, "ok": true, "sr": ["llms", "tnn"], "h3": ["其他语言", "基础张量运算"], "co": []}, {"n": "T3F", "alt": [], "cat": "layers", "gh": "Bihaqo/t3f", "ghl": "bihaqo/t3f", "u": [["GitHub", "https://github.com/Bihaqo/t3f"]], "cap": [["Tensor Methods for LLMs 清单", "TT computations with batching and Riemannian optimization; TT layers for compressing networks"], ["仓库自述", "Tensor Train decomposition on TensorFlow"]], "fmt": ["TT family"], "be": ["TensorFlow"], "lay": "+", "st": 228, "lic": "MIT", "pu": "2021-04-06", "ar": false, "ok": true, "sr": ["llms"], "h3": ["Python 张量库"], "co": []}, {"n": "TorchMPS", "alt": [], "cat": "layers", "gh": "jemisjoky/TorchMPS", "ghl": "jemisjoky/torchmps", "u": [["GitHub", "https://github.com/jemisjoky/TorchMPS"]], "cap": [["仓库自述", "PyTorch toolbox for matrix product state models"]], "fmt": [], "be": ["Python, PyTorch"], "lay": "", "st": 166, "lic": "MIT", "pu": "2024-03-26", "ar": false, "ok": true, "sr": ["llms"], "h3": ["其他语言"], "co": []}, {"n": "TedNet", "alt": [], "cat": "layers", "gh": "tnbar/tednet", "ghl": "tnbar/tednet", "u": [["GitHub", "https://github.com/tnbar/tednet"]], "cap": [["Tensorial NN 清单", "CP, BTT, Tucker-2, TT, and TR neural layers"], ["仓库自述", "TedNet: A Pytorch Toolkit for Tensor Decomposition Networks"]], "fmt": [], "be": ["Python, PyTorch", "PyTorch"], "lay": "", "st": 100, "lic": "MIT", "pu": "2022-04-06", "ar": false, "ok": true, "sr": ["llms", "tnn"], "h3": ["其他语言", "深度模型实现"], "co": [[201, "TedNet: A Pytorch Toolkit for Tensor Decomposition Networks", "2021.0", ""]]}, {"n": "TensorLy-Torch", "alt": [], "cat": "layers", "gh": "tensorly/torch", "ghl": "tensorly/torch", "u": [["GitHub", "https://github.com/tensorly/torch"], ["官网", "https://tensorly.org/torch/"]], "cap": [["Tensor Methods for LLMs 清单", "Ready-made tensorized and factorized layers built on TensorLy"], ["Tensorial NN 清单", "Tensorized neural layers and factorized parameters"], ["仓库自述", "TensorLy-Torch: Deep Tensor Learning with TensorLy and PyTorch"]], "fmt": ["CP, Tucker, TT, BlockTT (TTM)"], "be": ["PyTorch"], "lay": "+", "st": 84, "lic": "BSD-3-Clause", "pu": "2026-08-12", "ar": false, "ok": true, "sr": ["llms", "tnn"], "h3": ["Python 张量库", "深度模型实现"], "co": []}, {"n": "TensorKrowch", "alt": [], "cat": "layers", "gh": "joserapa98/tensorkrowch", "ghl": "joserapa98/tensorkrowch", "u": [["GitHub", "https://github.com/joserapa98/tensorkrowch"]], "cap": [["Tensor Methods for LLMs 清单", "Construct, train and embed arbitrary tensor networks as layers inside deep models"], ["仓库自述", "Smooth integration of tensor networks in machine learning"]], "fmt": ["Arbitrary TNs"], "be": ["PyTorch"], "lay": "+", "st": 52, "lic": "MIT", "pu": "2026-09-26", "ar": false, "ok": true, "sr": ["llms"], "h3": ["Python 张量库"], "co": [[311, "TensorKrowch: Smooth integration of tensor networks in machine learning", "2023.0", "1"]]}, {"n": "tn4ml", "alt": [], "cat": "layers", "gh": "bsc-quantic/tn4ml", "ghl": "bsc-quantic/tn4ml", "u": [["GitHub", "https://github.com/bsc-quantic/tn4ml"]], "cap": [["Tensor Methods for LLMs 清单", "TN training pipelines for ML: data embedding, objectives, DMRG-like optimization"], ["仓库自述", "Tensor Networks for Machine Learning"]], "fmt": ["MPS, MPO, spaced-MPO"], "be": ["Build on quimb and JAX"], "lay": "+", "st": 24, "lic": "MIT", "pu": "2026-06-23", "ar": false, "ok": true, "sr": ["llms"], "h3": ["Python 张量库"], "co": [[476, "tn4ml: Tensor Network Training and Customization for Machine Learning", "2025.0", "0"]]}, {"n": "Yao", "alt": [], "cat": "quantum", "gh": "QuantumBFS/Yao.jl", "ghl": "quantumbfs/yao.jl", "u": [["GitHub", "https://github.com/QuantumBFS/Yao.jl"]], "cap": [["Tensorial NN 清单", "Extensible quantum algorithm simulation"], ["仓库自述", "Extensible, Efficient Quantum Algorithm Design for Humans."]], "fmt": [], "be": ["Julia"], "lay": "", "st": 1043, "lic": "", "pu": "2026-09-09", "ar": false, "ok": true, "sr": ["tnn"], "h3": ["量子与 TN 模拟"], "co": []}, {"n": "quimb", "alt": [], "cat": "quantum", "gh": "jcmgray/quimb", "ghl": "jcmgray/quimb", "u": [["GitHub", "https://github.com/jcmgray/quimb"]], "cap": [["Tensor Methods for LLMs 清单", "Many-body library with a strong TN module: arbitrary geometry, MPS/PEPS/MERA, DMRG/TEBD"], ["仓库自述", "A python library for quantum information and many-body calculations including tensor networks."]], "fmt": ["Arbitrary TNs"], "be": ["Arbitrary via autoray"], "lay": "-", "st": 669, "lic": "", "pu": "2026-09-26", "ar": false, "ok": true, "sr": ["llms"], "h3": ["Python 张量库"], "co": []}, {"n": "lambeq", "alt": [], "cat": "quantum", "gh": "CQCL/lambeq", "ghl": "cqcl/lambeq", "u": [["GitHub", "https://github.com/CQCL/lambeq"]], "cap": [["Tensorial NN 清单", "Quantum natural language processing"], ["仓库自述", "A high-level Python library for Quantum Natural Language Processing - Quantinuum/lambeq"]], "fmt": [], "be": ["Python"], "lay": "", "st": 541, "lic": "Apache-2.0", "pu": "2026-09-01", "ar": false, "ok": true, "sr": ["tnn"], "h3": ["量子与 TN 模拟"], "co": []}, {"n": "cotengra", "alt": [], "cat": "quantum", "gh": "jcmgray/cotengra", "ghl": "jcmgray/cotengra", "u": [["GitHub", "https://github.com/jcmgray/cotengra"]], "cap": [["Tensor Methods for LLMs 清单", "Contraction path optimization for large tensor networks and einsum expressions"], ["仓库自述", "Hyper optimized contraction trees for large tensor networks and einsums - jcmgray/cotengra"]], "fmt": [], "be": ["Arbitrary via autoray"], "lay": "-", "st": 249, "lic": "Apache-2.0", "pu": "2026-09-01", "ar": false, "ok": true, "sr": ["llms"], "h3": ["Python 张量库"], "co": []}, {"n": "TensorNetworkQuantumSimulator.jl", "alt": [], "cat": "quantum", "gh": "JoeyT1994/TensorNetworkQuantumSimulator.jl", "ghl": "joeyt1994/tensornetworkquantumsimulator.jl", "u": [["GitHub", "https://github.com/JoeyT1994/TensorNetworkQuantumSimulator.jl"]], "cap": [["Tensorial NN 清单", "Quantum-circuit simulation with PEPS-style tensor-network backends"], ["仓库自述", "Package built on top of ITensors.jl and NamedGraphs.jl  for quantum simulation with tensor networks (TNs) of near-arbitrary geometry"]], "fmt": [], "be": ["Julia"], "lay": "", "st": 89, "lic": "MIT", "pu": "2026-09-26", "ar": false, "ok": true, "sr": ["tnn"], "h3": ["量子与 TN 模拟"], "co": []}, {"n": "TeD-Q", "alt": [], "cat": "quantum", "gh": "amore-upf/ted-q", "ghl": "amore-upf/ted-q", "u": [["GitHub", "https://github.com/amore-upf/ted-q"]], "cap": [["Tensorial NN 清单", "Differentiable quantum machine learning and TN simulation"], ["仓库自述", "Repository for the TED-Q dataset: TED Talks and the Questions they Evoke."]], "fmt": [], "be": ["Python"], "lay": "", "st": 5, "lic": "", "pu": "2024-07-11", "ar": false, "ok": true, "sr": ["tnn"], "h3": ["量子与 TN 模拟"], "co": []}], "cat": ["basic", "layers", "quantum"], "catName": {"basic": "基础张量运算与分解", "layers": "深度模型层实现", "quantum": "张量网络与量子模拟"}, "catDesc": {"basic": "张量代数、分解算法（CP / Tucker / TT / t-SVD）与后端抽象，本身不提供神经网络层。", "layers": "把张量分解封装成可训练的神经网络层，可直接嵌进 PyTorch / TensorFlow 模型。", "quantum": "任意几何张量网络的构造、收缩与量子线路模拟，是多体物理与 QNLP 的底座。"}, "srcShort": {"llms": "TMs4LLMs", "tnn": "TNN"}};
+const S={q:"",g:"all",sortKey:"st",sortDir:-1,closed:new Set(),open:new Set()};
+function el(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
+function link(url,txt,cls){const a=document.createElement("a");a.href=url;a.target="_blank";a.rel="noopener";a.textContent=txt;if(cls)a.className=cls;return a}
+function toolEl(p,i){
+ const d=el("div","grow");
+ const r1=el("div","r1");
+ const rt=el("span","rt");
+ if(p.gh)rt.appendChild(el("span","own",p.gh.split("/")[0]+" / "));
+ rt.appendChild(document.createTextNode(p.n));
+ if(p.alt&&p.alt.length)rt.appendChild(el("span","alt","  又名 "+p.alt.join(" / ")));
+ r1.appendChild(rt);
+ const add=(txt,cls)=>r1.appendChild(el("span","badge "+(cls||""),txt));
+ const be=[...new Set((p.be||[]).join(",").split(/[,/]/).map(s=>s.trim()).filter(Boolean))];
+ if(be.length)add(be.slice(0,3).join(" / ")+(be.length>3?" 等":""),"lang");
+ if(p.st!=null)add("★ "+p.st.toLocaleString("en-US"),"st");else add("无 GitHub 数据");
+ if(p.lic)add(p.lic);
+ if(p.pu)add("推送 "+p.pu);
+ if(p.ar)add("已归档","warn");
+ if(p.sr.length>1)add("双源收录","c");
+ if(p.co&&p.co.length)add("本库 "+p.co.length+" 篇","c");
+ const ver=el("span","ver");
+ (p.u||[]).forEach(([lb,url])=>ver.appendChild(link(url,lb,lb==="GitHub"?"gh":"")));
+ if(p.gh)ver.appendChild(link("https://github.com/"+p.gh+"/commits","提交历史"));
+ r1.appendChild(ver);
+ d.appendChild(r1);
+ d.appendChild(el("div","capline",(p.cap&&p.cap.length)?p.cap[0][1]:"（清单与仓库都没有给出一句话说明）"));
+ const det=el("div","detail");
+ (p.cap||[]).forEach(([s,c])=>{const b=el("div","cap"+(s==="仓库自述"?" repo":""));
+  b.appendChild(el("span","s",s));b.appendChild(document.createTextNode(c));det.appendChild(b)});
+ const bits=[];
+ if(p.fmt&&p.fmt.length)bits.push("支持格式："+p.fmt.join("；"));
+ if(p.be&&p.be.length)bits.push("后端 / 语言："+p.be.join("；"));
+ if(p.lay)bits.push("神经网络层："+(p.lay==="+ "?"提供":"不提供"));
+ if(p.h3&&p.h3.length)bits.push("清单归类："+p.h3.join(" / "));
+ bits.push("来源清单："+p.sr.map(s=>D.srcShort[s]||s).join(" + "));
+ if(p.gh)bits.push("仓库："+p.gh);
+ det.appendChild(el("div","kv",bits.join("\n")));
+ if(p.co&&p.co.length){
+  const cw=el("div","corp");
+  cw.appendChild(el("div","ch","本站论文库中链接到此仓库的论文"));
+  const ul=document.createElement("ul");
+  p.co.forEach(([ln,ti,yr,cit])=>{const li=document.createElement("li");
+   li.appendChild(document.createTextNode(ti+" "));
+   li.appendChild(el("span","cy","bibliography 第 "+ln+" 行 · "+(yr||"—")+" · 被引 "+(cit||"—")));
+   ul.appendChild(li)});
+  cw.appendChild(ul);det.appendChild(cw);
+ }
+ d.appendChild(det);
+ if(S.open.has(i))d.classList.add("open");
+ d.addEventListener("click",e=>{if(e.target.tagName==="A")return;
+  d.classList.toggle("open");
+  if(d.classList.contains("open"))S.open.add(i);else S.open.delete(i)});
+ return d;
+}
+function match(p){
+ if(S.g==="both"&&p.sr.length<2)return false;
+ if(S.g==="live"&&(p.ar||!(p.pu&&p.pu>="2025")))return false;
+ if(S.g!=="all"&&S.g!=="both"&&S.g!=="live"&&p.cat!==S.g)return false;
+ const q=S.q.trim().toLowerCase();
+ if(!q)return true;
+ const hay=[p.n,(p.alt||[]).join(" "),(p.cap||[]).map(c=>c[1]).join(" "),
+  (p.fmt||[]).join(" "),(p.be||[]).join(" "),p.gh||"",(p.h3||[]).join(" ")].join(" ").toLowerCase();
+ return hay.indexOf(q)>=0;
+}
+function render(){
+ const list=document.getElementById("list");list.innerHTML="";
+ document.getElementById("sortKey").value=S.sortKey;
+ document.getElementById("sortDirBtn").textContent=S.sortDir<0?"▼ 降序":"▲ 升序";
+ const ps=D.tools.map((p,i)=>({p,i})).filter(({p})=>match(p));
+ const k=S.sortKey,dir=S.sortDir;
+ ps.sort((A,B)=>{
+  if(k==="n")return dir*String(A.p.n).localeCompare(String(B.p.n));
+  const x=A.p[k],y=B.p[k];
+  const xn=(x==null||x===""),yn=(y==null||y==="");
+  if(xn&&yn)return 0;if(xn)return 1;if(yn)return -1;
+  return dir*(x>y?1:(x<y?-1:0))});
+ const chip=document.querySelector('.chip[data-g="'+S.g+'"]');
+ document.getElementById("count").textContent="显示 "+ps.length+" / "+D.tools.length+" 个工具"
+  +(S.g!=="all"&&chip?(" · 筛选「"+chip.textContent+"」"):"")
+  +(S.q?(" · 搜索「"+S.q+"」"):"");
+ const groups=new Map();
+ ps.forEach(e=>{if(!groups.has(e.p.cat))groups.set(e.p.cat,[]);groups.get(e.p.cat).push(e)});
+ D.cat.forEach(c=>{
+  if(!groups.has(c))return;
+  const blk=el("div","gblock");if(S.closed.has(c))blk.classList.add("closed");
+  const gh=el("div","ghead");
+  gh.appendChild(el("span","gname",D.catName[c]));
+  gh.appendChild(el("span","gcount",groups.get(c).length+" 个"));
+  gh.appendChild(el("span","gbar"));
+  gh.appendChild(el("span","gmean",D.catDesc[c]));
+  gh.appendChild(el("span","gchev","▾"));
+  gh.addEventListener("click",()=>{blk.classList.toggle("closed");
+   if(blk.classList.contains("closed"))S.closed.add(c);else S.closed.delete(c)});
+  blk.appendChild(gh);
+  groups.get(c).forEach(e=>blk.appendChild(toolEl(e.p,e.i)));
+  list.appendChild(blk)});
+ if(!ps.length)list.appendChild(el("div","gdesc","没有匹配的工具。"));
+}
+document.getElementById("q").addEventListener("input",e=>{S.q=e.target.value;render()});
+document.getElementById("sortKey").addEventListener("change",e=>{
+ S.sortKey=e.target.value;if(e.target.value==="n")S.sortDir=1;render()});
+document.getElementById("sortDirBtn").addEventListener("click",()=>{S.sortDir*=-1;render()});
+document.querySelectorAll(".chip[data-g]").forEach(ch=>ch.addEventListener("click",()=>{
+ document.querySelectorAll(".chip[data-g]").forEach(c=>c.classList.remove("on"));
+ ch.classList.add("on");S.g=ch.dataset.g;render()}));
+render();
+function t(){const r=document.documentElement;const cur=r.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');const n=cur==='dark'?'light':'dark';r.setAttribute('data-theme',n);localStorage.setItem('tn-theme',n);}
+(function(){const s=localStorage.getItem('tn-theme');if(s)document.documentElement.setAttribute('data-theme',s);else if(matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.setAttribute('data-theme','dark');})();
+(function(){const ls=[...document.querySelectorAll('#side .toc a')];if(!('IntersectionObserver'in window)||!ls.length)return;
+const spy=new IntersectionObserver(es=>{es.forEach(en=>{if(en.isIntersecting)ls.forEach(l=>l.classList.toggle('on',l.getAttribute('href')==='#'+en.target.id));});},{rootMargin:'-30% 0px -60% 0px'});
+document.querySelectorAll('section[id]').forEach(s=>spy.observe(s));})();
+</script>
+</body></html>

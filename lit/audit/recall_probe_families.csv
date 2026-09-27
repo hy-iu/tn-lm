@@ -1,0 +1,16 @@
+family,query,total_results,fetched,in_corpus,missing,missing_on_topic
+q01_mps_lm,"(ti:""matrix product state"" OR ti:""matrix-product state"") AND (abs:""language model"" OR ti:language)",2,2,1,0,0
+q02_tn_seq,"abs:""tensor network"" AND (abs:""sequence modeling"" OR ti:sequence)",11,11,1,9,5
+q03_tt_nn,"(ti:""tensor train"" OR ti:""tensor-train"" OR abs:""tensor train"") AND (ti:""neural network"" OR ti:compression OR abs:""deep neural"")",89,89,12,72,31
+q04_tn_llm,"abs:""tensor network"" AND (abs:""large language model"" OR ti:LLM)",21,21,7,13,6
+q05_born,"abs:""Born machine""",80,80,9,66,26
+q06_mi,"abs:""mutual information"" AND (abs:""natural language"" OR abs:""language model"")",384,384,1,383,0
+q07_qiml_review,"ti:""quantum-inspired tensor network""",14,14,3,11,11
+q08_ttn,"abs:""tree tensor network"" AND (abs:generative OR abs:""language model"")",64,64,6,57,40
+q09_qllm,"ti:quantum AND (ti:""language model"" OR ti:LLM)",126,126,11,113,3
+q10_tt_tf,"(abs:tensorized OR abs:""tensor train"" OR abs:""matrix product state"") AND ti:transformer",694,694,3,689,25
+q11_peps,"abs:""projected entangled pair state"" AND (abs:learning OR abs:""neural network"")",10,10,3,7,5
+q12_ent_lang,abs:entanglement AND ti:language,220,220,3,216,0
+x1_tn_ml,"abs:""tensor network"" AND ti:""machine learning""",73,73,8,60,37
+x2_tn_opt,"abs:""tensor network"" AND abs:""optimization pipeline""",2,2,0,2,1
+x3_tn_software,"abs:""tensor network"" AND (abs:library OR abs:software) AND (abs:""machine learning"" OR abs:""deep learning"")",13,13,0,13,5

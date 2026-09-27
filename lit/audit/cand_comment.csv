@@ -1,0 +1,265 @@
+arxiv_id,comment
+0904.1925,"16 pages, 4 figures"
+1006.3095,
+1201.3974,"11 pages, 9 figures, renamed partial sampling to incomplete sampling for clarity, extra references, plus a variety of minor changes"
+1302.2298,"15 pages, 19 figures"
+1304.6112,"25 pages, 12 figs, 2 tables, includes reference implementation of algorithm, v2.01. Update corrects the display of contraction sequences involving single-tensor traces (i.e. where an index in the input appears twice on the same tensor)"
+1307.1522,"12 pages, 13 figures"
+1310.7605,"Accepted in Phys. Rev. Lett. 9 pages, 13 figures. This version is reorganized to be more pedagogical and includes a new derivation of the FFT decomposition, as well as extra details on the contraction scheme in the Appendix"
+1406.2666,"11 pages, 13 figures"
+1510.00689,"Revised version, with additional numeric results. Main text: 5 pages, 5 figures. Supplementary material: 9 pages, 13 figures"
+1602.07966,"12 pages; example added, proof of equivalence extended"
+1605.05775,"11 pages, 15 figures; updated version includes corrections, links to sample codes, expanded discussion, and additional references"
+1705.10186,"11 pages, 5 captioned figures"
+1710.07324,
+1711.00811,Accepted as a conference paper at ICLR 2018
+1711.03357,"8 pages, 2 figures"
+1712.05134,CVPR2018
+1712.05689,
+1802.10410,Accepted at IJCNN 2018. Source code URL: https://github.com/androstj/tensor_rnn
+1803.11537,10 pages; 14 figures; added new detailed study of noise resilience
+1804.02398,"6 pages, 2 figures, numerics added"
+1804.04168,"9 pages, 7 figures, Github page for code https://github.com/GiggleLiu/QuantumCircuitBornMachine"
+1805.12524,"4 pages, 5 figures, plus appendices"
+1807.07099,
+1812.01171,Minor changes to discussion; version appears in JHEP
+1812.02622,
+1901.07448,5 + 12 pages; 2 figures
+1901.10787,
+1903.09650,"Typos corrected, discussion and refs added; revised version accepted for publication in PRX. Source code available at https://github.com/wangleiphy/tensorgrad"
+1904.02214,"18 pages + supplementary material, 11 figures. Implementation at https://github.com/BrianCoyle/IsingBornMachine v4 : Close to journal published version - significant text structure change, split into main text & appendices. See v2 for unsplit version"
+1905.01330,The TensorNetwork library can be found at https://github.com/google/tensornetwork
+1906.06329,"9 pages, 8 figures. All code can be found at https://github.com/google/tensornetwork"
+1906.10155,feedback welcome; 10 pages; 10 figures; RevTex
+1906.10175,
+1907.01384,
+1907.03741,"14 pages + 14 pages supplementary material, extended version, code available at http://github.com/glivan/tensor_networks_for_probabilistic_modeling"
+1907.10290,"5+6 pages, 3+6 figures. Essential changes and new data were added to this new version"
+1908.10778,"9 pages, 4 figures"
+1909.13831,
+1912.12923,"7 pages, 5 figures; in the second version, results of the BTN with a new structure were added; other modifications including the formulation of Bayes' equation in tensor forms were made"
+2001.04029,"5 pages, 4 figures"
+2002.00544,Accepted to ICASSP 2020. Update reproducible code
+2003.08551,"10 pages, 7 figures"
+2003.08729,
+2004.11038,"5 pages, 3 figures"
+2004.13747,"13 pages, 4 figures"
+2005.09428,
+2006.10619,Accepted at ESANN2020
+2006.15938,"submitted to <<Neural Networks>> on Apr.18,2020; accepted on Sep.08,2020"
+2007.00017,"13 pages, 5 figures, 5 tables, revised version, to appear in Physical Review Research"
+2007.06968,Found Comput Math (2021)
+2008.00691,"17 Pages, 19 Figures"
+2008.11414,"14 pages, 15 figures, 1 table"
+2009.08727,29th European Signal Processing Conference (EUSIPCO) 2021
+2010.00520,
+2010.04196,
+2010.08689,Accepted to Siam Journal on Mathematics of Data Science (SIMODS) 2021
+2010.10029,Accepted as a journal paper in Machine Learning Journal. arXiv admin note: text overlap with arXiv:1807.01406
+2011.00904,"17 pages, 5 figures"
+2012.12953,"19 pages, 1 figure. A more detailed exposition can be found in arXiv:1904.03507. Erratum: Example 3.3 does not satisfy Assumption 3.1 (4)"
+2101.03154,"8 pages, 7 figures"
+2101.06250,"Significantly revised since v1. Main revisions: A thorough comparison of our quantum-inspired optimization strategy with state-of-the-art optimizers. 15 pages, 6 figures"
+2102.01828,
+2103.05545,Updated results with SOC; as published
+2104.05018,Accepted in Neurocomputing
+2104.13436,29 pages
+2105.04983,International Joint Conference on Neural Networks (IJCNN) 2021
+2106.05742,v2: Added short comparison to entanglement devised barren plateau mitigation - relevant paper missed in first submission
+2108.00031,"23 pages, 10 figures; minor improvements, added references; published version; This article belongs to the themed collection ""Mathematical Physics and Numerical Simulation of Many-Particle Systems"", V. Bach and L. Delle Site (eds.), Letters in Mathematical Physics"
+2108.04029,"10 pages, 5 figures, 1 table"
+2108.08312,7+21 pages
+2109.06315,"19 pages, 11 figures. v2: published version"
+2109.14710,
+2109.15200,
+2110.03861,"Preprint. A Non-archival and preliminary venue was presented in NeurIPS 2021, Quantum Tensor Networks in Machine Learning Workshop"
+2110.04253,"20 pages, 9 figures, 4 tables"
+2111.02457,"40 pages, 5 figures"
+2111.14046,"19 pages, 1 figure"
+2112.01474,Dedicated to Ronald DeVore on the occasion of his 80th birthday
+2112.02655,Accepted in: Fourth Workshop on Machine Learning and the Physical Sciences (35th Conference on Neural Information Processing Systems; NeurIPS2021); final version
+2112.05326,"Accepted to NeurIPS 2021, Second Workshop on Quantum Tensor Networks in Machine Learning"
+2112.10239,"6 pages, 2 figures"
+2201.03531,"6 pages, 3 figures"
+2201.04107,"12 pages, 7 figures"
+2201.08770,"34 pages, 18 figures. The main text and appendix have been revised and expanded. We include more details about the numerical simulations and the trained generative models"
+2202.09925,
+2202.12319,"16 pages, 2 figures. Quantumarticle 6.1. The computational appendix is available at https://www.github.com/apozas/private-tn V3: Published version"
+2203.03366,
+2203.06031,"10 pages, 10 Figures"
+2203.15246,
+2203.17089,submitted for publication
+2205.04730,"28 pages, 9 figures"
+2205.04878,"16 pages, 10 figures"
+2205.09414,"PhD Thesis. Defended 26th November 2021, University of Edinburgh"
+2205.15296,"7 pages, 6 figures"
+2206.01273,
+2206.02171,
+2206.03066,The first two authors contributed equally to this work
+2207.02851,7 pages
+2207.06031,"7 pages, 8 figures. In the updated version, we added the unsupervised segmentation of images of cells, and the results with multi-qubit measurements"
+2207.07417,
+2207.11173,
+2207.13645,
+2208.00164,
+2208.04372,"Main text: 8 pages and 6 figures. Supplementary material: 3 pages, 3 figures"
+2209.01195,"10 pages, 6 figures. Appendices: 7 pages, 4 figures"
+2209.02964,
+2209.11058,
+2209.12332,"Journal version: 16 pages, 14 figures"
+2210.08399,
+2210.11130,"PhD thesis. Contains educational introductions to tensor network methods (DMRG, MPS, PEPS), deep learning (Neural networks, convolutional layers, regularization, natural language processing, transformers), and variational quantum algorithms (gate model, parameter shift rule, VQE, adapt-VQE, barren plateaus)"
+2211.10418,
+2212.10421,"12 pages, 8 figures, 37 references"
+2301.07528,This article is submitted to IGARSS 2023 conference
+2301.09363,"Revised version: Small corrections to figures, additional references, and link to open-source code associated with the project. This version is in line with the version accepted for publication"
+2302.03886,"18 pages, 4 figures"
+2303.06340,"10 pages, 7 figures"
+2303.06815,44 pages
+2303.11735,
+2303.15626,"17 pages, 5 figures, 3 tables"
+2303.16214,
+2303.16955,
+2304.01751,"16 pages, 13 figures"
+2304.03606,"21 pages, 35 figures, accepted by Advanced Quantum Technologies"
+2304.05342,
+2305.03160,
+2306.03741,The paper has been accepted by ICASSP 2026
+2306.08595,"20 pages, 2 figures. The TensorKrowch GitHub repository is in https://github.com/joserapa98/tensorkrowch and the TensorKrowch documentation is in https://joserapa98.github.io/tensorkrowch. V3: Accepted version, corrected acknowledgments"
+2307.03292,"11 pages, 16 figures"
+2307.06937,"15 + 14 pages, 8 + 9 figures"
+2308.06900,"7 pages, 6 figures"
+2308.08448,"AI Summit, London"
+2308.11269,"59 pages, 13 figures, 9 tables. - Edited for spelling, grammar, and corrected minor typos in formulas - Adjusted wording in places for better clarity - Corrected contact info - Added Table 1 to clarify variables used in dequantized algs. - Added subsections in QVAS discussing QCBMs and TN-based VQC models - Included additional references as requested by authors to ensure a more exhaustive survey"
+2309.06577,"11 pages, 16 figures, several improvements, and new demonstrations"
+2309.10310,Accepted to ICDM 2023 - IEEE International Conference on Data Mining 2023
+2309.15761,"38 pages, 16 figures, published version"
+2311.01960,Accepted and formatted in Neurips 2023
+2311.11091,
+2311.17798,"25 pages, 17 figures, 3 tables"
+2312.12556,
+2312.16432,
+2401.08001,DATE 2024
+2401.10748,
+2402.06455,"44 pages, 6 figures. Accompanying code repository: https://github.com/ArneWulff/ssr-with-qc-and-tn . Accompanying data repository: https://doi.org/10.4121/ae276609-55b0-4af1-88c0-1102b1b58990 . Changes: Minor revision"
+2402.11740,"22 pages, 14 figures"
+2403.10481,
+2403.12969,See source code at https://github.com/ConstantijnvdP/eidolon
+2404.03182,"18 pages, 6 figures"
+2404.05784,"21 pages, 17 figures"
+2404.11715,"50 pages, 13 figures"
+2404.16580,
+2405.02277,
+2405.02630,
+2405.09952,
+2405.12301,
+2405.14072,"11+8 pages, 12 figures"
+2406.09769,
+2407.07242,"53 pages, 11 figures"
+2407.13249,"(53 pages, 17 figures, code available at https://github.com/Drachier/PyTreeNet)"
+2407.13533,
+2408.13101,"15 pages, 6 figures, ICPR-accepted"
+2409.16346,
+2410.04462,
+2410.09703,"5 pages (main text) + 3 pages (appendices), 5 figures (main text) + 4 figures (appendices)"
+2410.10728,
+2410.11785,"7 pages, 8 figures"
+2410.21417,"46 pages, 4 figures; v2: typos fixed, Fig. 4 added, minor errors in Sec. 6 corrected"
+2412.00858,
+2412.00923,"v2: expanded introduction, more references and clarifications; v3: Added references and further clarifications; v4: minor clarification added"
+2412.05674,"7+23 pages, comments welcome"
+2412.06111,
+2412.12067,"24 pages, 9 figures"
+2501.08727,ICCV 2025
+2501.19135,
+2502.12384,
+2503.10483,
+2503.12790,
+2503.15460,"31 pages, 25 figures (main manuscript); 7 pages, 3 figures (supplemental information)"
+2504.06474,"14 Pages, 17 Figures; IEEE TCAD;"
+2505.00126,
+2505.03399,
+2505.07612,"12 pages, 11 figures"
+2505.23537,
+2506.05477,
+2506.11711,"14 pages, 14 figures, extended version of the presented and published at the 1st International Conference on Quantum Software (IQSOFT)"
+2506.14569,
+2506.22340,
+2506.23560,Accepted for publication in EUSIPCO 2025
+2507.01235,Funding course: NSERC and Canada Research Chair program
+2507.05222,
+2507.21726,"24 pages, 6 figures, 4 pseudo-code algorithms, 1 table; updated version: independent integer numbering for theorems, equations"
+2508.00024,"Accepted for Poster, Presentation and Proceedings at: 3rd International Workshop on AI for Quantum and Quantum for AI (AIQxQIA 2025), co-located with ECAI 2025, Bologna, Italy, 25-30 October 2025"
+2508.00048,Any comments are welcome! The simulation code is provided at https://github.com/adaskin/structure-aware-circuits
+2509.03234,Accepted at ACL main conference 2026. Code is available at https://github.com/guyuxuan9/TeRA
+2509.05051,"Accepted to the proceedings of IEEE Quantum Artificial Intelligence, 6 pages, 3 figures"
+2509.08385,Work presented at the 3rd International Workshop on Quantum Machine Learning: From Research to Practice (QML@QCE'25)
+2509.09463,"18 pages, 6 figures. Substantially revised following peer review, including two new sections. Published in Linear Algebra and its Applications"
+2509.20105,
+2510.08476,"26 pages, 3 figures, supersedes arXiv:2504.05997"
+2510.11773,"14 pages, 13 figures. Package available at: https://github.com/qiboteam/qiboml"
+2510.13386,
+2510.14099,"Title changed, 49 pages, 8 figures, 1 table"
+2510.15366,"30 pages, 9 figures"
+2511.01845,"45 pages, 17 figures"
+2511.02413,
+2511.11346,
+2512.15875,
+2512.18059,"37 pages, 6 figures"
+2512.18995,"31 pages, 32 figures, 3 tables. Code is available at https://github.com/TuringQ/deepquantum"
+2512.22672,
+2601.03035,"65 pages, 92 figures. Set of lectures given at the Jyväskylä summer school during August 2025"
+2601.10194,
+2601.12375,"13 pages, 4 figures, 5 tables"
+2601.19650,"8 figures, 15 pages; Updated results after feedback"
+2601.20026,
+2602.01996,"36 pages, 16 figures, this is the author-accepted version of the article published in ACM Transactions on Embedded Computing Systems (TECS), Vol. 24, No. 6"
+2602.11042,"14 pages, 1 figure"
+2602.15906,"7 pages, 4 figures"
+2602.17281,AAM
+2602.20175,"11 pages, 7 figures"
+2603.09789,Revised title to better highlight the paper's main theme; updated and clarified the experimental results discussion
+2603.11014,
+2603.11658,"8 pages, 10 figures, accepted paper for ICRA2026"
+2603.12851,"10 pages, 7 figures"
+2603.14576,"16 + 35 pages, 3 + 4 figures"
+2603.17711,"22 pages, 10 figures; small changes throughout and addition of best practices sections; comments welcome"
+2603.23106,"22 pages, 13 figures"
+2603.23407,"16 pages, 7 figures"
+2603.24069,"12 pages, 6 figures"
+2603.27856,
+2603.28065,"14 pages, 16 figures"
+2604.05856,"13 pages, 5 figures, 4 tables"
+2604.06541,"26 pages, 5 figures"
+2604.18776,
+2604.28008,
+2605.01494,"33 pages, 9 figures"
+2605.10258,"11 pages, 7 figures. Accepted at the 2026 IEEE International Conference on Quantum Computing and Engineering (QCE 2026), QGDD Technical Papers track"
+2605.19122,
+2605.27735,
+2606.00130,"6 figure, 36 pages, to be submitted to Journal and confrence"
+2606.01975,Submitted to the proceedings of the deRSE26 conference
+2606.06093,"21 pages, 19 figures"
+2606.08565,"38 pages, 17 figures"
+2606.10179,23 pages
+2606.17064,"28 pages, 11 figures"
+2606.26900,"26 pages, 6 figures"
+2607.07857,5+2+33 pages; 3+3+11 figures; 6 tables; An accompanying blueprint document is available at https://lionsr.github.io/TNLean/blueprint-ch01-12.pdf
+2607.08674,
+2607.09113,
+2607.19503,
+2607.28435,
+2608.00194,
+2608.07043,"10 pages, 6 figures, 4 tables, 1 listing. Code available at: https://github.com/AlbMLpy/tnkm"
+2608.14169,"12 (main text) + 8 pages (appendix and references), 3 figures"
+2608.16994,"11 pages, 2 appendix pages, 4 figures, 3 tables"
+2608.17135,"23 pages, 10 figures"
+2608.19071,
+2608.19789,
+2608.23366,"20 pages, 3 figures, 1 table"
+2608.29612,"15 (main text) + 6 (SM) pages, 4 + 1 figures"
+2609.05313,"16 pages, 4 figures, and 2 tables"
+2609.23050,
+2609.25384,
+2609.28029,"18 pages, 3 figures, 8 tables. Submitted to SIAM Journal on Matrix Analysis and Applications (SIMAX)"
+2609.28229,

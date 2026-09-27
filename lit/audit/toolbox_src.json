@@ -1,0 +1,830 @@
+[
+ {
+  "src": "llms",
+  "h2": "Software",
+  "h3": "Python tensor libraries",
+  "cols": [
+   "Library",
+   "Decompositions",
+   "Description",
+   "NN layers",
+   "Backend"
+  ],
+  "cells": {
+   "Library": "[TensorLy](https://github.com/tensorly/tensorly)",
+   "Decompositions": "CP, Tucker, TT",
+   "Description": "General-purpose tensor toolbox: tensor algebra, tensor decompositions, tensor regression",
+   "NN layers": "–",
+   "Backend": "NumPy, PyTorch, JAX, TensorFlow, CuPy or Paddle"
+  },
+  "links": [
+   {
+    "text": "TensorLy",
+    "url": "https://github.com/tensorly/tensorly"
+   }
+  ],
+  "raw": "| [TensorLy](https://github.com/tensorly/tensorly)           | CP, Tucker, TT                 | General-purpose tensor toolbox: tensor algebra, tensor decompositions, tensor regression       | –         | NumPy, PyTorch, JAX, TensorFlow, CuPy or Paddle |"
+ },
+ {
+  "src": "llms",
+  "h2": "Software",
+  "h3": "Python tensor libraries",
+  "cols": [
+   "Library",
+   "Decompositions",
+   "Description",
+   "NN layers",
+   "Backend"
+  ],
+  "cells": {
+   "Library": "[TensorLy-Torch](https://github.com/tensorly/torch)",
+   "Decompositions": "CP, Tucker, TT, BlockTT (TTM)",
+   "Description": "Ready-made tensorized and factorized layers built on TensorLy",
+   "NN layers": "+",
+   "Backend": "PyTorch"
+  },
+  "links": [
+   {
+    "text": "TensorLy-Torch",
+    "url": "https://github.com/tensorly/torch"
+   }
+  ],
+  "raw": "| [TensorLy-Torch](https://github.com/tensorly/torch)        | CP, Tucker, TT, BlockTT (TTM)  | Ready-made tensorized and factorized layers built on TensorLy                                  | +         | PyTorch                                         |"
+ },
+ {
+  "src": "llms",
+  "h2": "Software",
+  "h3": "Python tensor libraries",
+  "cols": [
+   "Library",
+   "Decompositions",
+   "Description",
+   "NN layers",
+   "Backend"
+  ],
+  "cells": {
+   "Library": "[tntorch](https://github.com/rballester/tntorch)",
+   "Decompositions": "CP, Tucker, TT, Hybrid formats",
+   "Description": "Unified interface over TN formats with cross-approximation, rank truncation and fancy indexing",
+   "NN layers": "-",
+   "Backend": "PyTorch"
+  },
+  "links": [
+   {
+    "text": "tntorch",
+    "url": "https://github.com/rballester/tntorch"
+   }
+  ],
+  "raw": "| [tntorch](https://github.com/rballester/tntorch)           | CP, Tucker, TT, Hybrid formats | Unified interface over TN formats with cross-approximation, rank truncation and fancy indexing | -         | PyTorch                                         |"
+ },
+ {
+  "src": "llms",
+  "h2": "Software",
+  "h3": "Python tensor libraries",
+  "cols": [
+   "Library",
+   "Decompositions",
+   "Description",
+   "NN layers",
+   "Backend"
+  ],
+  "cells": {
+   "Library": "[T3F](https://github.com/Bihaqo/t3f/tree/develop)",
+   "Decompositions": "TT family",
+   "Description": "TT computations with batching and Riemannian optimization; TT layers for compressing networks",
+   "NN layers": "+",
+   "Backend": "TensorFlow"
+  },
+  "links": [
+   {
+    "text": "T3F",
+    "url": "https://github.com/Bihaqo/t3f/tree/develop"
+   }
+  ],
+  "raw": "| [T3F](https://github.com/Bihaqo/t3f/tree/develop)          | TT family                      | TT computations with batching and Riemannian optimization; TT layers for compressing networks  | +         | TensorFlow                                      |"
+ },
+ {
+  "src": "llms",
+  "h2": "Software",
+  "h3": "Python tensor libraries",
+  "cols": [
+   "Library",
+   "Decompositions",
+   "Description",
+   "NN layers",
+   "Backend"
+  ],
+  "cells": {
+   "Library": "[TensorKrowch](https://github.com/joserapa98/tensorkrowch)",
+   "Decompositions": "Arbitrary TNs",
+   "Description": "Construct, train and embed arbitrary tensor networks as layers inside deep models",
+   "NN layers": "+",
+   "Backend": "PyTorch"
+  },
+  "links": [
+   {
+    "text": "TensorKrowch",
+    "url": "https://github.com/joserapa98/tensorkrowch"
+   }
+  ],
+  "raw": "| [TensorKrowch](https://github.com/joserapa98/tensorkrowch) | Arbitrary TNs                  | Construct, train and embed arbitrary tensor networks as layers inside deep models              | +         | PyTorch                                         |"
+ },
+ {
+  "src": "llms",
+  "h2": "Software",
+  "h3": "Python tensor libraries",
+  "cols": [
+   "Library",
+   "Decompositions",
+   "Description",
+   "NN layers",
+   "Backend"
+  ],
+  "cells": {
+   "Library": "[tn4ml](https://github.com/bsc-quantic/tn4ml)",
+   "Decompositions": "MPS, MPO, spaced-MPO",
+   "Description": "TN training pipelines for ML: data embedding, objectives, DMRG-like optimization",
+   "NN layers": "+",
+   "Backend": "Build on quimb and JAX"
+  },
+  "links": [
+   {
+    "text": "tn4ml",
+    "url": "https://github.com/bsc-quantic/tn4ml"
+   }
+  ],
+  "raw": "| [tn4ml](https://github.com/bsc-quantic/tn4ml)              | MPS, MPO, spaced-MPO           | TN training pipelines for ML: data embedding, objectives, DMRG-like optimization               | +         | Build on quimb and JAX                          |"
+ },
+ {
+  "src": "llms",
+  "h2": "Software",
+  "h3": "Python tensor libraries",
+  "cols": [
+   "Library",
+   "Decompositions",
+   "Description",
+   "NN layers",
+   "Backend"
+  ],
+  "cells": {
+   "Library": "[quimb](https://github.com/jcmgray/quimb)",
+   "Decompositions": "Arbitrary TNs",
+   "Description": "Many-body library with a strong TN module: arbitrary geometry, MPS/PEPS/MERA, DMRG/TEBD",
+   "NN layers": "–",
+   "Backend": "Arbitrary via autoray"
+  },
+  "links": [
+   {
+    "text": "quimb",
+    "url": "https://github.com/jcmgray/quimb"
+   }
+  ],
+  "raw": "| [quimb](https://github.com/jcmgray/quimb)                  | Arbitrary TNs                  | Many-body library with a strong TN module: arbitrary geometry, MPS/PEPS/MERA, DMRG/TEBD        | –         | Arbitrary via autoray                           |"
+ },
+ {
+  "src": "llms",
+  "h2": "Software",
+  "h3": "Python tensor libraries",
+  "cols": [
+   "Library",
+   "Decompositions",
+   "Description",
+   "NN layers",
+   "Backend"
+  ],
+  "cells": {
+   "Library": "[cotengra](https://github.com/jcmgray/cotengra)",
+   "Decompositions": "–",
+   "Description": "Contraction path optimization for large tensor networks and einsum expressions",
+   "NN layers": "–",
+   "Backend": "Arbitrary via autoray"
+  },
+  "links": [
+   {
+    "text": "cotengra",
+    "url": "https://github.com/jcmgray/cotengra"
+   }
+  ],
+  "raw": "| [cotengra](https://github.com/jcmgray/cotengra)            | –                              | Contraction path optimization for large tensor networks and einsum expressions                 | –         | Arbitrary via autoray                           |"
+ },
+ {
+  "src": "llms",
+  "h2": "Software",
+  "h3": "Hardware co-design",
+  "cols": [
+   "Design",
+   "Description",
+   "Venue",
+   "Year"
+  ],
+  "cells": {
+   "Design": "[ETTE: Efficient Tensor-Train-based Computing Engine for Deep Neural Networks](https://dl.acm.org/doi/10.1145/3579371.3589103)",
+   "Description": "TT-format DNN inference, algorithm/hardware co-design",
+   "Venue": "ISCA",
+   "Year": "2023"
+  },
+  "links": [
+   {
+    "text": "ETTE: Efficient Tensor-Train-based Computing Engine for Deep Neural Networks",
+    "url": "https://dl.acm.org/doi/10.1145/3579371.3589103"
+   }
+  ],
+  "raw": "| [ETTE: Efficient Tensor-Train-based Computing Engine for Deep Neural Networks](https://dl.acm.org/doi/10.1145/3579371.3589103)              | TT-format DNN inference, algorithm/hardware co-design | ISCA  | 2023 |"
+ },
+ {
+  "src": "llms",
+  "h2": "Software",
+  "h3": "Hardware co-design",
+  "cols": [
+   "Design",
+   "Description",
+   "Venue",
+   "Year"
+  ],
+  "cells": {
+   "Design": "[FETTA: Flexible and Efficient Hardware Accelerator for Tensorized Neural Network Training](https://ieeexplore.ieee.org/document/11333282)",
+   "Description": "Tensorized NN training, flexible contraction order",
+   "Venue": "IEEE",
+   "Year": "2025"
+  },
+  "links": [
+   {
+    "text": "FETTA: Flexible and Efficient Hardware Accelerator for Tensorized Neural Network Training",
+    "url": "https://ieeexplore.ieee.org/document/11333282"
+   }
+  ],
+  "raw": "| [FETTA: Flexible and Efficient Hardware Accelerator for Tensorized Neural Network Training](https://ieeexplore.ieee.org/document/11333282)  | Tensorized NN training, flexible contraction order    | IEEE  | 2025 |"
+ },
+ {
+  "src": "llms",
+  "h2": "Software",
+  "h3": "Hardware co-design",
+  "cols": [
+   "Design",
+   "Description",
+   "Venue",
+   "Year"
+  ],
+  "cells": {
+   "Design": "[A Tensor-Train Decomposition based Compression of LLMs on Group Vector Systolic Accelerator](https://arxiv.org/abs/2501.19135)",
+   "Description": "TT-compressed LLM inference",
+   "Venue": "Arxiv",
+   "Year": "2025"
+  },
+  "links": [
+   {
+    "text": "A Tensor-Train Decomposition based Compression of LLMs on Group Vector Systolic Accelerator",
+    "url": "https://arxiv.org/abs/2501.19135"
+   }
+  ],
+  "raw": "| [A Tensor-Train Decomposition based Compression of LLMs on Group Vector Systolic Accelerator](https://arxiv.org/abs/2501.19135)             | TT-compressed LLM inference                           | Arxiv | 2025 |"
+ },
+ {
+  "src": "llms",
+  "h2": "Software",
+  "h3": "Hardware co-design",
+  "cols": [
+   "Design",
+   "Description",
+   "Venue",
+   "Year"
+  ],
+  "cells": {
+   "Design": "[Ultra Memory-Efficient On-FPGA Training of Transformers via Tensor-Compressed Optimization](https://ieeexplore.ieee.org/document/11121368)",
+   "Description": "Memory-efficient tensorized Transformer training",
+   "Venue": "IEEE",
+   "Year": "2025"
+  },
+  "links": [
+   {
+    "text": "Ultra Memory-Efficient On-FPGA Training of Transformers via Tensor-Compressed Optimization",
+    "url": "https://ieeexplore.ieee.org/document/11121368"
+   }
+  ],
+  "raw": "| [Ultra Memory-Efficient On-FPGA Training of Transformers via Tensor-Compressed Optimization](https://ieeexplore.ieee.org/document/11121368) | Memory-efficient tensorized Transformer training      | IEEE  | 2025 |"
+ },
+ {
+  "src": "llms",
+  "h2": "Software",
+  "h3": "Others",
+  "cols": [
+   "Library",
+   "Language / Backend"
+  ],
+  "cells": {
+   "Library": "[ITensor](https://github.com/ITensor/ITensors.jl)",
+   "Language / Backend": "Julia, C++"
+  },
+  "links": [
+   {
+    "text": "ITensor",
+    "url": "https://github.com/ITensor/ITensors.jl"
+   }
+  ],
+  "raw": "| [ITensor](https://github.com/ITensor/ITensors.jl)                      | Julia, C++         |"
+ },
+ {
+  "src": "llms",
+  "h2": "Software",
+  "h3": "Others",
+  "cols": [
+   "Library",
+   "Language / Backend"
+  ],
+  "cells": {
+   "Library": "[Tensor Toolbox for MATLAB](https://gitlab.com/tensors/tensor_toolbox)",
+   "Language / Backend": "MATLAB"
+  },
+  "links": [
+   {
+    "text": "Tensor Toolbox for MATLAB",
+    "url": "https://gitlab.com/tensors/tensor_toolbox"
+   }
+  ],
+  "raw": "| [Tensor Toolbox for MATLAB](https://gitlab.com/tensors/tensor_toolbox) | MATLAB             |"
+ },
+ {
+  "src": "llms",
+  "h2": "Software",
+  "h3": "Others",
+  "cols": [
+   "Library",
+   "Language / Backend"
+  ],
+  "cells": {
+   "Library": "[TenDeC++](https://github.com/osmint/TenDeC)",
+   "Language / Backend": "C++"
+  },
+  "links": [
+   {
+    "text": "TenDeC++",
+    "url": "https://github.com/osmint/TenDeC"
+   }
+  ],
+  "raw": "| [TenDeC++](https://github.com/osmint/TenDeC)                           | C++                |"
+ },
+ {
+  "src": "llms",
+  "h2": "Software",
+  "h3": "Others",
+  "cols": [
+   "Library",
+   "Language / Backend"
+  ],
+  "cells": {
+   "Library": "[Scikit-TT](https://github.com/PGelss/scikit_tt)",
+   "Language / Backend": "Python, NumPy"
+  },
+  "links": [
+   {
+    "text": "Scikit-TT",
+    "url": "https://github.com/PGelss/scikit_tt"
+   }
+  ],
+  "raw": "| [Scikit-TT](https://github.com/PGelss/scikit_tt)                       | Python, NumPy      |"
+ },
+ {
+  "src": "llms",
+  "h2": "Software",
+  "h3": "Others",
+  "cols": [
+   "Library",
+   "Language / Backend"
+  ],
+  "cells": {
+   "Library": "[TTAX](https://github.com/fasghq/ttax)",
+   "Language / Backend": "Python, JAX"
+  },
+  "links": [
+   {
+    "text": "TTAX",
+    "url": "https://github.com/fasghq/ttax"
+   }
+  ],
+  "raw": "| [TTAX](https://github.com/fasghq/ttax)                                 | Python, JAX        |"
+ },
+ {
+  "src": "llms",
+  "h2": "Software",
+  "h3": "Others",
+  "cols": [
+   "Library",
+   "Language / Backend"
+  ],
+  "cells": {
+   "Library": "[TorchMPS](https://github.com/jemisjoky/TorchMPS)",
+   "Language / Backend": "Python, PyTorch"
+  },
+  "links": [
+   {
+    "text": "TorchMPS",
+    "url": "https://github.com/jemisjoky/TorchMPS"
+   }
+  ],
+  "raw": "| [TorchMPS](https://github.com/jemisjoky/TorchMPS)                      | Python, PyTorch    |"
+ },
+ {
+  "src": "llms",
+  "h2": "Software",
+  "h3": "Others",
+  "cols": [
+   "Library",
+   "Language / Backend"
+  ],
+  "cells": {
+   "Library": "[TedNet](https://github.com/tnbar/tednet)",
+   "Language / Backend": "Python, PyTorch"
+  },
+  "links": [
+   {
+    "text": "TedNet",
+    "url": "https://github.com/tnbar/tednet"
+   }
+  ],
+  "raw": "| [TedNet](https://github.com/tnbar/tednet)                              | Python, PyTorch    |"
+ },
+ {
+  "src": "llms",
+  "h2": "Software",
+  "h3": "Case Studies",
+  "cols": [],
+  "cells": {
+   "item": "[Compressing Transformer Language Models via Matrix Product Operator Decomposition: A Case Study on PicoGPT](https://arxiv.org/abs/2603.28534)"
+  },
+  "links": [
+   {
+    "text": "Compressing Transformer Language Models via Matrix Product Operator Decomposition: A Case Study on PicoGPT",
+    "url": "https://arxiv.org/abs/2603.28534"
+   }
+  ],
+  "raw": "- [Compressing Transformer Language Models via Matrix Product Operator Decomposition: A Case Study on PicoGPT](https://arxiv.org/abs/2603.28534)"
+ },
+ {
+  "src": "llms",
+  "h2": "Software",
+  "h3": "Case Studies",
+  "cols": [],
+  "cells": {
+   "item": "[A Practical Tensor-Network Compression Pipeline for Production-Scale Large Language Models](https://arxiv.org/abs/2602.01613v1)"
+  },
+  "links": [
+   {
+    "text": "A Practical Tensor-Network Compression Pipeline for Production-Scale Large Language Models",
+    "url": "https://arxiv.org/abs/2602.01613v1"
+   }
+  ],
+  "raw": "- [A Practical Tensor-Network Compression Pipeline for Production-Scale Large Language Models](https://arxiv.org/abs/2602.01613v1)"
+ },
+ {
+  "src": "tnn",
+  "h2": "Toolboxes",
+  "h3": "Basic Tensor Operations",
+  "cols": [
+   "Toolbox",
+   "Main capability",
+   "Backend"
+  ],
+  "cells": {
+   "Toolbox": "[TensorLy](https://tensorly.org/)",
+   "Main capability": "Tensor algebra, decomposition, regression, and backend abstraction",
+   "Backend": "Python: NumPy, PyTorch, JAX, TensorFlow, CuPy"
+  },
+  "links": [
+   {
+    "text": "TensorLy",
+    "url": "https://tensorly.org/"
+   }
+  ],
+  "raw": "| [TensorLy](https://tensorly.org/) | Tensor algebra, decomposition, regression, and backend abstraction | Python: NumPy, PyTorch, JAX, TensorFlow, CuPy |"
+ },
+ {
+  "src": "tnn",
+  "h2": "Toolboxes",
+  "h3": "Basic Tensor Operations",
+  "cols": [
+   "Toolbox",
+   "Main capability",
+   "Backend"
+  ],
+  "cells": {
+   "Toolbox": "[Tensor Toolbox](https://www.tensortoolbox.org/)",
+   "Main capability": "General multidimensional arrays and tensor decompositions",
+   "Backend": "MATLAB"
+  },
+  "links": [
+   {
+    "text": "Tensor Toolbox",
+    "url": "https://www.tensortoolbox.org/"
+   }
+  ],
+  "raw": "| [Tensor Toolbox](https://www.tensortoolbox.org/) | General multidimensional arrays and tensor decompositions | MATLAB |"
+ },
+ {
+  "src": "tnn",
+  "h2": "Toolboxes",
+  "h3": "Basic Tensor Operations",
+  "cols": [
+   "Toolbox",
+   "Main capability",
+   "Backend"
+  ],
+  "cells": {
+   "Toolbox": "[tntorch](https://github.com/rballester/tntorch)",
+   "Main capability": "Differentiable TT, CP, and Tucker modeling",
+   "Backend": "PyTorch"
+  },
+  "links": [
+   {
+    "text": "tntorch",
+    "url": "https://github.com/rballester/tntorch"
+   }
+  ],
+  "raw": "| [tntorch](https://github.com/rballester/tntorch) | Differentiable TT, CP, and Tucker modeling | PyTorch |"
+ },
+ {
+  "src": "tnn",
+  "h2": "Toolboxes",
+  "h3": "Basic Tensor Operations",
+  "cols": [
+   "Toolbox",
+   "Main capability",
+   "Backend"
+  ],
+  "cells": {
+   "Toolbox": "[ITensor](https://itensor.org/)",
+   "Main capability": "Diagram-oriented tensor-network algorithms",
+   "Backend": "C++ and Julia"
+  },
+  "links": [
+   {
+    "text": "ITensor",
+    "url": "https://itensor.org/"
+   }
+  ],
+  "raw": "| [ITensor](https://itensor.org/) | Diagram-oriented tensor-network algorithms | C++ and Julia |"
+ },
+ {
+  "src": "tnn",
+  "h2": "Toolboxes",
+  "h3": "Basic Tensor Operations",
+  "cols": [
+   "Toolbox",
+   "Main capability",
+   "Backend"
+  ],
+  "cells": {
+   "Toolbox": "[TensorNetwork](https://github.com/google/TensorNetwork)",
+   "Main capability": "General tensor-network construction and contraction",
+   "Backend": "Python"
+  },
+  "links": [
+   {
+    "text": "TensorNetwork",
+    "url": "https://github.com/google/TensorNetwork"
+   }
+  ],
+  "raw": "| [TensorNetwork](https://github.com/google/TensorNetwork) | General tensor-network construction and contraction | Python |"
+ },
+ {
+  "src": "tnn",
+  "h2": "Toolboxes",
+  "h3": "Basic Tensor Operations",
+  "cols": [
+   "Toolbox",
+   "Main capability",
+   "Backend"
+  ],
+  "cells": {
+   "Toolbox": "[Scikit-TT](https://github.com/PGelss/scikit_tt)",
+   "Main capability": "TT solvers, data-driven methods, and model construction",
+   "Backend": "Python"
+  },
+  "links": [
+   {
+    "text": "Scikit-TT",
+    "url": "https://github.com/PGelss/scikit_tt"
+   }
+  ],
+  "raw": "| [Scikit-TT](https://github.com/PGelss/scikit_tt) | TT solvers, data-driven methods, and model construction | Python |"
+ },
+ {
+  "src": "tnn",
+  "h2": "Toolboxes",
+  "h3": "Basic Tensor Operations",
+  "cols": [
+   "Toolbox",
+   "Main capability",
+   "Backend"
+  ],
+  "cells": {
+   "Toolbox": "[TT-Toolbox](https://github.com/oseledets/TT-Toolbox)",
+   "Main capability": "Core TT operations and algorithms",
+   "Backend": "MATLAB"
+  },
+  "links": [
+   {
+    "text": "TT-Toolbox",
+    "url": "https://github.com/oseledets/TT-Toolbox"
+   }
+  ],
+  "raw": "| [TT-Toolbox](https://github.com/oseledets/TT-Toolbox) | Core TT operations and algorithms | MATLAB |"
+ },
+ {
+  "src": "tnn",
+  "h2": "Toolboxes",
+  "h3": "Basic Tensor Operations",
+  "cols": [
+   "Toolbox",
+   "Main capability",
+   "Backend"
+  ],
+  "cells": {
+   "Toolbox": "[TenDeC++](https://github.com/XiaoYangLiu-FinRL/TensorLet_in_C_C_PlusPlus)",
+   "Main capability": "CP, Tucker, t-SVD, and TT decomposition",
+   "Backend": "C++"
+  },
+  "links": [
+   {
+    "text": "TenDeC++",
+    "url": "https://github.com/XiaoYangLiu-FinRL/TensorLet_in_C_C_PlusPlus"
+   }
+  ],
+  "raw": "| [TenDeC++](https://github.com/XiaoYangLiu-FinRL/TensorLet_in_C_C_PlusPlus) | CP, Tucker, t-SVD, and TT decomposition | C++ |"
+ },
+ {
+  "src": "tnn",
+  "h2": "Toolboxes",
+  "h3": "Deep-Model Implementations",
+  "cols": [
+   "Toolbox",
+   "Main capability",
+   "Backend"
+  ],
+  "cells": {
+   "Toolbox": "[TensorLy-Torch](https://tensorly.org/torch/)",
+   "Main capability": "Tensorized neural layers and factorized parameters",
+   "Backend": "PyTorch"
+  },
+  "links": [
+   {
+    "text": "TensorLy-Torch",
+    "url": "https://tensorly.org/torch/"
+   }
+  ],
+  "raw": "| [TensorLy-Torch](https://tensorly.org/torch/) | Tensorized neural layers and factorized parameters | PyTorch |"
+ },
+ {
+  "src": "tnn",
+  "h2": "Toolboxes",
+  "h3": "Deep-Model Implementations",
+  "cols": [
+   "Toolbox",
+   "Main capability",
+   "Backend"
+  ],
+  "cells": {
+   "Toolbox": "[TedNet](https://github.com/tnbar/tednet)",
+   "Main capability": "CP, BTT, Tucker-2, TT, and TR neural layers",
+   "Backend": "PyTorch"
+  },
+  "links": [
+   {
+    "text": "TedNet",
+    "url": "https://github.com/tnbar/tednet"
+   }
+  ],
+  "raw": "| [TedNet](https://github.com/tnbar/tednet) | CP, BTT, Tucker-2, TT, and TR neural layers | PyTorch |"
+ },
+ {
+  "src": "tnn",
+  "h2": "Toolboxes",
+  "h3": "Quantum and Tensor-Network Simulation",
+  "cols": [
+   "Toolbox",
+   "Main capability",
+   "Backend"
+  ],
+  "cells": {
+   "Toolbox": "[TensorNetworkQuantumSimulator.jl](https://github.com/JoeyT1994/TensorNetworkQuantumSimulator.jl)",
+   "Main capability": "Quantum-circuit simulation with PEPS-style tensor-network backends",
+   "Backend": "Julia"
+  },
+  "links": [
+   {
+    "text": "TensorNetworkQuantumSimulator.jl",
+    "url": "https://github.com/JoeyT1994/TensorNetworkQuantumSimulator.jl"
+   }
+  ],
+  "raw": "| [TensorNetworkQuantumSimulator.jl](https://github.com/JoeyT1994/TensorNetworkQuantumSimulator.jl) | Quantum-circuit simulation with PEPS-style tensor-network backends | Julia |"
+ },
+ {
+  "src": "tnn",
+  "h2": "Toolboxes",
+  "h3": "Quantum and Tensor-Network Simulation",
+  "cols": [
+   "Toolbox",
+   "Main capability",
+   "Backend"
+  ],
+  "cells": {
+   "Toolbox": "[ITensor](https://itensor.org/)",
+   "Main capability": "MPS/MPO and general TN simulation",
+   "Backend": "C++ and Julia"
+  },
+  "links": [
+   {
+    "text": "ITensor",
+    "url": "https://itensor.org/"
+   }
+  ],
+  "raw": "| [ITensor](https://itensor.org/) | MPS/MPO and general TN simulation | C++ and Julia |"
+ },
+ {
+  "src": "tnn",
+  "h2": "Toolboxes",
+  "h3": "Quantum and Tensor-Network Simulation",
+  "cols": [
+   "Toolbox",
+   "Main capability",
+   "Backend"
+  ],
+  "cells": {
+   "Toolbox": "[TensorNetwork](https://github.com/google/TensorNetwork)",
+   "Main capability": "General quantum-circuit tensor contraction",
+   "Backend": "Python"
+  },
+  "links": [
+   {
+    "text": "TensorNetwork",
+    "url": "https://github.com/google/TensorNetwork"
+   }
+  ],
+  "raw": "| [TensorNetwork](https://github.com/google/TensorNetwork) | General quantum-circuit tensor contraction | Python |"
+ },
+ {
+  "src": "tnn",
+  "h2": "Toolboxes",
+  "h3": "Quantum and Tensor-Network Simulation",
+  "cols": [
+   "Toolbox",
+   "Main capability",
+   "Backend"
+  ],
+  "cells": {
+   "Toolbox": "[TeD-Q](https://github.com/amore-upf/ted-q)",
+   "Main capability": "Differentiable quantum machine learning and TN simulation",
+   "Backend": "Python"
+  },
+  "links": [
+   {
+    "text": "TeD-Q",
+    "url": "https://github.com/amore-upf/ted-q"
+   }
+  ],
+  "raw": "| [TeD-Q](https://github.com/amore-upf/ted-q) | Differentiable quantum machine learning and TN simulation | Python |"
+ },
+ {
+  "src": "tnn",
+  "h2": "Toolboxes",
+  "h3": "Quantum and Tensor-Network Simulation",
+  "cols": [
+   "Toolbox",
+   "Main capability",
+   "Backend"
+  ],
+  "cells": {
+   "Toolbox": "[Yao](https://github.com/QuantumBFS/Yao.jl)",
+   "Main capability": "Extensible quantum algorithm simulation",
+   "Backend": "Julia"
+  },
+  "links": [
+   {
+    "text": "Yao",
+    "url": "https://github.com/QuantumBFS/Yao.jl"
+   }
+  ],
+  "raw": "| [Yao](https://github.com/QuantumBFS/Yao.jl) | Extensible quantum algorithm simulation | Julia |"
+ },
+ {
+  "src": "tnn",
+  "h2": "Toolboxes",
+  "h3": "Quantum and Tensor-Network Simulation",
+  "cols": [
+   "Toolbox",
+   "Main capability",
+   "Backend"
+  ],
+  "cells": {
+   "Toolbox": "[lambeq](https://github.com/CQCL/lambeq)",
+   "Main capability": "Quantum natural language processing",
+   "Backend": "Python"
+  },
+  "links": [
+   {
+    "text": "lambeq",
+    "url": "https://github.com/CQCL/lambeq"
+   }
+  ],
+  "raw": "| [lambeq](https://github.com/CQCL/lambeq) | Quantum natural language processing | Python |"
+ }
+]
