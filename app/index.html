@@ -148,7 +148,9 @@ body{transition:background .3s,color .3s}
   <div class="vrow cur"><span class="vn">v10</span><span class="vd">对比度修复：侧栏固定浅色文字；浅色主题 --muted/--accent 加深，全页文字达 WCAG AA（≥4.5:1）</span><span class="vid">—</span></div>
   <div class="vrow cur"><span class="vn">v11</span><span class="vd">§4 新增图 6 · 发文趋势 1989–2026（12 组检索 304 篇去重，堆叠柱+双轴）与逐年数据表，附 CSV 下载</span><span class="vid">—</span></div>
   <div class="vrow cur"><span class="vn">v12</span><span class="vd">新增独立论文库页 library.html：304 篇全量交互浏览（分组展开/筛选/排序/本地 PDF 直链）；§5 更名「关键论文」</span><span class="vid">—</span></div>
-  <div class="vrow cur"><span class="vn">v13</span><span class="vd">题录补全（arXiv/OpenAlex 全文摘要+期刊，121/70）；论文库新增显式排序控件、去冗标题；全部图表 tooltip 适配深色</span><span class="vid">当前</span></div>
+  <div class="vrow cur"><span class="vn">v13</span><span class="vd">题录补全（arXiv/OpenAlex 全文摘要+期刊，121/70）；论文库新增显式排序控件、去冗标题；全部图表 tooltip 适配深色</span><span class="vid">—</span></div>
+  <div class="vrow cur"><span class="vn">v14</span><span class="vd">参照两份 awesome 清单查漏补缺，论文库 304 → 630 篇（按 DOI/arXiv id 去重）；新增工具库页 toolboxes.html（工具、教程网站与前沿知识库）</span><span class="vid">—</span></div>
+  <div class="vrow cur"><span class="vn">v15</span><span class="vd">§4 图 6 与逐年数据表按 trend_data.csv 重算（累计 624，四主线归属 703 次）；CSV 下载改指仓库 raw 链接；站点上线 GitHub Pages，本地 PDF 直链仅本地可用</span><span class="vid">当前</span></div>
   <div class="vnote">历史版本的完整快照由预览界面的版本卡片承载，可直接切换回滚；此处为变更记录。</div>
 </div>
 <button id="themeBtn" onclick="toggleTheme()">◐ 主题</button>
@@ -361,28 +363,28 @@ body{transition:background .3s,color .3s}
   <div class="chart"><div class="chart-title">图 5 · 本地实测：召回准确率(%) 的 χ×L 热力图（RTX 3090 探针脚本产出）</div>
     <div id="c5" class="cviz"></div>
     <div class="chart-note">任务：存 L 个 NV=8 类符号，末尾位置指针查询。可见可召回项数随 χ 近似线性增长（χ≈(2–8)·L）。注：χ=256, L=8 的 98% 为重跑结果（首跑 81% 系训练噪声）——多种子是必需项。数据来源：nano_mps 项目 §4.1，单种子 steps=800。</div></div>
-  <div class="chart"><div class="chart-title">图 6 · 发文趋势 1989–2026（12 组关键词检索，304 篇去重；悬停看数值）</div>
+  <div class="chart"><div class="chart-title">图 6 · 发文趋势 1989–2026（12 组关键词检索 + 2 份 awesome 清单查漏，630 篇去重；悬停看数值）</div>
     <div id="c6" class="cviz" style="height:480px"></div>
-    <div class="chart-note">堆叠柱按四大主线归属（一篇可多归属，故主线列之和 ≥ 当年去重数）；黑线为当年去重论文数，橙色虚线为累计（右轴）。2026 为进行中（截至 9 月）。里程碑：2016 Stoudenmire MPS 分类器 · 2018 Han Born machine · 2021 Miller uMPS · 2024 CompactifAI。298 篇有年份信息，6 篇未计入趋势。原始数据：<a class="p-link" href="../lit/trend_data.csv" download>trend_data.csv ↓</a> · 检索总表：<a class="p-link" href="../lit/bibliography.csv" download>bibliography.csv ↓</a> · PDF 全文 227 篇在 lit/papers/。</div>
+    <div class="chart-note">堆叠柱按四大主线归属（一篇可多归属，故主线列之和 ≥ 当年去重数）；黑线为当年去重论文数，橙色虚线为累计（右轴）。2026 为进行中（截至 9 月）。里程碑：2016 Stoudenmire MPS 分类器 · 2018 Han Born machine · 2021 Miller uMPS · 2024 CompactifAI。624 篇有年份信息，6 篇未计入趋势。原始数据：<a class="p-link" href="https://raw.githubusercontent.com/hy-iu/tn-lm/main/lit/trend_data.csv" download>trend_data.csv ↓</a> · 检索总表：<a class="p-link" href="https://raw.githubusercontent.com/hy-iu/tn-lm/main/lit/bibliography.csv" download>bibliography.csv ↓</a> · PDF 全文 546 篇存于本地 lit/papers/（未随仓库发布，可用 lit/download.py 重新获取）。</div>
     <table>
       <tr><th>年份</th><th>MPS 作模型<br><span style="text-transform:none;font-weight:400">序列/语言/生成</span></th><th>MPO/TT 压缩</th><th>量子/量子启发 LLM</th><th>高维结构与标度</th><th>当年合计<br><span style="text-transform:none;font-weight:400">去重</span></th><th>累计</th></tr>
-      <tr><td>1989–2013</td><td>1</td><td>0</td><td>0</td><td>13</td><td>14</td><td>14</td></tr>
-      <tr><td>2014</td><td>2</td><td>0</td><td>0</td><td>1</td><td>3</td><td>17</td></tr>
-      <tr><td>2015</td><td>0</td><td>1</td><td>0</td><td>2</td><td>3</td><td>20</td></tr>
-      <tr><td>2016</td><td>0</td><td>0</td><td>0</td><td>2</td><td>2</td><td>22</td></tr>
-      <tr><td>2017</td><td>2</td><td>3</td><td>0</td><td>5</td><td>9</td><td>31</td></tr>
-      <tr><td>2018</td><td>4</td><td>5</td><td>0</td><td>9</td><td>16</td><td>47</td></tr>
-      <tr><td>2019</td><td>6</td><td>4</td><td>0</td><td>5</td><td>14</td><td>61</td></tr>
-      <tr><td>2020</td><td>6</td><td>8</td><td>1</td><td>2</td><td>16</td><td>77</td></tr>
-      <tr><td>2021</td><td>11</td><td>7</td><td>0</td><td>15</td><td><b>31</b></td><td>108</td></tr>
-      <tr><td>2022</td><td>7</td><td>6</td><td>0</td><td>8</td><td>20</td><td>128</td></tr>
-      <tr><td>2023</td><td>10</td><td>8</td><td>0</td><td>14</td><td>30</td><td>158</td></tr>
-      <tr><td>2024</td><td>8</td><td>16</td><td>4</td><td>12</td><td>38</td><td>196</td></tr>
-      <tr><td>2025</td><td>12</td><td>14</td><td>13</td><td>17</td><td><b>56</b></td><td>252</td></tr>
-      <tr><td>2026*</td><td>12</td><td>14</td><td>11</td><td>10</td><td>46</td><td>298</td></tr>
-      <tr><td><b>总计</b></td><td><b>81</b></td><td><b>86</b></td><td><b>29</b></td><td><b>115</b></td><td><b>298</b></td><td><b>298</b></td></tr>
+      <tr><td>1989–2013</td><td>2</td><td>1</td><td>0</td><td>19</td><td>21</td><td>21</td></tr>
+      <tr><td>2014</td><td>2</td><td>0</td><td>0</td><td>2</td><td>4</td><td>25</td></tr>
+      <tr><td>2015</td><td>0</td><td>1</td><td>0</td><td>2</td><td>6</td><td>31</td></tr>
+      <tr><td>2016</td><td>1</td><td>0</td><td>0</td><td>2</td><td>7</td><td>38</td></tr>
+      <tr><td>2017</td><td>6</td><td>8</td><td>0</td><td>6</td><td>19</td><td>57</td></tr>
+      <tr><td>2018</td><td>7</td><td>8</td><td>2</td><td>12</td><td>25</td><td>82</td></tr>
+      <tr><td>2019</td><td>10</td><td>9</td><td>4</td><td>10</td><td>31</td><td>113</td></tr>
+      <tr><td>2020</td><td>14</td><td>13</td><td>2</td><td>5</td><td>37</td><td>150</td></tr>
+      <tr><td>2021</td><td>21</td><td>13</td><td>8</td><td>21</td><td><b>56</b></td><td>206</td></tr>
+      <tr><td>2022</td><td>22</td><td>16</td><td>14</td><td>18</td><td>62</td><td>268</td></tr>
+      <tr><td>2023</td><td>26</td><td>22</td><td>11</td><td>17</td><td>64</td><td>332</td></tr>
+      <tr><td>2024</td><td>26</td><td>39</td><td>12</td><td>25</td><td>83</td><td>415</td></tr>
+      <tr><td>2025</td><td>30</td><td>36</td><td>25</td><td>25</td><td><b>102</b></td><td>517</td></tr>
+      <tr><td>2026*</td><td>42</td><td>47</td><td>22</td><td>17</td><td>107</td><td>624</td></tr>
+      <tr><td><b>总计</b></td><td><b>209</b></td><td><b>213</b></td><td><b>100</b></td><td><b>181</b></td><td><b>624</b></td><td><b>624</b></td></tr>
     </table>
-    <div class="chart-note">* 2026 为进行中（截至 9 月）。「当年合计/累计」为去重论文数；四大主线列按归属计数（一篇可多归属，总计 311 次 &gt; 298 篇），少数检索命中不属于四大主线。完整逐年数据见 trend_data.csv。</div></div>
+    <div class="chart-note">* 2026 为进行中（截至 9 月）。「当年合计/累计」为去重论文数；四大主线列按归属计数（一篇可多归属，总计 703 次 &gt; 624 篇），少数检索命中不属于四大主线。完整逐年数据见 trend_data.csv。</div></div>
 </section>
 <section id="papers">
   <div class="sec-label">§5 · 关键论文</div>
@@ -877,15 +879,15 @@ ch.setOption({...base,tooltip:{backgroundColor:CARD,borderColor:MUT,trigger:'axi
    markLine:{data:[{yAxis:1,label:{formatter:'1B 目标',color:ACC}}],lineStyle:{color:ACC,type:'dashed'},symbol:'none'}},
   {name:'分解核 A^s=U_s·V（r=64）',type:'line',data:fact.map(n=>n[1]),lineStyle:{color:GREEN,width:2.5},symbol:'diamond'}]});})();
 
-// Fig 6: publication trend 1989-2026 (12 keyword clusters, 304 papers deduped)
+// Fig 6: publication trend 1989-2026 (12 keyword clusters + 2 awesome lists, 630 papers deduped)
 (()=>{const el=document.getElementById('c6');if(!el)return;const ch=echarts.init(el);
 const YRS=[1989,1990,1991,1992,1993,1994,1995,1996,1997,1998,1999,2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026];
-const UNIQ=[1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,1,3,1,3,1,1,1,3,3,2,9,16,14,16,31,20,30,38,56,46];
-const CUM=[1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,3,3,3,4,7,8,11,12,13,14,17,20,22,31,47,61,77,108,128,158,196,252,298];
-const G0=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,2,0,0,2,4,6,6,11,7,10,8,12,12];
-const G1=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,3,5,4,8,7,6,8,16,14,14];
-const G2=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,4,13,11];
-const G3=[1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,1,3,0,3,1,1,1,1,2,2,5,9,5,2,15,8,14,12,17,10];
+const UNIQ=[1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,1,3,2,4,1,2,5,4,6,7,19,25,31,37,56,62,64,83,102,107];
+const CUM=[1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,3,3,3,4,7,9,13,14,16,21,25,31,38,57,82,113,150,206,268,332,415,517,624];
+const G0=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,2,0,1,6,7,10,14,21,22,26,26,30,42];
+const G1=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,8,8,9,13,13,16,22,39,36,47];
+const G2=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,4,2,8,14,11,12,25,22];
+const G3=[1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,1,3,1,4,1,2,4,2,2,2,6,12,10,5,21,18,17,25,25,17];
 const bar=(name,data,color)=>({name,type:'bar',stack:'trend',data,barWidth:'62%',itemStyle:{color},emphasis:{focus:'series'}});
 ch.setOption({backgroundColor:'transparent',
  tooltip:{backgroundColor:CARD,borderColor:MUT,trigger:'axis',axisPointer:{type:'shadow'},textStyle:{color:INK,fontSize:12},
@@ -894,7 +896,7 @@ ch.setOption({backgroundColor:'transparent',
  grid:{left:56,right:64,top:46,bottom:78},
  xAxis:{type:'category',data:YRS,axisLabel:{color:MUT,interval:4},axisTick:{alignWithLabel:true}},
  yAxis:[{type:'value',name:'当年（篇）',axisLabel:{color:MUT},splitLine:{lineStyle:{color:'#e2d9cb'}},nameTextStyle:{color:MUT}},
-        {type:'value',name:'累计（篇）',axisLabel:{color:ACC},splitLine:{show:false},nameTextStyle:{color:ACC},max:340}],
+        {type:'value',name:'累计（篇）',axisLabel:{color:ACC},splitLine:{show:false},nameTextStyle:{color:ACC},max:700}],
  series:[
   bar('MPS 作模型（序列/语言/生成）',G0,BLUE),
   bar('MPO/TT 压缩',G1,ORANGE),

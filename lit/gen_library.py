@@ -83,9 +83,14 @@ def fname(row):
 
     download.py 实际用标题命名落盘；arxiv 命名只是历史备选，两种都要试，
     不能依赖 pandas 把 "0808.3773" 猜成 float 才走对分支。
+    pub_year 行放最前：发表版全文占行，预印本按 {year}_arxiv_{id}.pdf 留档。
     """
     yr = nvi(row["year"], "nd") if nn(row.get("year")) else "nd"
-    cands = [f"{yr}_{safe_name(row['title'])[:50]}.pdf"]
+    cands = []
+    py = nvi(row.get("pub_year"), None) if nn(row.get("pub_year")) else None
+    if py and py != yr:
+        cands.append(f"{py}_{safe_name(row['title'])[:50]}.pdf")
+    cands.append(f"{yr}_{safe_name(row['title'])[:50]}.pdf")
     aid = row.get("arxiv_id")
     if isinstance(aid, str) and aid.strip():
         cands.append(f"{yr}_arxiv_{aid.strip()}.pdf")
@@ -325,7 +330,7 @@ footer{margin-top:70px;border-top:2px solid var(--ink);padding:26px 0 60px;font-
   <div class="stats">
     <div class="stat"><div class="num">__NPAPERS__</div><div class="lbl">论文条目（含 __NUNV__ 条摘要未核验）</div></div>
     <div class="stat"><div class="num">__NVK__</div><div class="lbl">摘要取自权威源全文</div></div>
-    <div class="stat"><div class="num">__NPDF__</div><div class="lbl">已下载全文</div></div>
+    <div class="stat"><div class="num">__NPDF__</div><div class="lbl">已下载全文（本地存档，未随站发布）</div></div>
     <div class="stat"><div class="num">__TOTCIT__</div><div class="lbl">被引合计</div></div>
     <div class="stat"><div class="num" style="font-size:20px;padding-top:8px">__YSPAN__</div><div class="lbl">年份跨度</div></div>
     <div class="stat"><div class="num">4+1</div><div class="lbl">主线 + 未分组</div></div>
@@ -360,10 +365,12 @@ footer{margin-top:70px;border-top:2px solid var(--ink);padding:26px 0 60px;font-
   <div id="list"></div>
 </section>
 
-<footer><span>MPS × LLM · Library</span><span>原始数据：<a href="../lit/bibliography.csv" download>bibliography.csv ↓</a> · <a href="../lit/trend_data.csv" download>trend_data.csv ↓</a></span><span>来源：学术检索索引 / arXiv / OpenAlex，仅供参考</span></footer>
+<footer><span>MPS × LLM · Library</span><span>原始数据：<a href="https://raw.githubusercontent.com/hy-iu/tn-lm/main/lit/bibliography.csv" download>bibliography.csv ↓</a> · <a href="https://raw.githubusercontent.com/hy-iu/tn-lm/main/lit/trend_data.csv" download>trend_data.csv ↓</a></span><span>来源：学术检索索引 / arXiv / OpenAlex，仅供参考</span></footer>
 </div></main>
 <script>
 const PAPERS=__DATA__;
+// 本地 PDF 存档（lit/papers/）不随 Pages 发布，线上隐藏徽章避免 404
+const LOCAL_PDF=!/\.github\.io$/i.test(location.hostname);
 const MAINMAP=[["MPS 语言模型","g0"],["MPS/序列建模","g0"],["MPS 生成/Born机","g0"],
  ["MPO/TT 压缩","g1"],["张量化Transformer","g1"],
  ["量子/混合LLM","g2"],["量子启发综述","g2"],
@@ -382,7 +389,7 @@ function rowEl(p,i){
  const addBadge=(txt,cls)=>{const b=document.createElement("span");b.className="badge "+cls;b.textContent=txt;r1.appendChild(b)};
  addBadge(p.y||"—","");
  addBadge("被引 "+p.c,p.c>50?"c":"");
- if(p.pdf){const b=document.createElement("span");b.className="badge pdf";const l=document.createElement("a");l.href=p.pdf;l.target="_blank";l.rel="noopener";l.textContent="PDF";b.appendChild(l);r1.appendChild(b)}
+ if(p.pdf&&LOCAL_PDF){const b=document.createElement("span");b.className="badge pdf";const l=document.createElement("a");l.href=p.pdf;l.target="_blank";l.rel="noopener";l.textContent="PDF";b.appendChild(l);r1.appendChild(b)}
  d.appendChild(r1);
  const meta=document.createElement("div");meta.className="rmeta";
  meta.textContent=(p.a?p.a+" · ":"")+(p.v||"")+(p.cl?" ｜ 命中："+p.cl:"");
@@ -408,7 +415,7 @@ function flatTable(ps){
  ps.forEach(({p})=>{const tr=document.createElement("tr");
   const td=document.createElement("td");td.className="tt";
   const a=document.createElement("a");a.href=p.u;a.target="_blank";a.rel="noopener";a.textContent=p.t;
-  if(p.pdf){const l=document.createElement("a");l.href=p.pdf;l.target="_blank";l.textContent=" · PDF";td.appendChild(l)}
+  if(p.pdf&&LOCAL_PDF){const l=document.createElement("a");l.href=p.pdf;l.target="_blank";l.textContent=" · PDF";td.appendChild(l)}
   td.prepend(a);tr.appendChild(td);
   const y=document.createElement("td");y.textContent=p.y||"—";tr.appendChild(y);
   const c=document.createElement("td");c.textContent=p.c;tr.appendChild(c);
