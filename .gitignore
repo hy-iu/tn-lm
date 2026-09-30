@@ -1,5 +1,6 @@
 .DS_Store
 # 547 个全文 PDF（约 1.1 GB）属二进制大文件，不入库；可用 lit/download.py 依 bibliography.csv 重新获取
 lit/papers/
+lit/arxiv_papers/
 __pycache__/
 *.ffs_db
