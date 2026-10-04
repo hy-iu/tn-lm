@@ -1,0 +1,140 @@
+\section{与相邻效率方法的关系}
+\label{sec:neighboring-methods}
+
+\begin{table}[!htbp]
+\centering
+\caption{\footnotesize 张量方法与相邻 LLM 效率技术的比较。表中着重说明二者之间的相互作用与互补性。}
+\label{tab:neighboring}
+\footnotesize
+\begin{tblr}{
+width = \textwidth,
+colspec = {Q[2.0cm,m,c]Q[2.5cm,m,c]Q[3.0cm,m,c]Q[3.0cm,m,c]X[m,c]},
+row{1} = {font=\bfseries},
+rowsep = 3pt,
+hline{1,9} = {1pt},
+hline{2} = {0.6pt},
+hline{3,4,5,6,7,8} = {0.6pt, gray7},
+}
+技术 & 目标 & 典型优势 & 典型局限 & 张量方法如何与之相互作用 \\
+低秩适配器（Low-rank Adapters）\cite{hu2022lora, zhang2023adalora} & 单个矩阵或更新量 & 简单、成熟、易于实现 & 局限于二维结构 & 张量化 PEFT 将低秩结构推广到跨层、跨模块与跨头（\cref{subsec:peft}）\\
+量化 \cite{frantar2023gptq, dettmers2022llmint8, liu2023llmqat} & 数值精度 & 显著降低内存、有硬件支持 & 低比特宽度下质量下降；训练后方法通常需要校准数据 & 张量因子可以量化到不同精度 \cite{liu2024decoquant} \\
+剪枝 / 稀疏化 \cite{frantar2023sparsegpt, ashkboos2024slicegpt} & 权重：神经元、块、注意力头 & 移除权重及相应计算 & 不规则稀疏可能带来速度损失 & 张量网络可与结构化稀疏相结合 \cite{solgi2025saten, li2026lestd} \\
+知识蒸馏（KD）\cite{hinton2015distillingknowledge} & 模型行为 & 在更小模型中恢复性能 & 需要数据与训练 & 张量化的学生模型可以从稠密教师模型蒸馏而来 \cite{edalati2021kroneckergpt} \\
+高效注意力 \cite{dao2022flashattention, wang2020linformer, deepseekai2025deepseekv32} & 注意力计算与内存流量 & 解决长上下文瓶颈 & 通常不减少 FFN 或嵌入参数 & 张量化注意力可与 IO 感知方法及线性/稀疏方法互补 \cite{ma2019tensorized} \\
+KV 缓存 \cite{shazeer2019mqa, ainslie2023gqa, deepseekai2024deepseekv2} & 推理时缓存的键与值 & 降低长上下文解码的缓存内存与带宽 & 可能损害模型质量 & MQA、GQA 等非张量方法是更一般张量参数化的特例 \cite{zhang2026tpa, klein2026tuckerattention} \\
+MoE 路由 \cite{shazeer2017moe, fedus2022switch} & 每个词元激活的参数量 & 在不激活全部参数的情况下扩展容量 & 路由与负载均衡复杂 & 专家索引成为额外的模，从而单个分解即可在专家之间共享结构 \cite{xu2026tdmoe} \\
+\end{tblr}
+\end{table}
+
+张量方法与其他 LLM 效率技术之间存在相互作用。\Cref{tab:neighboring} 针对每一项相邻技术，说明其目标、典型优势与局限，以及它与张量方法相互作用的确切方式。
+一个关键观察是：张量方法无需与这些技术作为互斥的替代方案相互竞争。在实际部署中，张量因子可以被量化，张量化适配器可以在量化后的骨干网络上训练，张量压缩之后还可以接知识蒸馏。
+
+\paragraph{如何理解这些相互作用。}
+\cref{tab:neighboring} 的最后一列包含三种在概念上不同的关系。第一，各技术可以是\emph{可组合的}：张量化改变结构性参数数量或算子图，量化改变精度，剪枝改变支撑集，知识蒸馏改变训练信号。这些方法作用于不同的设计变量，因此可以联合优化。第二，张量方法可以\emph{推广}相邻方法。当更新量只有两个模时即退化为矩阵低秩适配，而张量化 PEFT 将共享扩展到跨层、跨头或跨模块；类似地，MQA 与 GQA 可视为对注意力投影或缓存状态的更一般张量分解的受限情形。第三，各方法可能\emph{重叠}，即高效注意力核、线性或稀疏注意力与张量化注意力可能针对同一部分计算或内存流量。此时组合的收益是第一种方法已经改变瓶颈之后的边际收益，而不是两个独立报告的加速比的乘积。
+
+例如就量化而言，一个紧凑内存模型的存储量为
+\begin{equation}
+\label{eq:memory-budget}
+M_{\rm bits} = \sum_{k=1}^{K} n_k b_k + M_{\rm meta},
+\end{equation}
+其中张量化模型存储为 $K$ 个因子/核张量，$n_k$ 是第 $k$ 部分保留的标量个数，$b_k$ 是其以比特计的精度，$M_{\rm meta}$ 汇集了除数值本身之外该格式所需的开销，例如量化尺度与零点。
+按这种写法，两种技术作用于同一表达式的不同参数：张量化决定 $n_k$，量化决定 $b_k$，且两者都按因子分别选择。诸如先分解再量化、或对已量化模型进行分解这类顺序流程，在考察另一个参数之前就已固定了一个参数，因而只搜索了这一空间的一个切片，没有理由认为其结果是最优的。为不同因子分配不同精度的方案是走出该切片的第一步 \cite{liu2024decoquant}，且这一论点并不局限于量化。
+最后一项 $M_{\rm meta}$ 决定了结构性节省能否在存储格式中得以保留。例如，规则结构几乎无需额外描述开销，而不规则结构——哪个组携带哪个尺度、哪些核张量元素在剪枝后幸存——则必须逐一枚举。由于高压缩率往往正是通过引入这种不规则性获得的，仅按数值计算的压缩率可能高估实际占用内存的节省程度。
+
+\paragraph{组合顺序与误差相互作用。}
+即便两种技术针对不同变量，其次序也可能很重要。分解会改变所得因子的分布与敏感度，从而改变每个因子可以被量化到多激进的程度。分解之前剪枝可能破坏因子分解本可利用的低秩模式，而分解之后对因子剪枝则引入另一种结构化近似。蒸馏既可用于直接训练张量化的学生模型，也可作为压缩之后的修复阶段。因此，两种技术的误差不必线性叠加：它们可能相互放大、部分抵消，或充当隐式正则化项。所以组合方法应作为一个联合流程来优化和评估，而不是用各技术单独调优的超参数拼装而成。
+
+\paragraph{瓶颈感知的组合。}
+合适的组合取决于哪种资源在运行场景中占主导地位。如果权重带宽是瓶颈，张量化结合量化或结构化稀疏可以减少每个词元读取的字节数。在长上下文解码中，注意力与 KV 缓存方法更可能占主导，因此张量缓存分解应与 MQA/GQA 及 IO 感知内核一并评估。对于适配任务，张量化更新可以减少可训练状态，而量化骨干网络则控制冻结模型的内存占用。知识蒸馏又有所不同：它可以恢复质量或迁移行为，但其收益必须与额外的训练成本相权衡。这种分阶段的视角可以避免把并未改善当前非瓶颈资源的方法误记为端到端收益。
+
+这一局限可以用 Amdahl 型上界来表述。设 $p$ 为基线运行时间中受某项技术影响的比例，$S_{\rm target}$ 为该部分的加速比，则端到端加速比满足
+\begin{equation}
+S_{\rm e2e} \leq \frac{1}{(1-p)+p/S_{\rm target}}.
+\label{eq:neighboring-amdahl}
+\end{equation}
+因此，即使张量化模块可以任意快，当未张量化的 FFN、注意力、通信或框架开销主导其余运行时间时，也只能带来有限的收益。针对不同瓶颈的方法可以互补，而针对同一部分的方法则收益递减。这也解释了为什么同一组合对预填充、解码、微调和批量服务场景的帮助程度可能大相径庭。
+
+\paragraph{组合方法的评估。}
+一个有说服力的比较应包含四个系统：稠密基线、仅张量方法、仅相邻技术，以及二者的组合，且都在相同质量、相同硬件与精度条件下进行。只报告组合结果会使收益难以归因于张量化。此外，内存核算应包含张量元数据、量化尺度、稀疏索引、临时缩并缓冲区以及适配器状态。延迟应按预填充与解码分别统计，并同时报告单模块与端到端结果。最后，应明确说明操作次序以及每个基线的调参预算，并且应对张量化部分和完整流程分别报告 \cref{eq:rho-gap} 中的 $\rho_{\rm gap}$。
+
+\section{与概率张量网络的关系}
+\label{sec:prob-tensor-nets}
+% \color{blue}
+张量分解与概率图模型（probabilistic graphical models, PGM）之间的联系十多年来已被广泛认识，主要出现在无监督学习与密度估计的语境中 \cite{hameed2025efficient,han2018unsupervised,miller2021tensor,vieijra2022generative,glasser2019expressive}。人们常援引这种关系来为序列数据的张量网络架构提供依据，但这一对应关系十分微妙，需要仔细限定。本节阐明张量分解对应于 PGM 的确切条件，讨论这些对应关系对实值张量网络的局限，并概述其对语言建模的启示。
+
+\subsection{作为图模型参数化的张量分解}
+
+$N$ 个离散随机变量 $X_1,X_2,\dots, X_N$ 上的联合概率质量函数可以表示为一个元素非负且总和为一的张量 $\ten{P} \in \R^{I_1 \times I_2\times \dots \times I_N}$。许多常见 PGM 对应于 $\ten{P}$ 的低秩或结构化张量分解，张量分解直接编码了模型的条件独立性结构。
+
+\paragraph{CP 分解与朴素贝叶斯。}
+CP 分解将 $N$ 阶张量表示为
+\begin{equation}
+\ten{P}_{i_1,\dots,i_N} = \sum_{r=1}^{R} \lambda_r \mat{A}^{(1)}_{i_1,r} \mat{A}^{(2)}_{i_2,r} \cdots \mat{A}^{(N)}_{i_N,r}.
+\end{equation}
+如果 $\ten{P}$ 是联合概率张量，且元素 $\lambda_r, \mat{A}^{(n)}_{i_n,r}$ 非负并经过适当归一化，则 CP 表示恰好对应于带隐类变量 $Z \in \{1,2,\dots,R\}$ 的朴素贝叶斯模型。具体而言，每个观测变量 $X_n$ 在给定 $Z$ 时条件独立，条件分布为 $\Pr(X_n = i_n \mid Z = r) \propto \mat{A}^{(n)}_{i_n,r}$，先验为 $\Pr(Z = r) \propto \lambda_r$（差一个归一化常数）。这一对应在张量分解文献中广为人知，并已被用于主题建模 \cite{anandkumar2014tensor} 与非负张量分解 \cite{cichocki2009nonnegative}。
+
+
+\paragraph{TT 分解与隐马尔可夫模型。}
+张量列分解 \cite{oseledets2011tensor} 将张量表示为：
+\begin{equation}
+\ten{P}_{i_1,\dots,i_N} = \mat{G}^{(1)}_{i_1} \mat{G}^{(2)}_{i_2} \cdots \mat{G}^{(N)}_{i_N},
+\end{equation}
+其中每个 $\mat{G}^{(n)}_{i_n} \in \R^{R_{n-1} \times R_n}$ 是第 $n$ 个核张量的一个矩阵切片，且 $R_0 = R_N = 1$。
+
+如果元素非负且核张量满足一定的列随机归一化条件，则 TT 格式等价于隐马尔可夫模型（hidden Markov model, HMM）\cite{glasser2019expressive}。具体而言，键维数 $R_n$ 对应位置 $n$ 处的隐状态数，核张量 $\mat{G}^{(n)}_{i_n}$ 编码从隐状态 $R_{n-1}$ 到 $R_n$ 的转移概率以及 $X_n = i_n$ 的发射概率。
+% \cite{schollwock2011dmrg}
+这一联系已被用于基于张量网络的密度估计 \cite{han2018unsupervised}、生成建模 \cite{glasser2020probabilistic} 与序列建模 \cite{stoudenmire2016supervised}。
+
+同样，这一对应关系是有条件的：权重矩阵的无约束实值 TT 表示并不对应 HMM。其核张量不是随机矩阵，键维数没有概率解释，也不存在潜在的随机过程。TT 格式只是一种结构化的低秩参数化，恰好在代数形式上与 HMM 的参数化相同，但不具备概率语义。
+
+\paragraph{块项分解与更一般的 PGM。}
+块项（BT）分解将张量表示为若干 Tucker 块之和：
+\begin{equation}
+\ten{P} = \sum_{k=1}^{K} \ten{G}_k \times_1 \mat{A}^{(1)}_k \times_2 \mat{A}^{(2)}_k \cdots \times_N \mat{A}^{(N)}_k.
+\end{equation}
+当因子与核张量非负且归一化时，BT 分解可以表示隐变量模型的混合，例如朴素贝叶斯混合（每个块是一个朴素贝叶斯分量）或更一般的层次模型。反之，无约束的 BT 分解没有 PGM 解释，应纯粹视为一种灵活的张量参数化。
+
+\subsection{作为矩阵值随机过程的张量网络}
+
+「矩阵值马尔可夫链」一词常被不严格地用来描述对矩阵序列的 TTM 或 MPO 参数化。这一术语形象但并不形式精确。MPO 是如下形式的张量网络：
+\begin{equation}
+\ten{W}_{i_1,j_1,\dots,i_N,j_N} = \mat{G}^{(1)}_{i_1,j_1} \mat{G}^{(2)}_{i_2,j_2} \cdots \mat{G}^{(N)}_{i_N,j_N},
+\end{equation}
+其中每个 $\mat{G}^{(n)}_{i_n,j_n} \in \R^{R_{n-1} \times R_n}$ 是由输入-输出对 $(i_n, j_n)$ 索引的矩阵切片。
+
+这种表示\emph{不是}概率意义上的马尔可夫链。它没有转移概率，没有保持概率总量的状态空间，也没有随机解释。「矩阵值」指的是每个切片都是矩阵，「链」指的是这些矩阵的顺序缩并。它是一个有用的助记说法，但除非核张量被显式约束为列随机矩阵并施加相应的归一化条件，否则不应将其理解为蕴含概率意义上的马尔可夫过程
+
+\subsection{对语言模型的启示}
+
+张量分解与 PGM 的对应关系对语言建模中的张量方法有若干启示：
+
+\begin{enumerate}
+\item \textbf{可解释性：}当张量分解应用于嵌入表、注意力张量或激活张量时，各因子\emph{并不}自动对应主题、句法角色或语义特征等可解释的隐变量。要使因子在概率意义上可解释，分解必须非负且正确归一化。实践中很少如此；多数 LLM 张量化采用针对重构误差或任务损失优化的实值分解。
+
+\item \textbf{生成建模：}如果目标是直接由张量网络构建生成式语言模型，则分解必须受约束以表示有效的概率分布。这要求非负性与归一化，二者会使优化复杂化，并可能相比无约束实值分解降低表达能力。
+
+\item \textbf{序列结构：}TT 与 MPO 格式天然适合序列数据，因为它们施加的链式结构与词元的时间或位置次序相呼应。然而，这种结构上的相似并不意味着模型在概率意义上捕获了时间依赖；它只是说明该参数化与数据的序列性质相契合。
+
+\item \textbf{统一视角：}把张量分解视为 PGM 的参数化，为语言模型中的张量方法提供了统一视角。它提示张量化可被看作对模型表示施加某种条件独立性结构，从而可能成为一种有用的归纳偏置。这一视角对理解张量化架构的表达能力与泛化性质尤为相关。
+\end{enumerate}
+
+% \color{black}
+    % It is worth noting that tensor decompositions are closely related to probabilistic graphical models. A CP decomposition of a joint probability tensor $P(x_1,x_2,\ldots,x_N)$ corresponds to a naive Bayes model, while a TT/MPS decomposition corresponds to a hidden Markov model \cite{novikov2015tensorizing}. This connection suggests that tensor methods for language models can be viewed as imposing a particular probabilistic structure on the model's representations. In particular, the MPO parametrization of weight matrices can be interpreted as a matrix-valued Markov chain, which may explain why TT/MPS works well for sequential data like text.
+
+\section{软件概览}
+\label{sec:software-overview}
+
+
+\subsection{软件包与框架。}
+
+\paragraph{Python 张量库。}本段列出与深度学习场景兼容或专为其设计的最相关的 Python 软件包。TensorLy \cite{kossaifi2019tensorly} 是通用张量工具箱，可运行于多种后端，包括 NumPy \cite{harris2020numpy}、JAX \cite{bradbury2018jax} 与 PyTorch \cite{paszke2019pytorch}，而 tntorch \cite{usvyatsov2022tntorch} 则直接面向 PyTorch。面向张量化训练的软件包构建于成熟的深度学习框架之上：TensorLy-Torch \cite{kossaifi2024tensorlytorch} 面向 PyTorch，T3F \cite{novikov2020t3f} 面向 TensorFlow \cite{abadi2016tensorflow}。其他软件包，如 TensorKrowch \cite{pareja2024tensorkrowch} 与 tn4ml \cite{puljak2025tn4ml}，面向更广泛的机器学习应用。最后，quimb \cite{gray2018quimb} 支持跨多种后端的任意拓扑张量网络，cotengra \cite{gray2021hyperoptimized} 则专注于优化其缩并。
+
+\paragraph{软硬件协同设计。}另一条研究路线针对张量化层进行软硬件协同设计。ETTE \cite{gong2023ette} 与 Huang 等人 \cite{huang2025gvsa} 优化张量化线性层的前向传播以加速推理，而 FETTA \cite{lu2026fetta} 与 Tian 等人 \cite{tian2025fpga} 的 FPGA 设计则同时覆盖训练与推理。
+
+\paragraph{其他。}其余工具可分为三组。一类面向 Python 之外的语言，包括 Julia、C++ 与 MATLAB，例如 ITensor \cite{fishman2022itensor}、TenDeC++ \cite{huang2019tendec} 与 Tensor Toolbox \cite{bader2026tensortoolbox}。另一类实现单一分解族而不专注于深度学习，如 Scikit-TT \cite{gelss2019scikittt}。第三类已有五年以上未更新：TTAX \cite{novikov2021ttax}、TorchMPS \cite{miller2019torchmps} 与 TedNet \cite{yu2022tednet}。
+
+\subsection{案例研究}
+
+现在我们考察两项近期研究，它们展示了这些工具在不同规模下的实际用法：一个处于研究规模，另一个处于生产规模。Javanmard 等人 \cite{javanmard2026mpopicogpt} 对 PicoGPT \cite{osborne2026picogptjl}（一个小型 GPT-2 风格的字符级模型）的每个线性层应用 MPO 参数化。其工作提供了开源的 \texttt{MPOLinear} 模块，其核张量既可由稠密矩阵初始化，也可用标准 PyTorch 自动微分从零训练。他们在 Tiny Shakespeare 数据集上将张量化模型与稠密基线进行了对照验证。Kozyrev 等人 \cite{kozyrev2026minima} 提出 Minima——一个面向生产规模 LLM 的可部署压缩流程。该流程由敏感度分析、Tucker/TT/张量环压缩、简短的修复阶段、定制 Triton/CUDA 内核以及投机解码组成。作者在 Qwen3-32B \cite{yang2025qwen3} 模型上对其进行了验证。
+
+

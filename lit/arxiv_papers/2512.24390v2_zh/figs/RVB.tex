@@ -1,0 +1,19 @@
+\begin{tikzpicture}[baseline=(current bounding box.center)]
+	\def\l{1.4};
+    \def\h{.8};
+
+    \draw[singlet] (0,0) --+ (\l,0);
+    \draw[singlet] (2*\l,0) --+ (\l,0);
+
+    \draw[singlet] (-\l/2,-\h) --++ (\l/2,0);
+    \draw[singlet] (\l,-\h) --++ (\l,0);
+    \draw[singlet] (3*\l,-\h) --++ (\l/2,0);
+    
+    \foreach \i/\j in {0/2\msf i-1,1/2\msf i,2/2\msf i+1,3/2\msf i+2}{
+        \node[yshift=10pt] at (\l*\i,0) {$\sss \j$};
+        \node[mpstensor, inner sep=2pt] at (\l*\i,0) {};
+        \node[mpstensor, inner sep=2pt] at (\l*\i,-\h) {};
+    }
+    \node at (-2*\l,-\h/2) {$\ket{\Psi}=$};
+    \node at (-\l,-\h) {$+$};
+\end{tikzpicture}

@@ -1,0 +1,149 @@
+\paragraph{偏迹} \emph{偏迹}（partial trace）是一类常见运算，尤其在多体量子系统的建模中：对整个系统的密度矩阵施加偏迹，便得到系统某一部分的密度矩阵。不必深究量子系统的具体细节，只需考虑一个维度为 $d_1d_2\times d_1d_2$ 的方阵，我们把它解释为一个四阶张量 \begin{tikzpicture}[baseline=-0.5ex]
+    \tikzset{tensor/.style = {minimum width = 0.8cm,minimum height = 0.4cm,shape = rounded rectangle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{0}
+    \def\y{0}
+    \draw[edge] (\x-0.2,\y-0.15) -- (\x-0.2,\y-0.5)node [midway,left=-0.05cm] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (\x+0.2,\y-0.15) -- (\x+0.2,\y-0.5)node [midway,right=-0.05cm] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x-0.2,\y+0.15) -- (\x-0.2,\y+0.5)node [midway,left=-0.05cm] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (\x+0.2,\y+0.15) -- (\x+0.2,\y+0.5)node [midway,right=-0.05cm] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \node[tensor,fill=yellow] (Bt) at (\x,\y){$\Tt$};
+    \end{tikzpicture}。
+$\Tt$ 关于子空间 $\mathbb R^{d_1}$ 的偏迹是一个 $d_2\times d_2$ 矩阵，把对应的两条腿相连，即对 $d_1$ 这一维``求迹''而得到： \begin{tikzpicture}[baseline=-0.5ex]
+    \tikzset{tensor/.style = {minimum width = 0.6cm,minimum height = 0.4cm,shape = rounded rectangle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{0}
+    \def\y{0}
+    \draw[edge] (\x-0.2,\y-0.15) -- (\x-0.2,\y-0.4);
+    \draw[edge] (\x+0.2,\y-0.15) -- (\x+0.2,\y-0.5)node [midway,right=-0.05cm] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x-0.2,\y+0.15) -- (\x-0.2,\y+0.4);
+    \draw[edge] (\x+0.2,\y+0.15) -- (\x+0.2,\y+0.5)node [midway,right=-0.05cm] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x-0.2,\y-0.39) to [out=200,in=160] (\x-0.2,\y+0.39) node [midway,left=0.35cm] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \node[tensor,fill=yellow] (Bt) at (\x,\y){$\Tt$};
+    \end{tikzpicture}。类似地，$\Tt$ 关于子空间 $\mathbb R^{d_2}$ 的偏迹是 $d_1\times d_1$ 矩阵
+\begin{tikzpicture}[baseline=-0.5ex]
+    \tikzset{tensor/.style = {minimum width = 0.6cm,minimum height = 0.4cm,shape = rounded rectangle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{0}
+    \def\y{0}
+    \draw[edge] (\x-0.2,\y-0.15) -- (\x-0.2,\y-0.5)node [midway,left=-0.05cm] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (\x+0.2,\y-0.15) -- (\x+0.2,\y-0.4);
+    \draw[edge] (\x-0.2,\y+0.15) -- (\x-0.2,\y+0.5)node [midway,left=-0.05cm] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (\x+0.2,\y+0.15) -- (\x+0.2,\y+0.4);
+    \draw[edge] (\x+0.2,\y-0.39) to [out=330,in=30] (\x+0.2,\y+0.39) node [midway,right=0.3cm] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \node[tensor,fill=yellow] (Bt) at (\x,\y){$\Tt$};
+\end{tikzpicture}。
+
+\paragraph{张量的 Frobenius 范数} 张量 $\At\in\RR^{d_1\times\cdots\times d_N}$ 的 Frobenius 范数是其各元素
+平方之和的平方根~（即与自身内积的平方根）。在张量网络中，三阶张量 $\At\in\RR^{d_1\times d_2\times d_3}$ 的范数表示为
+\begin{align*}
+\norm{\At}_F^2 = \langle\At,\At\rangle = 
+\sum_{i_1=1}^{d_1}\sum_{i_2=1}^{d_2}\sum_{i_3=1}^{d_3}\At_{i_1i_2i_3}^2
+=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=green!50!red!50!white] (At) at (\x,\y){\scalebox{0.85}{$\At$}};
+    \node[tensor,fill=green!50!red!50!white] (At1) at (\x+1,\y){\scalebox{0.85}{$\At$}};
+    \draw[edge] (At) -- (At1);
+    \draw[edge] (At) to [out=45,in=135] (At1);
+    \draw[edge] (At) to [out=-45,in=-135] (At1);
+    \node[draw=none] () at (\x+0.5,\y+0.6) {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \node[draw=none] () at (\x+0.5,\y+0.15) {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \node[draw=none] () at (\x+0.5,\y-0.5) {\scalebox{0.7}{\dimcolor{$d_3$}}};
+\end{tikzpicture} .
+\end{align*}
+它是矩阵 Frobenius 范数最直接、自然的推广：
+\begin{align*}
+ \norm{\Ab}_F^2 = \tr(\Ab\Ab^\ts) = \tr(\Ab^\ts\Ab) =  \hspace*{-0.5cm}
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (A) at (\x,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=red!50!white] (B) at (\x+1,\y){\scalebox{0.85}{$\Ab$}};
+    \draw[edge] (A) -- (B) node [midway,above]{\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge] (A) to [out=155,in=25, distance=1cm] (B);
+    \node[draw=none] () at (\x+0.5,\y+0.65) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \end{tikzpicture} \hspace*{-0.5cm}.
+\end{align*}
+
+
+\paragraph{外积的 Frobenius 范数} 借助张量网络，几乎可以显然地验证：外积的 Frobenius 范数等于各因子 Frobenius 范数的乘积。例如，取 $\Ab\in\RR^{m\times n}$ 与 $\Tt\in\RR^{d_1\times d_2\times d_3}$，有
+$$ \begin{tikzpicture}[baseline=-0.5ex]
+    \tikzset{tensor/.style = {minimum width = 1.8cm,minimum height = 0.4cm,shape = rounded rectangle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{0}
+    \def\y{0}
+    \draw[edge] (\x-0.7,\y-0.15) -- (\x-0.7,\y-0.5)node [midway,left=-0.05cm] {\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge] (\x-0.35,\y-0.15) -- (\x-0.35,\y-0.5)node [midway,left=-0.05cm] {\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge] (\x,\y-0.15) -- (\x,\y-0.5)node [midway,left=-0.1cm] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (\x+0.35,\y-0.15) -- (\x+0.35,\y-0.5)node [midway,left=-0.1cm] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x+0.7,\y-0.15) -- (\x+0.7,\y-0.5)node [midway,left=-0.1cm] {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \node[tensor,fill=yellow] (Bt) at (\x,\y){$\Ab \outprod \Tt$};
+    \end{tikzpicture}
+    = 
+    \begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum width = 0.8cm,minimum height = 0.4cm,shape = rounded rectangle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x+0.2,\y-0.15) -- (\x+0.2,\y-0.5) node [midway,left=-0.05cm]{\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge] (\x-0.2,\y-0.15) -- (\x-0.2,\y-0.5) node [midway,left=-0.05cm]{\scalebox{0.7}{\dimcolor{$m$}}};
+    \node[tensor,fill=red!50!white] (A) at (\x,\y){{$\Ab$}};
+
+   
+    \def\y{0}
+    \def\x{1}
+    \draw[edge] (\x-0.3,\y-0.15) -- (\x-0.3,\y-0.5) node [midway,left=-0.1cm]{\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (\x+0.05,\y-0.15) -- (\x+0.05,\y-0.5) node [midway,left=-0.1cm]{\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x+0.3,\y-0.15) -- (\x+0.3,\y-0.5) node [midway,right=-0.05cm]{\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \node[tensor,fill=red!30!blue!20!white] (T) at (\x,\y){{$\Tt$}};
+\end{tikzpicture}
+    $$
+于是
+\begin{align*}
+\norm{\Ab\outprod\Tt}_F^2
+=
+\norm{
+\begin{tikzpicture}[baseline=\baseline]
+\tikzset{tensor/.style = {minimum width = 1.8cm,minimum height = 0.4cm,shape = rounded rectangle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{0}
+    \def\y{0}
+    \draw[edge] (\x-0.7,\y-0.15) -- (\x-0.7,\y-0.5)node [midway,left=-0.05cm] {\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge] (\x-0.35,\y-0.15) -- (\x-0.35,\y-0.5)node [midway,left=-0.05cm] {\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge] (\x,\y-0.15) -- (\x,\y-0.5)node [midway,left=-0.1cm] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (\x+0.35,\y-0.15) -- (\x+0.35,\y-0.5)node [midway,left=-0.1cm] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x+0.7,\y-0.15) -- (\x+0.7,\y-0.5)node [midway,left=-0.1cm] {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \node[tensor,fill=yellow] (Bt) at (\x,\y){$\Ab \outprod \Tt$};
+\end{tikzpicture}
+}_F^2
+=
+\begin{tikzpicture}[baseline=\baseline]
+\tikzset{tensor/.style = {minimum width = 1.8cm,minimum height = 0.4cm,shape = rounded rectangle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{0}
+    \def\y{0.35}
+    \draw[edge] (\x-0.7,\y-0.15) -- (\x-0.7,\y-0.5)node [midway,left=-0.05cm] {\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge] (\x-0.35,\y-0.15) -- (\x-0.35,\y-0.5)node [midway,left=-0.05cm] {\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge] (\x,\y-0.15) -- (\x,\y-0.5)node [midway,left=-0.1cm] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (\x+0.35,\y-0.15) -- (\x+0.35,\y-0.5)node [midway,left=-0.1cm] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x+0.7,\y-0.15) -- (\x+0.7,\y-0.5)node [midway,left=-0.1cm] {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \node[tensor,fill=yellow] (Bt) at (\x,\y){$\Ab \outprod \Tt$};
+    \node[tensor,fill=yellow] (Bt) at (\x,\y-0.7){$\Ab \outprod \Tt$};
+\end{tikzpicture}
+=
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum width = 0.9cm,minimum height = 0.4cm,shape = rounded rectangle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.35}
+    \def\x{0}
+    \draw[edge] (\x+0.2,\y-0.15) -- (\x+0.2,\y-0.5) node [midway,left=-0.05cm]{\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge] (\x-0.2,\y-0.15) -- (\x-0.2,\y-0.5) node [midway,left=-0.05cm]{\scalebox{0.7}{\dimcolor{$m$}}};
+    \node[tensor,fill=red!50!white] (A) at (\x,\y){{$\Ab$}};
+    \node[tensor,fill=red!50!white] (A) at (\x,\y-0.7){{$\Ab$}};
+    \def\x{1}
+    \draw[edge] (\x-0.3,\y-0.15) -- (\x-0.3,\y-0.5) node [midway,left=-0.1cm]{\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (\x+0.05,\y-0.15) -- (\x+0.05,\y-0.5) node [midway,left=-0.1cm]{\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x+0.3,\y-0.15) -- (\x+0.3,\y-0.5) node [midway,right=-0.1cm]{\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \node[tensor,fill=red!30!blue!20!white] (T) at (\x,\y){{$\Tt$}};
+    \node[tensor,fill=red!30!blue!20!white] (T) at (\x,\y-0.7){{$\Tt$}};
+\end{tikzpicture}
+=\norm{\Ab}_F^2 \norm{\Tt}_F^2
+.
+\end{align*}
+

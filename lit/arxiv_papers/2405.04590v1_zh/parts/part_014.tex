@@ -1,0 +1,147 @@
+\subsection{与 RAC 和 MI-RNN 的关系}
+\label{appendix: sec: claim 4.3}
+
+我们在此聚焦于乘性集成（Multiplicative Integration, MI），即通过 Hadamard 积 `$\odot$' 连接两路输入的一种方式。MI 已被用于递归算术线路（Recurrent Arithmetic Circuit, RAC）、乘性 RNN（M-RNN）\citep{sutskever2011generating} 以及 MI-RNN：
+
+\emph{递归算术线路}（RAC）是一类递归网络，其隐藏状态 $\vh^{(t)}_\textrm{RAC}$ 定义如下 \citep{levine2018benefits}：
+%
+\begin{equation} \small
+\label{eq: RAC_simple}
+   \vh^{(t)}_\textrm{RAC} =  \mW^{hx} \vf (x^{(t)}) \odot \mW^{hh}\vh^{(t-1)}_\textrm{RAC}
+\end{equation}
+%
+
+这些隐藏状态在 M-RNN 中也被用作一个\emph{中间项}。
+
+\emph{乘性集成 RNN}（MI-RNN）是带有激活函数的 RAC，其隐藏状态 $\vh^{(t)}_\textrm{MI}$ 定义如下 \citep{wu_multiplicative_2016}：
+
+
+\begin{equation} \small
+\label{eq: mirnn}
+    \vh^{(t)}_\textrm{MI}= \phi(\mW^{hx} \vf(x^{(t)}) \odot \mW^{hh}\vh^{(t-1)}_\textrm{MI})
+\end{equation}
+
+% \begin{wrapfigure}[16]{r}{0.42\textwidth}
+% \small
+% % \vspace{-10mm}
+% \begin{center}
+% \includegraphics[width=0.40\textwidth]{figure/SecondOrderRNN.pdf}
+% \vspace{-4mm}
+% \caption{\small{Second-order RNNs}}.
+% \vspace{-2mm}
+% \label{fig:secondorderrnn}
+% \end{center}
+% \end{wrapfigure}
+
+
+
+
+% \subsection{TTLM generalizes Second-order RNNs }
+% \label{sec: relationship}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[scale=0.45]{figure/TTLM_Tiny.pdf}
+    \caption{a) TTLM 框架下的二阶 RNN。b) TTLM 框架下 RAC 的隐藏状态。c) TTLM 框架下 MI-RNN 的隐藏状态。方块中的虚线表示 $\mathcal{A}, \Phi(X)$ 或 $\tG$。小空心圆表示激活函数。}
+  \label{fig:rnns}
+\end{figure}
+
+
+
+% \begin{proof} The detailed proof can be found in Appendix \ref{appendix: seecond}. The diagrammatic notation of Second-order RNNs is shown in Fig. \ref{fig: TTLM}b.
+
+% \end{proof}
+
+
+
+
+
+% \begin{wrapfigure}[16]{r}{0.42\textwidth}
+% \small
+% % \vspace{-10mm}
+% \begin{center}
+% \includegraphics[width=0.40\textwidth]{figure/RACs.pdf}
+% \vspace{-4mm}
+% \caption{\small{RACs}}.
+% \vspace{-2mm}
+% \label{fig:RACs}
+% \end{center}
+% \end{wrapfigure}
+
+
+
+
+\begin{claim}
+\label{cm: G and RACs} 给定条件：TT-scores 满足 $\tG = \mW^{hx} \odot \mW^{hh}$。
+RAC 的隐藏状态与 TTLM 的隐藏状态相同。存在非线性函数 $\phi$，使得当伴随以 $\phi$ 时，MI-RNN 的隐藏状态与 TTLM 的隐藏状态相同。
+\end{claim}
+
+% \begin{proof} The detailed proof can be found in Appendix \ref{appendix: sec: claim 4.3}. The diagrammatic notations of RACs and MI-RNN  are shown in Fig. \ref{fig: TTLM}.
+% \end{proof}
+
+
+\begin{proof} 该证明基于以下观察：
+%
+用张量收缩的语言来说，式 \ref{eq: RAC_simple} 涉及将输入权重矩阵 $\mW^{hx}$ 与输入向量 $\vf (x^{(t)})$ 收缩，并将隐藏权重矩阵 $\mW^{hh}$ 与 $\vh^{(t-1)}_\textrm{RAC}$ 收缩。二者的 Hadamard 积是一个三阶对角张量 $\delta \in \mathbb{R}^{R \times R \times R}$，满足当且仅当 $i = j = k$ 时 $\delta_{ijk} = 1$，否则 $\delta_{ijk} = 0$。于是，我们可以将式 \ref{eq: RAC_simple} 写成逐元素的形式：
+%
+\begin{equation} \small
+\begin{split}
+    \label{eq: RAC_element}
+    h^{(t)}_{\textrm{RAC}_{\alpha_t}}
+    & = \sum_{{i_t = 1}}^{|V|} \sum_{{\alpha_t = 1}}^{R} f(x^{(t)})_{i_t}W^{hx}_{i_tj}\mathbf{\delta}_{j\alpha_{t}k}W^{hh}_{k\alpha_{t-1}} h^{(t-1)}_{\textrm{RAC}_{\alpha_{t-1}}} \\
+    & = \sum_{{i_t = 1}}^{|V|} \sum_{{\alpha_t = 1}}^{R} f(x^{(t)})_{i_t}\etG_{i_t\alpha_{t}\alpha_{t-1}} h^{(t-1)}_{\textrm{RAC}_{\alpha_{t-1}}} \\
+\end{split}
+\end{equation}
+
+
+其中 $\tG = \mW^{hx} \odot \mW^{hh}$。此时，式 \ref{eq: ttlm cell} 中 TTLM 的隐藏状态等于式 \ref{eq: RAC_element} 中 RAC 的隐藏状态，如图 \ref{fig:rnns}b 所示。类似地，若给式 \ref{eq: ttlm cell} 伴随一个激活函数 $\phi$，则式 \ref{eq: ttlm cell} 就等于式 \ref{eq: mirnn} 中 MI-RNN 的隐藏状态，如图 \ref{fig:rnns}c 所示。
+
+\end{proof}
+
+综合 Claim \ref{cm: G and T} 与 \ref{cm: G and RACs}，这三种模型都可以由带非线性激活函数的 TTLM 来模拟；我们将为这一猜想寻找理论证明留作未来的工作。
+
+% \section{Implementations}
+% \label{sec:implementations}
+% % Note that in order to follow a realistic case, the baseline models implemented by us have an embedding matrix $W^{xe}$ between one-hot vectors $\vf (x^{(t)})$ and the input-to-hidden  matrix $\mW^{hx}$ \footnote{This change  obeys the multiplicative form and follows the TT-format of TTLM ($W^{xe}$ is part of TT cores)}.
+% We implement all RNNs models, TTLM, TTLM-Large, and TTLM-Tiny using PyTorch on GPU A100 one single card.
+
+
+% For RNNs, there are five matrix parameters: $\mW^{xe}\in \mathbb{R}^{E\times |V|}$ is the input embedding matrix, $\mW^{eh}\in
+% \mathbb{R}^{E\times H}$ is the embedding-to- hidden matrix, $\mW^{hh}\in \mathbb{R}^{H\times H}$ is the hidden-to-hidden matrix. We tie (share the same training parameters) the input embedding  $\mW^{xe}$ and output embedding $\mV$ which has been proved lead to a significant reduction in perplexity \citep{press2016using}. So there is a projection matrix $\mP\in\mathbb{R}^{H\times E}$ before the output embedding. All this process is introduced in  \citep{press2016using}.
+
+% For TTLM models, we tie the input tensor $\tW^{xe}$ and $\tV$. The implementation of $\delta$ is functioned by a reshape function, so the interaction between hidden and input can be computed by matrix product. We also let $\tG^{(1)}$ have the same parameters along the dimension $|V|$ (i.e. $\tG^{(1)}$ is simplified into a  $\mG^{(1)}\in\mathbb{R}^{1\times R}$ and thus it can be viewed as the initial hidden state $\vh^{(0)}$).
+
+
+
+% \begin{table}[ht]
+%     \centering
+%     \begin{tabular}{l|c}
+%     \hline
+%         Model & Training Parameters \\
+%         \hline
+%         Vanilla-RNN & $\mW^{xe}\in \mathbb{R}^{E\times |V|}$, $\mW^{eh}\in \mathbb{R}^{E\times H}$, $\mW^{hh}\in \mathbb{R}^{H\times H}$, \\
+%         & $\mP\in\mathbb{R}^{H\times E}$, $\mV\in\mathbb{R}^{E\times|V|}$  \\
+%         \hline
+
+%         MI-RNNs & $\mW^{xe}\in \mathbb{R}^{E\times |V|}$, $\mW^{eh}\in \mathbb{R}^{E\times H}$, $\mW^{hh}\in \mathbb{R}^{H\times H}$, \\ & $\mP\in\mathbb{R}^{H\times E}$, $\mV\in\mathbb{R}^{E\times|V|}$\\
+%         \hline
+%         RACs & $\mW^{xe}\in \mathbb{R}^{E\times |V|}$, $\mW^{eh}\in \mathbb{R}^{E\times H}$, $\mW^{hh}\in \mathbb{R}^{H\times H}$, \\
+%         & $\mP\in\mathbb{R}^{H\times E}$, $\mV\in\mathbb{R}^{E\times|V|}$\\
+%         \hline
+%         Second-order RNNs & $\mW^{xe} \in \mathbb{R}^{E\times |V|}$, $\tT \in \mathbb{R}^{H\times H \times H}$, $\mW^{hh}\in \mathbb{R}^{E \times H}$, \\
+%         & $\mP\in\mathbb{R}^{H\times E}$, $\mV\in\mathbb{R}^{E\times|V|}$\\
+%         \hline
+%         TTLM & $\tG\in \mathbb{R}^{R\times |V|\times R}$, $\mG^{(t)}\in \mathbb{R}^{R \times |V|}$, $\mG^{(1)} \in \mathbb{R}^{R \times |V|}$ \\
+%         \hline
+%         TTLM-Tiny & $\tW^{xe}\in \mathbb{R}^{R\times |V| \times R}$, $\mW^{hh}\in\mathbb{R}^{R\times R}$, \\
+%         & $\tP\in\mathbb{R}^{R\times R\times R}$, $\tV\in\mathbb{R}^{R\times R\times |V|}$\\
+
+%         \hline
+%         TTLM-Large & $\tW^{xe}\in\mathbb{R}^{R\times |V|\times R}$, $\tW^{eh}\in\mathbb{R}^{R\times R\times R\times R}$, $\mW^{hh}\in\mathbb{R}^{R\times R}$, \\
+%         & $\tP\in\mathbb{R}^{R\times R\times R}$, $\tV\in\mathbb{R}^{R\times R\times |V|}$\\
+%     \end{tabular}
+%     \caption{Training parameters in our implementation. $E$ is the embedding size, $H$ is the hidden units in RNNs, and $R$ is the rank in the TTLM.  We set $H=R$ and $E=R^2$ to make the parameters of all models in the same scale. The parameters of $\mW^{xe}$  and $\tW^{xe}$are uniformly initialized in the interval $[-0.1,0.1]$, $\mW^{eh}$, $\tW^{eh}$ and $\mW^{hh}$ are uniformly initialized between $[-\frac{1}{\sqrt{H}}, \frac{1}{\sqrt{H}}]$.}
+%     \label{tab:my_label}
+% \end{table}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -1,0 +1,75 @@
+\tikzstyle{obj1}=[line width = 0.8pt, line join=round, line cap=round]
+\tikzstyle{obj2}=[line width = 0.8pt, line join=round, line cap=round, color=BrickRed]
+\tikzstyle{obj3}=[line width = 0.8pt, line join=round, line cap=round, color=BlueViolet]
+\tikzstyle{mpstensor}=[draw=black, line width = 0.7pt, fill=BlueViolet!14, circle, inner sep=3pt]
+\tikzstyle{mpotensor}=[draw=black, line width=.7pt, fill=gray!20, rectangle, inner sep=3.8pt, rounded corners=2pt]
+\tikzstyle{matrix}=[draw=black, line width = 0.7pt, fill=black!10, circle, inner sep=1.6pt]
+\tikzstyle{mor}=[draw=none, fill=gray!22]
+
+\tikzset{singlet/.style={decorate, decoration=snake}}
+
+\tikzset{->1-/.style={decoration={
+			markings,
+			mark=at position #1 with {\arrow{Triangle[fill=black, width=3.5pt, length=3.5pt]}}},postaction={decorate}}}
+\tikzset{-<1-/.style={decoration={
+			markings,
+			mark=at position #1 with {\arrowreversed{Triangle[fill=black, width=3.5pt, length=3.5pt]}}},postaction={decorate}}}
+			
+\tikzset{->2-/.style={decoration={
+			markings,
+			mark=at position #1 with {\arrow{Triangle[fill=BrickRed, width=3.5pt, length=3.5pt]}}},postaction={decorate}}}
+\tikzset{->3-/.style={decoration={
+			markings,
+			mark=at position #1 with {\arrow{Triangle[fill=BlueViolet!80, width=3.5pt, length=3.5pt]}}},postaction={decorate}}}
+
+\tikzset{
+    mask point/.style={ transform shape, sloped, 
+    minimum width=20pt, minimum height=4pt, inner sep=0pt, ultra thin, font=\tiny}
+}
+\tikzset{
+    clip even odd rule/.code={\pgfseteorule},
+    invclip/.style={clip,insert path=[clip even odd rule]{
+    [reset cm](-\maxdimen,-\maxdimen)rectangle(\maxdimen,\maxdimen)
+}}}
+\newcommand\clipIntersection[1]{
+    (#1.north west) -- (#1.north east) -- (#1.south east) -- (#1.south west) -- (#1.north west)
+}
+\newcommand\clipAroundNode[2]{
+    \begin{pgfscope}
+        \begin{scope}[overlay]
+            \path[invclip] \clipIntersection{#1};#2
+        \end{scope}
+    \end{pgfscope}
+}
+\newcommand{\middleCoo}[6]{
+    \path (#1) --coordinate[pos=0.5](#3) (#2);
+    \path (#1) --coordinate[pos={0.5-\sp}](#4) (#2);
+    \path (#1) --coordinate[pos={0.5+\sp}](#5) (#2);
+}
+\newcommand{\barycentre}[8]{
+    \middleCoo{#1}{#2}{A}{}{}{}{#8};
+    \middleCoo{#2}{#3}{B}{}{}{}{#8};
+    \middleCoo{#1}{#3}{C}{}{}{}{#8};
+    \path[name path=PA#3] (A) -- (#3);
+    \path[name path=PB#1] (B) -- (#1);
+    \path[name path=PC#2] (C) -- (#2);
+    \path [name intersections={of=PA#3 and PB#1,by={#4}}];
+    \path (#1) --coordinate[pos=0.84](#5) (#4);
+    \path (#2) --coordinate[pos=0.84](#6) (#4);
+    \path (#3) --coordinate[pos=0.84](#7) (#4);
+}
+\newcommand{\barycentreSq}[9]{
+    \middleCoo{#1}{#2}{A1}{A2}{A3}{};
+    \middleCoo{#3}{#4}{B1}{B2}{B3}{};
+    \middleCoo{#1}{#3}{C1}{C2}{C3}{};
+    \middleCoo{#2}{#4}{D1}{D2}{D3}{};
+    \middleCoo{A1}{B1}{#5}{}{};
+    \path[name path=PA2B2] (A2) -- (B2);
+    \path[name path=PA3B3] (A3) -- (B3);
+    \path[name path=PC2D2] (C2) -- (D2);
+    \path[name path=PC3D3] (C3) -- (D3);       
+    \path [name intersections={of=PA2B2 and PC2D2,by={#6}}];
+    \path [name intersections={of=PA2B2 and PC3D3,by={#8}}];
+    \path [name intersections={of=PA3B3 and PC2D2,by={#7}}];
+    \path [name intersections={of=PA3B3 and PC3D3,by={#9}}];
+}

@@ -1,0 +1,290 @@
+\paragraph{例} 设有一个任意的张量网络，例如
+$$\Tt = 
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!20!blue!20!white] (A) at (\x,\y){\scalebox{0.85}{$\At$}}; 
+    \node[tensor,fill=red!40!blue!20!white] (B) at (\x+1,\y){\scalebox{0.85}{$\Bt$}};
+    \node[tensor,fill=red!40!blue!30!white] (C) at (\x+2,\y){\scalebox{0.85}{$\Ct$}};
+    \node[tensor,fill=red!60!blue!40!white] (G) at (\x+1,\y+1){\scalebox{0.85}{$\Gt$}};
+    \draw[edge](A)--(B)node[midway,above] {\scalebox{0.7}{\dimcolor{$r_1$}}};
+    \draw[edge](B)--(C)node[midway,above] {\scalebox{0.7}{\dimcolor{$r_2$}}};
+    \draw[edge](G)--(A)node[midway,left] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge](G)--(B)node[midway,left] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge](G)--(C)node[midway,right] {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \draw[edge](A)--(\x,\y-0.85)node[midway,left] {\scalebox{0.7}{\dimcolor{$m_1$}}};
+    \draw[edge](B)--(\x+1,\y-0.85)node[midway,left] {\scalebox{0.7}{\dimcolor{$m_2$}}};
+    \draw[edge](C)--(\x+2,\y-0.85)node[midway,left] {\scalebox{0.7}{\dimcolor{$m_3$}}};
+\end{tikzpicture},
+$$
+其中 $\At\in\RR^{m_1\times d_1\times r_1}, \Bt\in\RR^{m_2\times r_1\times d_2\times r_2}, \Ct\in\RR^{m_3\times r_2\times d_3}$ 与 $\Gt\in\RR^{d_1\times d_2\times d_3}$ 的元素均独立同分布地取自标准正态分布，我们要计算 $\norm{\Tt}^2_F$ 的期望。利用张量网络图，有
+\begin{align*}
+    \EE\left(\norm{\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!20!blue!20!white] (A) at (\x,\y){\scalebox{0.85}{$\At$}}; 
+    \node[tensor,fill=red!40!blue!20!white] (B) at (\x+1,\y){\scalebox{0.85}{$\Bt$}};
+    \node[tensor,fill=red!40!blue!30!white] (C) at (\x+2,\y){\scalebox{0.85}{$\Ct$}};
+    \node[tensor,fill=red!60!blue!40!white] (G) at (\x+1,\y+1){\scalebox{0.85}{$\Gt$}};
+    \draw[edge](A)--(B)node[midway,above] {\scalebox{0.7}{\dimcolor{$r_1$}}};
+    \draw[edge](B)--(C)node[midway,above] {\scalebox{0.7}{\dimcolor{$r_2$}}};
+    \draw[edge](G)--(A)node[midway,left] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge](G)--(B)node[midway,left] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge](G)--(C)node[midway,right] {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \draw[edge](A)--(\x,\y-0.85)node[midway,left] {\scalebox{0.7}{\dimcolor{$m_1$}}};
+    \draw[edge](B)--(\x+1,\y-0.85)node[midway,left] {\scalebox{0.7}{\dimcolor{$m_2$}}};
+    \draw[edge](C)--(\x+2,\y-0.85)node[midway,left] {\scalebox{0.7}{\dimcolor{$m_3$}}};
+\end{tikzpicture}}_F^2\right)
+=
+\EE\left(\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.5}
+    \def\x{0}
+    \node[tensor,fill=red!20!blue!20!white] (A_1) at (\x,\y){\scalebox{0.85}{$\At$}}; 
+    \node[tensor,fill=red!40!blue!20!white] (B_1) at (\x+1,\y){\scalebox{0.85}{$\Bt$}};
+    \node[tensor,fill=red!40!blue!30!white] (C_1) at (\x+2,\y){\scalebox{0.85}{$\Ct$}};
+    \node[tensor,fill=red!60!blue!40!white] (G_1) at (\x+1,\y+1){\scalebox{0.85}{$\Gt$}};
+    \draw[edge](A_1)--(B_1)node[midway,above] {\scalebox{0.7}{\dimcolor{$r_1$}}};
+    \draw[edge](B_1)--(C_1)node[midway,above] {\scalebox{0.7}{\dimcolor{$r_2$}}};
+    \draw[edge](G_1)--(A_1)node[midway,left] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge](G_1)--(B_1)node[midway,left] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge](G_1)--(C_1)node[midway,right] {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \node[tensor,fill=red!20!blue!20!white] (A) at (\x,\y-1){\scalebox{0.85}{$\At$}}; 
+    \node[tensor,fill=red!40!blue!20!white] (B) at (\x+1,\y-1){\scalebox{0.85}{$\Bt$}};
+    \node[tensor,fill=red!40!blue!30!white] (C) at (\x+2,\y-1){\scalebox{0.85}{$\Ct$}};
+    \node[tensor,fill=red!60!blue!40!white] (G) at (\x+1,\y-2){\scalebox{0.85}{$\Gt$}};
+    \draw[edge](A)--(B)node[midway,above] {\scalebox{0.7}{\dimcolor{$r_1$}}};
+    \draw[edge](B)--(C)node[midway,above] {\scalebox{0.7}{\dimcolor{$r_2$}}};
+    \draw[edge](G)--(A)node[midway,left] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge](G)--(B)node[midway,left] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge](G)--(C)node[midway,right] {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \draw[edge](A_1)--(A)node[midway,left] {\scalebox{0.7}{\dimcolor{$m_1$}}};
+    \draw[edge](B_1)--(B)node[midway,left] {\scalebox{0.7}{\dimcolor{$m_2$}}};
+    \draw[edge](C_1)--(C)node[midway,left] {\scalebox{0.7}{\dimcolor{$m_3$}}};
+\end{tikzpicture}\right).
+\end{align*}
+由命题~\ref{prop:wishart-mean} 可知 
+
+$$
+\EE\left(\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.5}
+    \def\x{0}
+    \node[tensor,fill=red!20!blue!20!white] (A1) at (\x,\y){\scalebox{0.85}{$\At$}}; 
+    \node[tensor,fill=red!20!blue!20!white] (A2) at (\x,\y-1){\scalebox{0.85}{$\At$}}; 
+    \draw[edge, draw=blue](A1) -- (A2)node [midway,right]{\scalebox{0.7}{\dimcolor{$m_1$}}};
+    \draw[edge, draw=blue](A1) -- (\x+0.65,\y)node [midway,above]{\scalebox{0.7}{\dimcolor{$r_1$}}};
+    \draw[edge, draw=blue](A2) -- (\x+0.65,\y-1)node [midway,above]{\scalebox{0.7}{\dimcolor{$r_1$}}};
+    \draw[edge,draw=blue](A1) -- (\x,\y+0.65)node [midway,right]{\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge,draw=blue](A2) -- (\x,\y-1.65)node [midway,right]{\scalebox{0.7}{\dimcolor{$d_1$}}};
+\end{tikzpicture}\right) = m_1
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge, draw=blue](\x-0.65,\y+0.5) -- (\x-0.65,\y-0.5);
+    \draw[edge, draw=blue](\x,\y+0.5) to [out=190,in=170] (\x,\y-0.5);
+    \node[draw=none] () at (\x-0.8,\y) {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \node[draw=none] () at (\x-0.1,\y) {\scalebox{0.7}{\dimcolor{$r_1$}}};
+\end{tikzpicture},\  
+\EE\left(\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.5}
+    \def\x{0}
+    \node[tensor,fill=red!40!blue!20!white] (B1) at (\x,\y){\scalebox{0.85}{$\Bt$}};
+    \node[tensor,fill=red!40!blue!20!white] (B2) at (\x,\y-1){\scalebox{0.85}{$\Bt$}};
+    \draw[edge, draw=red](B1) -- (B2)node [midway,right]{\scalebox{0.7}{\dimcolor{$m_2$}}};
+    \draw[edge, draw=red](B1) -- (\x,\y+0.65)node [midway,right]{\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge, draw=red](B1) -- (\x+0.65,\y)node [midway,above]{\scalebox{0.7}{\dimcolor{$r_2$}}};
+    \draw[edge, draw=red](B2) -- (\x+0.65,\y-1)node [midway,above]{\scalebox{0.7}{\dimcolor{$r_2$}}};
+    \draw[edge, draw=red](B1) -- (\x-0.65,\y)node [midway,above]{\scalebox{0.7}{\dimcolor{$r_1$}}};
+    \draw[edge, draw=red](B2) -- (\x-0.65,\y-1)node [midway,above]{\scalebox{0.7}{\dimcolor{$r_1$}}};
+     \draw[edge, draw=red](B2) --(\x,\y-1.65)node [midway,right]{\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \end{tikzpicture}\right)
+    =
+m_2
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge, draw=red](\x-0.65,\y+0.5) -- (\x-0.65,\y-0.5);
+    \draw[edge, draw=red](\x,\y+0.5) to [out=190,in=170] (\x,\y-0.5);
+    \draw[edge, draw=red](\x-1.3,\y+0.5) to [out=-20,in=-5] (\x-1.3,\y-0.5);
+    \node[draw=none] () at (\x-0.8,\y) {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    0.5);
+    \node[draw=none] () at (\x-1.2,\y) {\scalebox{0.7}{\dimcolor{$r_1$}}};
+    \node[draw=none] () at (\x-0.1,\y) {\scalebox{0.7}{\dimcolor{$r_2$}}};
+\end{tikzpicture}
+\text{ and }
+    \EE\left(\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.5}
+    \def\x{0}
+    \node[tensor,fill=red!40!blue!30!white] (C1) at (\x,\y){\scalebox{0.85}{$\Ct$}};
+    \node[tensor,fill=red!40!blue!30!white] (C2) at (\x,\y-1){\scalebox{0.85}{$\Ct$}};
+    \draw[edge, draw=orange](C1) -- (C2)node [midway,right]{\scalebox{0.7}{\dimcolor{$m_3$}}};
+    \draw[edge, draw=orange](C1) -- (\x,\y+0.65)node [midway,right]{\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \draw[edge, draw=orange](C1) -- (\x-0.65,\y)node [midway,above]{\scalebox{0.7}{\dimcolor{$r_2$}}};
+    \draw[edge, draw=orange](C2) -- (\x-0.65,\y-1)node [midway,above]{\scalebox{0.7}{\dimcolor{$r_2$}}};
+     \draw[edge, draw=orange](C2) --(\x,\y-1.65)node [midway,right]{\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \end{tikzpicture}\right)
+=
+m_3
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge, draw=orange](\x-0.65,\y+0.5) -- (\x-0.65,\y-0.5);
+    \draw[edge, draw=orange](\x-1.3,\y+0.5) to [out=-20,in=-5] (\x-1.3,\y-0.5);
+    \node[draw=none] () at (\x-0.8,\y) {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    0.5);
+    \node[draw=none] () at (\x-1.2,\y) {\scalebox{0.7}{\dimcolor{$r_2$}}};
+\end{tikzpicture},
+$$
+于是由命题~\ref{prop:inner-expectation} 可写为：
+\begin{align*}
+\EE\left(\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.5}
+    \def\x{0}
+    \node[tensor,fill=red!20!blue!20!white] (A_1) at (\x,\y){\scalebox{0.85}{$\At$}}; 
+    \node[tensor,fill=red!40!blue!20!white] (B_1) at (\x+1,\y){\scalebox{0.85}{$\Bt$}};
+    \node[tensor,fill=red!40!blue!30!white] (C_1) at (\x+2,\y){\scalebox{0.85}{$\Ct$}};
+    \draw[edge](A_1)--(B_1)node[midway,above] {\scalebox{0.7}{\dimcolor{$r_1$}}};
+    \draw[edge](B_1)--(C_1)node[midway,above] {\scalebox{0.7}{\dimcolor{$r_2$}}};
+    \draw[edge](A_1) -- (\x+0.65,\y+0.65) node[midway,left] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge](B_1) -- (\x+1,\y+0.65) node[midway,right] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge](C_1) -- (\x+1.65,\y+0.65) node[midway,right] {\scalebox{0.7}{\dimcolor{$d_3$}}};  \node[tensor,fill=red!20!blue!20!white] (A) at (\x,\y-1){\scalebox{0.85}{$\At$}}; 
+    \node[tensor,fill=red!40!blue!20!white] (B) at (\x+1,\y-1){\scalebox{0.85}{$\Bt$}};
+    \node[tensor,fill=red!40!blue!30!white] (C) at (\x+2,\y-1){\scalebox{0.85}{$\Ct$}};
+    \draw[edge](A)--(B) node[midway,above] {\scalebox{0.7}{\dimcolor{$r_1$}}};
+    \draw[edge](B)--(C)node[midway,above] {\scalebox{0.7}{\dimcolor{$r_2$}}};
+    \draw[edge](A_1)--(A) node[midway,left] {\scalebox{0.7}{\dimcolor{$m_1$}}};
+    \draw[edge](B_1)--(B) node[midway,left] {\scalebox{0.7}{\dimcolor{$m_2$}}};
+    \draw[edge](C_1)--(C) node[midway,left] {\scalebox{0.7}{\dimcolor{$m_3$}}};
+    \draw[edge](A) -- (\x+0.65,\y-1.65)node[midway,left] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge](B) -- (\x+1,\y-1.65)node[midway,right] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge](C) -- (\x+1.65,\y-1.65)node[midway,right] {\scalebox{0.7}{\dimcolor{$d_3$}}};
+\end{tikzpicture}\right)
+&=
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.5}
+    \def\x{0}
+    \node[tensor,fill=red!20!blue!20!white] (A1) at (\x,\y){\scalebox{0.85}{$\At$}}; 
+    \node[tensor,fill=red!20!blue!20!white] (A2) at (\x,\y-1){\scalebox{0.85}{$\At$}}; 
+    \draw[edge, draw=blue](A1) -- (A2)node[midway,right] {\scalebox{0.7}{\dimcolor{$m_1$}}};
+    \draw[edge, draw=blue](A1) -- (\x+0.65,\y)node[midway,above] {\scalebox{0.7}{\dimcolor{$r_1$}}};
+    \draw[edge, draw=blue](A2) -- (\x+0.65,\y-1)node[midway,above] {\scalebox{0.7}{\dimcolor{$r_1$}}};
+    \draw[edge,draw=blue](A1) -- (\x,\y+0.65)node[midway,right] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge,draw=blue](A2) -- (\x,\y-1.65)node[midway,right] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \node at (\x-0.55,\y-0.5) {$\EE\left( \vphantom{\rule{0pt}{1cm}} \right.$};
+    \node at (\x+1,\y-0.5) {$\left.\vphantom{\rule{0pt}{1cm}} \right)$};
+    \node at (\x+1.45,\y-0.5){$\EE\left( \vphantom{\rule{0pt}{1cm}} \right.$};
+    \node[tensor,fill=red!40!blue!20!white] (B1) at (\x+2,\y){\scalebox{0.85}{$\Bt$}};
+    \node[tensor,fill=red!40!blue!20!white] (B2) at (\x+2,\y-1){\scalebox{0.85}{$\Bt$}};
+    \draw[edge, draw=red](B1) -- (B2)node[midway,right] {\scalebox{0.7}{\dimcolor{$m_2$}}};
+    \draw[edge, draw=red](B1) -- (\x+2.65,\y)node[midway,above] {\scalebox{0.7}{\dimcolor{$r_2$}}};
+    \draw[edge, draw=red](B2) -- (\x+2.65,\y-1)node[midway,above] {\scalebox{0.7}{\dimcolor{$r_2$}}};
+     \draw[edge, draw=red](B1) -- (\x+2,\y+0.65)node[midway,right] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge, draw=red](B2) -- (\x+2,\y-1.65)node[midway,right] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge, draw=red](B1) -- (\x+1.35,\y);
+     \draw[edge, draw=red](B2) -- (\x+1.35,\y-1);
+     \draw[edge](\x+1.35,\y) -- (\x+0.65,\y);
+    \draw[edge](\x+1.35,\y-1) -- (\x+0.65,\y-1);
+    \node at (\x+3,\y-0.5) {$\left.\vphantom{\rule{0pt}{1cm}} \right)$};
+    \node at (\x+3.45,\y-0.5){$\EE\left( \vphantom{\rule{0pt}{1cm}} \right.$};
+    \node[tensor,fill=red!40!blue!30!white] (C1) at (\x+4,\y){\scalebox{0.85}{$\Ct$}};
+    \node[tensor,fill=red!40!blue!30!white] (C2) at (\x+4,\y-1){\scalebox{0.85}{$\Ct$}};
+    \draw[edge, draw=orange](C1) -- (C2)node[midway,right] {\scalebox{0.7}{\dimcolor{$m_3$}}};
+    \draw[edge, draw=orange](C1) -- (\x+3.25,\y);
+     \draw[edge, draw=orange](C2) -- (\x+3.25,\y-1);
+    \draw[edge, draw=orange](C1) --(\x+4,\y+0.65)node[midway,right] {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \draw[edge, draw=orange](C2) -- (\x+4,\y-1.65)node[midway,right] {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \draw[edge](\x+3.25,\y)--(\x+2.65,\y);
+    \draw[edge](\x+3.25,\y-1)--(\x+2.65,\y-1);
+    \node at (\x+4.5,\y-0.5) {$\left.\vphantom{\rule{0pt}{1cm}} \right)$};
+\end{tikzpicture}\\
+&= 
+m_1m_2m_3
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge, draw=blue](\x,\y+0.5) -- (\x,\y-0.5);
+    \draw[edge, draw=blue](\x+0.5,\y+0.5) to [out=190,in=170] (\x+0.5,\y-0.5);
+    \node[draw=none] () at (\x-0.15,\y) {\scalebox{0.7}{\dimcolor{$d_1$}}};
+     \draw[edge, draw=red](\x+0.5,\y+0.5) to [out=-20,in=-5] (\x+0.5,\y-0.5);
+    \node[draw=none] () at (\x+0.5,\y+0.65) {\scalebox{0.7}{\dimcolor{$r_1$}}};
+    \node[draw=none] () at (\x+1.1,\y) {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge, draw=red](\x+1.25,\y+0.5) -- (\x+1.25,\y-0.5);
+    \draw[edge, draw=red](\x+1.75,\y+0.5) to [out=190,in=170] (\x+1.75,\y-0.5);
+    \draw[edge, draw=orange](\x+1.75,\y+0.5) to [out=-20,in=-5] (\x+1.75,\y-0.5);
+    \node[draw=none] () at (\x+1.75,\y+0.65) {\scalebox{0.7}{\dimcolor{$r_2$}}};
+    \draw[edge, draw=orange](\x+2.5,\y+0.5) -- (\x+2.5,\y-0.5);
+    \node[draw=none] () at (\x+2.35,\y) {\scalebox{0.7}{\dimcolor{$d_3$}}};
+  \end{tikzpicture}\\
+&=
+m_1m_2m_3r_1r_2
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge, draw=blue](\x,\y+0.5) -- (\x,\y-0.5);
+    \node[draw=none] () at (\x-0.15,\y) {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge, draw=red](\x+0.5,\y+0.5) -- (\x+0.5,\y-0.5);
+    \node[draw=none] () at (\x+0.35,\y) {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge, draw=orange](\x+1,\y+0.5) -- (\x+1,\y-0.5);
+    \node[draw=none] () at (\x+0.85,\y) {\scalebox{0.7}{\dimcolor{$d_3$}}};
+\end{tikzpicture}.
+\end{align*}
+因此，由于 $\Gt$ 与 $\At,\Bt$ 及 $\Ct$ 相互独立，可再次使用命题~\ref{prop:inner-expectation}，得到 
+\begin{align*}
+    \EE\left(\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.5}
+    \def\x{0}
+    \node[tensor,fill=red!20!blue!20!white] (A_1) at (\x,\y){\scalebox{0.85}{$\At$}}; 
+    \node[tensor,fill=red!40!blue!20!white] (B_1) at (\x+1,\y){\scalebox{0.85}{$\Bt$}};
+    \node[tensor,fill=red!40!blue!30!white] (C_1) at (\x+2,\y){\scalebox{0.85}{$\Ct$}};
+    \node[tensor,fill=red!60!blue!40!white] (G_1) at (\x+1,\y+1){\scalebox{0.85}{$\Gt$}};
+    \draw[edge](A_1)--(B_1)node[midway,above] {\scalebox{0.7}{\dimcolor{$r_1$}}};
+    \draw[edge](B_1)--(C_1)node[midway,above] {\scalebox{0.7}{\dimcolor{$r_2$}}};
+    \draw[edge](G_1)--(A_1)node[midway,left] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge](G_1)--(B_1)node[midway,left] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge](G_1)--(C_1)node[midway,right] {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \node[tensor,fill=red!20!blue!20!white] (A) at (\x,\y-1){\scalebox{0.85}{$\At$}}; 
+    \node[tensor,fill=red!40!blue!20!white] (B) at (\x+1,\y-1){\scalebox{0.85}{$\Bt$}};
+    \node[tensor,fill=red!40!blue!30!white] (C) at (\x+2,\y-1){\scalebox{0.85}{$\Ct$}};
+    \node[tensor,fill=red!60!blue!40!white] (G) at (\x+1,\y-2){\scalebox{0.85}{$\Gt$}};
+    \draw[edge](A)--(B)node[midway,above] {\scalebox{0.7}{\dimcolor{$r_1$}}};
+    \draw[edge](B)--(C)node[midway,above] {\scalebox{0.7}{\dimcolor{$r_2$}}};
+    \draw[edge](G)--(A)node[midway,left] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge](G)--(B)node[midway,left] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge](G)--(C)node[midway,right] {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \draw[edge](A_1)--(A)node[midway,left] {\scalebox{0.7}{\dimcolor{$m_1$}}};
+    \draw[edge](B_1)--(B)node[midway,left] {\scalebox{0.7}{\dimcolor{$m_2$}}};
+    \draw[edge](C_1)--(C)node[midway,left] {\scalebox{0.7}{\dimcolor{$m_3$}}};
+\end{tikzpicture}\right)
+&=
+m_1m_2m_3r_1r_2
+\EE\left(\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.5}
+    \def\x{0}
+    \node[tensor,fill=red!60!blue!40!white] (G_1) at (\x+1,\y+1){\scalebox{0.85}{$\Gt$}};
+    \node[tensor,fill=red!60!blue!40!white] (G) at (\x+1,\y-2){\scalebox{0.85}{$\Gt$}};
+    \draw[edge](G_1)--(\x+1,\y+0.25);
+    \draw[edge](G_1) -- (\x+0.5,\y+0.5);
+    \draw[edge](G_1) -- (\x+1.5,\y+0.5);
+    \draw[edge](G)--(\x+1,\y-1.25);
+    \draw[edge](G)--(\x+0.5,\y-1.5);
+    \draw[edge](G)--(\x+1.5,\y-1.5);
+    \draw[edge, draw=blue](\x+0.5,\y+0.5)--(\x+0.5,\y-1.5)node[midway,left] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge, draw=red](\x+1,\y+0.25)--(\x+1,\y-1.25)node[midway,right] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+     \draw[edge, draw=orange](\x+1.5,\y+0.5)--(\x+1.5,\y-1.5)node[midway,right] {\scalebox{0.7}{\dimcolor{$d_3$}}};
+\end{tikzpicture}\right)
+\ \ \ \textequal{Prop.~\ref{prop:wishart-mean}}\ \  m_1m_2m_3r_1r_2d_1d_2d_3.
+\end{align*}

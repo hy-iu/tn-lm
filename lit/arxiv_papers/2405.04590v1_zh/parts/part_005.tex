@@ -1,0 +1,100 @@
+\subsection{张量列语言模型（Tensor Train Language Model）}
+\label{sec: TTLM}
+\subsubsection{张量列分解（Tensor-Train Decomposition）}
+设文本 $X$ 中单词下标的序列为 $w_1, w_2, \cdots, w_N$，其中 $w_i \in \{1, 2, \cdots, |V|\}$，其对应的在 $\mathcal{A}$ 中的权重记为 $\mathcal{A}_{w_1 w_2\cdots w_N}$。我们使用 TT 分解将 $\mathcal{A}_{w_1 w_2\cdots w_N}$ 表示为如下 TT 格式（TT format）\citep{oseledets2011tensor}：
+
+
+\begin{align}
+    \label{eq: TT_index}
+    \mathcal{A}_{w_1w_2...w_N}
+    & = \underbrace{\tG^{(1)}_{:, w_1}}_{1\times R_1} \underbrace{\tG^{(2)}_{:, w_2, :}}_{R_1 \times R_2} \cdots \underbrace{\tG^{(N)}_{:, w_N}}_{R_{N-1} \times 1}  \\
+    &= \sum_{\alpha_1, \cdots, \alpha_{N-1}}   \etG^{(1)}_{w_1\alpha_1} \etG^{(2)}_{\alpha_1w_2\alpha_2} \cdots \etG^{(N)}_{\alpha_{N-1}w_N}  \nonumber
+\end{align}
+
+其中张量 $\tG^{(t)} \in \mathbb{R}^{R_{t-1} \times |V| \times R_t}$（$t =1,...,d$，按定义 $R_0 = R_N = 1$）称为 \textit{TT 核心张量}（TT cores），而 $R_k$（$k = 1,\cdots,N$）称为 \textit{TT 秩}（TT ranks）。
+
+尽管依赖于位置的 TT 核心张量 $\tG^{(t)}$ 有可能为语言建模带来更强的表达能力，但这一性质目前在适用性上造成了不必要的障碍，例如 $R_t$ 的选取。这里我们遵循惯例，考虑一类特殊的 TT 分解 \cite{khrulkov2018expressive, miller2021tensor}，即在式 \ref{eq: TT_index} 中假设所有中间的 TT 核心张量彼此相等，即 $\tG = \tG^{(2)},\ldots,\tG^{(N-1)} \in \mathbb{R}^{R \times |V| \times R}$，且 $\tG^{(1)} = \tG^{(N)} \in \mathbb{R}^{|V| \times R}$。
+
+\subsubsection{TTLM 的定义}
+%
+\begin{figure*}[t]
+    \centering
+    % \vspace{-15pt}
+    \includegraphics[scale=0.5]{figure/TTLM.pdf}
+    \caption{a) 基于式 \ref{eq: ttlm_general} 的张量列语言模型。b) TTLM-Tiny 的 TT 核心张量。c) TTLM-Large 的 TT 核心张量。方块中的虚线代表 $\mathcal{A}, \Phi(X)$ 或 $\tG$。注意 TTLM-Large 与 TTLM-Tiny 的唯一区别在于是否使用张量 $\tW^{eh}$。}
+    \label{fig: TTLM}
+\end{figure*}
+
+我们定义 \textit{张量列语言模型}（Tensor Train Language Model, TTLM）如下：
+\begin{equation}
+\begin{split}
+    p(X) = \sum_{i_1, \cdots, i_N = 1}^{|V|} \sum_{\alpha_1, \cdots, \alpha_{N-1} = 1}^R f(x^{(1)})_{i_1}\etG^{(1)}_{i_1\alpha_1} \cdots \\ f(x^{(N)})_{i_N}\etG^{(N)}_{\alpha_{N-1}i_N}  \label{eq: ttlm_general}
+\end{split}
+\end{equation}
+
+其中每个 $\vf(x^{(t)})$ 是一个 one-hot 向量，至多对一个 $t$ 有 $w_t = 1$，其余位置为零。TTLM 的张量图记号如图 \ref{fig: TTLM}a 所示。注意，式 \ref{eq: ttlm_general} 能够像式 \ref{eq: TT_index} 那样在低维空间中计算 $\mathcal{A}$ 的元素。若将式 \ref{eq: TT_index} 中 $\tG^{(t)}_{:, w_t, :}$ 的元素表示为：
+%
+\begin{align}
+    \label{eq: single G}
+    \etG^{(t)}_{\alpha_{t-1}w_t\alpha_{t}}
+    & = \sum_{{i = 1}}^{|V|} f(x^{(t)})_{i}\etG^{(t)}_{\alpha_{t-1}i\alpha_{t}}
+\end{align}
+%
+由于这里的 $\mathcal{A}_{w_1w_2...w_N}$ 等于 $p(X)$，将式 \ref{eq: single G} 代入式 \ref{eq: TT_index} 即可推导出式 \ref{eq: ttlm_general}。
+
+由式 \ref{eq: ttlm_general} 定义的 TTLM 与式 \ref{eq: TT_index} 的关键区别在于：TTLM 将权重 $\mathcal{A}$ 与输入数据 $\Phi(X)$ 结合在一起，这表明它有潜力用于语言建模任务。
+
+\subsubsection{概率的递归计算.}
+\label{sec:recursive probability}
+我们递归地展开式 \ref{eq: ttlm_general} 中 TTLM 的计算，发现 $\tG$ 有两个"输入"来源：来自上一次递归展开的信息，以及输入数据 $\vf(x^{(t)})$（详细版本见式 \ref{eq: TTLM_unfold}）。
+从这个角度看，$\tG$ 充当一个双线性映射 $\tG: \mathbb{R}^{|V|} \times \mathbb{R}^R \rightarrow \mathbb{R}^R $，我们可以把上一步的信息视为一个隐状态 $\vh^{(t)}_\text{TTLM}$，其由下式给出：
+%
+\begin{align}
+    \label{eq: ttlm cell full}
+    \vh^{(t)}_{\textrm{TTLM}}
+    & = \vf(x^{(t)})^T\tG  \vh^{(t-1)}_{\textrm{TTLM}}
+\end{align}
+%
+其中 $\vf(x^{(t)})$、$\tG$ 与 $\vh^{(t-1)}_{\textrm{TTLM}}$ 三者收缩在一起（我们将 $\tG$ 的下标从 $\mathbb{R}^{R \times |V| \times R}$ 置换为 $\mathbb{R}^{|V| \times R \times R}$，这不会改变下标的个数）。
+
+利用这一循环性质，我们在此进一步给出实际中用 TTLM 计算 $p(X)$ 的细节。在语言建模中，$p(X)$ 通常用链式法则（chain rule）\citep{bahl1983maximum} 分解如下：
+%
+\begin{align}
+    p(X) = \prod_{t=1}^N p(x^{(t)}|x^{(1:t-1)}) \nonumber
+\end{align}
+%
+其中 $x^{(1:t-1)}$ 表示文本 $[x^{(1)}, x^{(2)}, \cdots ,x^{(t-1)}]$。在时刻 $t$，模型的输出预测 $\vy^{(t)}\in \mathbb{V}$ 是在给定 $x^{(1:t-1)}$ 的条件下单词 $x^{(t)}$ 的概率分布。
+
+在 TTLM 中，我们将 $\vy^{(t)}$ 定义如下：
+%
+\begin{align}
+\label{eq: probability_TT}
+    \vy^{(t)} = \psi \left(\tG^{(t)} \vh^{(t-1)}_{\textrm{TTLM}}\right)
+\end{align}
+%
+其中 $\tG^{(t)}\in \mathbb{R}^{|V| \times R}$ 是时刻 $t$ 处 TT 格式中的最后一个 TT 核心张量。$\psi$ 是任意能保证 $\vy^{(t)}$ 非负且条件概率之和为 $1$ 的函数。当把 TTLM 用作更大架构中的组件时，$\psi$ 可以取为常数缩放函数以保持线性性；当 TTLM 独立使用时，$\psi$ 可以取为任意合适的激活函数——在本文余下部分，我们将使用 $\softmax$ 函数 \cite{bridle1990probabilistic}。图 \ref{fig: probability_ttlm} 给出了一个条件概率递归计算的例子。
+%
+ \begin{figure}[t]
+    \centering
+\includegraphics[width=0.40\textwidth]{figure/ConditionalProbabilityTTLM.pdf}
+    \caption{TTLM 中条件概率的递归计算。这里我们给出一个例子：给定文本 $x^{(1:3)}$，$\vy^{(4)}=\psi(\tG^{(4)}\vh_{\textrm{TTLM}}^{(3)})$，其中 $\vy^{(4)}$ 是单词 $x^{(4)}$ 的概率分布。}
+    \label{fig: probability_ttlm}
+    % \vspace{-4mm}
+\end{figure}
+%
+
+
+如果我们把式 \ref{eq: probability_TT} 中的 $\vh^{(t-1)}_{\textrm{TTLM}}$ 用式 \ref{eq: ttlm_general} 与式 \ref{eq: ttlm cell full} 代入，就可以在高维空间中推导出 $\vy^{(t)}$ 的定义：
+%
+\begin{align} \small
+      \vy^{(t)} &= \psi \left( \sum_{i_1, \cdots, i_{t-1}} \sum_{\alpha_1,\cdots, \alpha_{t-1}} f(x^{(1)})_{i_1}\etG^{(1)}_{i_1\alpha_1} \cdots \tG^{(t)}_{\alpha_{t-1}}  \right) \label{eq: probability_original_1} \\
+      % &= \psi \left(\langle \mathcal{A}^{(1:t)}), \bigotimes\limits^{t-1}_{i=1}  \vf(x^{(i)}) \rangle_{t-1} \right) \label{eq: probability_original_2} \\
+    &=  \psi \left(\langle \mathcal{A}^{(1:t)}, \Phi(X^{(1: t-1)}) \rangle_{t-1} \right)  \label{eq: probability_original_3}
+\end{align}
+%
+其中 $\mathcal{A}^{(1:t)}\in \mathbb{V}^{\otimes t}$，$\Phi(X^{(1: t-1)}) = \bigotimes\limits^{t-1}_{i=1}  \vf(x^{(i)}) \in \mathbb{V}^{\otimes t-1}$，而 $\langle \cdot \rangle_{t-1}$ 表示第 \ref{sec:preliminaries} 节中定义的"广义内积"（generalized inner product）。注意，式 \ref{eq: probability_original_1} 是式 \ref{eq: probability_original_3} 的低维形式，类似于式 \ref{eq: ttlm_general} 与式 \ref{eq: general definition} 之间的关系。
+
+
+
+
+由这些定义，TTLM 具有如下一些有趣的性质：(1) 我们可以使用 teacher forcing \citep{marcus1998rethinking} 来学习 TT 核心张量的参数。(2) 隐状态到输出的张量 $\tG^{(t)}$ 被定义为与输入到隐状态的张量 $\tG^{(1)}$ 相同。(3) $\tG$ 与 $\tG^{(t)}$ 没有共同的参数。我们在附录 \ref{sec: relationship} 中对不同 TT 核心张量之间的关系给出了详细解释。

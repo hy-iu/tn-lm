@@ -1,0 +1,73 @@
+\section{Encoding structure}
+
+The goal of generative modeling is to model the joint probability $p(\vect{x})$ given the training dataset. Once the model is well-trained, it can be used to generate new samples that should ideally resemble the distribution of the training data. In this work, we adopt the traditional Born Machine structure, which uses quantum wave function $\ket{\Psi_\theta}$ as the backbone and encoding tokens as quantum measurement operators $M(\vect{x})=\{M_{\gamma}(x_i)|x_i\in V\}$, where $\gamma$, $\theta$ are trainable parameters from embedding and MPS respectively, and $V$ is the total vocabulary set. The joint probability of each data point $\vect{x}=(x_1,x_2,...,x_n)$ can be embedded by the expectation value of quantum measure $M_\gamma(\vect{x})=\bigotimes_{i}M_{\gamma}(x_i)$ given quantum wave function.
+\begin{equation}\label{eq: P}
+    p_{\theta, \gamma}(\vect{x})=\bra{\Psi_\theta}\bigotimes_{i}M_{\gamma}(x_i)\ket{\Psi_\theta},
+\end{equation}
+where the backbone quantum state is normalized $\braket{\Psi_\theta}{\Psi_\theta}=1$. In order to guarantee that the encoded probabilities are \textit{real}, \textit{positive semi-definite} and \textit{normalize} with respect to the entire input space, we restrict the embedded operators to be positive operator-valued measurements (POVMs), which are \textit{hermitian}, \textit{positive semi-definite} and overall \textit{normalized}:
+\begin{equation}\label{eq: emb}
+\begin{split}
+    \forall x_{i}\in V,\ M_{\gamma}(x_i)&=M^{\dagger}_{\gamma}(x_i)\succeq 0,\\
+    \sum_{i}M_{\gamma}(x_i)&=I.
+\end{split}
+\end{equation}
+where $I$ stands for the identity operator. Previous research has explored various implementations of adaptive POVMs \cite{2022arXiv220807817G, 2023arXiv230315353Z, 2021PRXQ....2d0342G}; this work extends this concept by employing QR decomposition for trainable token embeddings in sequential data modeling in Born machines.
+
+
+In the previous Born machine model parametrization, the embedding constraint is satisfied by assigning each token $x_i\in\dsN$ directly by a corresponding projector $\ket{x_i}\bra{x_i}$ of the basis state\cite{PhysRevX.8.031012} labeled by the token index. This is equivalent to fixing the POVMs as one-hot embedding matrices $M_\text{one-hot}(x_i)_{\alpha\beta}=\delta_{\alpha,x_i}\delta_{\beta,x_i}$ with the matrix dimension strictly equals to the vocabulary size. Although the one-hot embedding could satisfy \eqnref{eq: emb}, this embedding scheme is predefined and not trainable. It cannot fully utilize the operator space and is suboptimal. In contrast, the trainable POVM embedding allows for potentially packing more tokens in the same Hilbert space, and further putting the physical dimension of the quantum state as an additional hyper-parameter to improve the expressive power of the model. In this paper, we propose a trainable parametrization method that can leverage the potential of the operator space while satisfying \eqnref{eq: emb}.
+
+The parameters $\gamma$ are initialized as a complex tensor of the shape $(v \times p, p)$, where $v$ stands for vocabulary size and $p$ stands for the physical dimension of the quantum state. Then $\gamma$ is forwarded with a QR decomposition $\gamma=Q_\gamma R_\gamma$ and the resulting $Q_{\gamma}$ matrix is further reshaped into $(v, p, p)$ then batch-multiplied with its hermitian conjugate to get the quantum measurement matrices. 
+\begin{equation}\label{eq: parametrization}
+    M_{\gamma}(x_{i})=Q^{\dagger}_{\gamma}(x_i)Q_{\gamma}(x_i), \ x_i\in V.
+\end{equation}
+The above construction ensures that the constraints in \eqnref{eq: emb} are automatically satisfied and the physical dimension becomes an adjustable hyper-parameter.
+
+Following \cite{PhysRevX.8.031012}, the backbone quantum state can be efficiently parametrized with normalized MPS, and the corresponding isometric constrain $\braket{\Psi_\theta}{\Psi_\theta}=1$ is maintained by isometric optimization method during gradient-based optimization\cite{wen2013feasible,2022MLS&T...3a5020G}. With an explicit choice of basis $\ket{\vect{\beta}}=\ket{\beta_1,\beta_2,\cdots,\beta_n}$ in the physical Hilbert space, the MPS wave function can be expressed as 
+\begin{equation}\label{eq: mps}
+\braket{\vect{\beta}}{\Psi_\theta}=\sum_{b_1 b_2...b_{n-1}}(A_{\theta 1})^{\beta_1}_{b_1} (A_{\theta 2})^{\beta_2}_{b_1 b_2}\dots (A_{\theta n})^{\beta_n}_{b_{n-1}},
+\end{equation}
+which are modeled by a series of tensors $A_{\theta i}$ parameterized by $\theta$ at site $i$. The tensors $A_{\theta i}$ are isometric in the sense that after contracting the in-coming legs between $A_{\theta i}$ and $A_{\theta i}^*$ (complex conjugation), the out-going legs from an identity map,
+\begin{equation}
+\sum_{b_i,\beta_i} (A_{\theta i}^*)_{b_{i-1}b_{i}}^{\beta_i}(A_{\theta i})_{b'_{i-1}b_{i}}^{\beta_i}=\delta_{b_{i-1}b'_{i-1}.}
+\end{equation}
+The isometry structure is indicated in \figref{fig: tn} by the arrows. Employing the isometric MPS has several advantages. First, it ensures the normalization of the modeled probability distribution, allowing direct log-likelihood optimization. Second, 
+it allows efficient marginalization of the probability distribution to the leading token, by summing out the subsequent tokens.
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=240pt]{tn.pdf}
+\caption{Tensor network representation of probability model $p_{\theta,\gamma}(\vect{x})$. The MPS tensors $A_{\theta i}$ are blue circles, and the measurement operators $M_\gamma(x_i)$ are orange boxes. The isometric structure is indicated by arrows on the tensor legs, projecting from the larger Hilbert space to the smaller sub-space.}
+\label{fig: tn}
+\end{center}
+\end{figure}
+
+Given the tractable log-likelihood of the Born machine, the unsupervised learning objective function for a specified dataset is the negative log-likelihood (NLL) \begin{equation}
+\mathcal{L}=-\frac{1}{N}\sum_{\vect{x}\in \text{data}}\log p_{\theta,\gamma}(\vect{x}),
+\end{equation}
+where $N$ denotes the size of the dataset. \figref{fig: tn} shows the tensor network of the probability encoding of a single data point in one-dimensional shape $\vect{x}=(x_1,x_2,...,x_n)$. The training process for optimizing the parameters based on the NLL is outlined in Algorithm~\ref{alg:train}.
+
+
+\begin{algorithm}[H]
+\caption{Training Process of the Born Machine}
+\label{alg:train}
+\begin{algorithmic}
+\REQUIRE Training dataset $D$, learning rate $\eta$
+\STATE Initialize parameters $\theta$, $\gamma$
+\WHILE{not converged}
+    \FOR{each data sample $x \in D$}
+        \STATE Compute joint probability $p_{\theta,\gamma}(x)$ using \eqnref{eq: P}
+        \STATE Compute NLL loss $L = -\log p_{\theta,\gamma}(x)$
+        \STATE Compute gradients $\nabla_{\theta} L$, $\nabla_{\gamma} L$
+        \STATE Update parameters:
+        \STATE $\theta \leftarrow \theta - \eta \nabla_{\theta} L$
+        \STATE $\gamma \leftarrow \gamma - \eta \nabla_{\gamma} L$
+    \ENDFOR
+    \STATE Check for convergence
+\ENDWHILE
+\ENSURE Optimized parameters $\theta$, $\gamma$
+\end{algorithmic}
+\end{algorithm}
+
+
+
+

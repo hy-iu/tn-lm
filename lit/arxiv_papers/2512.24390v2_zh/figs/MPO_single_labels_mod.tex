@@ -1,0 +1,8 @@
+\begin{tikzpicture}[baseline={([yshift=-.5ex]current bounding box.center)}]
+	\def\l{.8};
+    \def\h{.8};
+
+	\draw[obj2] (-\l,0) node[text=black,anchor=east] {$\sss (\RCR{A}{a}{C},i)$} -- (\l,0) node[text=black,anchor=west] {$\sss (\RCR{D}{\alpha}{B},l) $};
+    \draw[obj1] (0,\h) node[anchor=south] {$\sss (\RDR{E}{\alpha}{D},j)$} -- (0,-\h) node[anchor=north] {$\sss (\RDR{A}{\alpha}{B},k)$};
+    \node[mpotensor] at (0,0) {};
+\end{tikzpicture}

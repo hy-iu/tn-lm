@@ -1,0 +1,30 @@
+\begin{tikzpicture}[scale=1,baseline={([yshift=-.5ex]current bounding box.center)}]
+    \def\r{4pt};
+    \def\l{3.5};
+    \def\sp{0.08};
+    
+    \def\sgn{1};
+    
+    \coordinate (a1) at (0,0);
+    \coordinate (a2) at (\l,0);
+    \coordinate (a3) at (\l/2,{\sgn*sqrt(3)*\l/2});
+                    
+    \clip ({(0.5-\sp)*\l*cos(60)-0.05},-\sgn*0.05) rectangle ({\l-(0.5-\sp)*\l*cos(60)+0.05},{\sgn*(\l-(0.5+\sp)*\l*sin(60))+\sgn*0.05});
+    
+    \middleCoo{a1}{a2}{m12}{m12-1}{m12-2}{\sp};
+    \middleCoo{a2}{a3}{m23}{m23-2}{m23-3}{\sp};
+    \middleCoo{a1}{a3}{m13}{m13-1}{m13-3}{\sp};
+    \barycentre{a1}{a2}{a3}{b123}{b123-1}{b123-2}{b123-3}{\sp};
+    
+    \draw[obj1] (m12) --node[pos=0.5, fill=white] {${\sss \tau}$} (b123);
+    \draw[obj1] (b123) --node[pos=0.35, fill=white, sloped] {${\sss \tau}$} (m13);
+    \draw[obj1] (b123) --node[pos=0.35, fill=white, sloped] {${\sss \tau}$} (m23);
+    
+    \draw[obj1, rounded corners=\r] 
+        (m12-1) -- (b123-1) -- (m13-1)
+        (m12-2) -- (b123-2) -- (m23-2)
+        (m23-3) -- (b123-3) -- (m13-3);
+    \node[yshift=-\sgn*5pt, xshift=-8pt] at (b123-1) {${\sss \tau}$};
+    \node[yshift=-\sgn*5pt, xshift=8pt] at (b123-2) {${\sss \tau}$};
+    \node[yshift=\sgn*9pt] at (b123-3) {${\sss \tau}$};
+\end{tikzpicture}

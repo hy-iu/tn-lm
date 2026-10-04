@@ -1,0 +1,107 @@
+\documentclass[11pt]{article}
+
+% 中文支持：必须在 brainlab 之前加载（brainlab.sty 内部加载 hyperref，
+% ctex/xeCJK 需先于 hyperref 生效）
+\usepackage[fontset=macnew]{ctex}
+
+\usepackage[
+  % ----- 模式 -----
+  shownumpages,          % 显示页码
+  % ----- 参考文献 -----
+  citingstyle=numbers,     % 引用样式: numbers | authoryear | super
+  bibliostyle=plainnat,    % 文献样式: unsrtnat | plainnat | abbrvnat
+  bibfile=references,      % .bib 文件名（不含扩展名）
+]{brainlab}
+
+\usepackage{shortcuts}
+
+% 仅用于演示的 lipsum
+\usepackage{lipsum}
+
+% 字体修复（必须在 brainlab 之后）：
+% 1) 本机没有 macnew 预设的等宽中文字体 STFangsong，用宋体替代；
+%    放入 AtBeginDocument 以便在 ctex 的字体钩子之后生效；
+% 2) brainlab 加载的 newtxtext 会全局设置 \defaultfontfeatures{Extension=.otf,...}，
+%    污染其后的 fontspec 调用（按文件名而非字体名查找），需先清空再设 CJK 等宽字体。
+\AtBeginDocument{%
+  \defaultfontfeatures{}%
+  \setCJKmonofont{Songti SC}%
+}
+
+% brainlab.sty 加载 babel[english]，会在 \begin{document} 时把可见名称重置为
+% 英文，故在 AtBeginDocument 中（注册顺序靠后、执行靠后）重新断言为中文。
+\AtBeginDocument{%
+  \renewcommand{\figurename}{图}%
+  \renewcommand{\tablename}{表}%
+  \renewcommand{\refname}{参考文献}%
+  \renewcommand{\bibname}{参考文献}%
+  \renewcommand{\abstractname}{摘要}%
+  \renewcommand{\contentsname}{目录}%
+  \renewcommand{\appendixname}{附录}%
+  \renewcommand{\listfigurename}{插图清单}%
+  \renewcommand{\listtablename}{表格清单}%
+  \renewcommand{\proofname}{证明}%
+}
+
+\setbrainmeta{
+  title={重新思考张量分解\\在大语言模型训练后压缩中的作用},
+  authors={Artur Zagitov\equalcontrib, Alexander Miasnikov\equalcontrib, Maxim Krutikov, Vladimir Aletov, Gleb Molodtsov, Nail Bashirov, Artem Tsedenov, Aleksandr Beznosikov
+  },
+  affiliations={
+    BRAIn Lab, {\scriptsize{Moscow, Russia}} \\
+    % \textsuperscript{2}Institute for System Programming, RAS
+  },
+  abstract={
+    训练后压缩（post-training compression）对于在资源紧张条件下部署大语言模型（LLM）至关重要。张量分解已成为一个颇具前景的方向，其提供的紧凑参数化与 Transformer 权重结构高度契合。然而，已有研究仅在狭窄的设定下评估这些方法，张量化在大规模部署中是否有效仍不清楚。我们在稠密架构与专家混合（MoE）架构上系统评估了张量压缩，基于实证分析与理论分析确立了其性能权衡。我们发现，张量分解所假定的共享子空间与现代 LLM 学到的异构表示之间存在根本性错配，从而划定了这类方法的实际局限，并澄清了其在大规模部署中的可行角色。代码可在 \url{https://github.com/brain-lab-research/TT-LLM} 获取。
+  },
+  % additionallogos={innopolis.png,mipt.png,isp.png}
+}
+\begin{document}
+\begin{mainpart}
+
+\allowdisplaybreaks
+\vspace{-8mm}
+\section{测试}
+\label{sec:test}
+
+这是一段用于骨架编译验证的占位中文正文。大语言模型（LLM）的量化方法参见 \cite{GPTQ_2022}，剪枝方法参见 \cite{LLM_pruner_2023}。如图~\ref{fig:test} 所示，张量列（TT）分解可以压缩权重张量；表~\ref{tab:test} 给出了占位数据。
+
+\begin{theorem}[测试定理]
+\label{thm:test}
+设 $\cX \in \R^{d \times d \times d}$ 为三阶张量，则其 TT 秩满足 $\rank(\cX) \leq d$。
+\end{theorem}
+
+\begin{proof}
+占位证明：由奇异值分解（SVD）逐层截断即得。
+\end{proof}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.6\textwidth]{emnlp/figs/moe_main_left_ppl.pdf}
+  \caption{测试图注：MoE 模型上的困惑度对比（占位）。}
+  \label{fig:test}
+\end{figure}
+
+\begin{table}[htbp]
+  \centering
+  \caption{测试表注（占位）。}
+  \label{tab:test}
+  \begin{tabular}{lc}
+    \toprule
+    方法 & 困惑度 \\
+    \midrule
+    稠密基线 & 10.0 \\
+    TT 分解 & 10.5 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\end{mainpart}
+
+\begin{appendixpart}
+
+\section{附录测试}
+附录中的占位中文正文，引用定理~\ref{thm:test} 与图~\ref{fig:test}。
+
+\end{appendixpart}
+\end{document}

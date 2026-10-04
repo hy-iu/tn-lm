@@ -1,0 +1,17 @@
+\begin{tikzpicture}[x={(1,0)},z={(.5,.5)},baseline={([yshift=-.5ex]current bounding box.center)}]
+	\def\l{.8};
+    \def\h{.8};
+
+    \draw[obj1] (-\l,0,0) -- (\l,0,0);
+    \draw[obj1] (0,-\l,0) -- (0,\l,0);
+    \draw[obj1] (0,0,0) -- (0,0,\h);
+
+    \node[anchor=east] at (-\l,0,0) {$\sss \alpha$};
+    \node[anchor=west] at (\l,0,0) {$\sss \beta$};
+    \node[anchor=north] at (0,-\l,0) {$\sss \gamma$};
+    \node[anchor=south] at (0,\l,0) {$\sss \delta$};
+    \node[anchor=south west] at (0,0,\h) {$\sss i$};
+    
+    \node[mpstensor, inner sep=4pt] at (0,0,0) {};
+    \node at (0,0,0) {$\sss A$};
+\end{tikzpicture}

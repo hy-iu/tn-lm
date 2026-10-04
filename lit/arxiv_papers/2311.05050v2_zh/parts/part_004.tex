@@ -1,0 +1,58 @@
+\section{实验结果}\label{Empirical result}
+
+由于 MPS 的一维结构，Born 机器（Born machine）特别适合于序列建模。在各种类型的序列数据中，生物基因序列是最为重要的一类，对人类具有巨大价值。然而，基因序列难以通过实验获得，且为提取有限的数据往往需要付出巨大成本。因此，使用生成模型来辨识基因序列中潜在的概率分布并生成新样本，可以提高探索新基因序列的效率并降低成本。在本研究中，我们将评估带可训练 POVM 的 Born 机器在 RNA 序列无监督学习中的性能。我们使用来自开源数据库 \textit{5SrRNAdb}\cite{szymanski20165srnadb} 的细菌 5S rRNA 数据，其平均长度为 120，词表总大小为 4（\textit{A}: 腺嘌呤 Adenine，\textit{T}: 胸腺嘧啶 Thymine，\textit{C}: 胞嘧啶 Cytosine，\textit{G}: 鸟嘌呤 Guanine）。训练集和测试集是从该数据集中无偏划分得到的。
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=250pt]{samples.pdf}
+\caption{在此图中，每条水平线代表一条 RNA 序列，纵向排列显示。四种颜色代表四种类型的核苷酸。(a) 由带 POVM 嵌入的 Born 机器生成的样本。(b) 由 GPT-2 生成的样本。(c) 来自测试集的真实数据。}
+\label{fig: generation}
+\end{center}
+\end{figure}
+
+\figref{fig: generation} 中由带 POVM 的 Born 机器与 GPT-2 生成的样本在定性上与真实测试集相似，表明两个模型都捕捉到了序列数据中可见的模式。鉴于这种相似性，我们接下来使用诸如 NLL、单位点概率（single-site probability）与 Pearson 相关（Pearson correlation）等定量指标来评估各模型的性能。\figref{fig: loss} 表明，增大 POVM 的物理维数（physical dimension）可以降低收敛的 NLL 值，即使在边界维数固定的情况下也是如此。此外，它还揭示出更高的物理维数扩展了键维（bond dimension）的上限，从而能够进一步最小化 NLL。
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=200pt]{loss.pdf}
+\caption{使用 \textit{Adam} 优化器最小化 NLL 目标函数，并为键维/物理维数分别调节学习率。结果表明，同时增大键维和物理维数可以降低收敛的 NLL。绿色虚线表示参数量相近的 GPT-2 模型的收敛 NLL。}
+\label{fig: loss}
+\end{center}
+\end{figure}
+
+RNA 数据分布的特征之一是，对各个位点做边缘化后的联合概率分布蕴含着潜在的接触预测（contact prediction）信息\cite{trinquier2021efficient}。RNA 中的接触预测是指确定 RNA 分子中哪些残基（residue）或核苷酸（nucleotide）在分子的三维结构中彼此邻近的过程。为了更深入地评估带可训练 POVM 的 Born 机器的性能并发掘接触预测，可以利用其高效的边缘化能力 \eqnref{eq: single site}，然后将其与从数据集中提取的统计频率进行比较。特别地，我们将研究两个\textit{统计特征}（statistical features）：
+\begin{itemize}
+\item 单位点概率分布 $p(x_i)$，
+\item 以及两位点 Pearson 相关
+\begin{equation}\label{eq: corre}
+    c(x_i,x_j)=\log\frac{p(x_i,x_j)}{p(x_i)p(x_j)}.
+\end{equation}
+\end{itemize}
+\figref{fig: corre} 中的每个子图画出模型预测的统计特征（纵轴）相对于数据给出的统计特征（横轴）的散点。\figref{fig: corre}(a-e) 对应 $p(x_i)$，其中图中每个点对应位点 $i$ 及该位点上 token $x_i$ 的不同选择。\figref{fig: corre}(f-j) 对应 $c(x_i,x_j)$，其中图中每个点对应配对 $(i,j)$ 及该配对上 token $(x_i,x_j)$ 的选择。如果模型完美地学到了数据中的所有统计特征，我们应当期望所有点都落在对角虚线上（在该线上模型预测与数据统计相一致）。\figref{fig: corre} 中的结果表明，随着物理维数的增大，单位点概率与关联都更加接近测试集。这说明，与固定的 one-hot 嵌入方法相比，配备可训练 POVM 嵌入的 Born 机器在建模训练数据中跨位点的 token 关联方面更为强大。
+
+
+我们还将我们的量子模型与参数量相当的经典序列生成模型 Generative Pretrained Transformer-2（GPT-2）进行了基准比较。GPT-2 配置由 \textit{Hugging Face transformer} 库\cite{gpt2lmhead} 初始化，取 $d_{\text{embedding}} = 72$、$n_{\text{layer}} = 12$、$n_{\text{head}} = 4$，总共约含 80 万参数，并与 GPT-2LMHead 模型集成。对于 Born 机器，参数总数可以估计为键维、物理维数与序列长度的乘积，即 $d_{\text{bond}}^2 \times d_{\text{phys}} \times L$。例如，我们最大的配置使用 $d_{\text{bond}} = 20$、$d_{\text{phys}} = 16$、$L = 120$，得到约 77 万参数——与 GPT-2 相当。在 \figref{fig: loss} 与 \figref{fig: corre} 中，在我们当前的设置下，Born 机器相比 GPT-2 达到了更低的 NLL，并在近似单位点概率方面表现相当；但它在关联近似方面的能力较弱。像 GPT-2 这类基于注意力的网络具有全连接（all-to-all connectivity）结构，且没有内在的维数限制，因而特别擅长捕捉长程关联（long-range correlation）。
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=240pt]{corre.pdf}
+\caption{比较模型的单位点概率 $p(x_i)$（上排，(a-e)）与两位点关联 $c(x_i,y_j)$（下排，(f-j)）与数据集中对应的量。GPT-2：(a)\&(f)。one-hot 嵌入（基线）：(b)\&(g)。可训练 POVM 嵌入（本文方法），物理维数：(c)\&(h) $p=4$，(d)\&(i) $p=8$，(e)\&(j) $p=16$。虚线表示 $y=x$ 参考线。}
+\label{fig: corre}
+\end{center}
+\end{figure}
+
+
+\section{总结}
+
+生成模型是机器学习的一个重要分支，它致力于理解数据固有的概率分布。与判别模型不同，它们侧重于捕捉数据的内在结构。本工作继续研究一类称为 Born 机器的量子启发式生成建模模型。这些机器在矩阵乘积态（MPS）框架内使用量子波函数对潜在的数据分布进行建模。本研究的主要创新在于对 token 嵌入方法的扩展。这项工作没有通过相应的张量指标直接嵌入每个 token，而是引入了可训练的正算符取值测量（POVM）的概念。通过将 MPS 与可训练嵌入相结合，Born 机器可以获得更好的性能，并从数据集中提取更深层的关联。源代码与原始数据可在 GitHub 仓库\cite{hou2023github} 中获取。
+
+我们的新 Born 机器架构以量子波函数为主干，将 token 编码为量子测量矩阵。每个数据点的联合概率表示为一个量子测量的期望值。Born 机器的一个关键特性是其自回归生成能力，可以按任意顺序进行序列采样——这使其适用于掩码 token 采样（masked token sampling）与异常检测（anomaly detection）等任务。虽然我们当前的实现可以通过 MPS 进行经典模拟，但真正的优势可能要等到在真实量子设备上进行采样时才会显现。一个有前景的策略是先在经典硬件上用 MPS 高效地训练模型，然后通过等价的量子线路（quantum circuit）将训练好的态转移到量子计算机上。如 \cite{2022PhRvX..12a1047H, 2024QS&T....9a5012R} 所示范的，量子线路中的每个 MPS 张量都可以映射为带有 ancilla 插入与测量的局域量子门，从而将 MPS 表示为量子计算机上的真实量子态。此外，本工作引入的自适应 POVM 方法可以通过扩展 Hilbert 空间上的广义测量来实现\cite{preskill1998lecture}，从而实现高效采样并潜在地利用量子优势（quantum advantage）。由于 POVM 在实践中可以直接实现，这一方法可以扩展到 Quantum Circuit Born Machine (QCBM) 架构，以便在量子硬件上实现\cite{PhysRevA.98.062324, 2019npjQI...5...45B}。
+
+在应用方面，我们的研究聚焦于 RNA 序列的无监督学习。结果表明，通过增大 POVM 中的物理维数，Born 机器可以获得更好的性能，捕捉 RNA 数据中更深层的关联。然而，Born 机器的当前框架中仍存在一些未解决的问题。例如，其现有结构无法直接处理长度差异显著的数据。此外，由于当前的 Born 机器是用一维 MPS 与离散化的嵌入方法构建的，直接将其扩展到处理更高维与连续的数据类型并不方便。另外，还存在将训练好的 MPS 与相应的 POVM 转移到量子设备上进行高效采样的挑战。
+
+\begin{acknowledgments}
+我们感谢与 Rose Yu、Tian-Xiao Hu 和 Zhao-Yi Zeng 的有益讨论。
+我们感谢 OpenAI GPT4 模型在撰写本文的过程中提供编辑建议。本研究由 NSF Grant No.~DMR-2238360 资助。
+\end{acknowledgments}
+
+

@@ -1,0 +1,39 @@
+\begin{document}
+\setlength{\parindent}{2em}
+\renewcommand{\refname}{参考文献}
+\renewcommand{\figurename}{图}
+\renewcommand{\tablename}{表}
+\renewcommand{\acknowledgmentsname}{致谢}
+
+\title{基于可训练 token 嵌入的张量网络 Born 机器上的序列学习\\
+（Sequential learning on a Tensor Network Born machine with Trainable Token Embedding）}
+
+\author{Wanda Hou}
+\affiliation{Department of Physics, University of California, San Diego, CA 92093, USA}
+\author{Miao Li}
+\affiliation{School of Physics, Zhejiang University, Hangzhou 310027, China}
+\affiliation{Department of Physics, Georgia Institute of Technology,
+Atlanta, GA 30332, USA}
+\author{Yi-Zhuang You}
+\thanks{Corresponding author: yzyou@physics.ucsd.edu}
+\affiliation{Department of Physics, University of California, San Diego, CA 92093, USA}
+\date{\today}
+
+\begin{abstract}
+ 生成模型（generative model）旨在学习数据背后潜在的概率分布，从而生成新的、逼真的样本。量子启发式生成模型，例如基于矩阵乘积态（MPS）框架的 Born 机器（Born machine），已在无监督学习任务中展现出卓越的能力。本研究通过正算符取值测量（POVM）引入可训练的 token 嵌入，取代传统的静态张量指标方案，从而推进了 Born 机器范式。关键技术创新包括：将 token 编码为带可训练参数的量子测量算符，并利用 QR 分解调整 MPS 的物理维数（physical dimension）。这一方法最大化了算符空间的利用率，并增强了模型的表达能力。在 RNA 数据上的实证结果表明，与 one-hot 嵌入相比，所提方法显著降低了负对数似然（NLL）；更高的物理维数进一步提升了单点概率与多点关联。该模型在单点估计上优于 GPT-2，并取得了具有竞争力的关联建模效果，展示了可训练 POVM 嵌入在量子启发式序列建模中刻画复杂数据关联的潜力。
+\end{abstract}
+
+\maketitle
+
+\section{引言}
+
+无监督学习对于充分利用当今海量的无标注数据至关重要。一种重要的方法是生成建模（generative modeling），其目标是在假定某种潜在物理机制的前提下对数据的概率分布进行建模\cite{lecun2015deep,2019RvMP...91d5002C}。与旨在寻找不同类别之间决策边界的判别模型不同，生成模型的目标是复现观测数据潜在的分布 $p(x)$，进而生成在原始数据集语境下合理的新样本。
+
+近年来，生成建模技术取得了快速发展，许多模型，如变分自编码器（VAE）\cite{2013arXiv1312.6114K}、生成对抗网络（GAN）\cite{2014arXiv1406.2661G,2018PhRvA..98a2324D}以及 Transformer\cite{2017arXiv170603762V}，已被应用于各个领域。从经典物理中汲取灵感，现有模型或多或少都采用了基于能量的建模思想，即如同统计物理中那样，将某些概率建模为遵循 Boltzmann 分布（Boltzmann distribution）的 $p(x)\propto e^{-E(x)}$\cite{ackley1985learning,salakhutdinov2015learning}。与之相对，量子物理采用波函数（wave function）模型，其中概率被建模为 $p(x)=|\Psi(x)|^2$，其中 $\Psi(x)$ 是一个量子波函数。这类量子生成模型被称为 Born 机器\cite{PhysRevX.8.031012, 2022PhRvA.106b2612K, 2021arXiv211205326M}。量子概率模型比其经典对应物更具表达力，因为它们能够建模违反 Bell 不等式的分布，而后者正是量子纠缠（entanglement）的特征\cite{trueblood2012quantum,haven2016quantum}。
+
+作为一种生成建模算法，Born 机器具有许多特色优势，例如可处理的 log-likelihood 与边缘化 log-likelihood，这提供了更好的可解释性并支持异常检测；log-likelihood 梯度可被高效且精确地求值，使得无需采样的基于梯度的优化成为可能；同时支持自回归（autoregressive）采样与掩码采样。凭借这些特性，Born 机器在无监督学习任务的许多领域（如序列数据学习）中表现出色，并能超越基于经典物理的模型\cite{2018Entrp..20..583C,2018arXiv180404168L}。
+
+一类特别重要的数据是一维序列数据，即按照特定序列排序的一组数据点，其排序通常由时间或空间顺序决定。Born 机器在序列建模方面发展成熟，这是因为序列的一维结构允许使用一种高效的张量网络表示——矩阵乘积态（MPS）——来对底层量子态进行建模\cite{orus2019tensor,2019PhRvX...9c1041L,2021arXiv210612974L}。Born 机器支持可处理的 log-likelihood，从而提供更好的可解释性与高效的直接采样，同时支持自回归采样与掩码采样。目前的研究通过利用量子态的纠缠特征并将其编码到 MPS 中以提升 Born 机器的表达能力，已取得巨大进展\cite{2018PhRvA..98a2324D,mitarai2018quantum,2018arXiv180404168L,gong2022born,2019arXiv190300556M}。
+
+对离散型序列数据 $\vect{x}=(x_1,x_2,\cdots)$ 进行建模时，相应的 token $x_i\in \dsN$ 通常被直接视为 MPS 物理维数的张量指标，并被编码为对角基投影算符 $\ket{x_i}\bra{x_i}$。然而在本研究中，我们探索一种更一般的嵌入方法：将每个 token $x_i$ 编码为局域 Hilbert 空间中带可训练参数 $\gamma$ 的更一般的量子测量算符 $M_{\gamma}(x_i)$，而非对角基投影算符。概率被建模为 $p_{\theta,\gamma}(\vect{x})=\bra{\Psi_\theta}M_{\gamma}(\vect{x})\ket{\Psi_\theta}$，其中 $M_\gamma(\vect{x})=\bigotimes_i M_\gamma(x_i)$ 是对应于序列 $\vect{x}$ 的联合测量算符，而 $\ket{\Psi_\theta}$ 是一个多体量子态，仍具有以 $\theta$ 参数化的 MPS 结构。关键创新在于：将 token 编码为测量算符充分利用了算符空间，使得在小得多的 Hilbert 空间中能够容纳更多 token。此外，通过同时提高嵌入量子测量与 MPS 的物理维数，模型可以利用更大算符空间的力量来提升表达能力。我们在序列 RNA 数据上的实验结果表明，借助调整物理维数的灵活性，Born 机器能够展现出更好的性能，并从数据集中学到更深层的相关性。
+

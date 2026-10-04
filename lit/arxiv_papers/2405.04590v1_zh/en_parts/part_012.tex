@@ -1,0 +1,72 @@
+\section{Relationship between TT Cores in TTLM}
+\label{sec: relationship}
+
+To help readers understand the roles of TT cores in TTLM, we here provide a detailed calculation of the probability of a text $X = [x^{(1)}, x^{(2)}, \cdots ,x^{(N)}]$ by TTLM. Note that all the intermediate TT cores are equal to each other: $\tG = \tG^{(2)},...,\tG^{(N-1)}$ and $\tG^{(1)} = \tG^{(N)}$. 
+
+The calculation of $\vy^{(t)}$ (i.e. the conditional probability of $x^{(t)}$ given  $x^{(1:t-1)})$ at time $t$) can be described as three steps. As step I, suppose $\vf(x^{(1)})$ is a one-hot vector having $f(x^{(1)})_1 = 1$. The calculation of $\tG^{(1)}\vf(x^{(1})$ in TTLM is as follows:
+
+\begin{align}
+\tG^{(1)}\vf(x^{(1}) &= 
+\left[\begin{array}{c}
+f\left(x^{(1)}\right)_1 \\
+f\left(x^{(1)}\right)_2 \\
+\ldots \\
+f\left(x^{(1)}\right)_{|V|}
+\end{array}\right] \left[\begin{array}{cccc}
+\tG_{11}^{(1)} & \tG_{12}^{(1)} & \ldots & \tG_{1 R}^{(1)} \\
+\tG_{21}^{(1)} & \tG_{22}^{(1)} & \ldots & \tG_{2 R}^{(1)} \\
+\ldots & \ldots & \ldots & \ldots \\
+\tG_{|V| 1}^{(1)} & \tG_{|V| 2}^{(1)} & \ldots & \tG_{|V| R}^{(1)}
+\end{array}\right] \nonumber \\ 
+&=\left[\tG_{11}^{(1)}, \tG_{12}^{(1)}, \cdots, \tG_{1R}^{(1)}\right]^T \nonumber \\ 
+&=\vh_{\textrm{TTLM}}^{(1)} \nonumber
+\end{align}
+
+% \begin{wrapfigure}[13]{r}{0.42\textwidth}
+% \small
+% \vspace{-18mm}
+% \begin{center}
+% \includegraphics[scale=0.35]{figure/G_LA.png}
+% \vspace{-4mm}
+% \label{fig: probability_ttlm}
+% \vspace{-8mm}
+% \end{center}
+% \end{wrapfigure} 
+
+As step II, TTLM will calculate 
+$\vf(x^{(i)})\tG\vh^{(i-1)}_{\textrm{TTLM}}$ where $i \in \{2,3,\cdots,t-1\}$. For example, $\vh_{\textrm{TTLM}}^{(2)}$ is calculated in Eq. \ref{eq: ttlm cell full} at time $t= 2$ as follows: 
+\begin{align}
+    \vh_{\textrm{TTLM}}^{(2)} = \vf(x^{(2)})^T\tG  \vh^{(1)}_{\textrm{TTLM}} \nonumber 
+\end{align}
+
+
+
+
+
+As step III, TTLM will output $\vy^{(t)}$ as follows:
+
+\begin{align}
+\tG^{(t)}\vh^{(t-1)}_{\textrm{TTLM}} &= 
+\left[\begin{array}{cccc}
+\tG_{11}^{(t)} & \tG_{12}^{(t)} & \ldots & \tG_{1 R}^{(t)} \\
+\tG_{21}^{(t)} & \tG_{22}^{(t)} & \ldots & \tG_{2 R}^{(t)} \\
+\ldots & \ldots & \ldots & \ldots \\
+\tG_{|V| 1}^{(t)} & \tG_{|V| 2}^{(t)} & \ldots & \tG_{|V| R}^{(t)}
+\end{array}\right] \left[\begin{array}{c}
+h^{(t-1)}_{{\textrm{TTLM}}_1} \\
+h^{(t-1)}_{{\textrm{TTLM}}_2} \\
+\ldots \\
+h^{(t-1)}_{{\textrm{TTLM}}_R}
+\end{array}\right] \nonumber \\ 
+&= \left[\begin{array}{c}
+\sum_{i=1}^{R}\tG_{1i}^{(t)} h^{(t-1)}_{{\textrm{TTLM}}_1}  \\
+\sum_{i=1}^{R}\tG_{2i}^{(t)} h^{(t-1)}_{{\textrm{TTLM}}_2} \\
+\ldots \\
+\sum_{i=1}^{R}\tG_{Ri}^{(t)} h^{(t-1)}_{{\textrm{TTLM}}_R} 
+\end{array}\right] \nonumber
+\end{align}
+
+Observing the calculation, $\tG^{(1)}$, $\tG$ and $\tG^{(t)}$ theoretically have no parameters in common (though we set $\tG^{(1)} = \tG^{(t)}$ for simplicity). Further, their roles in TTLM are different: $\tG^{(1)}$ can be viewed as a word embedding matrix; $\tG$ deals with two sources of information, i.e. hidden state and input word; $\tG^{(t)}$ extracts the evidence provided in $\vh^{(t-1)}_{\textrm{TTLM}}$ and generates a set of scores over vocabulary. 
+
+
+

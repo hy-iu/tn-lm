@@ -1,0 +1,338 @@
+由此可见，借助张量网络可以高效地完成复杂计算。下面介绍涉及高斯随机矩阵的其他恒等式。
+\begin{enumerate}
+\item  第一个恒等式是 \emph{Isserlis} 定理~\citep{isserlis1918formula} 的一个有用推论。
+\begin{theorem}\label{thm:isserlis}
+设随机向量 $\ab\in\RR^{n}$ 的元素独立同分布地取自均值为零、方差为一的正态分布。则
+\begin{align*}
+\EE(\ab^{\outprod 4}) 
+&= 
+\EE\left(\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.25}
+    \def\x{0}
+    \node[tensor,fill=red!20!blue!20!white] (a1) at (\x,\y){\scalebox{0.85}{$\ab$}}; 
+    \node[tensor,fill=red!20!blue!20!white] (a2) at (\x+1,\y){\scalebox{0.85}{$\ab$}}; 
+    \node[tensor,fill=red!20!blue!20!white] (a3) at (\x+2,\y){\scalebox{0.85}{$\ab$}}; 
+    \node[tensor,fill=red!20!blue!20!white] (a4) at (\x+3,\y){\scalebox{0.85}{$\ab$}}; 
+    \draw[edge](a1) -- (\x,\y-0.85);
+    \draw[edge](a2) -- (\x+1,\y-0.85);
+    \draw[edge](a3) -- (\x+2,\y-0.85);
+    \draw[edge](a4) -- (\x+3,\y-0.85);
+\end{tikzpicture}
+\right)\\
+&=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \draw[edge] (\x+2,\y-0.1) to [out=100,in=80] (\x+3.65,\y-0.1);
+\end{tikzpicture}
++
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \draw[edge] (\x+1.45,\y-0.1) to [out=100,in=80] (\x+3,\y-0.1);
+\end{tikzpicture}
++
+    \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x,\y-0.1) to [out=100,in=80] (\x+2,\y-0.1);
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+\end{tikzpicture}
+\end{align*}
+其中 $\ab^{\outprod 4}$ 表示 $\ab$ 与自身作 4 次外积。最后一个等式中，求和的各项对应单位矩阵的不同重排。
+
+该结果可推广到任意协方差结构：若 $\ab$ 取自多元正态 $\mathcal N(\mathbf 0, \Sigmab )$，则
+\begin{align*}
+\EE(\ab^{\outprod 4})=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.4cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}`
+    \def\x{0}
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \draw[edge] (\x+2,\y-0.1) to [out=100,in=80] (\x+3.65,\y-0.1);
+    \node[tensor,fill=red!50!white] (A) at (\x+0.9,\y+0.35){\scalebox{0.85}{$\Sigmab$}};
+    \node[tensor,fill=red!50!white] (A) at (\x+2.8,\y+0.35){\scalebox{0.85}{$\Sigmab$}};
+\end{tikzpicture}
++
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.4cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}`
+    \def\x{0}
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \draw[edge] (\x+1.45,\y-0.1) to [out=100,in=80] (\x+3,\y-0.1);
+    \node[tensor,fill=red!50!white] (A) at (\x+0.9,\y+0.35){\scalebox{0.85}{$\Sigmab$}};
+    \node[tensor,fill=red!50!white] (A) at (\x+2.25,\y+0.35){\scalebox{0.85}{$\Sigmab$}};
+\end{tikzpicture}
++
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.4cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.3}`
+    \def\x{0}
+    \draw[edge] (\x,\y-0.1) to [out=100,in=80] (\x+2,\y-0.1);
+    \draw[edge] (\x+0.15,\y-0.45) to [out=100,in=80] (\x+1.85,\y-0.45);
+    \node[tensor,fill=red!50!white] (A) at (\x+0.9,\y+0.45){\scalebox{0.85}{$\Sigmab$}};
+    \node[tensor,fill=red!50!white] (A) at (\x+0.95,\y){\scalebox{0.85}{$\Sigmab$}};
+\end{tikzpicture} .
+\end{align*}
+
+
+\begin{proof}
+    我们证明协方差为单位矩阵的情形。对任意协方差矩阵，证明可直接推广。 
+    
+    逐元素地，利用 Isserlis
+    定理，并结合 $\ab\sim\mathcal{N}(\mathbf{0},\Ib)$ 这一事实，对 $i_1,\cdots,i_4\in[n]$ 有
+\begin{align*}
+(\EE(&\ab^{\outprod 4}))_{i_1,i_2,i_3,i_4} 
+=
+    \EE(\ab_{i_1}\ab_{i_2}\ab_{i_3}\ab_{i_4})\\
+&= 
+    \EE(\ab_{i_1}\ab_{i_2})\EE(\ab_{i_3}\ab_{i_4}) + \EE(\ab_{i_1}\ab_{i_3})\EE(\ab_{i_2}\ab_{i_4})
+    +\EE(\ab_{i_1}\ab_{i_4})\EE(\ab_{i_2}\ab_{i_3})\\
+&=
+    \delta_{i_1i_2}\delta_{i_3i_4} + \delta_{i_1i_3}\delta_{i_2i_4} + \delta_{i_1i_4}\delta_{i_2i_3},
+\end{align*}
+用张量网络记法写作：
+\begin{align*}
+\EE(\ab^{\outprod 4})_{i_1i_2i_3i_4}
+=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \draw[edge] (\x+2,\y-0.1) to [out=100,in=80] (\x+3.65,\y-0.1);
+    \node[draw=none] () at (\x+0.15,\y-0.25) {\scalebox{0.7}{\indcolor{$i_1$}}};
+    \node[draw=none] () at (\x+1.85,\y-0.25) {\scalebox{0.7}{\indcolor{$i_2$}}};
+    \node[draw=none] () at (\x+2.15,\y-0.25) {\scalebox{0.7}{\indcolor{$i_3$}}};
+    \node[draw=none] () at (\x+3.65,\y-0.25) {\scalebox{0.7}{\indcolor{$i_4$}}};
+\end{tikzpicture}
++
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \draw[edge] (\x+1.45,\y-0.1) to [out=100,in=80] (\x+3,\y-0.1);
+    \node[draw=none] () at (\x+0.15,\y-0.25) {\scalebox{0.7}{\indcolor{$i_1$}}};
+    \node[draw=none] () at (\x+3,\y-0.25) {\scalebox{0.7}{\indcolor{$i_4$}}};
+    \node[draw=none] () at (\x+1.85,\y-0.25) {\scalebox{0.7}{\indcolor{$i_3$}}};
+    \node[draw=none] () at (\x+1.45,\y-0.25) {\scalebox{0.7}{\indcolor{$i_2$}}};
+\end{tikzpicture}
++
+    \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x,\y-0.1) to [out=100,in=80] (\x+2,\y-0.1);
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \node[draw=none] () at (\x,\y-0.25) {\scalebox{0.7}{\indcolor{$i_1$}}};
+    \node[draw=none] () at (\x+2.15,\y-0.25) {\scalebox{0.7}{\indcolor{$i_4$}}};
+    \node[draw=none] () at (\x+0.35,\y-0.25) {\scalebox{0.7}{\indcolor{$i_2$}}};
+    \node[draw=none] () at (\x+1.7,\y-0.25) {\scalebox{0.7}{\indcolor{$i_3$}}};
+\end{tikzpicture}.
+\end{align*}
+\end{proof}
+\end{theorem}
+也可以把 \emph{Isserlis 定理} 的结论推广到随机变量本身为高阶张量的情形。例如，对三阶张量 $\At\in\RR^{d_1\times d_2\times d_3}$，可写为
+\begin{align*}
+    (\EE(\At^{\outprod 4}))_{i_1j_1r_1i_2j_2r_2i_3j_3r_3i_4j_4r_4}
+&=\\
+&\hspace{-3cm}\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{0}
+    \def\y{0}
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \draw[edge] (\x+2,\y-0.1) to [out=100,in=80] (\x+3.65,\y-0.1);
+    \node[draw=none] () at (\x+0.15,\y-0.25) {\scalebox{0.7}{\indcolor{$j_1$}}};
+    \node[draw=none] () at (\x+1.85,\y-0.25) {\scalebox{0.7}{\indcolor{$j_2$}}};
+    \node[draw=none] () at (\x+2.15,\y-0.25) {\scalebox{0.7}{\indcolor{$j_3$}}};
+    \node[draw=none] () at (\x+3.65,\y-0.25) {\scalebox{0.7}{\indcolor{$j_4$}}};
+    \draw[edge] (\x+0.15,\y+1) to [out=100,in=80] (\x+1.85,\y+1);
+    \draw[edge] (\x+2,\y+1) to [out=100,in=80] (\x+3.65,\y+1);
+    \node[draw=none] () at (\x+0.15,\y+0.9) {\scalebox{0.7}{\indcolor{$i_1$}}};
+    \node[draw=none] () at (\x+1.85,\y+0.9) {\scalebox{0.7}{\indcolor{$i_2$}}};
+    \node[draw=none] () at (\x+2.15,\y+0.9) {\scalebox{0.7}{\indcolor{$i_3$}}};
+    \node[draw=none] () at (\x+3.65,\y+0.9) {\scalebox{0.7}{\indcolor{$i_4$}}};
+    \draw[edge] (\x+0.15,\y-1) to [out=100,in=80] (\x+1.85,\y-1);
+    \draw[edge] (\x+2,\y-1) to [out=100,in=80] (\x+3.65,\y-1);
+    \node[draw=none] () at (\x+0.15,\y-1.15) {\scalebox{0.7}{\indcolor{$r_1$}}};
+    \node[draw=none] () at (\x+1.85,\y-1.15) {\scalebox{0.7}{\indcolor{$r_2$}}};
+    \node[draw=none] () at (\x+2.15,\y-1.15) {\scalebox{0.7}{\indcolor{$r_3$}}};
+    \node[draw=none] () at (\x+3.65,\y-1.15) {\scalebox{0.7}{\indcolor{$r_4$}}};
+\end{tikzpicture}
++
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{0}
+    \def\y{0}
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \draw[edge] (\x+1.45,\y-0.1) to [out=100,in=80] (\x+3,\y-0.1);
+    \node[draw=none] () at (\x+0.15,\y-0.25) {\scalebox{0.7}{\indcolor{$j_1$}}};
+    \node[draw=none] () at (\x+3,\y-0.25) {\scalebox{0.7}{\indcolor{$j_4$}}};
+    \node[draw=none] () at (\x+1.85,\y-0.25) {\scalebox{0.7}{\indcolor{$j_3$}}};
+    \node[draw=none] () at (\x+1.45,\y-0.25) {\scalebox{0.7}{\indcolor{$j_2$}}};
+    \draw[edge] (\x+0.15,\y+1) to [out=100,in=80] (\x+1.85,\y+1);
+    \draw[edge] (\x+1.45,\y+1) to [out=100,in=80] (\x+3,\y+1);
+    \node[draw=none] () at (\x+0.15,\y+0.9) {\scalebox{0.7}{\indcolor{$i_1$}}};
+    \node[draw=none] () at (\x+3,\y+0.9) {\scalebox{0.7}{\indcolor{$i_4$}}};
+    \node[draw=none] () at (\x+1.85,\y+0.9) {\scalebox{0.7}{\indcolor{$i_3$}}};
+    \node[draw=none] () at (\x+1.45,\y+0.9) {\scalebox{0.7}{\indcolor{$i_2$}}};
+    \draw[edge] (\x+0.15,\y-1) to [out=100,in=80] (\x+1.85,\y-1);
+    \draw[edge] (\x+1.45,\y-1) to [out=100,in=80] (\x+3,\y-1);
+    \node[draw=none] () at (\x+0.15,\y-1.15) {\scalebox{0.7}{\indcolor{$r_1$}}};
+    \node[draw=none] () at (\x+3,\y-1.15) {\scalebox{0.7}{\indcolor{$r_4$}}};
+    \node[draw=none] () at (\x+1.85,\y-1.15) {\scalebox{0.7}{\indcolor{$r_3$}}};
+    \node[draw=none] () at (\x+1.45,\y-1.15) {\scalebox{0.7}{\indcolor{$r_2$}}};
+\end{tikzpicture}
++
+    \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{0}
+    \def\y{0}
+    \draw[edge] (\x,\y+1) to [out=100,in=80] (\x+2,\y+1);
+    \draw[edge] (\x+0.15,\y+1) to [out=100,in=80] (\x+1.85,\y+1);
+    \node[draw=none] () at (\x,\y+0.9) {\scalebox{0.7}{\indcolor{$i_1$}}};
+    \node[draw=none] () at (\x+2.15,\y+0.9) {\scalebox{0.7}{\indcolor{$i_4$}}};
+    \node[draw=none] () at (\x+0.35,\y+0.9) {\scalebox{0.7}{\indcolor{$i_2$}}};
+    \node[draw=none] () at (\x+1.7,\y+0.9) {\scalebox{0.7}{\indcolor{$i_3$}}};
+    \draw[edge] (\x,\y-0.1) to [out=100,in=80] (\x+2,\y-0.1);
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \node[draw=none] () at (\x,\y-0.25) {\scalebox{0.7}{\indcolor{$j_1$}}};
+    \node[draw=none] () at (\x+2.15,\y-0.25) {\scalebox{0.7}{\indcolor{$j_4$}}};
+    \node[draw=none] () at (\x+0.35,\y-0.25) {\scalebox{0.7}{\indcolor{$j_2$}}};
+    \node[draw=none] () at (\x+1.7,\y-0.25) {\scalebox{0.7}{\indcolor{$j_3$}}};
+    \draw[edge] (\x,\y-1) to [out=100,in=80] (\x+2,\y-1);
+    \draw[edge] (\x+0.15,\y-1) to [out=100,in=80] (\x+1.85,\y-1);
+    \node[draw=none] () at (\x,\y-1.25) {\scalebox{0.7}{\indcolor{$r_1$}}};
+    \node[draw=none] () at (\x+2.15,\y-1.25) {\scalebox{0.7}{\indcolor{$r_4$}}};
+    \node[draw=none] () at (\x+0.35,\y-1.25) {\scalebox{0.7}{\indcolor{$r_2$}}};
+    \node[draw=none] () at (\x+1.7,\y-1.25) {\scalebox{0.7}{\indcolor{$r_3$}}};
+\end{tikzpicture},
+\end{align*}
+对 $i_1,\cdots,i_4\in[d_1], j_1,\cdots,j_4\in [d_2]$ 以及 $r_1,\cdots,r_4\in[d_3]$ 成立。
+\item 利用上述结果，当 $\Ab$ 为随机矩阵时，可轻松导出  $(\Ab^\ts\Ab)^{\outprod 2}$ 的期望：
+\begin{proposition}\label{prop:kronecker-exp}
+    设随机矩阵 $\Ab\in\RR^{m\times n}$ 的元素独立同分布地取自标准正态分布。则
+\begin{align*}
+\EE((\Ab^\ts\Ab)^{\outprod 2})) 
+=
+m^2\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \draw[edge] (\x+2,\y-0.1) to [out=100,in=80] (\x+3.65,\y-0.1);
+    \node[draw=none] () at (\x+1,\y+0.5) {\scalebox{0.7}{\dimcolor{$n$}}};
+    \node[draw=none] () at (\x+2.85,\y+0.5) {\scalebox{0.7}{\dimcolor{$n$}}};
+\end{tikzpicture}
++m\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \draw[edge] (\x+1.45,\y-0.1) to [out=100,in=80] (\x+3,\y-0.1);
+    \node[draw=none] () at (\x+1,\y+0.5) {\scalebox{0.7}{\dimcolor{$n$}}};
+    \node[draw=none] () at (\x+2.25,\y+0.5) {\scalebox{0.7}{\dimcolor{$n$}}};
+\end{tikzpicture}
++
+m\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x,\y-0.1) to [out=100,in=80] (\x+2,\y-0.1);
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \node[draw=none] () at (\x+1,\y+0.65) {\scalebox{0.7}{\dimcolor{$n$}}};
+    \node[draw=none] () at (\x+1,\y+0.25) {\scalebox{0.7}{\dimcolor{$n$}}};
+\end{tikzpicture}.
+\end{align*}
+\begin{proof}
+将定理~\ref{thm:isserlis} 用于矩阵，并借助命题~\ref{prop:wishart-mean}，即可得到所需表达式。首先，由定理~\ref{thm:isserlis} 有
+\begin{align*}
+\EE(\Ab^{\outprod4})_{i_1j_1i_2j_2i_3j_3i_4j_4}
+&= 
+\EE\left(\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.25}
+    \def\x{0}
+    \node[tensor,fill=green!50!blue!20!white] (A1) at (\x,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=green!50!blue!20!white] (A2) at (\x+1,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=green!50!blue!20!white] (A3) at (\x+2,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=green!50!blue!20!white] (A4) at (\x+3,\y){\scalebox{0.85}{$\Ab$}};
+    \draw[edge](\x-0.15,\y-0.18) -- (\x-0.15,\y-0.65)node [below]{\scalebox{0.7}{\indcolor{$i_1$}}};
+    \draw[edge](\x+0.15,\y-0.18) -- (\x+0.15,\y-0.65)node [below]{\scalebox{0.7}{\indcolor{$j_1$}}};
+    \draw[edge](\x+0.85,\y-0.18) -- (\x+0.85,\y-0.65)node [below]{\scalebox{0.7}{\indcolor{$i_2$}}};
+    \draw[edge](\x+1.15,\y-0.18) -- (\x+1.15,\y-0.65)node [below]{\scalebox{0.7}{\indcolor{$j_2$}}};
+    \draw[edge](\x+1.85,\y-0.18) -- (\x+1.85,\y-0.65)node [below]{\scalebox{0.7}{\indcolor{$i_3$}}};
+    \draw[edge](\x+2.15,\y-0.18) -- (\x+2.15,\y-0.65)node [below]{\scalebox{0.7}{\indcolor{$j_3$}}};
+    \draw[edge](\x+2.85,\y-0.18) -- (\x+2.85,\y-0.65)node [below]{\scalebox{0.7}{\indcolor{$i_4$}}};
+    \draw[edge](\x+3.15,\y-0.18) -- (\x+3.15,\y-0.65)node [below]{\scalebox{0.7}{\indcolor{$j_4$}}};
+     \node[draw=none] () at (\x-0.35,\y-0.4) {\scalebox{0.7}{\dimcolor{$n$}}};
+    \node[draw=none] () at (\x+0.35,\y-0.4) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \node[draw=none] () at (\x+0.65,\y-0.4) {\scalebox{0.7}{\dimcolor{$n$}}};
+    \node[draw=none] () at (\x+1.35,\y-0.4) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \node[draw=none] () at (\x+1.65,\y-0.4) {\scalebox{0.7}{\dimcolor{$n$}}};
+    \node[draw=none] () at (\x+2.35,\y-0.4) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \node[draw=none] () at (\x+2.65,\y-0.4) {\scalebox{0.7}{\dimcolor{$n$}}};
+    \node[draw=none] () at (\x+3.35,\y-0.4) {\scalebox{0.7}{\dimcolor{$m$}}};
+\end{tikzpicture}\right)\\
+&\hspace{-1.5cm}=  
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.5}
+    \def\x{0}
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \draw[edge] (\x+2,\y-0.1) to [out=100,in=80] (\x+3.65,\y-0.1);
+    \node[draw=none] () at (\x+0.15,\y-0.25) {\scalebox{0.7}{\indcolor{$i_1$}}};
+    \node[draw=none] () at (\x+1.85,\y-0.25) {\scalebox{0.7}{\indcolor{$i_2$}}};
+    \node[draw=none] () at (\x+2.15,\y-0.25) {\scalebox{0.7}{\indcolor{$i_3$}}};
+    \node[draw=none] () at (\x+3.85,\y-0.25) {\scalebox{0.7}{\indcolor{$i_4$}}};
+    \draw[edge](\x+0.15,\y-0.85) to [out=100,in=80] (\x+1.85,\y-0.85);
+    \draw[edge] (\x+2,\y-0.85) to [out=100,in=80] (\x+3.65,\y-0.85);
+    \node[draw=none] () at (\x+0.1,\y-0.95) {\scalebox{0.7}{\indcolor{$j_1$}}};
+    \node[draw=none] () at (\x+1.8, \y-0.95) {\scalebox{0.7}{\indcolor{$j_2$}}};
+    \node[draw=none] () at (\x+2.15,\y-0.95) {\scalebox{0.7}{\indcolor{$j_3$}}};
+    \node[draw=none] () at (\x+3.85,\y-0.95) {\scalebox{0.7}{\indcolor{$j_4$}}};
+\end{tikzpicture}
++
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.5}
+    \def\x{0}
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \draw[edge] (\x+1.45,\y-0.1) to [out=100,in=80] (\x+3,\y-0.1);
+    \node[draw=none] () at (\x+0.15,\y-0.25) {\scalebox{0.7}{\indcolor{$i_1$}}};
+    \node[draw=none] () at (\x+3,\y-0.25) {\scalebox{0.7}{\indcolor{$i_4$}}};
+    \node[draw=none] () at (\x+1.85,\y-0.25) {\scalebox{0.7}{\indcolor{$i_3$}}};
+    \node[draw=none] () at (\x+1.45,\y-0.25) {\scalebox{0.7}{\indcolor{$i_2$}}};
+    \draw[edge] (\x+0.15,\y-0.85) to [out=100,in=80] (\x+1.85,\y-0.85);
+    \draw[edge] (\x+1.45,\y-0.85) to [out=100,in=80] (\x+3,\y-0.85);
+    \node[draw=none] () at (\x+0.1,\y-0.95) {\scalebox{0.7}{\indcolor{$j_1$}}};
+    \node[draw=none] () at (\x+2.95,\y-0.95) {\scalebox{0.7}{\indcolor{$j_4$}}};
+    \node[draw=none] () at (\x+1.8,\y-0.95) {\scalebox{0.7}{\indcolor{$j_3$}}};
+    \node[draw=none] () at (\x+1.4,\y-0.95) {\scalebox{0.7}{\indcolor{$j_2$}}};
+\end{tikzpicture}
++
+ \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.5}
+    \def\x{0}
+    \draw[edge] (\x,\y-0.1) to [out=100,in=80] (\x+2,\y-0.1);
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \node[draw=none] () at (\x,\y-0.25) {\scalebox{0.7}{\indcolor{$i_1$}}};
+    \node[draw=none] () at (\x+2.15,\y-0.25) {\scalebox{0.7}{\indcolor{$i_4$}}};
+    \node[draw=none] () at (\x+0.35,\y-0.23) {\scalebox{0.7}{\indcolor{$i_2$}}};
+    \node[draw=none] () at (\x+1.7,\y-0.25) {\scalebox{0.7}{\indcolor{$i_3$}}};
+    \draw[edge] (\x,\y-0.85) to [out=100,in=80] (\x+2,\y-0.85);
+    \draw[edge] (\x+0.15,\y-0.85) to [out=100,in=80] (\x+1.85,\y-0.85);
+    \node[draw=none] () at (\x-0.03,\y-0.95) {\scalebox{0.7}{\indcolor{$j_1$}}};
+    \node[draw=none] () at (\x+2.15,\y-0.95) {\scalebox{0.7}{\indcolor{$j_4$}}};
+    \node[draw=none] () at (\x+0.35,\y-0.95) {\scalebox{0.7}{\indcolor{$j_2$}}};
+    \node[draw=none] () at (\x+1.7,\y-0.95) {\scalebox{0.7}{\indcolor{$j_3$}}};
+\end{tikzpicture},
+\end{align*}

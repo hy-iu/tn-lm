@@ -1,0 +1,29 @@
+\begin{tikzpicture}[baseline=(current bounding box.center)]
+	\def\l{1.2};
+    \def\h{1.3};
+    
+    \draw[obj1, dotted] (3/2*\l,-4/3*\h) --++ (0,5/3*\h);
+    \draw[obj1, dotted, rounded corners = 3pt] (2*\l/3,-4/3*\h) rectangle (4*\l/3,\h/3);
+    \node[anchor=north] at (\l,-4/3*\h) {$\mbb T_A$};
+    
+    \node[draw, rounded corners=3pt, fill = white] at (\l/2,\h/2) {$L$};
+    \node[draw, rounded corners=3pt, fill = white] at (5*\l/2,\h/2) {$R$};
+    
+    \draw[obj1] (-\l/2,0) -- (7*\l/2,0);
+    \draw[obj1] (-\l/2,-\h) -- (7*\l/2,-\h);
+    \draw[obj1] (0,0) --+ (0,-\h);
+    \draw[obj1] (\l,0) --+ (0,-\h);
+    \draw[obj1] (2*\l,0) --+ (0,\h/3);
+    \draw[obj1] (2*\l,-\h) --+ (0,-\h/3);
+    \draw[obj1] (3*\l,0) --+ (0,\h/3);
+    \draw[obj1] (3*\l,-\h) --+ (0,-\h/3);
+
+    \foreach \i in {0,1,2,3}{
+        \node[mpstensor, inner sep=4pt] at (\l*\i,0) {};
+        \node[mpstensor, inner sep=4pt] at (\l*\i,-\h) {};
+        \node at (\l*\i,0) {$\sss \bar A$};
+        \node at (\l*\i,-\h) {$\sss A$};
+    }
+    \node at (-3/4*\l,-\h/2) {$\dots$};
+    \node at (15/4*\l,-\h/2) {$\dots$};
+\end{tikzpicture}

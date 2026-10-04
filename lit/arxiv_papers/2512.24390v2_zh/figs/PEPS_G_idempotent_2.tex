@@ -1,0 +1,51 @@
+\begin{tikzpicture}[x={(1,0)},z={(.5,.5)},baseline={([yshift=-.5ex]current bounding box.center)}]
+    \def\l{1.};
+    \def\h{.8};
+    \def\d{.3};
+    
+    \foreach \y in {0,1,3,4}{
+    	\draw[obj1] (-.5*\l,\y*\l,0) --++ (5*\l,0,0);
+    }
+    \foreach \x in {0,1,3,4}{
+    		\draw[obj1] (\x*\l,-.5*\l,0) --++ (0,5*\l,0);
+    }
+    \foreach \y in {0,1,3,4}{
+    	\foreach \x in {0,1,3,4}{
+    		\draw[obj1] (\x*\l,\y*\l,0) --+ (0,0,\h);
+    		\node[mpstensor, inner sep=3pt] at (\x*\l,\y*\l,0) {};
+    	}
+    }
+    \begin{scope}[obj2,dotted,inner sep=2pt]
+        \draw (-.5*\l,2*\l-\d) -- (2*\l-\d,2*\l-\d);
+        \draw (2*\l-\d,-.5*\l) -- (2*\l-\d,2*\l-\d);
+        \draw (2*\l-\d,2*\l-\d) -- (2*\l+\d,2*\l+\d);
+        \draw (4.5*\l,2*\l+\d) -- (2*\l+\d,2*\l+\d);
+        \draw (2*\l+\d,4.5*\l) -- (2*\l+\d,2*\l+\d);
+    \end{scope}
+    \begin{scope}[every node/.append style={mpotensor}]
+    \foreach \x in {0,1}{
+        \node at (\x*\l,2*\l-\d) {};
+        % \node at (\x*\l,2*\l-\d) {$\sss g$};
+    }
+    \foreach \x in {3,4}{
+        \node at (\x*\l,2*\l+\d) {};
+        % \node at (\x*\l,2*\l+\d) {$\sss g$};
+    }
+    \foreach \y in {0,1}{
+        \node at (2*\l-\d,\y*\l) {};
+        % \node at (2*\l-\d,\y*\l) {$\sss h$};
+    }
+    \foreach \y in {3,4}{
+        \node at (2*\l+\d,\y*\l) {};
+        % \node at (2*\l+\d,\y*\l) {$\sss h$};
+    }
+    \end{scope}
+
+    \node[anchor=south] at (.5*\l,2*\l-\d) {$\sss g$};
+    \node[anchor=south] at (3.5*\l,2*\l+\d) {$\sss g$};
+    \node[anchor=west] at (2*\l-\d,.5*\l) {$\sss h$};
+    \node[anchor=east] at (2*\l+\d,3.5*\l) {$\sss h$};
+    
+    \node[draw=black, line width=.7pt, fill=gray!20, circle, inner sep=2.7pt] at (2*\l-\d,2*\l-\d) {};
+    \node[draw=black, line width=.7pt, fill=gray!20, circle, inner sep=2.7pt] at (2*\l+\d,2*\l+\d) {};
+\end{tikzpicture}

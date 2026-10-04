@@ -1,0 +1,50 @@
+\subsection{实现}
+\label{sec:implementations}
+
+
+\begin{table}[ht] \small
+    \centering
+    \begin{tabular}{ll}
+    \toprule
+        模型 & 训练参数 \\
+        \midrule
+        Vanilla-RNN & $\mW^{xe}\in \mathbb{R}^{E\times |V|}$, $\mW^{eh}\in \mathbb{R}^{E\times H}$, \\
+        & $\mW^{hh}\in \mathbb{R}^{H\times H}$, $\mP\in\mathbb{R}^{H\times E}$, \\
+        & $\mV\in\mathbb{R}^{E\times|V|}$  \\
+        \hline
+        MI-RNNs & $\mW^{xe}\in \mathbb{R}^{E\times |V|}$, $\mW^{eh}\in \mathbb{R}^{E\times H}$, \\
+        & $\mW^{hh}\in \mathbb{R}^{H\times H}$, $\mP\in\mathbb{R}^{H\times E}$, \\
+        & $\mV\in\mathbb{R}^{E\times|V|}$  \\
+
+        \hline
+        RACs & $\mW^{xe}\in \mathbb{R}^{E\times |V|}$, $\mW^{eh}\in \mathbb{R}^{E\times H}$, \\
+        & $\mW^{hh}\in \mathbb{R}^{H\times H}$, $\mP\in\mathbb{R}^{H\times E}$, \\
+        & $\mV\in\mathbb{R}^{E\times|V|}$\\
+        \hline
+        Second-order RNNs & $\mW^{xe} \in \mathbb{R}^{E\times |V|}$, $\tT \in \mathbb{R}^{H\times H \times H}$, \\
+        & $\mW^{hh}\in \mathbb{R}^{E \times H}$, $\mP\in\mathbb{R}^{H\times E}$, \\
+        & $\mV\in\mathbb{R}^{E\times|V|}$ \\
+        \hline
+        TTLM & $\tG\in \mathbb{R}^{R\times |V|\times R}$, $\mG^{(t)}\in \mathbb{R}^{R \times |V|}$, \\
+
+        & $\mG^{(1)} \in \mathbb{R}^{R \times |V|}$ \\
+        \hline
+        TTLM-Tiny & $\tW^{xe}\in \mathbb{R}^{R\times |V| \times R}$, $\mW^{hh}\in\mathbb{R}^{R\times R}$, \\
+        & $\tP\in\mathbb{R}^{R\times R\times R}$, $\tV\in\mathbb{R}^{R\times R\times |V|}$\\
+
+        \hline
+        TTLM-Large & $\tW^{xe}\in\mathbb{R}^{R\times |V|\times R}$, \\ & $\tW^{eh}\in\mathbb{R}^{R\times R\times R\times R}$, \\
+        & $\mW^{hh}\in\mathbb{R}^{R\times R}$, $\tP\in\mathbb{R}^{R\times R\times R}$, \\
+        &  $\tV\in\mathbb{R}^{R\times R\times |V|}$\\
+    \bottomrule
+    \end{tabular}
+    \caption{我们实现中使用的训练参数。$E$ 为嵌入维度，$H$ 为 RNN 中的隐单元数，$R$ 为 TTLM 中的秩。我们令 $H=R$、$E=R^2$，使所有模型的参数量处于同一量级。$\mW^{xe}$ 的参数在区间 $[-0.1,0.1]$ 内均匀初始化，$\mW^{eh}$ 与 $\mW^{hh}$ 在 $[-\frac{1}{\sqrt{H}}, \frac{1}{\sqrt{H}}]$ 之间均匀初始化。}
+    \label{tab:my_label}
+\end{table}
+
+我们使用 PyTorch 在单张 GPU A100 上实现了所有模型。
+
+我们采用标准 Transformer 的 PyTorch 版本 \citep{vaswani2017attention}。\footnote{代码见 \url{https://pytorch.org/tutorials/beginner/transformer_tutorial.html}。} 对于 RNN，共有五个矩阵参数：$\mW^{xe}\in \mathbb{R}^{E\times |V|}$ 为输入嵌入矩阵，$\mW^{eh}\in
+\mathbb{R}^{E\times H}$ 为从嵌入到隐层的矩阵，$\mW^{hh}\in \mathbb{R}^{H\times H}$ 为隐层到隐层的矩阵。我们将输入嵌入 $\mW^{xe}$ 与输出嵌入 $\mV$ 绑定（即共享同一组训练参数），这已被证明能显著降低 perplexity \citep{press2016using}。因此，在输出嵌入之前存在一个投影矩阵 $\mP\in\mathbb{R}^{H\times E}$。上述流程均引自 \citep{press2016using}。
+
+对于 TTLM 模型，我们将输入张量 $\tW^{xe}$ 与 $\tV$ 绑定。$\delta$ 的实现通过一个 reshape 函数完成，因此隐层与输入之间的交互可以用矩阵乘积来计算。我们还让 $\tG^{(1)}$ 沿 $|V|$ 维度取相同参数（即 $\tG^{(1)}$ 被简化为一个 $\mG^{(1)}\in\mathbb{R}^{1\times R}$，从而可以将其视为初始隐状态）。

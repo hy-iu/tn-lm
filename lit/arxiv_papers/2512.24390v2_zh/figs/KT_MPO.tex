@@ -1,0 +1,8 @@
+\begin{tikzpicture}[baseline={([yshift=-.5ex]current bounding box.center)}]
+	\def\l{.8};
+    \def\h{.8};
+
+	\draw[obj3] (-\l,0) node[text=black,anchor=east] {$\sss \alpha$} -- (\l,0) node[text=black,anchor=west] {$\sss \beta$};
+    \draw[obj1] (0,\h) node[anchor=south] {$\sss h$} -- (0,-\h) node[anchor=north] {$\sss g$};
+    \node[mpotensor] at (0,0) {};
+\end{tikzpicture}

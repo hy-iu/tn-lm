@@ -1,0 +1,19 @@
+\begin{tikzpicture}[baseline={([yshift=-1ex]current bounding box.center)}]
+    \def\l{.8};
+    \def\h{.7};
+    
+    \draw[obj2] (-\l,-\h/2) -- (-2*\l,-\h/2);
+    \draw[obj1] (-\l,-4/3*\h) -- (-\l,1/3*\h);
+    
+    \draw[obj2] (0,-\h/2) -- (-\l,-\h/2);
+    \draw[obj2, rounded corners=3pt] (\l,0) -- (0,0) -- (0,-\h/2);
+    \draw[obj2, rounded corners=3pt] (\l,-\h) -- (0,-\h) -- (0,-\h/2);
+    
+    \node[draw=black, line width=.7pt, fill=gray!20, circle, inner sep=2.9pt] at (0,-\h/2) {};
+    
+    \node[draw=black, line width=.7pt, fill=gray!20, rectangle, inner sep=3.8pt, rounded corners=2pt] at (-\l,-\h/2) {};
+
+    \node[anchor=south] at (\l/2,0) {$\sss g$};
+    \node[anchor=south] at (\l/2,-\h) {$\sss h$};
+    \node[anchor=south] at (-1/2*\l,-\h/2) {$\sss gh$};
+\end{tikzpicture}

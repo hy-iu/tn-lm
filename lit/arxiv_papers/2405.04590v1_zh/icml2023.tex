@@ -1,0 +1,970 @@
+%%%%%%%% ICML 2023 EXAMPLE LATEX SUBMISSION FILE %%%%%%%%%%%%%%%%%
+
+\documentclass{article}
+\usepackage{xeCJK}
+\setCJKmainfont{SimSun}[ItalicFont=KaiTi, BoldFont=SimHei]
+\setCJKsansfont{SimHei}
+\setCJKmonofont{SimSun}
+\renewcommand{\figurename}{图}
+\renewcommand{\tablename}{表}
+\renewcommand{\refname}{参考文献}
+\renewcommand{\abstractname}{摘要}
+
+% Recommended, but optional, packages for figures and better typesetting:
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{booktabs} % for professional tables
+
+% hyperref makes hyperlinks in the resulting PDF.
+% If your build breaks (sometimes temporarily if a hyperlink spans a page)
+% please comment out the following usepackage line and replace
+% \usepackage{icml2023} with \usepackage[nohyperref]{icml2023} above.
+\usepackage{hyperref}
+% Attempt to make hyperref and algorithmic work together better:
+\newcommand{\theHalgorithm}{\arabic{algorithm}}
+
+% Use the following line for the initial blind version submitted for review:
+% \usepackage{icml2023}
+
+
+% If accepted, instead use the following line for the camera-ready submission:
+\usepackage[accepted]{icml2023}
+\renewcommand{\algorithmicrequire}{\textbf{输入:}}
+\renewcommand{\algorithmicensure}{\textbf{输出:}}
+\floatname{algorithm}{算法}
+
+% For theorems and such
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{amsthm}
+\renewcommand{\proofname}{证明}
+
+% if you use cleveref..
+\usepackage[capitalize,noabbrev]{cleveref}
+\crefname{figure}{图}{图}\Crefname{figure}{图}{图}
+\crefname{table}{表}{表}\Crefname{table}{表}{表}
+\crefname{equation}{式}{式}\Crefname{equation}{式}{式}
+\crefname{section}{节}{节}\Crefname{section}{节}{节}
+\crefname{appendix}{附录}{附录}\Crefname{appendix}{附录}{附录}
+\usepackage{comment}
+\usepackage{epigraph}
+% Optional math commands from https://github.com/goodfeli/dlbook_notation.
+\input{math_commands.tex}
+
+% \usepackage[table]{xcolor}
+
+\usepackage{wrapfig}
+\usepackage{braket}
+\usepackage{multirow}
+\usepackage{booktabs} % toprule
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{color,xcolor}
+\usepackage{array}
+% \usepackage[ruled,vlined]{algorithm2e}
+\usepackage{algorithm}
+% \usepackage{algpseudocode}
+\usepackage{todonotes}
+\newcommand{\benyou}[1]{{\bf \color{blue} [[benyou says ``#1'']]}}
+\newcommand{\qiuchi}[1]{{\bf \color{red} [[qiuchi says ``#1'']]}}
+\newcommand{\panfeng}[1]{{\bf \color{green} [[prof. says ``#1'']]}}
+\newcommand{\zhan}[1]{{\bf \color{orange} [[zhan says ``#1'']]}}
+\newcommand{\jgs}[1]{{\bf \color{magenta} [[Jakob says ``#1'']]}}
+% \usepackage{subcaption}
+\usepackage{amsthm}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% THEOREMS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\theoremstyle{plain}
+\newtheorem{theorem}{定理}[section]
+\newtheorem{proposition}[theorem]{命题}
+\newtheorem{lemma}[theorem]{引理}
+\newtheorem{corollary}[theorem]{推论}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{定义}
+\newtheorem{assumption}[theorem]{假设}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{注}
+\newtheorem{claim}[theorem]{断言}
+
+% Todonotes is useful during development; simply uncomment the next line
+%    and comment out the line below the next line to turn off comments
+%\usepackage[disable,textsize=tiny]{todonotes}
+% \usepackage[textsize=tiny]{todonotes}
+
+
+% The \icmltitle you define below is probably too long as a header.
+% Therefore, a short form for the running title is supplied here:
+% \icmltitlerunning{Submission and Formatting Instructions for ICML 2023}
+
+\begin{document}
+
+\twocolumn[
+\icmltitlerunning{Language Modeling Using Tensor Trains}
+\icmltitle{基于张量列的语言建模\\（Language Modeling Using Tensor Trains）}
+% \benyou{
+% minor points:
+
+% 1. please highlight somewhere what does "Real-world" really mean and in which sense the previous work is not real-world.
+
+% 3. conclusion sections  seems too simple:  the current one seems to just list very detailed technical implementation. summarize some findings/contribution, and why it is important to the community and its potential to future machine learning, and also give some limitations (I do think there shoud be some.)
+
+% 4. is there any experimental parts showing something related to long-term dependency as we stated in the very beginning of the introduction? if not why? This is important because one wonders the motivation to use TTLM. People do not like "yet-another-approach", they cares which problems do we additionally solve and why it is important.
+
+
+% }
+% It is OKAY to include author information, even for blind
+% submissions: the style file will automatically remove it for you
+% unless you've provided the [accepted] option to the icml2023
+% package.
+
+% List of affiliations: The first argument should be a (short)
+% identifier you will use later to specify author affiliations
+% Academic affiliations should list Department, University, City, Region, Country
+% Industry affiliations should list Company, City, Region, Country
+
+% You can specify symbols, otherwise they are numbered in order.
+% Ideally, you should not use this facility. Affiliations will be numbered
+% in order of appearance and this is the preferred way.
+\icmlsetsymbol{equal}{*}
+
+\begin{icmlauthorlist}
+\icmlauthor{Zhan Su}{equal,yyy}
+\icmlauthor{Yuqin Zhou}{equal,yyy}
+\icmlauthor{Fengran Mo}{comp}
+\icmlauthor{Jakob Grue Simonsen}{yyy}
+% \icmlauthor{Firstname5 Lastname5}{yyy}
+% \icmlauthor{Firstname6 Lastname6}{sch,yyy,comp}
+% \icmlauthor{Firstname7 Lastname7}{comp}
+% \icmlauthor{Firstname8 Lastname8}{sch}
+% \icmlauthor{Firstname8 Lastname8}{yyy,comp}
+% \icmlauthor{}{sch}
+%\icmlauthor{}{sch}
+\end{icmlauthorlist}
+
+\icmlaffiliation{yyy}{Department of Computer Science, University of Copenhagen, Copenhagen, Denmark}
+\icmlaffiliation{comp}{Department of Computer Science and Operations Research, University of Montreal, Quebec, Canada}
+
+\icmlcorrespondingauthor{Zhan Su}{zhan.su@di.ku.dk}
+\icmlcorrespondingauthor{Jakob Grue Simonsen}{simonsen@di.ku.dk}
+
+% You may provide any keywords that you
+% find helpful for describing your paper; these are used to populate
+% the "keywords" metadata in the PDF but will not be shown in the document
+% \icmlkeywords{Machine Learning, ICML}
+
+\vskip 0.3in
+]
+
+
+% this must go after the closing bracket ] following \twocolumn[ ...
+
+% This command actually creates the footnote in the first column
+% listing the affiliations and the copyright notice.
+% The command takes one argument, which is text to display at the start of the footnote.
+% The \icmlEqualContribution command is standard text for equal contribution.
+% Remove it (just {}) if you do not need this facility.
+
+% \printAffiliationsAndNotice{}  % leave blank if no need to mention equal contribution
+\printAffiliationsAndNotice{\icmlEqualContribution} % otherwise use the standard text.
+
+\begin{abstract}
+我们提出了一种基于最简单张量网络（即张量列（TT））的新型张量网络语言模型，称为「张量列语言模型」（Tensor Train Language Model, TTLM）。TTLM 在由词的张量积构成的指数空间中表示句子，却以低维方式计算句子的概率。我们证明，二阶 RNN、循环算术线路（Recurrent Arithmetic Circuit, RAC）与乘性集成 RNN 的架构本质上都是 TTLM 的特例。在真实语言建模任务上的实验评估表明，所提出的 TTLM 变体（即 TTLM-Large 与 TTLM-Tiny）在隐藏单元数较少时优于朴素循环神经网络（RNN）。\footnote{代码见 \url{https://github.com/shuishen112/tensortrainlm}。}
+\end{abstract}
+
+\section{引言}
+
+% A \textit{language model} assigns probabilities of sequences of words from the vocabulary $V$; the number of distinct sentences increases exponentially w.r.t to their length $N$. Hence the domain of a language model is, by definition, the exponential space $V^N$.  However, due to the vanilla exponential space being intractable, existing work tends to use recurrent architectures to generate conditional probabilities based on the context (typically encapsulated as a fixed-length dense vector). This indeed simplifies the calculation.
+
+% Human languages, like many biological systems including families of proteins, genomes, and neurons in the brain, have significant long-range correlations that decay with a power law \citep{tagliazucchi2012criticality, mora2011biological}. However,  $n$-gram models have long-range correlations that decay exponentially which belie the essential critical behavior inherent in language \citep{pestun2017language}. Even 
+% current network models like LSTM \cite{hochreiter1997long} are still hard to match long-range and higher-order statistics of natural languages \citep{lin2016critical}.
+
+人类语言与许多生物系统（包括蛋白质家族、基因组以及大脑中的神经元）一样，具有随幂律衰减的显著长程关联 \citep{tagliazucchi2012criticality, mora2011biological}。
+而 LSTM \cite{hochreiter1997long} 等现有网络模型仍难以匹配自然语言的长程与高阶统计特性 \citep{lin2016critical}。
+
+
+最近，研究者们转向了张量网络语言建模，其中所包含的模型具有按幂律衰减的关联函数 \citep{pestun2017tensor,pestun2017language,miller2021tensor}。张量网络（tensor network）大致上是将大张量分解为若干较小张量集合的分解方式，已在物理学、数学和机器学习中得到应用 \citep{cohen2016expressive}。然而，所谓的“张量网络语言模型”或者只是一个有待实践证明的概念 \cite{pestun2017tensor}，或者由于其建模概率的方式而不适用于真实世界的语言建模任务 \citep{miller2021tensor}。为使张量网络语言建模走向实用，我们迈出了将其应用于真实语言建模数据集的第一步。
+
+作为概念验证工作，我们推导了张量列语言模型（Tensor Train Language Model, TTLM）（即最简单的张量网络）。在技术上，我们基于由词表示的张量积所构造的指数级语义空间来表示句子。句子的概率由两个高维张量的内积定义：输入 $\Phi(X)$ 与全局
+系数 $\mathcal{A}$，并被分解为条件概率。
+
+在 TTLM 框架下，我们提出了两个变体：TTLM-Tiny 与 TTLM-Large。此外，我们阐明了所提出的 TTLM 与一系列循环神经网络（Recurrent Neural Network, RNN）（即二阶 RNN \citep{goudreau1994first}、循环算术电路（Recurrent Arithmetic Circuit, RAC）\citep{levine2018benefits} 以及乘性集成 RNN（MI-RNN）\citep{wu_multiplicative_2016}）之间的关系。这些联系为理解 RNN 提供了新的视角，并为 TTLM 给出了一些自然的实现。
+
+
+我们对这些 TTLM 变体进行了基准测试，并分析了其工作机制与行为上的差异。在语言建模任务上的实验结果表明，在相同训练设置下，我们的 TTLM 变体可以优于 Vanilla-RNN。这些结果证明了 TTLM 的可行性。
+
+
+我们的主要贡献可概括如下：
+\begin{itemize}
+    % \item We propose a novel Tensor Train Language Model, as a first attempt to apply tensor networks on real-world language modeling tasks.
+    \item 我们提出了一个新颖的张量列语言模型（TTLM），作为张量网络如何应用于真实世界语言建模数据集的一个示范。
+    \item 我们提出了两个新颖的 TTLM 变体，即 TTLM-Large 与 TTLM-Tiny，并从理论上证明了 TTLM 与一系列现有 RNN 之间的关系。
+    \item 与 Vanilla-RNN 相比，在 WikiText-2 与 PTB 数据集上，TTLM-Large 分别将 perplexity 降低了 14.3 和 16.0，TTLM-Tiny 分别将 perplexity 降低了 1.7 和 8.5。
+\end{itemize}
+
+
+\section{相关工作}
+
+机器学习中关于张量网络（tensor network）的研究主要致力于分析神经网络的理论性质。人们对前馈、卷积和循环架构获得了更深入的理解，包括参数压缩 \citep{novikov2015tensorizing}、表达能力 \citep{cohen2016expressive, cohen2016convolutional, khrulkov2018expressive}，以及长期记忆方面的深度效率 \citep{levine2018benefits}。对于 NLP 中的序列建模任务，以往的研究分为两个阶段。
+
+\paragraph{理论性提案.}
+\citep{pestun2017tensor} 提出了一种张量网络语言模型，旨在构建现实世界语言建模中的长程关联；\citep{pestun2017language} 提出了一维格点上的量子统计语言模型，称为 trace-density 模型。
+据我们所知，这些张量网络语言模型仍然停留在理论性提案阶段，而非实证性工作。
+
+
+\paragraph{序列建模.} \cite{novikov2021tensor} 提出了一种新的高效的基于张量列（TT）的方法，用于 TT 密度估计，能够高效地计算概率密度函数。\cite{miller2021tensor} 将一种循环张量网络——uniform matrix product state——应用于概率的序列建模，同时为序列生成模型的设计开辟了重要的新研究方向。然而，可能是由于效率问题，大多数现有模型仅在小词表规模和简单数据集（如 Tomita 文法 \citep{tomita1982dynamic}）上进行了测试；还需要在中等规模的自然语言数据集上做进一步评估，才能充分衡量其性能。我们在附录：\ref{sec:datasets} 中对所使用的数据集与相关工作进行了比较。
+
+本文是首个以可应用于现实世界语言建模数据集的方式导出张量网络语言模型的工作。提升效率的努力有两个方面。第一，我们不计算全概率公式所需的概率 normalization 项，而是转而基于上下文表示来计算条件概率，如第 \ref{sec:recursive probability} 节所述。
+第二，我们进一步分解 TT 核并使用低尺度隐单元，见第 \ref{sec: Tinyttlm} 节。
+
+
+\input{sections/Preliminaries}
+\section{基于张量列（TT）的语言建模}
+\label{sec:ttlm}
+
+我们在第 \ref{sec:lmts} 节中介绍张量空间中的语言模型，并在第 \ref{sec: TTLM} 节中定义我们的\emph{张量列语言模型（Tensor Train Language Model）}。
+
+% \paragraph{General regression model }
+
+% One could define a  linear  regression model to obtain such a language model.
+% $$
+%   g (x) = \langle\tA, \Phi(X)\rangle
+% $$
+
+% $ \Phi(X)$ is the representation for a given text (e.g., \textit{N}-gram $X$). $ \tA $ is the  element-wise weight for $ \Phi(X)$. In other words, $ \tA $ and  $ \Phi(X)$ have the same shape; the latter $ \tA $ is the  coefficients of $ \Phi(X)$.
+\subsection{张量空间中的语言模型}
+\label{sec:lmts}
+
+
+% \subsubsection*{\textbf{Text representation}}
+
+% Suppose a given text consists of $N$ words $ X = \{x^{(1)}, x^{(2)}, \cdots ,x^{(N)}\}$ and let $\vf_i$ be a feature extractor,  each view of $X$ could be represented as a concatenation of feature maps:
+
+% $$
+% \small
+% \Phi(X)_\textrm{concat} = (\vf_1 (x^{(1)});  \vf_2 (x^{(2)}); \cdots ;  \vf_N (x^{(N)}))
+% $$
+
+% where $\vf_i$ could be one-hot encoding or word embedding.
+
+自然语言中的特征（例如 token 或词）之间通常存在复杂的依赖关系 \citep{hou2013mining}\footnote{这类依赖关系（包括搭配）曾被看作纠缠的一种类比 \citep{hou2013mining}。}，而诸如特征拼接等标准方法难以很好地刻画这些依赖。在因子分解机（factorization machines）中，任意特征之间也存在类似的交互 \citep{rendle2010factorization}。给定由 $N$ 个词构成的文本 $X = [x^{(1)}, x^{(2)}, \cdots ,x^{(N)}]$ 以及特征提取器 $\vf_i \in \mathbb{R}^{I_i}$（它可以是独热编码（one-hot encoding）或词嵌入），我们现在定义一种旨在刻画这些依赖关系的 $X$ 的表示：
+%
+\begin{equation}
+\begin{split}
+    \label{eq: Phi X}
+    \Phi(X)
+    &= \vf_1 (x^{(1)}) \otimes  \vf_2 (x^{(2)}) \cdots \otimes \vf_N (x^{(N)}) \\
+    &= \bigotimes^N_{i=1} \vf_i (x^{(i)}) \\
+    % &= \includegraphics[width=2cm, height = 0.9cm]{figure/G.png}
+\end{split}
+\end{equation}
+%
+其中张量空间（tensor space）为 $\mathbb{R}^{I_1}\otimes\mathbb{R}^{I_2} \otimes\cdots\otimes\mathbb{R}^{I_N}$。$\vf_i$ 的每个分量表示独立的承载含义的单元，例如词素或隐因子。为简单起见，我们在后续章节中假设文本共享同一个独热编码 $\vf(x^{(t)}) \in \mathbb{R}^{|V|}$。于是，$\Phi(X)$ 是一个 $|V|^N$ 维的张量，它记录了 $X$ 中词的所有可能组合。
+
+受 \cite{zhang2019generalized, kossaifi2020tensor} 启发，我们定义一个张量回归模型来计算每个文本 $X$ 的概率：
+%
+\begin{align}
+    \label{eq: general definition}
+    p(X)
+    &= \langle\mathcal{A}, \Phi(X)\rangle \nonumber \\
+    &= \sum_{i_1,i_2,\cdots,i_N = 1}^{|V|} \mathcal{A}_{i_1,\cdots, i_N} \cdot \Phi(X)_{i_1,\cdots, i_N}
+\end{align}
+%
+其中 $\langle \cdot \rangle$ 表示两个同尺寸张量的内积，而 $\mathcal{A}$ 是一个回归权重张量，它与张量空间 $\mathbb{V}^{\otimes N} = \underbrace{\mathbb{V} \otimes \cdots \otimes \mathbb{V}}_N $（其中 $\mathbb{V}$ 指 $\mathbb{R}^{|V|}$）中的 $\Phi(X)$ 具有相同的形状。类似的函数曾在 \cite{novikov2016exponential, NIPS2016_6211, khrulkov2018expressive, zhang2019generalized} 中被考虑过。
+
+% The diagrammatic notation of Eq. \ref{eq: general definition} is \includegraphics[scale=0.10]{figure/d_original.png}.
+
+\subsection{张量列语言模型（Tensor Train Language Model）}
+\label{sec: TTLM}
+\subsubsection{张量列分解（Tensor-Train Decomposition）}
+设文本 $X$ 中单词下标的序列为 $w_1, w_2, \cdots, w_N$，其中 $w_i \in \{1, 2, \cdots, |V|\}$，其对应的在 $\mathcal{A}$ 中的权重记为 $\mathcal{A}_{w_1 w_2\cdots w_N}$。我们使用 TT 分解将 $\mathcal{A}_{w_1 w_2\cdots w_N}$ 表示为如下 TT 格式（TT format）\citep{oseledets2011tensor}：
+
+
+\begin{align}
+    \label{eq: TT_index}
+    \mathcal{A}_{w_1w_2...w_N}
+    & = \underbrace{\tG^{(1)}_{:, w_1}}_{1\times R_1} \underbrace{\tG^{(2)}_{:, w_2, :}}_{R_1 \times R_2} \cdots \underbrace{\tG^{(N)}_{:, w_N}}_{R_{N-1} \times 1}  \\
+    &= \sum_{\alpha_1, \cdots, \alpha_{N-1}}   \etG^{(1)}_{w_1\alpha_1} \etG^{(2)}_{\alpha_1w_2\alpha_2} \cdots \etG^{(N)}_{\alpha_{N-1}w_N}  \nonumber
+\end{align}
+
+其中张量 $\tG^{(t)} \in \mathbb{R}^{R_{t-1} \times |V| \times R_t}$（$t =1,...,d$，按定义 $R_0 = R_N = 1$）称为 \textit{TT 核心张量}（TT cores），而 $R_k$（$k = 1,\cdots,N$）称为 \textit{TT 秩}（TT ranks）。
+
+尽管依赖于位置的 TT 核心张量 $\tG^{(t)}$ 有可能为语言建模带来更强的表达能力，但这一性质目前在适用性上造成了不必要的障碍，例如 $R_t$ 的选取。这里我们遵循惯例，考虑一类特殊的 TT 分解 \cite{khrulkov2018expressive, miller2021tensor}，即在式 \ref{eq: TT_index} 中假设所有中间的 TT 核心张量彼此相等，即 $\tG = \tG^{(2)},\ldots,\tG^{(N-1)} \in \mathbb{R}^{R \times |V| \times R}$，且 $\tG^{(1)} = \tG^{(N)} \in \mathbb{R}^{|V| \times R}$。
+
+\subsubsection{TTLM 的定义}
+%
+\begin{figure*}[t]
+    \centering
+    % \vspace{-15pt}
+    \includegraphics[scale=0.5]{figure/TTLM.pdf}
+    \caption{a) 基于式 \ref{eq: ttlm_general} 的张量列语言模型。b) TTLM-Tiny 的 TT 核心张量。c) TTLM-Large 的 TT 核心张量。方块中的虚线代表 $\mathcal{A}, \Phi(X)$ 或 $\tG$。注意 TTLM-Large 与 TTLM-Tiny 的唯一区别在于是否使用张量 $\tW^{eh}$。}
+    \label{fig: TTLM}
+\end{figure*}
+
+我们定义 \textit{张量列语言模型}（Tensor Train Language Model, TTLM）如下：
+\begin{equation}
+\begin{split}
+    p(X) = \sum_{i_1, \cdots, i_N = 1}^{|V|} \sum_{\alpha_1, \cdots, \alpha_{N-1} = 1}^R f(x^{(1)})_{i_1}\etG^{(1)}_{i_1\alpha_1} \cdots \\ f(x^{(N)})_{i_N}\etG^{(N)}_{\alpha_{N-1}i_N}  \label{eq: ttlm_general}
+\end{split}
+\end{equation}
+
+其中每个 $\vf(x^{(t)})$ 是一个 one-hot 向量，至多对一个 $t$ 有 $w_t = 1$，其余位置为零。TTLM 的张量图记号如图 \ref{fig: TTLM}a 所示。注意，式 \ref{eq: ttlm_general} 能够像式 \ref{eq: TT_index} 那样在低维空间中计算 $\mathcal{A}$ 的元素。若将式 \ref{eq: TT_index} 中 $\tG^{(t)}_{:, w_t, :}$ 的元素表示为：
+%
+\begin{align}
+    \label{eq: single G}
+    \etG^{(t)}_{\alpha_{t-1}w_t\alpha_{t}}
+    & = \sum_{{i = 1}}^{|V|} f(x^{(t)})_{i}\etG^{(t)}_{\alpha_{t-1}i\alpha_{t}}
+\end{align}
+%
+由于这里的 $\mathcal{A}_{w_1w_2...w_N}$ 等于 $p(X)$，将式 \ref{eq: single G} 代入式 \ref{eq: TT_index} 即可推导出式 \ref{eq: ttlm_general}。
+
+由式 \ref{eq: ttlm_general} 定义的 TTLM 与式 \ref{eq: TT_index} 的关键区别在于：TTLM 将权重 $\mathcal{A}$ 与输入数据 $\Phi(X)$ 结合在一起，这表明它有潜力用于语言建模任务。
+
+\subsubsection{概率的递归计算.}
+\label{sec:recursive probability}
+我们递归地展开式 \ref{eq: ttlm_general} 中 TTLM 的计算，发现 $\tG$ 有两个"输入"来源：来自上一次递归展开的信息，以及输入数据 $\vf(x^{(t)})$（详细版本见式 \ref{eq: TTLM_unfold}）。
+从这个角度看，$\tG$ 充当一个双线性映射 $\tG: \mathbb{R}^{|V|} \times \mathbb{R}^R \rightarrow \mathbb{R}^R $，我们可以把上一步的信息视为一个隐状态 $\vh^{(t)}_\text{TTLM}$，其由下式给出：
+%
+\begin{align}
+    \label{eq: ttlm cell full}
+    \vh^{(t)}_{\textrm{TTLM}}
+    & = \vf(x^{(t)})^T\tG  \vh^{(t-1)}_{\textrm{TTLM}}
+\end{align}
+%
+其中 $\vf(x^{(t)})$、$\tG$ 与 $\vh^{(t-1)}_{\textrm{TTLM}}$ 三者收缩在一起（我们将 $\tG$ 的下标从 $\mathbb{R}^{R \times |V| \times R}$ 置换为 $\mathbb{R}^{|V| \times R \times R}$，这不会改变下标的个数）。
+
+利用这一循环性质，我们在此进一步给出实际中用 TTLM 计算 $p(X)$ 的细节。在语言建模中，$p(X)$ 通常用链式法则（chain rule）\citep{bahl1983maximum} 分解如下：
+%
+\begin{align}
+    p(X) = \prod_{t=1}^N p(x^{(t)}|x^{(1:t-1)}) \nonumber
+\end{align}
+%
+其中 $x^{(1:t-1)}$ 表示文本 $[x^{(1)}, x^{(2)}, \cdots ,x^{(t-1)}]$。在时刻 $t$，模型的输出预测 $\vy^{(t)}\in \mathbb{V}$ 是在给定 $x^{(1:t-1)}$ 的条件下单词 $x^{(t)}$ 的概率分布。
+
+在 TTLM 中，我们将 $\vy^{(t)}$ 定义如下：
+%
+\begin{align}
+\label{eq: probability_TT}
+    \vy^{(t)} = \psi \left(\tG^{(t)} \vh^{(t-1)}_{\textrm{TTLM}}\right)
+\end{align}
+%
+其中 $\tG^{(t)}\in \mathbb{R}^{|V| \times R}$ 是时刻 $t$ 处 TT 格式中的最后一个 TT 核心张量。$\psi$ 是任意能保证 $\vy^{(t)}$ 非负且条件概率之和为 $1$ 的函数。当把 TTLM 用作更大架构中的组件时，$\psi$ 可以取为常数缩放函数以保持线性性；当 TTLM 独立使用时，$\psi$ 可以取为任意合适的激活函数——在本文余下部分，我们将使用 $\softmax$ 函数 \cite{bridle1990probabilistic}。图 \ref{fig: probability_ttlm} 给出了一个条件概率递归计算的例子。
+%
+ \begin{figure}[t]
+    \centering
+\includegraphics[width=0.40\textwidth]{figure/ConditionalProbabilityTTLM.pdf}
+    \caption{TTLM 中条件概率的递归计算。这里我们给出一个例子：给定文本 $x^{(1:3)}$，$\vy^{(4)}=\psi(\tG^{(4)}\vh_{\textrm{TTLM}}^{(3)})$，其中 $\vy^{(4)}$ 是单词 $x^{(4)}$ 的概率分布。}
+    \label{fig: probability_ttlm}
+    % \vspace{-4mm}
+\end{figure}
+%
+
+
+如果我们把式 \ref{eq: probability_TT} 中的 $\vh^{(t-1)}_{\textrm{TTLM}}$ 用式 \ref{eq: ttlm_general} 与式 \ref{eq: ttlm cell full} 代入，就可以在高维空间中推导出 $\vy^{(t)}$ 的定义：
+%
+\begin{align} \small
+      \vy^{(t)} &= \psi \left( \sum_{i_1, \cdots, i_{t-1}} \sum_{\alpha_1,\cdots, \alpha_{t-1}} f(x^{(1)})_{i_1}\etG^{(1)}_{i_1\alpha_1} \cdots \tG^{(t)}_{\alpha_{t-1}}  \right) \label{eq: probability_original_1} \\
+      % &= \psi \left(\langle \mathcal{A}^{(1:t)}), \bigotimes\limits^{t-1}_{i=1}  \vf(x^{(i)}) \rangle_{t-1} \right) \label{eq: probability_original_2} \\
+    &=  \psi \left(\langle \mathcal{A}^{(1:t)}, \Phi(X^{(1: t-1)}) \rangle_{t-1} \right)  \label{eq: probability_original_3}
+\end{align}
+%
+其中 $\mathcal{A}^{(1:t)}\in \mathbb{V}^{\otimes t}$，$\Phi(X^{(1: t-1)}) = \bigotimes\limits^{t-1}_{i=1}  \vf(x^{(i)}) \in \mathbb{V}^{\otimes t-1}$，而 $\langle \cdot \rangle_{t-1}$ 表示第 \ref{sec:preliminaries} 节中定义的"广义内积"（generalized inner product）。注意，式 \ref{eq: probability_original_1} 是式 \ref{eq: probability_original_3} 的低维形式，类似于式 \ref{eq: ttlm_general} 与式 \ref{eq: general definition} 之间的关系。
+
+
+
+
+由这些定义，TTLM 具有如下一些有趣的性质：(1) 我们可以使用 teacher forcing \citep{marcus1998rethinking} 来学习 TT 核心张量的参数。(2) 隐状态到输出的张量 $\tG^{(t)}$ 被定义为与输入到隐状态的张量 $\tG^{(1)}$ 相同。(3) $\tG$ 与 $\tG^{(t)}$ 没有共同的参数。我们在附录 \ref{sec: relationship} 中对不同 TT 核心张量之间的关系给出了详细解释。
+\section{TTLM 变体}
+
+为了展示 TTLM 框架的多样性与实际适用性，我们现在提出两个新变体：TTLM-Large 和 TTLM-Tiny，见第 \ref{sec: Tinyttlm} 节。我们在第\ \ref{sec: Existing  TTLM variants} 节简要总结 TTLM 与一些广泛使用的 RNN 之间的关系。
+
+\subsection{新变体：TTLM-Large 与 TTLM-Tiny}
+\label{sec: Tinyttlm}
+
+TTLM 中的 TT 核心 $\tG$ 是一个完整的三阶张量。在这两个变体中，我们在不违反 TT 格式的前提下将 $\tG$ 分解为若干个独立的张量，如图 \ref{fig: TTLM}b 和图 \ref{fig: TTLM}c 所示。我们将 TTLM-Tiny 和 TTLM-Large 定义如下：
+
+\begin{equation}
+\begin{split}
+& \vh^{(t)}_{\textrm{Tiny}} = \vf (x^{(t)})^T \tW^{xe} \bm{\delta} \mW^{hh}\vh^{(t-1)}_{\textrm{Tiny}}\\
+& \vh^{(t)}_{\textrm{Large}}  = \vf (x^{(t)})^T \tW^{xe} \tW^{eh}  \bm{\delta} \mW^{hh}\vh^{(t-1)}_{\textrm{Large}}\\
+\end{split}
+\end{equation}
+
+其中 $\mW^{hh} \in \mathbb{R}^{R \times R}$ 是隐藏层到隐藏层的矩阵；$\tW^{xe} \in \mathbb{R}^{|V| \times R \times R}$ 是输入到隐藏层的张量；$\tW^{eh} \in \mathbb{R}^{R \times R \times R \times R}$；而 $\bm{\delta} \in  \mathbb{R}^{R \times R \times R \times R}$ 是一个四阶对角张量，满足当 $i = j = k = l$ 时 $\delta_{ijkl} = 1$，否则 $\delta_{ijkl} = 0$。
+
+
+我们所提出的模型与 TTLM 之间的关系如下：两个模型中的 $\tW^{xe}$ 扮演与 TTLM 中 $\tG^{(t)}$ 相同的角色（即输入到隐藏层以及隐藏层到输出），而在 TTLM-Tiny 中 $\tG = \tW^{xe} \bm{\delta} \mW^{hh}$，在 TTLM-Large 中 $\tG = \tW^{xe} \tW^{eh} \bm{\delta} \mW^{hh}$。
+
+
+与 RNN 中一样，我们对 TTLM-Large 和 TTLM-Tiny 递归地计算条件概率：
+
+\begin{equation}
+\vy^{(t)} = \psi (\tV\tP\vh^{(t)})
+\end{equation}
+
+其中 $\tV\in\mathbb{R}^{R \times |V|\times R}$ 是输出嵌入（embedding）张量，$\tP\in\mathbb{R}^{R \times R\times R}$ 是投影张量。然后我们将输入张量 $\tW^{xe}$ 与输出嵌入张量 $\tV$ 绑定（tied）（我们在第 \ref{sec:implementations} 节给出详细解释）。
+
+我们的模型的一个明显优势是能够分别利用来自隐藏层和输入数据的信息。这种交互，尤其是 TTLM-Tiny，有可能避免过拟合，类似于 \cite{wu_multiplicative_2016} 中两个"输入"来源之间的\textit{乘法集成}（multiplication integration）可以胜过许多其他方法的做法。我们在第 \ref{sec: rank} 节给出相关的实验证据。
+
+
+
+\subsection{已有的 TTLM 变体}
+\label{sec: Existing  TTLM variants}
+鉴于 TTLM 的 TT 秩可以变化，附录 \ref{sec: TTLM generalization} 详细说明了一个事实：三个已有模型，即二阶 RNN（Second-order RNNs）、递归算术电路（Recurrent Arithmetic Circuits, RACs）和乘法集成 RNN（Multiplicative Integration RNNs, MI-RNNs），都可以被视为 TTLM 的一种"特殊"实现。
+
+我们简要总结这三个模型之间的区别：1) 二阶 RNN 使用三阶 $\tT$ 作为 TT 核心，其激活函数由式 \ref{eq: second-order-rnn} 给出；2)
+RAC 使用 $\mW^{hx} \odot \mW^{hh}$ 作为 TT 核心，由式 \ref{eq: RAC_simple} 给出；3) MI-RNN 使用 $\mW^{hx} \odot \mW^{hh}$ 作为 TT 核心，其激活函数由式 \ref{eq: mirnn} 给出。
+
+连同我们提出的两个模型，我们在第 \ref{sec: experiments} 节研究二阶 RNN、RAC 和 MI-RNN 相对于 TTLM-Large 和 TTLM-Tiny 的实验性能。
+\section{实验评估}
+\label{sec: experiments}
+
+为了进一步理解 TTLM 各变体的性质，我们现在将 TTLM、TTLM-Large 和 TTLM-Tiny 与 Second-order RNNs、RACs、MI-RNNs 以及 Vanilla-RNNs 进行对比，考察它们的有效性。
+
+
+我们在第 \ref{sec:setting} 节中给出实验设置，在第 \ref{sec:implementations} 节中给出实现细节。我们在第 \ref{sec: rank} 节中研究秩对 TTLM 各变体性能的影响，并在第 \ref{sec: activation} 节中考察非线性激活函数对 TTLM 各变体有效性的影响。
+
+
+
+\subsection{实验设置}
+\label{sec:setting}
+\begin{table*}[t]
+\small
+\centering
+  \begin{tabular}{l|cc|cc|ccc}
+    \toprule
+      \multirow{2}{*}{模型} & \multicolumn{2}{c|}{
+      WikiText-2} &
+    \multicolumn{2}{c|}{PTB} & 隐藏单元 & 层数 & 嵌入 \\
+
+    &参数量 & PPL  & 参数量  & PPL & (秩) & & 维度\\
+    % \hline
+
+    % RNN \citep{mikolov2012context} & - & - & - & 124.7 & 300 & 1 & - \\
+    % LSTM \citep{zaremba2014recurrent} & - & - & - & 114.5 & 200 & 2 & -\\
+    % LSTM \citep{grave2016improving} & -& 99.3 & -& 82.3& 1024 & 1 & -\\
+    % LSTM \citep{merity2017regularizing} & - & 100.9 & - & 80.6 & 650 & 2 & -\\
+    \midrule
+    Transformer \citep{vaswani2017attention} & 90.5M & 293.0 & 32.8M & 208.7 &20 & 1 & 400 \\
+    Vanilla-RNNs \citep{mikolov2012context} & 11.6M & 96.6 & 4.0M & 115.3 & 20 & 1 & 400\\
+    Second-order RNNs \citep{hochreiter1997long} & 11.8M & 96.0 & 4.2M& 108.2 & 20 & 1 & 400\\
+    RACs  \citep{levine2018benefits} &11.6M& 97.6 & 4.0M  & 116.8 &20 & 1 & 400 \\
+    MI-RNNs \citep{wu_multiplicative_2016} &  11.6M & 99.6 &4.0M & 119.1 & 20 & 1 & 400 \\
+    \hline
+    TTLM & 12.2M & 546.4 & 4.2M & 559.8 & 20& 1 & 400\\
+    TTLM-Tiny & 11.6M &94.9 & 4.0M &106.8 & 20 & 1 & 400\\
+    TTLM-Large &11.8M &\textbf{82.3} & 4.2M & \textbf{99.3} & 20 & 1 & 400 \\
+  \bottomrule
+\end{tabular}
+\caption{WikiText-2 与 PTB 数据集上的测试集 PPL。符号 “$-$” 表示原始论文中未提供这些数据。“参数量”列表示参数的数量；详细描述见第 \ref{sec:implementations} 节。“隐藏单元（秩）”列表示隐藏单元或秩的数量。“嵌入维度”列表示每个嵌入向量的维度。我们报告了注意力头数从 [2, 4, 5, 8] 中选取的 Transformer 的最低测试集 PPL。\label{tab:evaluation}}
+\end{table*}
+%
+\paragraph{任务、数据集与指标。} 我们在两个词级语言模型数据集上进行实验：\textbf{(1)} 英文宾州树库（Penn Treebank，PTB）\citep{marcinkiewicz1994building}，由 929k 训练 token、73k 验证 token 和 82k 测试 token 组成，其词表规模为 10k。\textbf{(2)} WikiText-2 数据集 \citep{merity2016pointer} 源自维基百科文章，由 2088k 训练 token、217k 验证 token、45k 测试 token 以及超过 30k 个词类型的词表组成。我们在语言建模任务上比较这些模型，并采用 perplexity（PPL）\citep{meister-cotterell-2021-language} 进行评估；PPL 越低，模型越好。
+
+% \subsubsection{Baselines and Implements}
+
+\paragraph{基线。} 我们的模型与以下基线进行比较：
+  Transformer \citep{vaswani2017attention}、Vanilla-RNNs \citep{mikolov2012context}、Second-order RNNs \citep{hochreiter1997long}、循环算术电路（Recurrent Arithmetic Circuits，RACs）\citep{levine2018benefits}，以及乘性积分 RNN（Multiplicative Integration RNNs，MI-RNNs）\citep{wu_multiplicative_2016}。实现细节见第 \ref{sec:implementations} 节。
+
+
+% \subsubsection{Parameter Setting}
+% \label{sec:experimental_setting}
+
+% (2)  Different TT cores settings will influence the number of trainable parameters. Sec. \ref{sec: model size} compares the \textbf{model size} of TT variants
+
+% \begin{comment}
+
+% \subsubsection{Evaluation Metric}
+% It  is  the  average  per-word  log-probability on the holdout data set. The low the perplexity, the more effective the model is. The formula of PPL is shown in Eq.\ref{eq:ppl}:
+
+% \begin{equation} \small
+% \label{eq:ppl}
+%     \text{PPL} = e^{-\frac{1}{n}\sum_{i}\log(p(w_i))}
+% \end{equation}
+% \end{comment}
+
+% \textbf{Reproductibility statements} To foster reproducibility, all of our code in Sec. \ref{eq: experiments} are provided in the  \textit{link}
+
+
+% \textbf{Training environments.}
+
+% \textbf{Initialization} The learning weights of embedding tensor $\tW^{xe} \in \mathbb{R}^{|V|\times R\times R}$ were uniformly initialized in the interval $[-0.1,0.1]$ and all other weights were initialized between $[-\frac{1}{\sqrt{H}}, \frac{1}{\sqrt{H}}]$, where $H$ is the hidden units for RNN models. For TTLM-Large or TTLM-Tiny, The learning tensor $\tW^{eh}$ is initialized between $[-\frac{1}{R}, \frac{1}{R}]$ where R is the rank of TTLM. $\mW^{hh}$ is initialized between $[-\frac{1}{\sqrt{R}}, \frac{1}{\sqrt{R}}]$.
+
+\paragraph{超参数。} \textbf{(1)} 为了在相同规模下比较同类模型的有效性，我们将 TTLM 各变体/Vanilla-RNNs 的秩/隐藏单元数设为 [5, 10, 20, 25, 30, 35, 40, 45, 50]。这些模型的嵌入维度为隐藏单元数/秩的平方。这一设置源于第 \ref{sec: Tinyttlm} 节中介绍的 TTLM-Large 与 TTLM-Tiny 的架构。\textbf{(2)} 为避免嵌入维度对 Vanilla-RNNs 性能的潜在影响，我们通过将其嵌入维度设为 [100, 200, 300]，为该模型提供了若干常见的嵌入维度选择。我们将它们相应地命名为 RNNs-100、RNNs-200 和 RNNs-300，并在图 \ref{fig:rank} 中展示。\textbf{(3)} 我们将所有模型训练 50 个 epoch，并选择验证集上的最优模型来预测测试集上的结果。\textbf{(4)} 通过随机梯度下降调整模型中的权重，以最小化训练序列上的平均交叉熵损失，其中梯度采用截断的随时间反向传播（truncated backpropagation through time）算法 \citep{werbos1990backpropagation,williams1990efficient} 计算。随机种子被固定，以确保实验结果不受权重初始化的影响。
+\subsection{实现}
+\label{sec:implementations}
+
+
+\begin{table}[ht] \small
+    \centering
+    \begin{tabular}{ll}
+    \toprule
+        模型 & 训练参数 \\
+        \midrule
+        Vanilla-RNN & $\mW^{xe}\in \mathbb{R}^{E\times |V|}$, $\mW^{eh}\in \mathbb{R}^{E\times H}$, \\
+        & $\mW^{hh}\in \mathbb{R}^{H\times H}$, $\mP\in\mathbb{R}^{H\times E}$, \\
+        & $\mV\in\mathbb{R}^{E\times|V|}$  \\
+        \hline
+        MI-RNNs & $\mW^{xe}\in \mathbb{R}^{E\times |V|}$, $\mW^{eh}\in \mathbb{R}^{E\times H}$, \\
+        & $\mW^{hh}\in \mathbb{R}^{H\times H}$, $\mP\in\mathbb{R}^{H\times E}$, \\
+        & $\mV\in\mathbb{R}^{E\times|V|}$  \\
+
+        \hline
+        RACs & $\mW^{xe}\in \mathbb{R}^{E\times |V|}$, $\mW^{eh}\in \mathbb{R}^{E\times H}$, \\
+        & $\mW^{hh}\in \mathbb{R}^{H\times H}$, $\mP\in\mathbb{R}^{H\times E}$, \\
+        & $\mV\in\mathbb{R}^{E\times|V|}$\\
+        \hline
+        Second-order RNNs & $\mW^{xe} \in \mathbb{R}^{E\times |V|}$, $\tT \in \mathbb{R}^{H\times H \times H}$, \\
+        & $\mW^{hh}\in \mathbb{R}^{E \times H}$, $\mP\in\mathbb{R}^{H\times E}$, \\
+        & $\mV\in\mathbb{R}^{E\times|V|}$ \\
+        \hline
+        TTLM & $\tG\in \mathbb{R}^{R\times |V|\times R}$, $\mG^{(t)}\in \mathbb{R}^{R \times |V|}$, \\
+
+        & $\mG^{(1)} \in \mathbb{R}^{R \times |V|}$ \\
+        \hline
+        TTLM-Tiny & $\tW^{xe}\in \mathbb{R}^{R\times |V| \times R}$, $\mW^{hh}\in\mathbb{R}^{R\times R}$, \\
+        & $\tP\in\mathbb{R}^{R\times R\times R}$, $\tV\in\mathbb{R}^{R\times R\times |V|}$\\
+
+        \hline
+        TTLM-Large & $\tW^{xe}\in\mathbb{R}^{R\times |V|\times R}$, \\ & $\tW^{eh}\in\mathbb{R}^{R\times R\times R\times R}$, \\
+        & $\mW^{hh}\in\mathbb{R}^{R\times R}$, $\tP\in\mathbb{R}^{R\times R\times R}$, \\
+        &  $\tV\in\mathbb{R}^{R\times R\times |V|}$\\
+    \bottomrule
+    \end{tabular}
+    \caption{我们实现中使用的训练参数。$E$ 为嵌入维度，$H$ 为 RNN 中的隐单元数，$R$ 为 TTLM 中的秩。我们令 $H=R$、$E=R^2$，使所有模型的参数量处于同一量级。$\mW^{xe}$ 的参数在区间 $[-0.1,0.1]$ 内均匀初始化，$\mW^{eh}$ 与 $\mW^{hh}$ 在 $[-\frac{1}{\sqrt{H}}, \frac{1}{\sqrt{H}}]$ 之间均匀初始化。}
+    \label{tab:my_label}
+\end{table}
+
+我们使用 PyTorch 在单张 GPU A100 上实现了所有模型。
+
+我们采用标准 Transformer 的 PyTorch 版本 \citep{vaswani2017attention}。\footnote{代码见 \url{https://pytorch.org/tutorials/beginner/transformer_tutorial.html}。} 对于 RNN，共有五个矩阵参数：$\mW^{xe}\in \mathbb{R}^{E\times |V|}$ 为输入嵌入矩阵，$\mW^{eh}\in
+\mathbb{R}^{E\times H}$ 为从嵌入到隐层的矩阵，$\mW^{hh}\in \mathbb{R}^{H\times H}$ 为隐层到隐层的矩阵。我们将输入嵌入 $\mW^{xe}$ 与输出嵌入 $\mV$ 绑定（即共享同一组训练参数），这已被证明能显著降低 perplexity \citep{press2016using}。因此，在输出嵌入之前存在一个投影矩阵 $\mP\in\mathbb{R}^{H\times E}$。上述流程均引自 \citep{press2016using}。
+
+对于 TTLM 模型，我们将输入张量 $\tW^{xe}$ 与 $\tV$ 绑定。$\delta$ 的实现通过一个 reshape 函数完成，因此隐层与输入之间的交互可以用矩阵乘积来计算。我们还让 $\tG^{(1)}$ 沿 $|V|$ 维度取相同参数（即 $\tG^{(1)}$ 被简化为一个 $\mG^{(1)}\in\mathbb{R}^{1\times R}$，从而可以将其视为初始隐状态）。
+\subsection{秩与有效性分析}
+\label{sec: rank}
+
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[scale=0.36]{figure/comparision_with_rnn.png}
+    \caption{PTB 数据集上测试集 PPL 随秩/隐单元数的变化。此处 RNNs 指 Vanilla-RNNs，其嵌入维度与 TTLM-Large 和 TTLM-Tiny 相同。RNNs-100、RNNs-200 与 RNNs-300 分别表示嵌入维度固定为 100、200 和 300 的 Vanilla-RNNs。}
+    \label{fig:rank}
+\end{figure}
+
+
+TT 格式（TT format）的秩已被用于解释 RNNs 的表达能力或长期记忆容量 \citep{khrulkov2018expressive, levine2018benefits}。TT 分解的\textit{秩}已被证明等于 RNNs 隐状态的维度 \citep{khrulkov2018expressive}，这反映了 RNNs 的容量。秩越高，容量越大，反之亦然。然而，秩与语言建模有效性之间的关系尚未在实践中得到展示。我们将针对秩评估 TTLM-Large 与 TTLM-Tiny 的有效性。
+
+\subsubsection{有效性}
+表 \ref{tab:evaluation} 给出了我们的模型与各基线模型在 WikiText-2 和 PTB 数据集上的测试集 PPL 结果。如图所示，与 Vanilla-RNNs 相比，TTLM-Large 分别将 PPL 降低了 14.3 和 16.0，TTLM-Tiny 分别将 PPL 降低了 1.7 和 8.5。因此，当隐单元数或秩设为 20、嵌入维度为 400 时，TTLM-Large 与 TTLM-Tiny 的表现均优于所有基线模型。
+\begin{figure}[t]
+    \centering
+    \includegraphics[scale=0.24]{figure/ICML/rank_val_ppl_Large_Tiny_ICML.png}
+    \caption{TTLM-Large 与 TTLM-Tiny 在 PTB 数据集上随秩增大时的验证集 PPL。上：TTLM-Large，下：TTLM-Tiny。}
+    \label{fig:rank_analysis}
+\end{figure}
+
+为进一步评估我们模型的有效性，我们在秩逐渐增大的条件下对 TTLM-Large、TTLM-Tiny 与 Vanilla-RNNs 进行了比较，如图 \ref{fig:rank} 所示。值得注意的是，我们还纳入了 RNNs-100、RNNs-200 与 RNNs-300，以控制较大嵌入维度可能带来的影响。如图所示，即使隐单元数达到 40，RNNs 的测试集 PPL 仍在持续下降，而 TTLM-Large 与 TTLM-Tiny 并非如此。因此，我们期望我们的模型在\textit{小规模}的隐单元（即数量在 5 到 40 之间）下优于 Vanilla-RNNs，但在更大规模下则不然。
+
+\subsubsection{过拟合}
+\begin{figure*}[t]
+    \centering
+    % \vspace{-15pt}
+    \includegraphics[width= 1 \textwidth]{figure/four_comparison.png}
+    \caption{非线性对 PTB 数据集上各 TTLM 变体的影响。后缀 \texttt{-tanh} 表示使用 $tanh$ 激活函数的模型，以虚线标示。Second-linear 指不带激活函数的二阶 RNNs。设置：所有模型均有 17 个隐单元/秩。}
+    \label{fig:activation_comparision}
+\end{figure*}
+图 \ref{fig:rank_analysis} 展示了随秩数增大，TTLM-Large 与 TTLM-Tiny 在验证集上的表现。如图所示，当我们逐渐增大 TTLM-Large 的秩时，其验证集 PPL 在较早的训练轮次便开始上升。相比之下，TTLM-Tiny 的验证集 PPL 随秩数的增大而稳定下降。这一比较表明，TTLM-Large 比 TTLM-Tiny 更容易过拟合。图 \ref{fig:rank} 中的结果进一步支持了这一发现。TTLM-Tiny 的测试集 PPL 随秩的增大持续改善，而 TTLM-Large 的性能在秩数达到 25 时开始下降。
+
+当我们关注两个模型之间的差异时，TTLM-Large 拥有一个额外的参数张量 $\tW^{eh}$。因此我们认为，TT 核（TT cores）的参数化越简单，模型越容易避免过拟合。这一发现与 \cite{wu_multiplicative_2016} 中 MI-RNNs 与二阶 RNNs 的比较结果一致。就实际情形而言，我们需要意识到，与 TTLM-Large 相比，TTLM-Tiny 拟合训练数据的能力较低，因而过拟合的风险也较低。
+
+
+\subsection{非线性分析}
+\label{sec: activation}
+先前的研究曾尝试将 TT 分解作为理论平台来研究 RNNs \citep{khrulkov2018expressive, levine2018benefits}。然而，TT 分解与现有神经网络（如 Vanilla-RNNs）之间的一个关键差异，在于网络模型内部的非线性激活函数。张量分解中非线性的缺失使人质疑其理论分析能否迁移到基于 RNNs 的模型上。为理解 $tanh$ 激活函数对 TT 变体的作用是否随 TT 核的不同而变化，我们给出了如图 \ref{fig:activation_comparision} 所示的实证结果。
+
+
+就收敛速度而言，$\tanh$ 加速了 TTLM-Large-tanh、TTLM-Tiny-tanh 与 MI-RNNs，而对二阶 RNNs 几乎没有影响。就最低验证集 perplexity 的量级而言，$\tanh$ 损害了 TTLM-Large 与 TTLM-Tiny 的性能，但对乘性积分（multiplicative integration）以及二阶 RNNs 中三阶张量 $\tT$ 的影响甚微。
+
+因此，非线性激活函数对 TTLM 变体的影响取决于 TT 核的设置，无论是对验证集 PPL 的收敛还是对最低验证集 PPL 的量级而言都是如此。从实验的角度看，我们认为非线性函数对某一 TT 变体的作用不能简单地迁移或类推到另一个 TT 变体上。这也提示我们，对先前研究所宣称的张量分解与现有神经网络模型在实现层面的类比应保持警惕 \citep{khrulkov2018expressive, levine2018benefits}。非线性激活函数可能是影响这种类比的一个因素。
+
+\section{结论}
+
+张量网络已被提出作为有前景的语言模型，我们首先将 TT 分解应用于真实世界的语言建模数据集，并将该框架命名为 TTLM。我们提出了两个变体：TTLM-Large 和 TTLM-Tiny，并表明它们优于具有低规模隐单元的 Vanilla-RNN。这些实验结果的展示是在机器学习中探索张量网络的一次推进。同时，我们证明 Second-order RNN、RAC 和 MI-RNN 都是 TTLM 的特殊实现。
+
+本研究的一个局限是应当考察不同 normalization 函数的影响。在未来工作中，如果有合适的数学工具和基准测试可用，我们计划研究 TTLM 在自然语言中长期程关联的建模能力，这被认为是 TTLM 的核心特征之一。
+% \benyou{no benchmark}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% In the unusual situation where you want a paper to appear in the
+% references without citing it in the main text, use \nocite
+% \nocite{langley00}
+
+\bibliography{icml2023}
+\bibliographystyle{icml2023}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% APPENDIX
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\appendix
+\onecolumn
+
+\section{TTLM 中各 TT 核心张量之间的关系}
+\label{sec: relationship}
+
+为帮助读者理解 TTLM 中各 TT 核心张量（core）的作用，我们在此给出 TTLM 计算文本 $X = [x^{(1)}, x^{(2)}, \cdots ,x^{(N)}]$ 概率的详细过程。注意，所有中间 TT 核心张量彼此相等：$\tG = \tG^{(2)},...,\tG^{(N-1)}$，且 $\tG^{(1)} = \tG^{(N)}$。
+
+$\vy^{(t)}$（即在时刻 $t$ 给定 $x^{(1:t-1)}$ 时 $x^{(t)}$ 的条件概率）的计算可分为三步。作为第 I 步，假设 $\vf(x^{(1)})$ 是满足 $f(x^{(1)})_1 = 1$ 的 one-hot 向量。TTLM 中 $\tG^{(1)}\vf(x^{(1})$ 的计算如下：
+
+\begin{align}
+\tG^{(1)}\vf(x^{(1}) &=
+\left[\begin{array}{c}
+f\left(x^{(1)}\right)_1 \\
+f\left(x^{(1)}\right)_2 \\
+\ldots \\
+f\left(x^{(1)}\right)_{|V|}
+\end{array}\right] \left[\begin{array}{cccc}
+\tG_{11}^{(1)} & \tG_{12}^{(1)} & \ldots & \tG_{1 R}^{(1)} \\
+\tG_{21}^{(1)} & \tG_{22}^{(1)} & \ldots & \tG_{2 R}^{(1)} \\
+\ldots & \ldots & \ldots & \ldots \\
+\tG_{|V| 1}^{(1)} & \tG_{|V| 2}^{(1)} & \ldots & \tG_{|V| R}^{(1)}
+\end{array}\right] \nonumber \\
+&=\left[\tG_{11}^{(1)}, \tG_{12}^{(1)}, \cdots, \tG_{1R}^{(1)}\right]^T \nonumber \\
+&=\vh_{\textrm{TTLM}}^{(1)} \nonumber
+\end{align}
+
+% \begin{wrapfigure}[13]{r}{0.42\textwidth}
+% \small
+% \vspace{-18mm}
+% \begin{center}
+% \includegraphics[scale=0.35]{figure/G_LA.png}
+% \vspace{-4mm}
+% \label{fig: probability_ttlm}
+% \vspace{-8mm}
+% \end{center}
+% \end{wrapfigure}
+
+作为第 II 步，TTLM 将计算
+$\vf(x^{(i)})\tG\vh^{(i-1)}_{\textrm{TTLM}}$，其中 $i \in \{2,3,\cdots,t-1\}$。例如，$\vh_{\textrm{TTLM}}^{(2)}$ 在时刻 $t= 2$ 按式 \ref{eq: ttlm cell full} 计算如下：
+\begin{align}
+    \vh_{\textrm{TTLM}}^{(2)} = \vf(x^{(2)})^T\tG  \vh^{(1)}_{\textrm{TTLM}} \nonumber
+\end{align}
+
+作为第 III 步，TTLM 将输出 $\vy^{(t)}$，如下：
+
+\begin{align}
+\tG^{(t)}\vh^{(t-1)}_{\textrm{TTLM}} &=
+\left[\begin{array}{cccc}
+\tG_{11}^{(t)} & \tG_{12}^{(t)} & \ldots & \tG_{1 R}^{(t)} \\
+\tG_{21}^{(t)} & \tG_{22}^{(t)} & \ldots & \tG_{2 R}^{(t)} \\
+\ldots & \ldots & \ldots & \ldots \\
+\tG_{|V| 1}^{(t)} & \tG_{|V| 2}^{(t)} & \ldots & \tG_{|V| R}^{(t)}
+\end{array}\right] \left[\begin{array}{c}
+h^{(t-1)}_{{\textrm{TTLM}}_1} \\
+h^{(t-1)}_{{\textrm{TTLM}}_2} \\
+\ldots \\
+h^{(t-1)}_{{\textrm{TTLM}}_R}
+\end{array}\right] \nonumber \\
+&= \left[\begin{array}{c}
+\sum_{i=1}^{R}\tG_{1i}^{(t)} h^{(t-1)}_{{\textrm{TTLM}}_1}  \\
+\sum_{i=1}^{R}\tG_{2i}^{(t)} h^{(t-1)}_{{\textrm{TTLM}}_2} \\
+\ldots \\
+\sum_{i=1}^{R}\tG_{Ri}^{(t)} h^{(t-1)}_{{\textrm{TTLM}}_R}
+\end{array}\right] \nonumber
+\end{align}
+
+由上述计算可以观察到，$\tG^{(1)}$、$\tG$ 与 $\tG^{(t)}$ 在理论上没有共享参数（尽管为简单起见我们令 $\tG^{(1)} = \tG^{(t)}$）。此外，它们在 TTLM 中扮演的角色各不相同：$\tG^{(1)}$ 可视为词嵌入矩阵；$\tG$ 处理两种来源的信息，即隐藏状态与输入词；$\tG^{(t)}$ 则提取 $\vh^{(t-1)}_{\textrm{TTLM}}$ 中所提供的证据，并在词表上生成一组分数。
+\section{TTLM 与若干 RNN 的关系}
+\label{sec: TTLM generalization}
+
+本节展示 TTLM 与二阶 RNN（Second-order RNN）、递归算术电路（Recurrent Arithmetic Circuits, RAC）以及乘性积分 RNN（Multiplicative Integration RNN, MI-RNN）之间的关系。
+
+为了避免在表示不同 RNN 时符号混乱，我们约定如下记号：$\mW^{hx} \in \mathbb{R}^{R \times |V|}$ 表示输入到隐藏层的矩阵，$\mW^{hh} \in \mathbb{R}^{R \times R}$ 表示隐藏层到隐藏层的矩阵，$\phi(\cdot)$ 是逐元素的非线性激活函数。此外，不同的隐藏状态分别记为：二阶 RNN（$\vh^{(t)}_\textrm{2nd}$）、RAC（$\vh^{(t)}_\textrm{RAC}$）和 MI-RNN（$\vh^{(t)}_\textrm{MI}$）。
+
+
+\subsection{与二阶 RNN 的关系}
+\label{appendix: seecond}
+
+与具有\textit{加性}结构的 Vanilla-RNN \citep{mikolov2012context} 不同，二阶 RNN 以\textit{乘性}形式实现隐藏状态与输入数据之间的交互。这是通过一个三阶张量 $\tT$ 实现的，隐藏状态 $\vh^{(t)}_\textrm{2nd}$ 的第 $i$ 个分量定义为 \citep{hochreiter1997long, maupome-meurs-2020-language}：
+%
+\begin{equation} \small
+\label{eq: second-order-rnn}
+h^{(t)}_{\textrm{2nd}_i}  = \phi(\vf(x^{(t)})^T \tT_{i, :, :}\vh^{(t-1)}_\textrm{2nd} + \vb)
+\end{equation}
+%
+
+其中 $\tT_{i, :, :} \in\mathbb{R}^{M \times R}$ 是张量 $\tT\in\mathbb{R}^{M\times R \times R}$ 的第 $i$ 个切片，$\vb$ 是偏置向量。为简单起见，对于 RNN 的其他变体，我们将忽略 $\vb$，因为 $\vb$ 可以看作 $\vf (x^{(t)})$ 中取值为 1 的第 $0$ 个分量。\cite{rabusseau2019connecting} 已经证明张量列（TT）可以推广线性二阶 RNN。我们在此从 TTLM 递归性质的角度给出一个基础证明。
+
+\begin{claim}
+\label{cm: G and T}
+二阶 RNN 中的三阶张量 $\tT$ 等于 TTLM 中的 TT 核心张量。存在一个非线性激活 $\phi$，使得当二者均配备 $\phi$ 时，二阶 RNN 的隐藏状态与 TTLM 的隐藏状态完全一致。
+\end{claim}
+
+\begin{proof} 该证明基于如下观察：我们递归地展开式 \ref{eq: ttlm_general} 中 TTLM 的计算：
+
+\begin{equation} \small
+\begin{aligned}
+\label{eq: TTLM_unfold}
+p(X) &= \sum_{{i_ = 1}}^{|V|} f(x^{(1)})_{i_1}\etG^{(1)}_{i_1\alpha_{1}}  \cdots \\
+&= \sum_{{i_1,i_2 = 1}}^{|V|} \sum_{\alpha_1 = 1}^R   f(x^{(1)})_{i_1}\etG^{(1)}_{i_1\alpha_{1}} f(x^{(2)})_{i_2} \etG_{\alpha_{1}i_2\alpha_{2}} \cdots  \\
+&  \quad\quad\vdots \\
+&= \sum_{i_1, \cdots, i_N = 1}^{|V|}
+    \sum_{\alpha_1, \cdots ,\alpha_{N-1} =1}^{R}  f(x^{(1)})_{i_1}\etG^{(1)}_{i_1\alpha_1}
+    f(x^{(2)})_{i_2}\etG_{\alpha_1i_2\alpha_2} \cdots f(x^{(N)})_{i_N}\etG^{(N)}_{\alpha_{N-1}i_N}   \\
+\end{aligned}
+\end{equation}
+%
+可以观察到，在上述展开式中，在每个时间步上，$\tG$ 都有两个``输入''来源：来自上一次递归展开的信息（\textit{例如}，在第二行中，第一行就是上一次的信息），以及输入数据 $\vf(x^{(t)})$。从这个角度看，$\tG$ 充当一个双线性映射 $\tG: \mathbb{R}^{|V|} \times \mathbb{R}^R \rightarrow \mathbb{R}^R $，而我们可以把上一行中的信息视为隐藏状态 $\vh^{(t)}_\text{TTLM}$，由下式给出：
+%
+\begin{equation} \small
+\begin{split}
+    \label{eq: ttlm cell}
+    h^{(t)}_{\textrm{TTLM}_{\alpha_{t}}}
+    & = \sum_{{i_t = 1}}^{|V|} \sum_{{\alpha_t = 1}}^{R} f(x^{(t)})_{i_t}\etG_{i_t\alpha_{t}\alpha_{t-1}}  h^{(t-1)}_{\textrm{TTLM}_{\alpha_{t-1}}} \\
+\end{split}
+\end{equation}
+%
+其中我们将 $\etG_{\alpha_{t-1}i_t\alpha_{t}}$ 的指标置换为 $\etG_{i_t\alpha_{t}\alpha_{t-1}}$（注意这并不改变指标的个数）。
+
+我们还可以按逐分量的方式表示式 \ref{eq: second-order-rnn} 所示的二阶 RNN 的隐藏状态：
+%
+\begin{equation} \small
+\begin{split}
+    \label{eq: second_element}
+    h^{(t)}_{\textrm{2nd}_i}
+    &= \phi(\vf(x^{(t)})^T \tT_{i, :, :}\vh^{(t-1)}_\textrm{2nd}) \\
+    &= \phi\left(\sum^{|V|}_{j=1}\sum^{R}_{k=1} f(x^{(t)})_j\etT_{jik} h^{(t-1)}_{\textrm{2nd}_{k}}\right) \\
+\end{split}
+\end{equation}
+%
+其中 $j,k$ 是与 $i_t, \alpha_{t}$ 类似的哑指标；$i$ 指定 $\vh^{(t)}_{2nd}$ 的分量，正如 $\alpha_t$ 对 $\vh^{(t)}_\text{TTLM}$ 的作用一样。因此，$\tT$ 与 $\tG$ 是同样大小的可训练双线性映射。
+
+在证明了二阶 RNN 中的三阶张量 $\tT$ 等于 TT 核心张量 $\tG$ 之后，式 \ref{eq: second_element} 与式 \ref{eq: ttlm cell} 中的隐藏状态之间唯一的区别就是 $\phi$。如果我们为 $\vh^{(t)}_\text{TTLM}$ 加上 $\phi$，那么二阶 RNN 与 TTLM 的隐藏状态就完全一致，如图 \ref{fig:rnns}a 所示。
+
+
+\end{proof}
+
+\begin{comment}
+
+\begin{figure}[t]
+    \centering
+    \vspace{-15pt}
+    \includegraphics[width=3in]{figure/T and G.png}
+    \caption{式 \ref{eq: second-order-rnn} 中的 $\tT[i]$ 与式 \ref{eq: ttlm_general} 中的 $\tG[w_t]$ 是同一个大小的三阶张量沿不同方向的切片。}
+    \label{fig:t_and_g}
+\end{figure}
+\end{comment}
+\subsection{与 RAC 和 MI-RNN 的关系}
+\label{appendix: sec: claim 4.3}
+
+我们在此聚焦于乘性集成（Multiplicative Integration, MI），即通过 Hadamard 积 `$\odot$' 连接两路输入的一种方式。MI 已被用于递归算术线路（Recurrent Arithmetic Circuit, RAC）、乘性 RNN（M-RNN）\citep{sutskever2011generating} 以及 MI-RNN：
+
+\emph{递归算术线路}（RAC）是一类递归网络，其隐藏状态 $\vh^{(t)}_\textrm{RAC}$ 定义如下 \citep{levine2018benefits}：
+%
+\begin{equation} \small
+\label{eq: RAC_simple}
+   \vh^{(t)}_\textrm{RAC} =  \mW^{hx} \vf (x^{(t)}) \odot \mW^{hh}\vh^{(t-1)}_\textrm{RAC}
+\end{equation}
+%
+
+这些隐藏状态在 M-RNN 中也被用作一个\emph{中间项}。
+
+\emph{乘性集成 RNN}（MI-RNN）是带有激活函数的 RAC，其隐藏状态 $\vh^{(t)}_\textrm{MI}$ 定义如下 \citep{wu_multiplicative_2016}：
+
+
+\begin{equation} \small
+\label{eq: mirnn}
+    \vh^{(t)}_\textrm{MI}= \phi(\mW^{hx} \vf(x^{(t)}) \odot \mW^{hh}\vh^{(t-1)}_\textrm{MI})
+\end{equation}
+
+% \begin{wrapfigure}[16]{r}{0.42\textwidth}
+% \small
+% % \vspace{-10mm}
+% \begin{center}
+% \includegraphics[width=0.40\textwidth]{figure/SecondOrderRNN.pdf}
+% \vspace{-4mm}
+% \caption{\small{Second-order RNNs}}.
+% \vspace{-2mm}
+% \label{fig:secondorderrnn}
+% \end{center}
+% \end{wrapfigure}
+
+
+
+
+% \subsection{TTLM generalizes Second-order RNNs }
+% \label{sec: relationship}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[scale=0.45]{figure/TTLM_Tiny.pdf}
+    \caption{a) TTLM 框架下的二阶 RNN。b) TTLM 框架下 RAC 的隐藏状态。c) TTLM 框架下 MI-RNN 的隐藏状态。方块中的虚线表示 $\mathcal{A}, \Phi(X)$ 或 $\tG$。小空心圆表示激活函数。}
+  \label{fig:rnns}
+\end{figure}
+
+
+
+% \begin{proof} The detailed proof can be found in Appendix \ref{appendix: seecond}. The diagrammatic notation of Second-order RNNs is shown in Fig. \ref{fig: TTLM}b.
+
+% \end{proof}
+
+
+
+
+
+% \begin{wrapfigure}[16]{r}{0.42\textwidth}
+% \small
+% % \vspace{-10mm}
+% \begin{center}
+% \includegraphics[width=0.40\textwidth]{figure/RACs.pdf}
+% \vspace{-4mm}
+% \caption{\small{RACs}}.
+% \vspace{-2mm}
+% \label{fig:RACs}
+% \end{center}
+% \end{wrapfigure}
+
+
+
+
+\begin{claim}
+\label{cm: G and RACs} 给定条件：TT-scores 满足 $\tG = \mW^{hx} \odot \mW^{hh}$。
+RAC 的隐藏状态与 TTLM 的隐藏状态相同。存在非线性函数 $\phi$，使得当伴随以 $\phi$ 时，MI-RNN 的隐藏状态与 TTLM 的隐藏状态相同。
+\end{claim}
+
+% \begin{proof} The detailed proof can be found in Appendix \ref{appendix: sec: claim 4.3}. The diagrammatic notations of RACs and MI-RNN  are shown in Fig. \ref{fig: TTLM}.
+% \end{proof}
+
+
+\begin{proof} 该证明基于以下观察：
+%
+用张量收缩的语言来说，式 \ref{eq: RAC_simple} 涉及将输入权重矩阵 $\mW^{hx}$ 与输入向量 $\vf (x^{(t)})$ 收缩，并将隐藏权重矩阵 $\mW^{hh}$ 与 $\vh^{(t-1)}_\textrm{RAC}$ 收缩。二者的 Hadamard 积是一个三阶对角张量 $\delta \in \mathbb{R}^{R \times R \times R}$，满足当且仅当 $i = j = k$ 时 $\delta_{ijk} = 1$，否则 $\delta_{ijk} = 0$。于是，我们可以将式 \ref{eq: RAC_simple} 写成逐元素的形式：
+%
+\begin{equation} \small
+\begin{split}
+    \label{eq: RAC_element}
+    h^{(t)}_{\textrm{RAC}_{\alpha_t}}
+    & = \sum_{{i_t = 1}}^{|V|} \sum_{{\alpha_t = 1}}^{R} f(x^{(t)})_{i_t}W^{hx}_{i_tj}\mathbf{\delta}_{j\alpha_{t}k}W^{hh}_{k\alpha_{t-1}} h^{(t-1)}_{\textrm{RAC}_{\alpha_{t-1}}} \\
+    & = \sum_{{i_t = 1}}^{|V|} \sum_{{\alpha_t = 1}}^{R} f(x^{(t)})_{i_t}\etG_{i_t\alpha_{t}\alpha_{t-1}} h^{(t-1)}_{\textrm{RAC}_{\alpha_{t-1}}} \\
+\end{split}
+\end{equation}
+
+
+其中 $\tG = \mW^{hx} \odot \mW^{hh}$。此时，式 \ref{eq: ttlm cell} 中 TTLM 的隐藏状态等于式 \ref{eq: RAC_element} 中 RAC 的隐藏状态，如图 \ref{fig:rnns}b 所示。类似地，若给式 \ref{eq: ttlm cell} 伴随一个激活函数 $\phi$，则式 \ref{eq: ttlm cell} 就等于式 \ref{eq: mirnn} 中 MI-RNN 的隐藏状态，如图 \ref{fig:rnns}c 所示。
+
+\end{proof}
+
+综合 Claim \ref{cm: G and T} 与 \ref{cm: G and RACs}，这三种模型都可以由带非线性激活函数的 TTLM 来模拟；我们将为这一猜想寻找理论证明留作未来的工作。
+
+% \section{Implementations}
+% \label{sec:implementations}
+% % Note that in order to follow a realistic case, the baseline models implemented by us have an embedding matrix $W^{xe}$ between one-hot vectors $\vf (x^{(t)})$ and the input-to-hidden  matrix $\mW^{hx}$ \footnote{This change  obeys the multiplicative form and follows the TT-format of TTLM ($W^{xe}$ is part of TT cores)}.
+% We implement all RNNs models, TTLM, TTLM-Large, and TTLM-Tiny using PyTorch on GPU A100 one single card.
+
+
+% For RNNs, there are five matrix parameters: $\mW^{xe}\in \mathbb{R}^{E\times |V|}$ is the input embedding matrix, $\mW^{eh}\in
+% \mathbb{R}^{E\times H}$ is the embedding-to- hidden matrix, $\mW^{hh}\in \mathbb{R}^{H\times H}$ is the hidden-to-hidden matrix. We tie (share the same training parameters) the input embedding  $\mW^{xe}$ and output embedding $\mV$ which has been proved lead to a significant reduction in perplexity \citep{press2016using}. So there is a projection matrix $\mP\in\mathbb{R}^{H\times E}$ before the output embedding. All this process is introduced in  \citep{press2016using}.
+
+% For TTLM models, we tie the input tensor $\tW^{xe}$ and $\tV$. The implementation of $\delta$ is functioned by a reshape function, so the interaction between hidden and input can be computed by matrix product. We also let $\tG^{(1)}$ have the same parameters along the dimension $|V|$ (i.e. $\tG^{(1)}$ is simplified into a  $\mG^{(1)}\in\mathbb{R}^{1\times R}$ and thus it can be viewed as the initial hidden state $\vh^{(0)}$).
+
+
+
+% \begin{table}[ht]
+%     \centering
+%     \begin{tabular}{l|c}
+%     \hline
+%         Model & Training Parameters \\
+%         \hline
+%         Vanilla-RNN & $\mW^{xe}\in \mathbb{R}^{E\times |V|}$, $\mW^{eh}\in \mathbb{R}^{E\times H}$, $\mW^{hh}\in \mathbb{R}^{H\times H}$, \\
+%         & $\mP\in\mathbb{R}^{H\times E}$, $\mV\in\mathbb{R}^{E\times|V|}$  \\
+%         \hline
+
+%         MI-RNNs & $\mW^{xe}\in \mathbb{R}^{E\times |V|}$, $\mW^{eh}\in \mathbb{R}^{E\times H}$, $\mW^{hh}\in \mathbb{R}^{H\times H}$, \\ & $\mP\in\mathbb{R}^{H\times E}$, $\mV\in\mathbb{R}^{E\times|V|}$\\
+%         \hline
+%         RACs & $\mW^{xe}\in \mathbb{R}^{E\times |V|}$, $\mW^{eh}\in \mathbb{R}^{E\times H}$, $\mW^{hh}\in \mathbb{R}^{H\times H}$, \\
+%         & $\mP\in\mathbb{R}^{H\times E}$, $\mV\in\mathbb{R}^{E\times|V|}$\\
+%         \hline
+%         Second-order RNNs & $\mW^{xe} \in \mathbb{R}^{E\times |V|}$, $\tT \in \mathbb{R}^{H\times H \times H}$, $\mW^{hh}\in \mathbb{R}^{E \times H}$, \\
+%         & $\mP\in\mathbb{R}^{H\times E}$, $\mV\in\mathbb{R}^{E\times|V|}$\\
+%         \hline
+%         TTLM & $\tG\in \mathbb{R}^{R\times |V|\times R}$, $\mG^{(t)}\in \mathbb{R}^{R \times |V|}$, $\mG^{(1)} \in \mathbb{R}^{R \times |V|}$ \\
+%         \hline
+%         TTLM-Tiny & $\tW^{xe}\in \mathbb{R}^{R\times |V| \times R}$, $\mW^{hh}\in\mathbb{R}^{R\times R}$, \\
+%         & $\tP\in\mathbb{R}^{R\times R\times R}$, $\tV\in\mathbb{R}^{R\times R\times |V|}$\\
+
+%         \hline
+%         TTLM-Large & $\tW^{xe}\in\mathbb{R}^{R\times |V|\times R}$, $\tW^{eh}\in\mathbb{R}^{R\times R\times R\times R}$, $\mW^{hh}\in\mathbb{R}^{R\times R}$, \\
+%         & $\tP\in\mathbb{R}^{R\times R\times R}$, $\tV\in\mathbb{R}^{R\times R\times |V|}$\\
+%     \end{tabular}
+%     \caption{Training parameters in our implementation. $E$ is the embedding size, $H$ is the hidden units in RNNs, and $R$ is the rank in the TTLM.  We set $H=R$ and $E=R^2$ to make the parameters of all models in the same scale. The parameters of $\mW^{xe}$  and $\tW^{xe}$are uniformly initialized in the interval $[-0.1,0.1]$, $\mW^{eh}$, $\tW^{eh}$ and $\mW^{hh}$ are uniformly initialized between $[-\frac{1}{\sqrt{H}}, \frac{1}{\sqrt{H}}]$.}
+%     \label{tab:my_label}
+% \end{table}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{与相关工作在实验数据集上的比较}
+\label{sec:datasets}
+\begin{table}[t]
+    \centering
+    \begin{tabular}{l|c|c|c|c}
+    \toprule
+        数据集 & 数据类型 & 词表  & $N$ & 真实世界语言  \\
+         \midrule
+        Tomita grammars  \cite{tomita1982dynamic}  & 离散 & 2  & 10k & $\times$ \\
+        Motzkin grammar \citep{alexander2021exact} & 离散 & 3 & 10k   &$\times$ \\
+         Email addresses \citep{radev2008clair} & 离散 & $\leq 256$ & 4k & $\times$  \\
+        \midrule
+        POWER  \cite{Dua:2019} & 连续 & - & 1659k & $\times$ \\
+        GAS \cite{fonollosa2015reservoir} & 连续 & - & 852k &  $\times$ \\
+        HEPMASS \cite{baldi2016parameterized} & 连续 & - & 315k & $\times$  \\
+        MINIBOONE \cite{roe2005boosted} & 连续 & -  & 29k & $\times$  \\
+        BSDS300 \citep{martin2001database}  & 连续 & - & 1000k &  $\times$ \\
+
+        \midrule
+        PTB \citep{marcinkiewicz1994building} & 离散 & 10k  & 31k & $\surd$ \\
+        WikiText-2  \citep{merity2016pointer} & 离散 & 30k & 73k &  $\surd$ \\
+
+ \bottomrule
+    \end{tabular}
+    \caption{“数据集”一列表示训练数据集。前三个数据集用于 \citep{miller2021tensor}，接下来的五个用于 \cite{novikov2021tensor}，最后两个用于本文。“$N$”一列表示训练样本的数量。“词表”一列表示词的类型数。“连续”表示连续变量，而“离散”表示离散变量。}
+    \label{tab:datasets}
+\end{table}
+
+
+
+\end{document}
+
+
+% This document was modified from the file originally made available by
+% Pat Langley and Andrea Danyluk for ICML-2K. This version was created
+% by Iain Murray in 2018, and modified by Alexandre Bouchard in
+% 2019 and 2021 and by Csaba Szepesvari, Gang Niu and Sivan Sabato in 2022.
+% Modified again in 2023 by Sivan Sabato and Jonathan Scarlett.
+% Previous contributors include Dan Roy, Lise Getoor and Tobias
+% Scheffer, which was slightly modified from the 2010 version by
+% Thorsten Joachims & Johannes Fuernkranz, slightly modified from the
+% 2009 version by Kiri Wagstaff and Sam Roweis's 2008 version, which is
+% slightly modified from Prasad Tadepalli's 2007 version which is a
+% lightly changed version of the previous year's version by Andrew
+% Moore, which was in turn edited from those of Kristian Kersting and
+% Codrina Lauth. Alex Smola contributed to the algorithmic style files.

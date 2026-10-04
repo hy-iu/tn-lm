@@ -1,0 +1,54 @@
+\section{范畴论（Category theory）}\label{sec:cat}
+在本附录中，我们简要总结正文中用到的融合范畴（fusion category）以及（双）模范畴（(bi)module category）的相关概念。更详尽且技术严谨的阐述请参阅标准文献~\cite{Etingof2002,Etingof2015,Ostrik2001}与综述~\cite{Kitaev2005a,Beer2018,Kong2022}。
+
+\subsection{融合范畴（Fusion categories）}
+简要而言，一个（幺正）\emph{融合范畴} $\mc D$ 包含
+\begin{enumerate}
+    \item 包含\emph{简单对象}（拓扑缺陷）$a,b,c,\dots$ 的有限集合。
+    \item 融合规则 $a\otimes b =\bigoplus_c N_{ab}^c c$，以及张量积的单位元 $\mbb 1$。
+    \item 称为 \emph{F-符号}（F-symbol）或\emph{结合子}（associator）的幺正映射 $F:(\bullet \otimes\bullet)\otimes\bullet\overset{\sim}{\rightarrow}\bullet\otimes(\bullet\otimes\bullet)$。
+\end{enumerate}
+F-符号满足称为\emph{五边形方程}（pentagon equation）的自洽条件。展开而言，五边形方程归结为多元线性方程组，形式上示意为
+\begin{equation}
+    FF = \sum FFF,
+\end{equation}
+写出各分量形式则为
+\begin{equation}
+    \sum_o \left(F^{fcd}_e\right)^{h,no}_{g,lm} \left(F^{abh}_e\right)^{i,pq}_{f,ko} = \sum_{j,rst} \left(F^{abc}_g\right)^{j,rs}_{f,kl} \left(F^{ajd}_e\right)^{i,tq}_{g,sm} \left(F^{bcd}_i\right)^{h,np}_{j,rt}.
+\end{equation}
+值得注意的是，融合范畴不一定配有\emph{编织}（braiding），即幺正映射 $R_{ab}:a\otimes b\overset{\sim}{\rightarrow}b\otimes a$。然而，对于任意融合范畴，均可构造其 \emph{Drinfeld 中心} $\mc Z(\mc D)$，它是一个\emph{模}融合范畴（modular fusion category），特别意味着它配有\emph{非退化}的编织。该中心在 \cref{sec:SN} 的弦网（string-net）模型中可物理实现为模型的任意子（anyon）激发。它们的交换统计编码在 $\mc Z(\mc D)$ 的编织中。
+
+\paragraph{（反常）有限群对称性} 对于任意\emph{有限}群 $G$，融合范畴 $\Vect_G$ 是有限维 $G$-分次向量空间的范畴。本质上，$\Vect_G$ 的简单对象对应于 $G$ 的群元素，融合规则由群乘法决定。此时 $F$-符号全部平凡。当 $G$ 具有非平凡的第三上同调群时（见 \cref{sec:GroupCohomology}），任意 3-上循环（3-cocycle）$\omega$ 均可用于构造 $\Vect_G^\omega$。该融合范畴与 $\Vect_G$ 类似地构造，但此时 $F$-符号的非零分量取值为 $\omega$。此上循环编码了 \emph{（'t Hooft）异常}（anomaly），即对该对称性实施 gauge 的阻碍；或等价地说，正如正文 \cref{sec:SPT1d} 中所讨论的，阻碍该对称性接纳平凡对称基态。
+
+\bigskip\noindent 在这种意义下，融合范畴编码了对称性结构——对称性算符、其乘法规则与结合点——以及由 F-符号所编码的异常。
+
+\paragraph{$\Rep(G)$ 对称性} 对于任意有限群 $G$，范畴 $\Rep(G)$ 将 $G$ 的表示作为对象。不可约表示则构成\emph{简单}对象。这些对象的融合由群表示的标准张量积给出。由此可以推导出，$\Rep(G)$ 的 $F$-符号正是 6j-符号。
+
+\paragraph{Fibonacci 对称性}
+Fibonacci 融合范畴具有两个简单对象 $\{\mbb 1,\tau\}$，其唯一的非平凡融合规则为 $\tau\otimes\tau=\mbb 1\oplus\tau$。其 F-符号在文献（如文献~\cite{Beer2018}）中有详细阐述。名称 \emph{Fibonacci} 指的是在 $\tau$ 的逐次张量幂中，$\tau$ 的重数生成了 Fibonacci 数列。同样可以证明，Fibonacci 融合范畴也不允许具有平凡对称基态的局域对称哈密顿量~\cite{GarreRubio2022}。
+
+\subsection{模范畴（Module categories）}
+设 $\mc C$ 为融合范畴。一个（幺正左）\emph{$\mc C$-模范畴 $\mc M$} 包含
+\begin{enumerate}
+    \item 简单对象 $A,B,C,\dots$ 的有限集合。
+    \item $\mc C$ 在 $\mc M$ 上的\emph{作用}（action）$\act$：$a\act A =\bigoplus_{B} N_{aA}^{B}B$，其中 $B$ 为 $\mc M$ 中的简单对象。
+    \item 称为\emph{模 $\mF$-符号}或（左）\emph{模结合子}的幺正映射 $\mF:(\bullet \otimes\bullet)\act\bullet\overset{\sim}{\rightarrow}\bullet\act(\bullet\act\bullet)$。
+\end{enumerate}
+这些 $\mF$-符号进而满足一个同时包含 $\mc C$ 的 $F$-符号与模 $\mF$-符号的自洽方程。示意形式为：
+\begin{equation}
+    \mF\mF = \sum F\mF\mF.
+\end{equation}
+
+\paragraph{$\Vect_G$ 的模范畴}
+$\Vect_G$ 的不可分解模范畴由对偶对 $(H,\psi)$ 标记，其中 $H\subseteq G$ 为子群（在共轭意义下），$\psi$ 为 $H$ 的 2-上循环。在此情形下，简单对象由陪集 $r_1H,r_2H,\dots\in G/H$ 标记，$\Vect_G$ 在其上的作用定义为 $g\act rH := (gr)H$。模结合子 $\mF$ 可由 $\psi$ 构造，详见文献~\cite{Naidu2006}。
+
+\paragraph{$\Rep(G)$ 的模范畴} 由于 $\Rep(G)$ 与 $\Vect_G$ 的 \emph{Morita 等价}（Morita equivalence），$\Rep(G)$ 上的模范畴同样由元组 $(H,\psi)$ 分类。对应的模范畴为 $\Rep^\psi(H)$，即 $H$ 的 $\psi$-射影表示范畴。$\Rep(G)$ 在 $\Rep^\psi(H)$ 上的作用由将 $G$-表示限制到子群 $H$，随后取（射影）$H$-表示的张量积给出。
+
+\subsection{双模范畴（Bimodule categories）}
+给定一对融合范畴 $\mc C,\mc D$，一个 \emph{$(\mc C,\mc D)$-双模范畴} $\mc M$ 是既为左 $\mc C$-模范畴又为右 $\mc D$-模范畴的范畴，并配有额外的幺正\emph{双模 $\rF$-符号}或\emph{双模结合子} $\rF:(\bullet \act \bullet)\cat\bullet \overset{\sim}{\rightarrow} \bullet\act(\bullet\cat\bullet)$。
+
+\paragraph{$\Vect$} $\Vect$ 可解释为 $(\Vect_G,\Rep(G))$-双模范畴。在此情况下，$\rF$-符号的分量即为 $G$-表示的矩阵元。
+
+\bigskip\noindent 在整篇讲义中，我们专门处理\emph{可逆} $(\mc C,\mc D)$-双模范畴。特别是，这保证了 $\mc C$ 与 $\mc D$ 是 \emph{Morita 等价}的，或者等价地说，它们的 Drinfeld 中心 $\mc Z(\mc C)$ 与 $\mc Z(\mc D)$ 是等价的模融合范畴~\cite{Mueger2002}。在文献~\cite{Bridgeman2022}中，可逆性被证明等价于 MPO 单射性（MPO injectivity）的概念，并推导出了用双模结合子给出的刻画。
+
+给定融合范畴 $\mc C$ 与 $\mc C$-模范畴 $\mc M$，存在唯一的融合范畴——\emph{Morita 对偶}（Morita dual）$\mc C^\star_\mc M$，使得 $\mc M$ 成为可逆 $(\mc C,\mc C^\star_\mc M)$-双模范畴。例如：$(\Vect_G)^\star_\Vect=\Rep(G)$。关于 Morita 对偶融合范畴的严格定义，我们建议读者查阅相关文献。

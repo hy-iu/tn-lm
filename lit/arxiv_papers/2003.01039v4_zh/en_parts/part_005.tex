@@ -1,0 +1,44 @@
+\section{Regular Expressions and u-MPS}
+\label{sec:regex}
+%
+\begin{table}[t]
+\setlength\aboverulesep{0.1pt}
+\setlength\belowrulesep{0.1pt}
+\renewcommand{\arraystretch}{1.7}
+\caption{Dictionary giving the correspondence between regular expressions (regex) and generalized transfer operators associated with a u-MPS (note the reversal of order in $\EL_{R_1 R_2}$). The infinite sum giving $\ER_{S^*}(\QR)$ can be efficiently approximated by partial sums, or else computed as the solution $\QR^*$ to the linear equation $(I - \ER_S)\QR^* = \QR$ (similarly for $\EL_{S^*}(\QL)$).}
+\label{tab:regex_cp}
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{c|c|c}
+    \textbf{Regex} $\mathbf{R}$ & $\bm{\ER_R(\QR)}$ & $\bm{\EL_R(\QL)}$ \\
+    \midrule
+    $\mathbf{s}$ &         $\mc{A}_s \QR \mc{A}_s^T$                             & $\mc{A}_s^T \QL \mc{A}_s$ \\
+    $\mathbf{R_1 R_2}$ &   $\ER_{R_1}(\ER_{R_2}(\QR))$                           & $\EL_{R_2}(\EL_{R_1}(\QL))$ \\
+    $\mathbf{R_1 | R_2}$ & $\ER_{R_1}(\QR) + \ER_{R_2}(\QR)$                     & $\EL_{R_1}(\QL) + \EL_{R_2}(\QL)$ \\
+    $\mathbf{S^*}$ &       $\sum_{n=0}^\infty (\ER_S)^{\circ n}(\QR)$ & $\sum_{n=0}^\infty (\EL_S)^{\circ n}(\QL)$ 
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+%
+While transfer operators as defined above are standard in quantum many-body physics, we now show how this transfer operator calculus can be richly generalized in the setting of sequential data. We work with regular expressions (regex) $R$ over an alphabet $\Sigma$ of size $d$, which can be recursively defined in terms of: (a) String literals $s\in\Sigma^*$, (b) Concatenations of regex $R = R_1 R_2$, (c) Unions of regex $R = R_1 | R_2$, and (d) Kleene closures of regex $R = S^*$. We use $\Sigma$ to denote the union regex of all single characters $c \in \Sigma$, and $\Sigma^n$ to denote the concatenation of $\Sigma$ with itself $n$ times.
+
+Any regex $R$ defines a set $\Lang(R) \subset \Sigma^*$, the language of strings matching the pattern specified by $R$. While $\Lang(R)$ is uniquely determined by $R$, it is typically possible to choose multiple regex which define the same language. We assume in the following that we have chosen an unambiguous regex $R$, so that each string $s \in \Lang(R)$ matches $R$ exactly once. This involves no loss of generality, since any ambiguous regex can be replaced by an unambiguous regex defining the same language~\citep{book1971}. In such cases, we will use $R$ to also represent the subset $\Lang(R)$.
+
+To each regex $R$, we associate a pair of generalized transfer operators $\ER_{R}$ and $\EL_{R}$, formed by summing over all strings in the language $R$, which act on matrices as
+%
+\begin{align}
+\label{eq:transfer_op}
+\ER_R(\QR) &= \sum_{s\in R} \mc{A}(s) \QR \mc{A}(s)^T, \nonumber\\ 
+\EL_R(\QL) &= \sum_{s\in R} \mc{A}(s)^T \QL \mc{A}(s).
+\end{align}
+%
+While the naive sum appearing in~\eqnref{eq:transfer_op} can have infinitely many terms, the action of such CP maps can still be efficiently and exactly computed in terms of the recursive definition of the regex itself. Table~\ref{tab:regex_cp} gives the correspondence between the four primitive regex operations introduced above and the corresponding operations on CP maps. Proof of the consistency between these recursive operations and \eqnref{eq:transfer_op} for unambiguous regex, as well as a generalized correspondence holding for arbitrary regex, is given in Appendix~\ref{sec:appendix_a}.
+
+While most regex operations in Table~\ref{tab:regex_cp} are straightforward, the Kleene closure $\ER_S$ involves an infinite summation which is guaranteed to converge whenever the spectral norm of $\ER_S$ is bounded as $\rho(\ER_S) < 1$. We denote the value of this convergent sum by $\QR^*$, which can be approximated using a finite number of summands or alternately computed as the solution to the linear equation $(I - \ER_S)\QR^* = \QR$ (see~\citep{balle2019}).
+
+A fruitful way of interpreting the transfer operators $\ER_R$ and $\EL_R$ is as normalization functions for u-MPS sampling distributions. We define the quantity $\Z_R(\QL, \QR) = \Tr(\QL \ER_R(\QR))$ to be the (unnormalized) probability associated to a regex $R$ in the presence of boundary matrices $\QL, \QR$, and the quantity $\Z_R = \Z_R(\alphamat, \omegamat)$ as utilizing the boundary matrices of the u-MPS. It follows from \eqnref{eq:transfer_op} that $\Z_R = \sum_{s \in R}\Pt(s)$ does indeed give the unnormalized probability associated to all strings $s$ matching $R$. We recover as special cases of this the quantities $\Z_n = \Z_{\Sigma^n}$ and $\Z_* = \Z_{\Sigma^*}$ defined above.
+

@@ -1,0 +1,143 @@
+ In the above diagram, we can see that there is a connection between the legs of the same size $R$. This is consistent with matrix multiplication where there is a sum over indices with the same dimension. Finally, since the resulting diagram has two free legs, it represents a matrix. Here, the final object is a matrix which can be represented as  a single node, demonstrating how nodes can be merged in tensor networks:
+$$
+\Ab\Bb =\Mb \Leftrightarrow 
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (A) at (\x,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!50!white] (B) at (\x+1,\y){\scalebox{0.85}{$\Bb$}};
+    \draw[edge] (A) -- (B) node [above,midway] {\scalebox{0.7}{\dimcolor{$R$}}};
+    \draw[edge] (\x-0.25,\y) -- (\x-0.75,\y)  node [midway, above] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (\x+1.25,\y) -- (\x+1.75,\y)  node [midway,above] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \node[draw=none] () at (\x+2,\y) {\scalebox{1}{\textcolor{black}{$=$}}};
+    \node[tensor,fill=blue!30!red!20!white] (M) at (\x+3,\y){\scalebox{0.85}{$\Mb$}};
+    \draw[edge] (M) -- (\x+3.75,\y)  node [midway,above] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (M) -- (\x+2.25,\y)  node [midway,above] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \end{tikzpicture}.
+$$
+Contraction between two matrices can directly be extended to contractions between a matrix and a vector, a tensor and a matrix, a tensor a matrix and a vector products, etc. Here are some examples of tensor networks with their corresponding mathematical expressions: 
+\begin{align}\label{eq:matvec}
+\Ab\in\RR^{d_1\times R},\vb\in\RR^{R} \ : \ \
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (A) at (\x,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!10!white] (v) at (\x+1,\y){\scalebox{0.85}{$\vb$}};
+    \draw[edge] (A) -- (v) node [above,midway] {\scalebox{0.7}{\dimcolor{$R$}}};
+    \draw[edge] (\x-0.25,\y) -- (\x-0.75,\y)  node [pos=1.3]{\scalebox{0.7}{\indcolor{$i$}}};
+    \end{tikzpicture}
+=\sum_{r=1}^R\Ab_{ir}\vb_r,
+\end{align}
+\begin{align}\label{eq:tenmat}
+\At\in\RR^{d_1\times R\times d_2},\Ab\in\RR^{R\times d_3}\ :\ \
+\begin{tikzpicture}[baseline = \baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=green!50!red!50!white] (At) at (\x,\y){\scalebox{0.85}{$\At$}};
+    \node[tensor,fill=red!50!white] (A) at (\x+1,\y){\scalebox{0.85}{$\Ab$}};
+    \draw[edge] (At) -- (A) node [above,midway] {\scalebox{0.7}{\dimcolor{$R$}}};
+    \draw[edge] (\x-0.25,\y) -- (\x-0.75,\y)  node [pos=1.3] {\scalebox{0.7}{\indcolor{$i$}}};
+    \draw[edge] (\x,\y-0.25) -- (\x,\y-0.75)  node [pos=1.3] {\scalebox{0.7}{\indcolor{$j$}}};
+    \draw[edge] (\x+1.25,\y) -- (\x+1.75,\y)  node [pos=1.3] {\scalebox{0.7}{\indcolor{$k$}}};
+\end{tikzpicture} 
+= \sum_{r=1}^R\At_{ijr}\Ab_{rk},
+\end{align}
+\begin{align}\label{eq:tenmatvec}
+\At\in\RR^{d_1\times R\times d_2},\Ab\in\RR^{R\times d_3}, \vb\in\RR^{d_3}&:
+   \begin{tikzpicture}[baseline = \baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=green!50!red!50!white] (At) at (\x,\y){\scalebox{0.85}{$\At$}};
+    \node[tensor,fill=red!50!white] (A) at (\x+1,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!40!red!60!white] (a) at (\x+2,\y){\scalebox{0.85}{$\vb$}};
+    \draw[edge] (At) -- (A) node [above,midway] {\scalebox{0.7}{\dimcolor{$R$}}};
+    \draw[edge] (A) -- (a) node [above,midway] {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \draw[edge] (\x-0.25,\y) -- (\x-0.75,\y)  node [pos=1.3] {\scalebox{0.7}{\indcolor{$i$}}};
+    \draw[edge] (\x,\y-0.25) -- (\x,\y-0.75)  node [pos=1.3] {\scalebox{0.7}{\indcolor{$j$}}};
+    \end{tikzpicture} 
+= \sum_{r=1}^R\sum_{k=1}^{d_3}\At_{ijr}\Ab_{rk}\ab_{k}.
+\end{align}
+As we can see in all diagrams above, edges between two nodes represent summations. They also indicate that two tensors share dimensions of the same size on the corresponding mode. 
+As explained before, the number of free legs in the tensor network corresponds to the order of the tensor it represents. For the previous examples, we have
+
+$$
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (A) at (\x,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!10!white] (v) at (\x+1,\y){\scalebox{0.85}{$\vb$}};
+    \draw[edge] (A) -- (v) node [above,midway] {\scalebox{0.7}{\dimcolor{$R$}}};
+    \draw[edge] (\x-0.25,\y) -- (\x-0.75,\y)  node [midway, above] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \end{tikzpicture} 
+   \in \mathbb R^{d_1},\ \ 
+\begin{tikzpicture}[baseline = \baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=green!50!red!50!white] (At) at (\x,\y){\scalebox{0.85}{$\At$}};
+    \node[tensor,fill=red!50!white] (A) at (\x+1,\y){\scalebox{0.85}{$\Ab$}};
+    \draw[edge] (At) -- (A) node [above,midway] {\scalebox{0.7}{\dimcolor{$R$}}};
+    \draw[edge] (\x-0.25,\y) -- (\x-0.75,\y)  node [midway,above] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (\x,\y-0.25) -- (\x,\y-0.75)  node [midway,left] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x+1.25,\y) -- (\x+1.75,\y)  node [midway,above] {\scalebox{0.7}{\dimcolor{$d_3$}}};
+\end{tikzpicture} 
+\in \mathbb R^{d_1\times d_2 \times d_3},\ \ \text{and}\ \ 
+    \begin{tikzpicture}[baseline = \baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=green!50!red!50!white] (At) at (\x,\y){\scalebox{0.85}{$\At$}};
+    \node[tensor,fill=red!50!white] (A) at (\x+1,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!40!red!60!white] (a) at (\x+2,\y){\scalebox{0.85}{$\vb$}};
+    \draw[edge] (At) -- (A) node [above,midway] {\scalebox{0.7}{\dimcolor{$R$}}};
+    \draw[edge] (A) -- (a) node [above,midway] {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \draw[edge] (\x-0.25,\y) -- (\x-0.75,\y)  node [midway,above] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (\x,\y-0.25) -- (\x,\y-0.75)  node [midway,left] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \end{tikzpicture} 
+\in \mathbb R^{d_1\times d_2}.
+$$
+ 
+\paragraph{From mathematical expressions to tensor networks, and back} Tensor networks are simple to work with because there are no strict rules for representing legs and nodes. 
+In tensor network diagrams, nodes and edges can be positioned arbitrarily in the plane, only the graph structure matters. 
+For example, when translating matrix multiplication into  a tensor network diagram, the key feature is to ensure the dimension of the connected legs are consistent, e.g., for $\Ab\in\RR^{d_1\times R}, \Bb\in\RR^{R\times d_2}$  all diagrams below illustrate the \emph{same} matrix multiplication:
+\begin{align*} 
+\Ab\Bb
+=
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (A) at (\x,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!50!white] (B) at (\x+1,\y){\scalebox{0.85}{$\Bb$}};
+    \draw[edge] (A) -- (B) node [midway,above] {\scalebox{0.7}{\dimcolor{$R$}}};;
+    \draw[edge] (\x-0.25,\y) -- (\x-0.75,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$d_1$}}};;
+    \draw[edge] (\x+1.25,\y) -- (\x+1.75,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$d_2$}}};;
+    \node[draw=none] () at (\x+1.95,\y) {$=$};
+    \node[tensor,fill=red!50!white] (A1) at (\x+2.85,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!50!white] (B1) at (\x+3.85,\y){\scalebox{0.85}{$\Bb$}};
+    \draw[edge] (A1) -- (B1) node [midway,above] {\scalebox{0.7}{\dimcolor{$R$}}};;
+    \draw[edge] (A1) to [out=60,in=60, distance=0.5cm] (\x+2.2,\y);
+    \draw[edge] (B1) to [out=60,in=60, distance=0.5cm] (\x+4.4,\y-0.5);
+    \node[draw=none] () at (\x+2.4,\y+0.65) {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \node[draw=none] () at (\x+4,\y+0.65) {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \node[draw=none] () at (\x+4.7,\y) {$=$};
+    \node[tensor,fill=blue!50!white] (A2) at (\x+5.3,\y){\scalebox{0.85}{$\Bb$}};
+    \node[tensor,fill=red!50!white] (B2) at (\x+6.3,\y){\scalebox{0.85}{$\Ab$}};
+    \draw[edge] (A2) -- (B2) node [midway,above] {\scalebox{0.7}{\dimcolor{$R$}}};;
+    \draw[edge] (A2) -- (\x+5.3,\y+0.75) node [midway,left] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+     \draw[edge] (B2) -- (\x+6.3,\y-0.75) node [midway,right] {\scalebox{0.7}{\dimcolor{$d_1$}}};   
+     \node[draw=none] () at (\x+7.1,\y) {$=$};
+    \node[tensor,fill=red!50!white] (A3) at (\x+7.6,\y+0.5){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!50!white] (B3) at (\x+7.6,\y-0.5){\scalebox{0.85}{$\Bb$}};
+    \draw[edge] (A3) -- (B3) node [midway,right] {\scalebox{0.7}{\dimcolor{$R$}}};
+    \draw[edge] (A3) -- (\x+7.6,\y+1.25) node [midway,left] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (B3) -- (\x+7.6,\y-1.25) node [midway,left] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \end{tikzpicture}.
+\end{align*}
+Note that because of the sizes of $\Ab\in\RR^{d_1\times R}$ and $\Bb\in\RR^{R\times d_2}$, there is only one way to do the contraction between the two; hence, there would be no ambiguity in the diagrams above even if we omitted the dimensions on the edges. 
+

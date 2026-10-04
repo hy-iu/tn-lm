@@ -1,0 +1,247 @@
+\section{预备知识}
+\label{sec:preliminaries}
+
+\begin{figure}[!htpb]
+\centering
+\begin{minipage}[t]{0.45\textwidth}
+\vspace{0pt}
+\small
+\begin{tblr}{
+  width = \linewidth,
+  colspec = {Q[2.8cm,m,c]X[m,c]},
+  row{1} = {font=\bfseries},
+  rowsep = 2.5pt,
+  hline{1,12} = {1pt},
+  hline{2} = {0.6pt},
+  hline{3,4,5,6,7,8,9,10,11} = {0.6pt, gray7},
+}
+记号 & 含义 \\
+$\alpha$ & 标量 \\
+$\vecb{a}$ & 向量 \\
+$\mat{A}$ & 矩阵 \\
+$\ten{A}$ & 张量 \\
+$\ten{A}_{i_1, \dots, i_N}$ & 第 $(i_1, \dots, i_N)$ 个元素 \\
+$\ten{A}_{i_1, \dots, i_{n-1}, :, i_{n+1}, \dots, i_N}$ & 第 n 模切片 \\
+$\mat{A}\otimes\mat{B}$ & Kronecker 积 \\
+$\vecb{a} \circ \vecb{b}$ & 外积 \\
+$\ten{A}\times_n\mat{B}$ & 模-$n$ 积 \\
+$\ten{A} \leftindex_{i_1, \dots, i_K}\times^{j_1, \dots, j_K} \ten{B}$ & 缩并 \\
+\end{tblr}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.50\textwidth}
+\vspace{0pt}
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[
+  tnode/.style={circle, draw=black!80, line width=1.0pt,
+               minimum size=0.5cm, inner sep=0pt, font=\tiny},
+  knode/.style={circle, draw=black!80, line width=1.0pt,
+               minimum size=0.52cm, inner sep=0pt, font=\tiny},
+  leg/.style={line width=1.0pt, black!80},
+  bond/.style={line width=1.0pt, black!80},
+  lbl/.style={font=\tiny, align=center, text width=1.9cm},
+  idx/.style={font=\tiny, text=black},
+  pnl/.style={font=\tiny\bfseries}
+]
+
+% colours
+\definecolor{ColA}{RGB}{102,194,165}
+\definecolor{ColB}{RGB}{252,141, 98}
+
+% geometry
+\pgfmathsetmacro{\Rad}{0.25} % main node radius
+\pgfmathsetmacro{\Lleg}{0.30}  % straight leg length
+\pgfmathsetmacro{\Dx}{2.10}
+\pgfmathsetmacro{\CapDy}{0.70}
+\pgfmathsetmacro{\CapDyTensor}{0.8} % caption offset
+\pgfmathsetmacro{\CCentre}{2.10} % horizontal centre
+
+\pgfmathsetmacro{\RowOneY}{3.0}
+\pgfmathsetmacro{\RowTwoY}{1.0}
+\pgfmathsetmacro{\RowThreeY}{-1.0}
+\pgfmathsetmacro{\CapRowOneY}{\RowOneY-\CapDyTensor}  % caption level, row 1
+
+% Row 1: vector, matrix, tensor
+
+% a) vector
+\node[tnode, fill=ColA!35] (v) at (0*\Dx, \RowOneY) {$\vecb{a}$};
+\draw[leg] (v.east) -- ++(\Lleg, 0);
+\node[idx] at ($(v.east)+(\Lleg+0.08,0.11)$) {$I$};
+\node[lbl] at (0*\Dx, \CapRowOneY) {(a) 向量};
+
+% b) matrix
+\node[tnode, fill=ColA!35] (m) at (1*\Dx, \RowOneY) {$\mat{A}$};
+\draw[leg] (m.west) -- ++(-\Lleg, 0);
+\draw[leg] (m.east) -- ++( \Lleg, 0);
+\node[idx] at ($(m.west)+(-\Lleg-0.08,0.11)$) {$I$};
+\node[idx] at ($(m.east)+(\Lleg+0.08,0.11)$) {$J$};
+\node[lbl] at (1*\Dx, \CapRowOneY) {(b) 矩阵};
+
+% c) tensor
+\node[tnode, fill=ColA!35] (t) at (2*\Dx, \RowOneY) {$\ten{A}$};
+\draw[leg] (t.225) -- ++(-0.26, -0.26);
+\draw[leg] (t.315) -- ++( 0.26, -0.26);
+\node[idx] at ($(t.225)+(-0.26-0.2,-0.26-0.02)$) {$I_1$};
+\node[idx] at ($(t.315)+( 0.26+0.2,-0.26-0.02)$) {$I_N$};
+\node[font=\tiny] at ($(t.center)+(0,-0.50)$) {$\cdots$};
+\node[lbl] at (2*\Dx, \CapRowOneY) {(c) 张量};
+
+% Row 2: outer product, Kronecker product
+
+% e) Kronecker product
+\pgfmathsetmacro{\KRadCore}{0.25}
+\pgfmathsetmacro{\KDyABH}{0.36}
+\pgfmathsetmacro{\KFanHalf}{\KDyABH+\KRadCore}
+\pgfmathsetmacro{\KFanDepth}{0.26}
+\pgfmathsetmacro{\KBondLen}{0.35}
+\pgfmathsetmacro{\KExtLleg}{0.28}
+
+\pgfmathsetmacro{\OGap}{0.95}
+\pgfmathsetmacro{\KHalfWidth}{\KRadCore+\KBondLen+\KFanDepth+\KExtLleg}
+\pgfmathsetmacro{\OHalfWidth}{0.5*\OGap+\Rad}
+\pgfmathsetmacro{\RowTwoGap}{0.9} % whitespace between the two panels
+\pgfmathsetmacro{\RowTwoHalf}{\KHalfWidth+0.5*\RowTwoGap+\OHalfWidth}
+\pgfmathsetmacro{\KCoreX}{\CCentre+\RowTwoHalf-\KHalfWidth}
+
+\pgfmathsetmacro{\KLFanBX}{\KCoreX-\KRadCore-\KBondLen}
+\pgfmathsetmacro{\KLFanX}{\KLFanBX-\KFanDepth}
+\pgfmathsetmacro{\KRFanBX}{\KCoreX+\KRadCore+\KBondLen}
+\pgfmathsetmacro{\KRFanX}{\KRFanBX+\KFanDepth}
+
+\pgfmathsetmacro{\KTopY}{\RowTwoY+\KDyABH}
+\pgfmathsetmacro{\KBotY}{\RowTwoY-\KDyABH}
+\pgfmathsetmacro{\KFanTopY}{\RowTwoY+\KFanHalf}
+\pgfmathsetmacro{\KFanBotY}{\RowTwoY-\KFanHalf}
+
+\draw[leg] (\KLFanX, \RowTwoY) -- ++(-\KExtLleg, 0);
+\draw[leg] (\KRFanX, \RowTwoY) -- ++( \KExtLleg, 0);
+\node[idx] at ($(\KLFanX-\KExtLleg-0.08, \RowTwoY+0.15)$) {$I_1 I_2$};
+\node[idx] at ($(\KRFanX+\KExtLleg+0.08, \RowTwoY+0.15)$) {$J_1 J_2$};
+
+\fill[black!9, draw=black!80, line width=1.0pt]
+    (\KLFanBX, \KFanTopY)
+    arc[start angle=90, end angle=270, x radius=\KFanDepth, y radius=\KFanHalf]
+    -- cycle;
+\fill[black!9, draw=black!80, line width=1.0pt]
+    (\KRFanBX, \KFanBotY)
+    arc[start angle=-90, end angle=90, x radius=\KFanDepth, y radius=\KFanHalf]
+    -- cycle;
+
+\node[knode, fill=ColA!35] (kA) at (\KCoreX, \KTopY) {$\mat{A}$};
+\node[knode, fill=ColB!35] (kB) at (\KCoreX, \KBotY) {$\mat{B}$};
+\draw[bond] (\KLFanBX, \KTopY) -- (kA.west);
+\draw[bond] (\KLFanBX, \KBotY) -- (kB.west);
+\draw[bond] (kA.east) -- (\KRFanBX, \KTopY);
+\draw[bond] (kB.east) -- (\KRFanBX, \KBotY);
+\node[idx] at ($(\KLFanBX,\KTopY)!0.5!(kA.west)+(0.025, 0.17)$) {$I_1$};
+\node[idx] at ($(\KLFanBX,\KBotY)!0.5!(kB.west)+(0.025,-0.17)$) {$J_1$};
+\node[idx] at ($(kA.east)!0.5!(\KRFanBX,\KTopY)+(-0.025, 0.17)$) {$I_2$};
+\node[idx] at ($(kB.east)!0.5!(\KRFanBX,\KBotY)+(-0.025,-0.17)$) {$J_2$};
+
+\pgfmathsetmacro{\CapRowTwoY}{\RowTwoY-\KFanHalf-0.48}
+\node[lbl] at (\KCoreX, \CapRowTwoY) {(e) Kronecker 积};
+
+% d) outer product
+\pgfmathsetmacro{\OX}{\CCentre-\RowTwoHalf+\Rad}
+\pgfmathsetmacro{\OLleg}{0.24}
+\node[tnode, fill=ColA!35] (o1) at (\OX,       \RowTwoY) {$\vecb{a}$};
+\node[tnode, fill=ColB!35] (o2) at (\OX+\OGap, \RowTwoY) {$\vecb{b}$};
+\draw[leg] (o1.south) -- ++(0, -\OLleg);
+\draw[leg] (o2.south) -- ++(0, -\OLleg);
+\node[idx] at ($(o1.south)+(-0.16,-\OLleg)$) {$I$};
+\node[idx] at ($(o2.south)+( 0.16,-\OLleg)$) {$J$};
+\node[lbl] at ({\OX+0.5*\OGap}, \CapRowTwoY) {(d) 外积};
+
+% Row 3: contraction
+
+% f) contraction
+\pgfmathsetmacro{\CGap}{1.15}
+\pgfmathsetmacro{\CX}{\CCentre-0.5*\CGap}
+\node[tnode, fill=ColA!35] (c1) at (\CX,       \RowThreeY) {$\mat{A}$};
+\node[tnode, fill=ColB!35] (c2) at (\CX+\CGap, \RowThreeY) {$\mat{B}$};
+\draw[leg] (c1.west) -- ++(-\Lleg, 0);
+\draw[bond] (c1.east) -- (c2.west);
+\draw[leg] (c2.east) -- ++(\Lleg, 0);
+\node[idx] at ($(c1.west)+(-\Lleg-0.08,0.15)$) {$I$};
+\node[idx] at ($(c1.east)!0.5!(c2.west)+(0,0.15)$) {$K$};
+\node[idx] at ($(c2.east)+(\Lleg+0.08,0.15)$) {$J$};
+\node[lbl] at (\CCentre, \RowThreeY-\CapDy) {(f) 缩并};
+
+\end{tikzpicture}%
+}
+\end{minipage}
+\caption{\footnotesize 记号参考。
+\textit{左}：本综述通篇使用的标量、向量、矩阵、张量以及主要张量代数运算的符号。\textit{右}：同一批对象的张量网络图表示，并附各运算的示例。}
+\label{fig:notation-overview}
+\end{figure}
+
+\subsection{记号}
+
+\paragraph{对象} 花体大写字母 $\ten{A}\in\R^{I_1\times I_2\times \cdots\times I_N}$ 表示一个 $N$ 阶张量；矩阵与向量分别用粗体大写字母 $\mat{A}$ 与小写字母 $\vecb{a}$ 表示。\cref{fig:notation-overview}（左）中的符号汇总了本综述通篇使用的记号；\cref{fig:notation-overview}（右）中的张量网络图 \cite{penrose1971tensordiagrams} 则为每个对象与运算给出相应的图示。
+
+
+\paragraph{外积} 给定 $N$ 个向量 $\vecb{a}^{(1)}\in\R^{I_1},\ldots,\vecb{a}^{(N)}\in\R^{I_N}$，其外积为 $N$ 阶张量 $\vecb{a}^{(1)}\circ\cdots\circ\vecb{a}^{(N)}\in\R^{I_1\times\cdots\times I_N}$，其元素为：
+\begin{equation}
+\bigl(\vecb{a}^{(1)}\circ\cdots\circ\vecb{a}^{(N)}\bigr)_{i_1\ldots i_N}= \vecb{a}^{(1)}_{i_1}\vecb{a}^{(2)}_{i_2}\cdots \vecb{a}^{(N)}_{i_N}.
+\end{equation}
+该张量称为规范秩一（canonical rank-one）张量。当 $N=2$ 时，它退化为熟知的秩一矩阵 $\vecb{a}\circ\vecb{b}\in\R^{I\times J}$，其元素为 $(\vecb{a}\circ\vecb{b})_{ij}=a_ib_j$。在张量网络图中，外积通过将各张量并列放置来表示，如\cref{fig:notation-overview}(d) 所示。
+
+\paragraph{Kronecker 积与 Kronecker 分解} 两个矩阵 $\mat{A}\in\R^{I_1\times J_1}$ 与 $\mat{B}\in\R^{I_2\times J_2}$ 的 Kronecker 积是一个分块矩阵，其构造方式是把 $\mat{A}$ 的每个元素替换为按该元素缩放后的 $\mat{B}$ 的副本，
+\begin{equation}
+  \mat{A}\otimes\mat{B}=
+  \begin{bmatrix}
+  A_{11}\mat{B} & \cdots & A_{1J_1}\mat{B} \\
+  \vdots & \ddots & \vdots \\
+  A_{I_11}\mat{B} & \cdots & A_{I_1J_1}\mat{B}
+  \end{bmatrix}
+  \in\R^{I_1I_2\times J_1J_2}.
+\end{equation}
+对应的张量网络图见\cref{fig:notation-overview}(e)。该图与外积有密切联系；更多细节参见 \cite{yokota2024tensorbasics}。
+
+对于固定的 $R \in \mathbb{N}$，可以寻求用 Kronecker 积之和对矩阵作最佳逼近
+\begin{equation}
+\label{eq:kd}
+\min_{\mat{U}_r,\mat{V}_r}\ \| \mat{A}-\sum_{r=1}^{R}\mat{U}_r\otimes\mat{V}_r\|_F,
+\end{equation}
+其中 $\mat{A}\in\R^{I_1I_2\times J_1J_2}$、$\mat{U}_r\in\R^{I_1\times J_1}$、$\mat{V}_r\in\R^{I_2\times J_2}$。该问题存在闭式解：将 $\mat{A}$ 的各 $I_2\times J_2$ 分块重排为矩阵 $\mathcal{R}(\mat{A})\in\R^{I_1J_1\times I_2J_2}$ 的行，可使每个 Kronecker 项化为一个秩一矩阵，于是式 \eqref{eq:kd} 归结为对 $\mathcal{R}(\mat{A})$ 的低秩逼近，可由其秩 $R$ 截断奇异值分解（SVD）求解，再将所得奇异向量重排回 $\mat{U}_r$ 与 $\mat{V}_r$；精确构造参见 \cite{golubvanloan}。这就是所谓的 Kronecker 积 SVD，本文称之为 Kronecker 分解。使逼近精确成立的最小 $R$ 称为 $\mat{A}$ 的 Kronecker 秩。该分解并非 $\mat{A}$ 本身所固有，因为因子形状 $I_1I_2=I$ 与 $J_1J_2=J$ 可以有多种选法，而每种选择都定义了一个不同的问题 \eqref{eq:kd}，各有其 Kronecker 秩。尽管该构造可以推广到张量 \cite{batselier2017ktd}，我们只讨论矩阵情形。
+
+
+\paragraph{缩并} 缩并可以理解为对两个张量的一对或多对配对模求和，同时让其余模保持自由。设 $\ten{A}\in\R^{I_1\times I_2\times \cdots\times I_N}$ 为 $N$ 阶张量，$\ten{B}\in\R^{J_1\times J_2 \times \cdots\times J_M}$ 为 $M$ 阶张量，且存在 $K$ 对模 $(i_1,j_1),\ldots,(i_K,j_K)$ 满足
+\begin{equation}
+\left\{
+\begin{array}{ll}
+  1\le i_k\le N, \quad 1\le j_k\le M,  &  k\in\{1,2,\ldots,K\} \\
+  i_k \neq i_\ell, \quad  j_k\neq j_\ell, &  \forall k \neq \ell \\
+  I_{i_k}=J_{j_k}, & k\in \{1,2,\ldots,K\}.
+\end{array}
+\right.
+\end{equation}
+则 $\ten{A}$ 与 $\ten{B}$ 沿这 $K$ 对模的缩并记作
+\begin{equation}
+    \ten{A}\leftindex_{i_1,\ldots,i_K}\times^{j_1,\ldots,j_K}\ten{B},
+\end{equation}
+它是一个 $(N+M-2K)$ 阶张量，通过对 $K$ 个匹配指标求和得到，而 $\ten{A}$ 与 $\ten{B}$ 的其余各模均保持自由。在张量网络图记法中，缩并通过将被缩并模的腿相连来表示，自由模则保持不连接。这一抽象运算对应于现代数组编程库（如 NumPy \cite{harris2020numpy}、PyTorch \cite{paszke2019pytorch} 与 JAX \cite{bradbury2018jax}）中的 \texttt{einsum} 函数。
+
+例如，给定 $\mat{A} \in \R^{I \times K}, \mat{B} \in \R^{K \times J}$，沿模对 $(2,1)$ 的缩并给出标准矩阵乘积：
+\begin{equation}
+  \mat{C} = \mat{A} \mat{B} = \mat{A} \leftindex_{2} \times^{1} \mat{B} \in \R^{I \times J}, \quad \mat{C}_{ij} = \sum_{k=1}^{K} \mat{A}_{ik} \mat{B}_{kj}.
+\end{equation}
+该例子如\cref{fig:notation-overview}(f) 所示，其中尺寸为 $K$ 的模被缩并，而尺寸为 $J$ 与 $I$ 的模保持自由。用伪代码 \texttt{einsum} 记法表达，同一运算为：
+\begin{equation}
+  \mat{C} = \texttt{einsum}({"} ik, \ kj \to ij {"}, \mat{A}, \mat{B}).
+\end{equation}
+
+\paragraph{模-$n$ 积} 模-$n$ 积使 $N$ 阶张量 $\ten{A}\in\R^{I_1\times I_2 \times \cdots\times I_N}$ 与矩阵 $\mat{B}\in\R^{J\times I_n}$ 沿模对 $(n_1,m_1)=(n,2)$ 缩并：
+\begin{equation}
+\begin{gathered}
+    \ten{A}\times_n\mat{B} = \ten{A} \ \leftindex_{n} \times^{2} \ \mat{B} \in\R^{I_1\times\cdots\times I_{n-1}\times J\times I_{n+1}\times\cdots\times I_N}, \\
+    (\ten{A}\times_n\mat{B})_{i_1\dots i_{n-1}\,j\,i_{n+1}\dots i_N}=\sum_{i_n=1}^{I_n}\ten{A}_{i_1\dots i_N} \mat{B}_{j,i_n}.
+\end{gathered}
+\end{equation}
+用 \texttt{einsum} 记法，该运算可表示为：
+\begin{equation}
+    \ten{C} = \texttt{einsum}({"} i_1\dots i_n \dots i_N, \ j i_n \to i_1 \dots j \dots i_N {"}, \ten{A}, \mat{B}).
+\end{equation}
+直观上，该运算把沿张量第 $n$ 维的每条纤维（fiber，即每条一维线）都乘以矩阵 $\mat{B}$。若将张量展开（即把张量重排为矩阵），使第 $n$ 维成为二维矩阵的行，则 $\times_n$ 就化为对该展开矩阵的标准矩阵乘法，之后再将结果折叠回具有新形状的张量。
+

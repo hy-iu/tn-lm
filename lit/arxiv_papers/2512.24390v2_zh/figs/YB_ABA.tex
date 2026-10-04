@@ -1,0 +1,31 @@
+\begin{tikzpicture}[baseline=(current bounding box.center)]
+	\def\l{1.2};
+    \def\h{1.1};
+    
+
+    \foreach \x in {0,1,2,4,5,6}{
+        \node[anchor=north] at (\x*\l,-\h) {$\sss \ket{1}$};
+    }
+
+    \foreach \z/\r in {0/M,2/3,3/2,4/1}{
+        \draw[obj2] (-.5*\l,-\h/2+\z*\h) --+ (3*\l,0);
+        \draw[obj2] (3.5*\l,-\h/2+\z*\h) --+ (3*\l,0);
+
+        \node[anchor=east] at (-.5*\l,-\h/2+\z*\h) {$\sss \bra{0}$};
+        \node[anchor=west] at (6.5*\l,-\h/2+\z*\h) {$\sss \ket{1}$};
+        
+        \foreach \x in {0,1,2,4,5,6}{
+            \node at (3*\l,-\h/2+\z*\h) {$\dots$};
+            
+            \draw[obj1] (\l*\x,\z*\h) --+ (0,-\h);
+            \node[mpotensor, inner sep=6.2pt] at (\l*\x,-\h/2+\z*\h) {};
+            \node at (\l*\x,-\h/2+\z*\h) {$\sss \mu_\r$};
+        }
+    }
+    \foreach \x in {0,1,2,4,5,6}{
+        \node at (\l*\x,.5*\h) {$\vdots$};
+    }
+    
+    
+    
+\end{tikzpicture}

@@ -1,0 +1,24 @@
+\begin{tikzpicture}[baseline=(current bounding box.center)]
+	\def\l{1.2};
+    \def\h{1.3};
+    
+    \draw[obj1,rounded corners=3pt] (3/2*\l,-\h) -- (-\l/2,-\h)-- (-\l/2,0) --+ (2*\l,0);
+    \draw[obj1,rounded corners=3pt] (5/2*\l,-\h) -- (9*\l/2,-\h) -- (9*\l/2,0) --+ (-2*\l,0);
+
+    \node at (2*\l,-\h/2) {$\dots$};
+    \foreach \i in {0,1,3,4}{
+        \draw[obj1] (\l*\i,0) --+ (0,-\h);
+        \node[mpstensor, inner sep=4pt] at (\l*\i,0) {};
+        \node[mpstensor, inner sep=4pt] at (\l*\i,-\h) {};
+        \node at (\l*\i,0) {$\sss\bar A$};
+        \node at (\l*\i,-\h) {$\sss A$};
+    }
+    \node[mpotensor, inner sep=6pt] at (0,-\h/2) {};
+    \node[mpotensor, inner sep=6pt] at (4*\l,-\h/2) {};
+    \node at (0,-\h/2) {$\sss O_1$};
+    \node at (4*\l,-\h/2) {$\sss O_2$};
+    \node[matrix, inner sep=4pt] at (-\l/2,-\h/2) {};
+    \node[matrix, inner sep=4pt] at (9*\l/2,-\h/2) {};
+    \node at (-\l/2,-\h/2) {$\sss \Lambda$};
+    \node at (9*\l/2,-\h/2) {$\sss \rho$};
+\end{tikzpicture}

@@ -1,0 +1,14 @@
+\begin{tikzpicture}[baseline={([yshift=10pt]current bounding box.south)}]
+    \def\l{.8};
+    \def\h{.7};
+
+    \draw[obj2, rounded corners=3pt] (3/2*\l,\h) -- (\l/2,\h) -- (\l/2,\h/2) -- (\l/2,0) -- (3/2*\l,0);
+    \draw[obj2, rounded corners=3pt] (-\l/2,-\h/2) -- (-\l/2,\h/2) -- (\l/2,\h/2);
+    \draw[obj1] (-3/2*\l,-\h/2) -- (3/2*\l,-\h/2);
+    
+    \node[draw=black, line width=.7pt, fill=gray!20, circle, inner sep=2.9pt] at (-\l/2,-\h/2) {};
+    \node[draw=black, line width=.7pt, fill=gray!20, circle, inner sep=2.9pt] at (\l/2,\h/2) {};
+    
+    \node[anchor=south] at (\l,\h) {$\sss g$};
+    \node[anchor=south] at (\l,0) {$\sss h$};
+\end{tikzpicture}

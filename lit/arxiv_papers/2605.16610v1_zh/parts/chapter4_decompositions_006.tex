@@ -1,0 +1,166 @@
+我们先对 $\ten S$ 的第一模矩阵化做 QR 分解，该矩阵化的秩为 $R_1$：
+\begin{align*}
+    \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=green!50!red!50!white] (A) at (\x-5.5,\y){\scalebox{0.85}{$\St$}};
+    \draw[edge] (A) -- (\x-5.5,\y+0.75) node [midway,left]
+    {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (A) -- (\x-5.5,\y-0.75) node [midway,left]
+    {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \draw[edge] (\x-5.75,\y+0.05) -- (\x-6.2,\y-0.3) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x-5.25,\y+0.05) -- (\x-4.7,\y-0.3) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$d_4$}}};
+    \node[draw=none] at (\x-3,\y){$\underrightarrow{\text{mode-1 matricization}}$};
+    %
+    %
+    %
+    %
+    \node[tensor,fill=green!50!red!50!white] (A) at (\x-0.5,\y){\scalebox{0.85}{$\St$}};
+    \draw[edge] (\x-0.35,\y+0.2) -- (\x,\y+0.2) --(\x,\y+0.1) -- (\x
+    +0.35,\y+0.1) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x-0.35,\y-0.2) -- (\x,\y-0.2) -- (\x,\y-0.1) -- (\x+0.35,\y-0.1) node [midway,below]
+    {\scalebox{0.7}{\dimcolor{$d_4$}}};
+     \draw[edge] (A) -- (\x+0.35,\y)node [right]
+    {\scalebox{0.7}{\dimcolor{$d_3$}}};
+     \draw[edge] (A) -- (\x-1.25,\y) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \node[draw=none] at (\x+1.25,\y){$\underrightarrow{\text{QR}}$};
+    %
+    %
+    %
+    \node[tensor, path picture={
+    \fill[fill=blue!50!white](path picture bounding box.south east)
+        -- 
+    (path picture bounding box.north west) --
+    (path picture bounding box.north east) -- cycle;
+    }, shift={(\x+2,\y)}] (Q_1) {\scalebox{0.8}{$\Qb_1$}};
+    \node[tensor,fill=red!50!white] (R_1) at (\x+3,\y){\scalebox{0.85}{$\Rb_1$}};
+    \draw[edge] (Q_1) -- (\x+2,\y-0.75) node [midway,left]
+    {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (Q_1) -- (R_1) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$R_1$}}};
+    \draw[edge] (\x+3.15,\y+0.2) -- (\x+3.5,\y+0.2) --(\x+3.5,\y+0.1) -- (\x+4,\y+0.1) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x+3.15,\y-0.2) -- (\x+3.5,\y-0.2) -- (\x+3.5,\y-0.1) -- (\x+4,\y-0.1) node [midway,below]
+    {\scalebox{0.7}{\dimcolor{$d_4$}}};
+    \draw[edge] (R_1) -- (\x+4,\y) node [right]
+    {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \node[draw=none] at (\x+6.5,\y){\text{Keep $\Qb_1$, resume with $\Rb_1$.}};
+    \end{tikzpicture}
+\end{align*}
+然后，我们对上一步得到的 $\mat R_1$ 再做一次 QR 分解：
+\begin{align*}
+    \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (R_1) at (\x-5.5,\y){\scalebox{0.85}{$\Rb_1$}};
+    \draw[edge] (R_1) -- (\x-6.5,\y) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$R_1$}}};
+    \draw[edge] (\x-5.35,\y+0.2) -- (\x-5,\y+0.2) -- (\x-5,\y+0.1) -- (\x-4.5,\y+0.1) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x-5.35,\y-0.2) -- (\x-5,\y-0.2) -- (\x-5,\y-0.1) -- (\x-4.5,\y-0.1) node [midway,below]
+    {\scalebox{0.7}{\dimcolor{$d_4$}}};
+    \draw[edge] (R_1) -- (\x-4.5,\y) node [right]
+    {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \node[draw=none] at (\x-3.25,\y){$\underrightarrow{\text{reshape}}$};
+    \node[tensor,fill=red!50!white] (R_1) at (\x-1.25,\y){\scalebox{0.85}{$\Rb_1$}};
+    \draw[edge] (R_1) -- (\x-2.25,\y) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$R_1$}}};
+    \draw[edge] (\x-1.5,\y-0.1) -- (\x-2.25,\y-0.1) node [midway,below]
+    {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x-1.1,\y-0.2) -- (\x-0.7,\y-0.2) -- (\x-0.7,\y-0.1) -- (\x-0.35,\y-0.1) node [midway,below]
+    {\scalebox{0.7}{\dimcolor{$d_4$}}};
+    \draw[edge] (R_1) -- (\x-0.35,\y) node [right]
+    {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \node[draw=none] at (\x+0.5,\y){$\underrightarrow{\text{QR}}$};
+    \node[tensor, path picture={
+    \fill[fill=blue!30!white](path picture bounding box.south east)
+        -- 
+    (path picture bounding box.north west) --
+    (path picture bounding box.north east) -- cycle;
+    }, shift={(\x+1.5,\y)}] (Q_2) {\scalebox{0.8}{$\Qb_2$}};
+    \node[tensor,fill=red!50!white] (R_2) at (\x+2.5,\y){\scalebox{0.85}{$\Rb_2$}};
+    \draw[edge] (Q_2) -- (\x+1.5,\y-0.75) node [midway,left=0.1cm]
+    {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x+1.38,\y-0.22) -- (\x+1.38,\y-0.75) node [midway,right=0.1cm]
+    {\scalebox{0.7}{\dimcolor{$R_1$}}};
+    \draw[edge] (Q_2) -- (R_2) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$R_2$}}};
+    \draw[edge] (\x+2.65,\y-0.2) -- (\x+3,\y-0.2) -- (\x+3,\y-0.1) -- (\x+3.45,\y-0.1) node [midway,below]
+    {\scalebox{0.7}{\dimcolor{$d_4$}}};
+    \draw[edge] (R_2) -- (\x+3.45,\y) node [right]
+    {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \node[draw=none] at (\x+6,\y){\text{Keep $\Qb_2$}, resume with $\Rb_2$.};
+    \end{tikzpicture}
+\end{align*}\\
+要使这一精确 QR 分解的秩为 $R_2$，我们首先需要证明：
+将 $\Rb_1$ 重排成 $R_1d_2 \times d_3d_4$ 矩阵后，其秩至多为 $R_2$。注意到，由于 $\rank(\St_{([2])}) = R_2$，
+存在 $\Ab \in \RR^{d_1 d_2 \times R_2}$ 与
+$\Bb \in \RR^{R_2 \times d_3 d_4}$ 使得 $\St_{([2])} = \Ab\Bb$，即
+$$
+\begin{tikzpicture}[baseline=\baseline]
+\tikzset{
+  tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt},
+  edge/.style   = {thick,line width=.4mm},
+  every loop/.style={}
+}
+\def\y{0}
+\def\x{0}
+\node[tensor,fill=green!50!red!50!white] (A) at (\x-5.5,\y){\scalebox{0.85}{$\St$}};
+\draw[edge] (A) -- (\x-5.5,\y+0.75) node [midway,left]
+{\scalebox{0.7}{\dimcolor{$d_1$}}};
+\draw[edge] (A) -- (\x-5.5,\y-0.75) node [midway,left]
+{\scalebox{0.7}{\dimcolor{$d_3$}}};
+\draw[edge] (\x-5.75,\y+0.05) -- (\x-6.2,\y-0.3) node [midway,above]
+{\scalebox{0.7}{\dimcolor{$d_2$}}};
+\draw[edge] (\x-5.25,\y+0.05) -- (\x-4.7,\y-0.3) node [midway,above]
+{\scalebox{0.7}{\dimcolor{$d_4$}}};
+\end{tikzpicture}
+\ \ \ \underrightarrow{\text{reshape}}\ \ \ 
+\begin{tikzpicture}[baseline=\baseline]
+\tikzset{
+  tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt},
+  edge/.style   = {thick,line width=.4mm},
+  every loop/.style={}
+}
+\def\y{0}
+\def\x{0}
+\node[tensor,fill=green!50!red!50!white] (A) at (\x+0.5,\y){\scalebox{0.85}{$\St$}};
+\draw[edge] (\x+0.25,\y+0.1) -- (\x-0.35,\y+0.1) node [midway,above]
+{\scalebox{0.7}{\dimcolor{$d_1$}}};
+\draw[edge] (\x+0.75,\y-0.1) -- (\x+1.35,\y-0.1) node [midway,below]
+{\scalebox{0.7}{\dimcolor{$d_4$}}};
+\draw[edge] (A) -- (\x+1.35,\y) node [midway,above]
+{\scalebox{0.7}{\dimcolor{$d_3$}}};
+\draw[edge] (A) -- (\x-0.35,\y) node [midway,below]
+{\scalebox{0.7}{\dimcolor{$d_2$}}};
+\end{tikzpicture}
+\ \ \ =\ \ \ 
+\begin{tikzpicture}[baseline=\baseline]
+\tikzset{
+  tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt},
+  edge/.style   = {thick,line width=.4mm},
+  every loop/.style={}
+}
+\def\y{-0.05}
+\def\x{0}
+\node[tensor,fill=blue!50!red!50!white] (B) at (\x+6.5,\y){\scalebox{0.85}{$\Ab$}};
+\node[tensor,fill=blue!50!red!20!white] (C) at (\x+7.5,\y){\scalebox{0.85}{$\Bb$}};
+\draw[edge] (B) -- (C) node [midway,above]
+{\scalebox{0.7}{\dimcolor{$R_2$}}};
+\draw[edge] (B) -- (\x+5.5,\y) node [midway,below]
+{\scalebox{0.7}{\dimcolor{$d_2$}}};
+\draw[edge] (\x+6.25,\y+0.1) -- (\x+5.5,\y+0.1) node [midway,above]
+{\scalebox{0.7}{\dimcolor{$d_1$}}};
+\draw[edge] (C) -- (\x+8.5,\y) node [midway,above]
+{\scalebox{0.7}{\dimcolor{$d_3$}}};
+\draw[edge] (\x+7.75,\y-0.1) -- (\x+8.5,\y-0.1) node [midway,below]
+{\scalebox{0.7}{\dimcolor{$d_4$}}};
+\end{tikzpicture}.
+$$
+

@@ -1,0 +1,171 @@
+\section{Probability Distributions and Random Tensor Networks}\label{chapter:prob}
+In this chapter, we explore a very useful application of tensor networks: their ability to represent high-dimensional probability distributions in an intuitive and computationally efficient manner. For example, some tensor network decompositions, such as TT, allow efficient encoding of both probability distributions and their marginals~\citep{gardiner2024tensor, glasser2019expressive}. We start this chapter by showing how tensor networks can be used to efficiently model probability distributions. We then shift our focus to studying the statistical properties of tensors obtained by contracting random tensors together. Both parts of this chapter will illustrate how tensor networks can help us easily derive non-trivial results involving probability distributions and high-order tensors. 
+\subsection{Probability Distributions and Tensor Decompositions}
+In this section, we consider how probability distributions can be parameterized using tensor networks.
+\subsubsection{Probability Distributions as Tensors}\label{sub:probs}
+ One of the popular approaches to modeling a probability distribution with a tensor network is to represent the probabilities directly. Consider a multivariate probability mass function $\PP(X_1,\cdots,X_N)$ of $N$ discrete random variables. This joint probability distribution can be seen as an $N$-th order tensor with non-negative entries summing to one: 
+\begin{definition}\label{def:probability}
+Let $\PP$ be a joint distribution over $N$ discrete random variables $X_1,\cdots,X_N$ taking their values in $[d_1], [d_2], \cdots,[d_N]$, respectively. 
+We say that the tensor $\Tt\in\RR^{d_1\times\cdots\times d_N}$ defined by $\Tt_{i_1\cdots i_N} = \PP(X_1=i_1,\cdots,X_N=i_N)$, \emph{represents} the probability $\PP$, which we denote by $\Tt \simeq  \PP(X_1,\cdots,X_N)$. By construction, the entries of $\Tt$ are non-negative and sum to one: 
+$$
+\sum_{i_1,\cdots,i_N}\Tt_{i_1,\cdots,i_N} 
+=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{0}
+    \def\y{0}
+    \node[tensor,fill=blue!20!white] (T) at (\x+1,\y) {$\Tt$};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_1) at (\x,\y-0.65) {};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_2) at (\x+0.5,\y-0.65) {};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_3) at (\x+2,\y-0.65) {};
+    \node[draw=none] at (\x+1.25,\y-0.65){$\dots$};
+    \draw[edge] (T) -- (m_1)node [very near end,above]
+    {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (T) -- (m_2)node [very near end,right]
+    {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (T) -- (m_3)node [very near end,above]
+    {\scalebox{0.7}{\dimcolor{$d_N$}}};
+\end{tikzpicture}
+= 1,
+$$
+where $
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{0}
+    \def\y{0}
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_1) at (\x,\y) {};
+    \draw[edge](m_1)--(\x+1,\y);
+    \end{tikzpicture}
+$
+is a vector with all ones~(see item~\ref{itm:one-copy-tensor} in Proposition~\ref{prop:copy.tensor}).
+\end{definition}
+We now show how marginal and conditional probabilities can be expressed using tensor network notation.
+\paragraph{Marginal Probabilities}
+Let  $\Tt\in\RR^{d_1\times d_2\times d_3}$ be the tensor representing the probability distribution $\PP(X_1, X_2, X_3)$ then 
+\begin{enumerate}
+    \item Using the law of total probabilities, the marginal distribution of $X_2$ and $X_3$ can be expressed as
+    
+\begin{align*}
+    \PP(X_2=i_2,X_3=i_3) 
+    &=
+    \sum_{i_1=1}^{d_1}\PP(X_1= i_1,X_2=i_2,X_3=i_3) \\
+    &= 
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.25}
+    \def\x{0}
+    \node[tensor,fill=blue!20!white] (T) at (\x,\y) {$\Tt$};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_1) at (\x-0.5,\y-0.65) {};
+    \draw[edge] (T) -- (m_1);
+    \draw[edge](T) -- (\x,\y-0.65)node [very near end,below]
+    {\scalebox{0.7}{\indcolor{$i_2$}}};
+    \draw[edge](T) -- (\x+0.5,\y-0.65)node [very near end,below]
+    {\scalebox{0.7}{\indcolor{$i_3$}}};
+\end{tikzpicture}
+ = \sum_{i_1=1}^{d_1}\Tt_{i_1,i_2,i_3},
+\end{align*}
+for all $i_2,i_3$. This shows that the tensor representing the marginal distribution can be obtained from a simple operation on the tensor representing the joint, i.e.,
+\begin{align*}
+    \text{If}~~~ \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.25}
+    \def\x{0}
+    \node[tensor,fill=blue!20!white] (T) at (\x,\y) {$\Tt$};
+    \draw[edge] (T) -- (\x-0.5,\y-0.65);
+    \draw[edge] (T) -- (m_1);
+    \draw[edge](T) -- (\x,\y-0.65);
+    \draw[edge](T) -- (\x+0.5,\y-0.65);
+\end{tikzpicture}\simeq\PP(X_1, X_2, X_3),~~~\text{then}~~~
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.25}
+    \def\x{0}
+    \node[tensor,fill=blue!20!white] (T) at (\x,\y) {$\Tt$};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_1) at (\x-0.5,\y-0.65) {};
+    \draw[edge] (T) -- (m_1);
+    \draw[edge](T) -- (\x,\y-0.65);
+    \draw[edge](T) -- (\x+0.5,\y-0.65);
+\end{tikzpicture}\simeq\PP(X_2, X_3).
+\end{align*}
+\item
+We can similarly express the marginal distribution of $X_2$:
+\begin{align*}
+\PP(X_2=i_2) 
+&= \sum_{i_1,i_3=1}^{d_1,d_3}\PP(X_1=i_1,X_2= i_2, X_3=i_3)\\
+&=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.25}
+    \def\x{0}
+    \node[tensor,fill=blue!20!white] (T) at (\x,\y) {$\Tt$};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_1) at (\x-0.5,\y-0.65) {};        \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_2) at (\x+0.5,\y-0.65) {};
+    \draw[edge] (T) -- (m_1);
+    \draw[edge](T) -- (m_2);
+    \draw[edge](T) -- (\x,\y-0.65)node [very near end,below]
+    {\scalebox{0.7}{\indcolor{$i_2$}}};
+\end{tikzpicture}=\sum_{i_1,i_3=1}^{d_1,d_3}\Tt_{i_1,i_2,i_3},
+\end{align*}
+for all $i_2$. Hence, the marginal distribution for $X_2$ in the tensor network notation can be represented as:
+\begin{align*}
+    \text{If}~~~ \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.25}
+    \def\x{0}
+    \node[tensor,fill=blue!20!white] (T) at (\x,\y) {$\Tt$};
+    \draw[edge] (T) -- (\x-0.5,\y-0.65);
+    \draw[edge] (T) -- (m_1);
+    \draw[edge](T) -- (\x,\y-0.65);
+    \draw[edge](T) -- (\x+0.5,\y-0.65);
+\end{tikzpicture}\simeq\PP(X_1, X_2, X_3),~~~\text{then}~~~
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.25}
+    \def\x{0}
+    \node[tensor,fill=blue!20!white] (T) at (\x,\y) {$\Tt$};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_1) at (\x-0.5,\y-0.65) {};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_2) at (\x+0.5,\y-0.65) {};
+    \draw[edge] (T) -- (m_1);
+    \draw[edge](T) -- (\x,\y-0.65);
+    \draw[edge](T) -- (\x+0.5,\y-0.65);
+\end{tikzpicture}\simeq\PP(X_2).
+\end{align*}
+\end{enumerate}
+In the following, we use $\PP(i_1,\cdots,i_N)$ for simplicity to denote the probability $\PP(X_1=i_1,\cdots,X_N=i_N)$. 
+As we can see, to represent marginals in tensor network notation, we simply need to contract a vector of all ones with the corresponding legs.
+Similarly, we can represent conditional probability distributions.
+\paragraph{Conditional Probabilities}
+Let 
+$\PP(i_n \mid i_1, \dots, i_{n-1})
+$
+denote the conditional probability of $X_n = i_n$ given that the preceding $n-1$ random variables take the values $i_1, \dots, i_{n-1}$.  
+For a third-order probability tensor $\Tt\in \RR^{d_1 \times d_2 \times d_3}$, these conditional probabilities can be represented compactly using tensor network notation:
+\begin{enumerate}
+    \item 
+We have $
+\PP(i_1|i_2) = \frac{\PP(i_1,i_2)}{\PP(i_2)} = \frac{\sum_{i_3}\PP(i_1,i_2,i_3)}{\sum_{i_1,i_3}\PP(i_1,i_2,i_3)} = 
+\frac{\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{0}
+    \def\y{0}
+    \node[tensor,fill=blue!20!white] (T) at (\x,\y) {$\Tt$};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_1) at (\x+0.5,\y-0.65) {};
+    \draw[edge] (T) -- (\x-0.5,\y-0.65)node [very near end,below]
+    {\scalebox{0.7}{\indcolor{$i_1$}}};
+    \draw[edge](T) -- (\x,\y-0.75)node [very near end,below]
+    {\scalebox{0.7}{\indcolor{$i_2$}}};
+    \draw[edge](T) -- (m_1);
+\end{tikzpicture}}{\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{0}
+    \def\y{0}
+    \node[tensor,fill=blue!20!white] (T) at (\x,\y) {$\Tt$};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_1) at (\x-0.5,\y-0.65) {}; 
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_2) at (\x+0.5,\y-0.65) {};
+    \draw[edge] (T) -- (m_1);
+    \draw[edge](T) -- (m_2);
+    \draw[edge](T) -- (\x,\y-0.75)node [very near end,below]
+    {\scalebox{0.7}{\indcolor{$i_2$}}};
+\end{tikzpicture}},
+$
+for all $i_1, i_2$. 
+

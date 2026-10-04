@@ -1,0 +1,11 @@
+\begin{tikzpicture}[baseline={([yshift=10pt]current bounding box.south)}]
+	\def\l{.8};
+    \def\h{.65};
+
+	\draw[obj1] (-\l,0) -- (5*\l,0);
+	
+	\foreach \x in {0,1,2}{
+		\draw[obj1] (2*\x*\l,\h) -- (2*\x*\l,0);
+        \node[mpstensor] at (2*\x*\l,0) {};
+	}
+\end{tikzpicture}

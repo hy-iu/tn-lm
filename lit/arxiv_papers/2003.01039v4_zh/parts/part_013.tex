@@ -1,0 +1,102 @@
+\section{完全正映射与广义转移算符}
+\label{sec:appendix_a}
+
+在本节中，我们给出关于完全正（completely positive，CP）映射与正则表达式（regular expressions，下文简称 regex）的定义和已知结果，以及关于为 regex 指派广义转移算符的更多细节\footnote{本节中所有定义和结果均以实值矩阵的形式陈述，但复值矩阵与 CP 映射的相应陈述可通过将矩阵转置 $Q^T$ 替换为 Hermitian 伴随 $Q^\dagger$（即 $Q$ 的转置并取复共轭的对应物）而得到。}。我们最后证明，表~\ref{tab:regex_cp}
+（为方便起见在此重复）中给出的广义转移算符的递归定义具有一个按 regex 中所有字符串的加权和来表达的等价表示，对于无歧义 regex，它恰好给出式~\ref{eq:transfer_op} 的简单形式。
+
+我们称矩阵 $Q\in\field{D\times D}$ 为半正定（positive semidefinite，PSD）的，如果它~(a) 对称（$Q^T = Q$），且~(b) 对每个 $v\in\field{D}$ 满足 $v^T Q v \geq 0$。如果 $Q$ 进一步满足仅在 $v = 0$ 时才有 $v^T Q v = 0$ 的性质，则称其为正定（positive definite）的。给定一个 PSD 矩阵 $Q$，$Q$ 的对角元必然非负。对任意向量 $v$，秩-1 矩阵 $vv^T$ 必为 PSD 矩阵，且所有 PSD 矩阵 $Q\in\field{D\times D}$ 都可以表示为~（至多）$D$ 个这样的秩-1 矩阵的加权和。由此可以证明：对任意 PSD 矩阵 $Q$ 与 $Q'$，有 $\Tr(QQ') \geq0$。
+
+在量子力学中，人们常把 PSD 矩阵视为概率态的一种广义形式~\citep{nielsen2002}，这一视角使我们能够把矩阵 $\QL, \QR$ 视为 u-MPS 的概率隐状态（probabilistic latent states）。为此，完全正（CP）映射族正是作用于这些 PSD 矩阵的随机映射的自然推广。一个把 PSD 的 $Q\in\field{D\times D}$ 映到 $Q'=\E(Q)\in\field{D'\times D'}$ 的映射 $\E$ 称为 CP 的，如果它允许一个 Kraus 表示（Kraus representation），即由 $r \geq 1$ 个矩阵 $A_i\in\field{D'\times D}$ 组成，使得 $\E$ 可表示为：
+%
+\begin{equation}
+\label{eq:kraus}
+\E(Q) = \sum_{i=1}^r A_i Q A_i^T
+\end{equation}
+%
+条件~\eqref{eq:kraus} 特别蕴含：若 $Q$ 是 PSD 的，则 $\E(Q)$ 也是。\eqref{eq:kraus} 中的矩阵称为该映射的 Kraus 算符（Kraus operators），而同一个 CP 映射 $\E$ 可以有多个 Kraus 表示，其 $r$ 值互不相同。使 $\E$ 能够表示为~\eqref{eq:kraus} 的最小 $r$ 值称为 $\E$ 的秩，且总有界于 $r \leq D^2$。尽管如此，含有更多 Kraus 算符的 Kraus 表示对于理解映射的作用可能是有用的，正如我们将在下文看到的。
+
+对~\eqref{eq:kraus} 中出现的所有 Kraus 算符取转置，我们便得到一个新的 CP 映射 $\E^T$，即 $\E$ 的伴随。在数学上，这意味着对任意 CP 映射 $\E$ 与正矩阵 $\QL, \QR$，等式 $\Tr(\QL \E(\QR)) = \Tr(\E^T(\QL) \QR)$ 成立。为更加清晰起见，在 u-MPS 序列建模的语境下，我们常把一个 CP 映射及其伴随称为``右''映射与``左''映射 $\ER$ 和 $\EL$，而不是 $\E$ 和 $\E^T$。
+
+``转移算符（transfer operator）''一词在多体物理中很常见，在我们的语境中指由 Kraus 表示得到的 CP 映射 $\E$，其中 $A_i = \mc{A}(\varphi^{-1}(i))$，$\mc{A}$ 是 u-MPS 的核心张量（core tensor），$\varphi: \Sigma \to [d]$ 是把大小为 $d$ 的字母表 $\Sigma$ 中的字符 $c$ 映到数 $\{1, 2, \ldots, d\}$ 的双射（见图~\ref{fig:contraction}f）。
+在第~\ref{sec:regex} 节中
+我们介绍了对这一标准转移算符概念的推广，即纳入与任意正则表达式 $R$ 相关联的若干其他 CP 映射 $\E_R$，其递归定义见表~\ref{tab:regex_cp}。
+若用 $\Sigma$ 同时表示匹配字母表中任意单个字符的 regex，则标准转移算符即为 $R = \Sigma$ 的特殊情形。
+
+我们有时假设 regex $R$ 是无歧义的（unambiguous），即任何匹配 $R$ 的字符串 $s$ 都以恰好一种方式匹配。这一假设不失一般性，因为任何有歧义的 regex $R$ 都可以转换为接受同一字符串集合的无歧义 regex $R'$~\citep{book1971}。例如，有歧义的 regex $R = a^*a^*$ 以两种方式匹配字符串 $s = a$，但可以替换为等价的无歧义 regex $R' = a^*$。
+%
+\begin{table}[t]
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{c|cccc}
+    \textbf{正则表达式} $\mathbf{R =\ }$ & $c$ & $R_1 R_2$ & $R_1 | R_2$ & $S^*$ \\
+    \midrule
+    $\bm{\ER_R(\QR)}\ = $ & $\mc{A}(c) \QR \mc{A}(c)^T$ & $\ER_{R_1}(\ER_{R_2}(\QR))$ & $\ER_{R_1}(\QR) + \ER_{R_2}(\QR)$ & $\sum_{n=0}^\infty (\ER_S)^{\circ n}(\QR)$ \\
+    $\bm{\EL_R(\QL)}\ = $ & $\mc{A}(c)^T \QL \mc{A}(c)$ & $\EL_{R_2}(\EL_{R_1}(\QL))$ & $\EL_{R_1}(\QL) + \EL_{R_2}(\QL)$ & $\sum_{n=0}^\infty (\EL_S)^{\circ n}(\QL)$
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+
+任何 regex $R$ 都可以由 (a) 单个字符 $c\in\Sigma$、(b) regex 的拼接 $R = R_1 R_2$、(c) regex 的并 $R = R_1 | R_2$，以及 (d) regex 的 Kleene 闭包 $R = S^*$ 归纳地构造而成。我们对 $R$ 的结构作归纳证明：由表~\ref{tab:regex_cp} 中的递归程序定义的任意广义右转移算符 $\ER_R$
+按照式~\ref{eq:transfer_op} 的一个推广而作用，
+正如下列定理所述。
+
+\begin{theorem}
+\label{thm:transfer_op}
+考虑与任意 regex $R$ 及核心张量为 $\mc{A}$ 的 u-MPS 相关联的广义转移算符 $\ER_R$ 与 $\EL_R$，它们由表~\ref{tab:regex_cp} 中的递归规则定义。
+则 $\ER_R$ 收敛当且仅当 $\ER_L$ 收敛，且此时转移算符由如下 Kraus 表示描述：
+\begin{equation}
+\label{eq:gen_transfer_op}
+\ER_R(\QR) = \sum_{s\in \Sigma^*} \sR \mc{A}(s) \QR \mc{A}(s)^T, \qquad \EL_R(\QL) = \sum_{s\in \Sigma^*} \sR \mc{A}(s)^T \QL \mc{A}(s),
+\end{equation}
+其中 $\sR$ 表示字符串 $s$ 匹配 regex $R$ 的次数。对无歧义 regex，此 Kraus 表示与式~\eqref{eq:transfer_op} 的相同。
+\end{theorem}
+
+\begin{proof}
+
+对四种类型的 regex $R$，我们作归纳假设：$R$ 的子表达式（若存在）满足~\eqref{eq:gen_transfer_op}，并用它证明转移算符 $\ER_R$ 满足~\eqref{eq:gen_transfer_op}。这使我们能够立即证明关于左转移算符 $\EL_R$ 的相应陈述。
+
+\paragraph{$\mathbf{R = c:}$} 这一点由表~\ref{tab:regex_cp}
+以及匹配 $R$ 的唯一字符串 $s = c$ 立即可见。
+
+\paragraph{$\mathbf{R = R_1 R_2:}$} 假设 $R_1$ 与 $R_2$ 都满足~\eqref{eq:gen_transfer_op}。表~\ref{tab:regex_cp}
+给出：
+%
+\begin{align*}
+    \ER_{R_1 R_2}(\QR) &= \ER_{R_1}(\ER_{R_2}(\QR)) = \sum_{s_1 \in \Sigma^*} \sum_{s_2 \in \Sigma^*} \sRone \sRtwo \mc{A}(s_1) \mc{A}(s_2) \QR \mc{A}(s_2)^T \mc{A}(s_1)^T \\
+    &= \sum_{s_1 \in \Sigma^*} \sum_{s_2 \in \Sigma^*} \sRone \sRtwo \mc{A}(s_1 s_2) \QR \mc{A}(s_1 s_2)^T = \sum_{s \in \Sigma^*} |s|_{R_1\! R_2} \mc{A}(s) \QR \mc{A}(s)^T.
+\end{align*}
+%
+在倒数第二个等号中我们用到了复合性质 $\mc{A}(s_1)\mc{A}(s_2) = \mc{A}(s)$，而在最后一个等号中我们用到了恒等式 $|s|_{R_1 R_2} = \sum_{s_1 s_2 = s} |s_1|_{R_1} |s_2|_{R_2}$，其中对 $s_1, s_2$ 的求和遍历把 $s$ 分成前缀与后缀的所有可能分法。
+
+\paragraph{$\mathbf{R = R_1 | R_2:}$} 假设 $R_1$ 与 $R_2$ 都满足~\eqref{eq:gen_transfer_op}。表~\ref{tab:regex_cp}
+给出：
+%
+\begin{align*}
+    \ER_{R_1 | R_2}(\QR) &= \ER_{R_1}(\QR) + \ER_{R_2}(\QR) = \left(\sum_{s \in \Sigma^*} |s|_{R_1} \mc{A}(s) \QR \mc{A}(s)^T\right) + \left(\sum_{s \in \Sigma^*} |s|_{R_2} \mc{A}(s) \QR \mc{A}(s)^T\right) \\
+    &= \sum_{s \in \Sigma^*} |s|_{R_1 | R_2} \mc{A}(s) \QR \mc{A}(s)^T.
+\end{align*}
+%
+在最后一个等号中我们用到了恒等式 $|s|_{R_1 | R_2} = |s|_{R_1} + |s|_{R_2}$。
+
+\paragraph{$\mathbf{R = S^*:}$} 假设 $S$ 满足~\eqref{eq:gen_transfer_op}。算符 $\ER_{S^*}$ 只有当 $\ER_S$ 的谱范数（spectral norm）满足 $\rho(\ER_S) < 1$ 时才会收敛，此时表~\ref{tab:regex_cp}
+给出：
+%
+\begin{align*}
+    \ER_{S^*}(\QR) &= \sum_{n=0}^\infty (\ER_{S})^{\circ n}(\QR) = \sum_{n=0}^\infty \sum_{s_1\cdots s_n \in \Sigma^*} |s_1|_{S} \cdots |s_n|_S\, \mc{A}(s_1 \cdots s_n) \QR \mc{A}(s_1 \cdots s_n)^T \\
+    &= \sum_{s \in \Sigma^*} |s|_{S^*}\, \mc{A}(s) \QR \mc{A}(s)^T.
+\end{align*}
+%
+在最后一个等号中我们用到了恒等式 $|s|_{S^*} = \sum_{n=0}^\infty \sum_{s_1 \cdots s_n = s} |s_1|_{S} \cdots |s_n|_{S}$，其中对 $s_1, \ldots, s_n$ 的求和遍历把 $s$ 分成 $n$ 个连续片段的所有可能分法。
+
+虽然我们只刻画了右转移算符 $\ER_R$ 的作用，但把所有矩阵 $\mc{A}(s)$ 替换为其转置对应物 $\mc{A}(s)^T$ 便立即得到对 $\EL_R$ 作用的相应刻画。在后一情形中，方向反转的恒等式 $\mc{A}(s_1 s_2)^T = \mc{A}(s_2)^T \mc{A}(s_1)^T$ 由转移算符对应关系 $\EL_{R_1 R_2} = \EL_{R_2}\EL_{R_1}$ 所顾及。
+
+由于 $\ER_R$ 与 $\EL_R$ 互为伴随，二者的特征值谱相同，因此 $\ER_R$ 收敛当且仅当 $\EL_R$ 收敛。最后，对无歧义的 regex $R$，量 $\sR \in \{0, 1\}$，由此得到等式 $\sum_{s\in \Sigma^*} \sR \mc{A}(s) \QR \mc{A}(s)^T = \sum_{s\in R} \mc{A}(s) \QR \mc{A}(s)^T$，从而证明了式~\ref{eq:transfer_op}。
+
+\end{proof}
+
+尽管对于给定的 regex $R$ 与核心张量 $\mc{A}$，转移算符 $\ER_R$ 何时收敛并不显然，但可以清楚地看到，Kleene 闭包是唯一允许发散的运算。因此，regex $R$ 只有当其所有形如 $S_i^*$ 的子表达式都具有谱范数 $\rho(\ER_{S_i}) < 1$ 时才会收敛。注意，凡 $S$ 接受空字符串的 $S^*$ 必定产生发散的转移算符 $\ER_{S^*}$，因而特别地，任何形如 $\ER_{(S^*)^*}$ 的转移算符都是发散的。
+

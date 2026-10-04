@@ -1,6 +1,22 @@
 .DS_Store
 # 547 个全文 PDF（约 1.1 GB）属二进制大文件，不入库；可用 lit/download.py 依 bibliography.csv 重新获取
 lit/papers/
-lit/arxiv_papers/
+# arxiv_papers 默认全排除（英文原文 + 源 PDF 约 170M）；仅纳入 _zh 译稿工作区的文本源，
+# 成品 PDF（xelatex 可重建）与编译/渲染再生产物（render/、_baseline/、aux/log 等）不入库
+lit/arxiv_papers/*
+!lit/arxiv_papers/*_zh/
+lit/arxiv_papers/*_zh/**
+!lit/arxiv_papers/*_zh/**/
+!lit/arxiv_papers/*_zh/**/*.tex
+!lit/arxiv_papers/*_zh/**/*.md
+!lit/arxiv_papers/*_zh/**/*.py
+!lit/arxiv_papers/*_zh/**/*.bib
+!lit/arxiv_papers/*_zh/**/*.sty
+!lit/arxiv_papers/*_zh/**/*.bst
+!lit/arxiv_papers/*_zh/**/*.cls
+!lit/arxiv_papers/*_zh/**/*.json
+!lit/arxiv_papers/*_zh/**/*.diff
+!lit/arxiv_papers/*_zh/**/*.sh
+!lit/arxiv_papers/*_zh/**/*.txt
 __pycache__/
 *.ffs_db

@@ -1,0 +1,42 @@
+\section{TTLM 变体}
+
+为了展示 TTLM 框架的多样性与实际适用性，我们现在提出两个新变体：TTLM-Large 和 TTLM-Tiny，见第 \ref{sec: Tinyttlm} 节。我们在第\ \ref{sec: Existing  TTLM variants} 节简要总结 TTLM 与一些广泛使用的 RNN 之间的关系。
+
+\subsection{新变体：TTLM-Large 与 TTLM-Tiny}
+\label{sec: Tinyttlm}
+
+TTLM 中的 TT 核心 $\tG$ 是一个完整的三阶张量。在这两个变体中，我们在不违反 TT 格式的前提下将 $\tG$ 分解为若干个独立的张量，如图 \ref{fig: TTLM}b 和图 \ref{fig: TTLM}c 所示。我们将 TTLM-Tiny 和 TTLM-Large 定义如下：
+
+\begin{equation}
+\begin{split}
+& \vh^{(t)}_{\textrm{Tiny}} = \vf (x^{(t)})^T \tW^{xe} \bm{\delta} \mW^{hh}\vh^{(t-1)}_{\textrm{Tiny}}\\
+& \vh^{(t)}_{\textrm{Large}}  = \vf (x^{(t)})^T \tW^{xe} \tW^{eh}  \bm{\delta} \mW^{hh}\vh^{(t-1)}_{\textrm{Large}}\\
+\end{split}
+\end{equation}
+
+其中 $\mW^{hh} \in \mathbb{R}^{R \times R}$ 是隐藏层到隐藏层的矩阵；$\tW^{xe} \in \mathbb{R}^{|V| \times R \times R}$ 是输入到隐藏层的张量；$\tW^{eh} \in \mathbb{R}^{R \times R \times R \times R}$；而 $\bm{\delta} \in  \mathbb{R}^{R \times R \times R \times R}$ 是一个四阶对角张量，满足当 $i = j = k = l$ 时 $\delta_{ijkl} = 1$，否则 $\delta_{ijkl} = 0$。
+
+
+我们所提出的模型与 TTLM 之间的关系如下：两个模型中的 $\tW^{xe}$ 扮演与 TTLM 中 $\tG^{(t)}$ 相同的角色（即输入到隐藏层以及隐藏层到输出），而在 TTLM-Tiny 中 $\tG = \tW^{xe} \bm{\delta} \mW^{hh}$，在 TTLM-Large 中 $\tG = \tW^{xe} \tW^{eh} \bm{\delta} \mW^{hh}$。
+
+
+与 RNN 中一样，我们对 TTLM-Large 和 TTLM-Tiny 递归地计算条件概率：
+
+\begin{equation}
+\vy^{(t)} = \psi (\tV\tP\vh^{(t)})
+\end{equation}
+
+其中 $\tV\in\mathbb{R}^{R \times |V|\times R}$ 是输出嵌入（embedding）张量，$\tP\in\mathbb{R}^{R \times R\times R}$ 是投影张量。然后我们将输入张量 $\tW^{xe}$ 与输出嵌入张量 $\tV$ 绑定（tied）（我们在第 \ref{sec:implementations} 节给出详细解释）。
+
+我们的模型的一个明显优势是能够分别利用来自隐藏层和输入数据的信息。这种交互，尤其是 TTLM-Tiny，有可能避免过拟合，类似于 \cite{wu_multiplicative_2016} 中两个"输入"来源之间的\textit{乘法集成}（multiplication integration）可以胜过许多其他方法的做法。我们在第 \ref{sec: rank} 节给出相关的实验证据。
+
+
+
+\subsection{已有的 TTLM 变体}
+\label{sec: Existing  TTLM variants}
+鉴于 TTLM 的 TT 秩可以变化，附录 \ref{sec: TTLM generalization} 详细说明了一个事实：三个已有模型，即二阶 RNN（Second-order RNNs）、递归算术电路（Recurrent Arithmetic Circuits, RACs）和乘法集成 RNN（Multiplicative Integration RNNs, MI-RNNs），都可以被视为 TTLM 的一种"特殊"实现。
+
+我们简要总结这三个模型之间的区别：1) 二阶 RNN 使用三阶 $\tT$ 作为 TT 核心，其激活函数由式 \ref{eq: second-order-rnn} 给出；2)
+RAC 使用 $\mW^{hx} \odot \mW^{hh}$ 作为 TT 核心，由式 \ref{eq: RAC_simple} 给出；3) MI-RNN 使用 $\mW^{hx} \odot \mW^{hh}$ 作为 TT 核心，其激活函数由式 \ref{eq: mirnn} 给出。
+
+连同我们提出的两个模型，我们在第 \ref{sec: experiments} 节研究二阶 RNN、RAC 和 MI-RNN 相对于 TTLM-Large 和 TTLM-Tiny 的实验性能。

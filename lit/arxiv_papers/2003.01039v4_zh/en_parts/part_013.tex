@@ -1,0 +1,102 @@
+\section{Completely Positive Maps and Generalized Transfer Operators}
+\label{sec:appendix_a}
+
+In this section, we give definitions and known results concerning completely positive (CP) maps and regular expressions (regex), as well as further details regarding the assignment of generalized transfer operators to regex\footnote{We present all definitions and results in this section in terms of real-valued matrices, but the corresponding statements for complex-valued matrices and CP maps is obtained by replacing matrix transposes $Q^T$ by Hermitian adjoints $Q^\dagger$, representing the transposed and complex-conjugated counterpart of $Q$.}. We conclude with a proof that the recursive definition of generalized transfer operators given in Table~\ref{tab:regex_cp}
+(repeated here for convenience) has an equivalent representation in terms of a weighted sum over all strings in the regex, which for unambiguous regex gives precisely the simple form of Equation~\ref{eq:transfer_op}.
+
+We say that a matrix $Q\in\field{D\times D}$ is positive semidefinite (PSD) if it is~(a) Symmetric ($Q^T = Q$), and~(b) satisfies $v^T Q v \geq 0$ for every $v\in\field{D}$. If $Q$ further satisfies the property that $v^T Q v = 0$ only when $v = 0$, then we call it positive definite. Given a PSD matrix $Q$, the diagonal elements of $Q$ will necessarily be non-negative. For any vector $v$, the rank-1 matrix $vv^T$ is necessarily a PSD matrix, and all PSD matrices $Q\in\field{D\times D}$ can be expressed as the weighted sum of~(at most) $D$ such rank-1 matrices. This can be used to show that for any PSD matrices $Q$ and $Q'$, $\Tr(QQ') \geq0$.
+
+It is common in quantum mechanics to regard PSD matrices as a generalized form of probabilistic states~\citep{nielsen2002}, a viewpoint which allows us to consider the matrices $\QL, \QR$ as probabilistic latent states of a u-MPS. To this end, the family of completely positive~(CP) maps is the natural generalization of stochastic maps, which act on these PSD matrices. A map $\E$ sending PSD $Q\in\field{D\times D}$ to $Q'=\E(Q)\in\field{D'\times D'}$ is said to be CP if it admits a Kraus representation, consisting of $r \geq 1$ matrices $A_i\in\field{D'\times D}$ such that $\E$ can be expressed as:
+%
+\begin{equation}
+\label{eq:kraus}
+\E(Q) = \sum_{i=1}^r A_i Q A_i^T
+\end{equation}
+%
+The condition~\eqref{eq:kraus} implies in particular that $\E(Q)$ is PSD if $Q$ is. The matrices in \eqref{eq:kraus} are called the Kraus operators of the map, and the same CP map $\E$ can be given multiple Kraus representations with inequivalent values of $r$. The minimum value of $r$ such that $\E$ can be represented as~\eqref{eq:kraus} is called the rank of $\E$, and is always bounded as $r \leq D^2$. Nonetheless, Kraus representations with a greater number of Kraus operators can be useful for understanding the action of the map, as we will see below.
+
+By taking the transpose of all the Kraus operators appearing in~\eqref{eq:kraus}, we obtain a new CP map $\E^T$, which is the adjoint of $\E$. Mathematically, this means that for any CP map $\E$ and positive matrices $\QL, \QR$, the equality $\Tr(\QL \E(\QR)) = \Tr(\E^T(\QL) \QR)$. For greater clarity, in the context of sequence modeling with u-MPS we frequently refer to a CP map and its adjoint as ``right'' and ``left'' maps $\ER$ and $\EL$, rather than $\E$ and $\E^T$.
+
+The term ``transfer operator'' is common in many-body physics, and in our setting refers to a CP map $\E$ obtained from the Kraus representation with $A_i = \mc{A}(\varphi^{-1}(i))$, for $\mc{A}$ a u-MPS core tensor and $\varphi: \Sigma \to [d]$ a bijection mapping characters $c$ in the size-$d$ alphabet $\Sigma$ to the numbers $\{1, 2, \ldots, d\}$ (see Figure~\ref{fig:contraction}f). 
+In Section~\ref{sec:regex} 
+we introduced a generalization of this standard notion of transfer operator to include a number of other CP maps $\E_R$ associated with an arbitrary regular expression $R$, whose recursive definition is given in Table~\ref{tab:regex_cp}. 
+Using $\Sigma$ to also denote the regex matching any single character in our alphabet, the standard transfer operator emerges as the special case $R = \Sigma$.
+
+We sometimes assume that our regex $R$ is unambiguous, in the sense that any string $s$ matching $R$ matches in exactly one way. This assumption can be made without loss of generality, since any ambiguous regex $R$ can be converted into an unambiguous regex $R'$ accepting the same set of strings~\citep{book1971}. For example, the ambiguous regex $R = a^*a^*$ matches the string $s = a$ in two ways, but can be replaced with the equivalent unambiguous regex $R' = a^*$. 
+%
+\begin{table}[t]
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{c|cccc}
+    \textbf{Regex} $\mathbf{R =\ }$ & $c$ & $R_1 R_2$ & $R_1 | R_2$ & $S^*$ \\
+    \midrule
+    $\bm{\ER_R(\QR)}\ = $ & $\mc{A}(c) \QR \mc{A}(c)^T$ & $\ER_{R_1}(\ER_{R_2}(\QR))$ & $\ER_{R_1}(\QR) + \ER_{R_2}(\QR)$ & $\sum_{n=0}^\infty (\ER_S)^{\circ n}(\QR)$ \\
+    $\bm{\EL_R(\QL)}\ = $ & $\mc{A}(c)^T \QL \mc{A}(c)$ & $\EL_{R_2}(\EL_{R_1}(\QL))$ & $\EL_{R_1}(\QL) + \EL_{R_2}(\QL)$ & $\sum_{n=0}^\infty (\EL_S)^{\circ n}(\QL)$
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+
+Any regex $R$ can be built inductively from (a) Single characters $c\in\Sigma$, (b) Concatenations of regex $R = R_1 R_2$, (c) Unions of regex $R = R_1 | R_2$, and (d) Kleene closures of regex $R = S^*$. We prove by induction over the structure of $R$ that any generalized right transfer operator $\ER_R$ defined by the recursive procedure in Table~\ref{tab:regex_cp} 
+acts according to a generalization of Equation~\ref{eq:transfer_op}, 
+as stated in
+
+\begin{theorem}
+\label{thm:transfer_op}
+Consider the generalized transfer operators $\ER_R$ and $\EL_R$ associated with an arbitrary regex $R$ and a u-MPS with core tensor $\mc{A}$, which are defined by the recursive rules in Table~\ref{tab:regex_cp}. 
+Then $\ER_R$ converges if and only if $\ER_L$ converges, and in this case the transfer operators are described by the Kraus representations,
+\begin{equation}
+\label{eq:gen_transfer_op}
+\ER_R(\QR) = \sum_{s\in \Sigma^*} \sR \mc{A}(s) \QR \mc{A}(s)^T, \qquad \EL_R(\QL) = \sum_{s\in \Sigma^*} \sR \mc{A}(s)^T \QL \mc{A}(s),
+\end{equation}
+where $\sR$ denotes the number of times the string $s$ matches the regex $R$. For unambiguous regex, this Kraus representation is identical to that of Equation~\eqref{eq:transfer_op}.
+\end{theorem}
+
+\begin{proof}
+
+For each of the four types of regex $R$, we make the inductive assumption that the subexpressions of $R$ (if any) satisfy~\eqref{eq:gen_transfer_op}, and use this to prove that the transfer operator $\ER_R$ satisfies~\eqref{eq:gen_transfer_op}. This allows us to immediately prove the corresponding statement for the left transfer operator $\EL_R$.
+
+\paragraph{$\mathbf{R = c:}$} Apparent from Table~\ref{tab:regex_cp} 
+and the single string which matches $R$, $s = c$.
+   
+\paragraph{$\mathbf{R = R_1 R_2:}$} Assume $R_1$ and $R_2$ both satisfy~\eqref{eq:gen_transfer_op}. Table~\ref{tab:regex_cp} 
+gives:
+%
+\begin{align*}
+    \ER_{R_1 R_2}(\QR) &= \ER_{R_1}(\ER_{R_2}(\QR)) = \sum_{s_1 \in \Sigma^*} \sum_{s_2 \in \Sigma^*} \sRone \sRtwo \mc{A}(s_1) \mc{A}(s_2) \QR \mc{A}(s_2)^T \mc{A}(s_1)^T \\
+    &= \sum_{s_1 \in \Sigma^*} \sum_{s_2 \in \Sigma^*} \sRone \sRtwo \mc{A}(s_1 s_2) \QR \mc{A}(s_1 s_2)^T = \sum_{s \in \Sigma^*} |s|_{R_1\! R_2} \mc{A}(s) \QR \mc{A}(s)^T.
+\end{align*}
+%
+In the second-to-last equality we used the compositional property $\mc{A}(s_1)\mc{A}(s_2) = \mc{A}(s)$, while in the last equality we used the identity $|s|_{R_1 R_2} = \sum_{s_1 s_2 = s} |s_1|_{R_1} |s_2|_{R_2}$, where the sum over $s_1, s_2$ represents all possible partitions of $s$ into a prefix and suffix.
+
+\paragraph{$\mathbf{R = R_1 | R_2:}$} Assume $R_1$ and $R_2$ both satisfy~\eqref{eq:gen_transfer_op}. Table~\ref{tab:regex_cp} 
+gives:
+%
+\begin{align*}
+    \ER_{R_1 | R_2}(\QR) &= \ER_{R_1}(\QR) + \ER_{R_2}(\QR) = \left(\sum_{s \in \Sigma^*} |s|_{R_1} \mc{A}(s) \QR \mc{A}(s)^T\right) + \left(\sum_{s \in \Sigma^*} |s|_{R_2} \mc{A}(s) \QR \mc{A}(s)^T\right) \\
+    &= \sum_{s \in \Sigma^*} |s|_{R_1 | R_2} \mc{A}(s) \QR \mc{A}(s)^T.
+\end{align*}
+%
+In the final equality we have used the identity $|s|_{R_1 | R_2} = |s|_{R_1} + |s|_{R_2}$.
+   
+\paragraph{$\mathbf{R = S^*:}$} Assume $S$ satisfies~\eqref{eq:gen_transfer_op}. The operator $\ER_{S^*}$ will converge only when the spectral norm of $\ER_S$ satisfies $\rho(\ER_S) < 1$, in which case Table~\ref{tab:regex_cp} 
+gives:
+%
+\begin{align*}
+    \ER_{S^*}(\QR) &= \sum_{n=0}^\infty (\ER_{S})^{\circ n}(\QR) = \sum_{n=0}^\infty \sum_{s_1\cdots s_n \in \Sigma^*} |s_1|_{S} \cdots |s_n|_S\, \mc{A}(s_1 \cdots s_n) \QR \mc{A}(s_1 \cdots s_n)^T \\
+    &= \sum_{s \in \Sigma^*} |s|_{S^*}\, \mc{A}(s) \QR \mc{A}(s)^T.
+\end{align*}
+%
+In the final equality we have used the identity $|s|_{S^*} = \sum_{n=0}^\infty \sum_{s_1 \cdots s_n = s} |s_1|_{S} \cdots |s_n|_{S}$, where the sum over $s_1, \ldots, s_n$ represents all possible partitions of $s$ into $n$ contiguous pieces. 
+
+While we only characterized the action of the right transfer operators $\ER_R$, substituting all matrices $\mc{A}(s)$ with their transposed counterparts $\mc{A}(s)^T$ immediately yields the corresponding characterization for the action of $\EL_R$. In this latter case, the direction-reversing identity $\mc{A}(s_1 s_2)^T = \mc{A}(s_2)^T \mc{A}(s_1)^T$ is accounted for by the transfer operator correspondence $\EL_{R_1 R_2} = \EL_{R_2}\EL_{R_1}$. 
+
+Because $\ER_R$ and $\EL_R$ are adjoints of each other, their eigenvalue spectra are identical, and therefore $\ER_R$ converges if and only if $\EL_R$ converges. Finally for unambiguous regex $R$, the quantity $\sR \in \{0, 1\}$, giving the equality $\sum_{s\in \Sigma^*} \sR \mc{A}(s) \QR \mc{A}(s)^T = \sum_{s\in R} \mc{A}(s) \QR \mc{A}(s)^T$ which proves Equation~\ref{eq:transfer_op}.
+   
+\end{proof}
+
+Although it is not obvious a priori when a transfer operator $\ER_R$ will converge for a given regex $R$ and core tensor $\mc{A}$, it is clear that the Kleene closure is the only operation permitting divergence. Consequently, a regex $R$ will converge only when all of its subexpressions of the form $S_i^*$ have spectral norm $\rho(\ER_{S_i}) < 1$. Note that any $S^*$ for which $S$ accepts the empty string is guaranteed to produce a divergent transfer operator $\ER_{S^*}$, so that in particular any transfer operator of the form $\ER_{(S^*)^*}$ is divergent.
+

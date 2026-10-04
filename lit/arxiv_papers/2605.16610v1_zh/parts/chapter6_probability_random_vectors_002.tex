@@ -1,0 +1,257 @@
+利用复制张量，我们可以将其写为：
+\begin{align}\label{eqn:parametrized-prob}
+    \PP(X_1,\cdots,X_4) \simeq
+    \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{-0.35}
+    \def\x{0}
+  \node[tensor,fill=red!30!white] (D) at (\x-1,\y-0.25){$\Gt_1$};
+  \node[tensor,fill=red!50!white] (A) at (\x,\y-0.25){\scalebox{0.85}{$\Gt_2$}};
+  \node[tensor,fill=blue!50!white] (B) at (\x+1,\y-0.25){$\Gt_3$};
+   \node[tensor,fill=blue!20!white] (C) at (\x+2,\y-0.25){$\Gt_4$};
+   \node[tensor,fill=red!30!white] (G1) at (\x-1,\y+1){$\Gt_1$};
+  \node[tensor,fill=red!50!white] (G2) at (\x,\y+1){\scalebox{0.85}{$\Gt_2$}};
+  \node[tensor,fill=blue!50!white] (G3) at (\x+1,\y+1){$\Gt_3$};
+   \node[tensor,fill=blue!20!white] (G4) at (\x+2,\y+1){$\Gt_4$};
+    \draw[edge](G1) -- (G2)node [midway,above] {\edgelabel{$R_1$}};
+    \draw[edge](G2) -- (G3)node [midway,above] {\edgelabel{$R_2$}};
+    \draw[edge](G3) -- (G4)node [midway,above] {\edgelabel{$R_3$}};
+    \draw[edge](D) -- (A) node [midway,above] {\edgelabel{$R_1$}};
+    \draw[edge](A) -- (B) node [midway,above] {\edgelabel{$R_2$}};
+    \draw[edge](B) -- (C) node [midway,above] {\edgelabel{$R_3$}};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_1) at (\x-1,\y+0.35) {};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_2) at (\x,\y+0.35) {};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_3) at (\x+1,\y+0.35) {};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_4) at (\x+2,\y+0.35) {};
+    \draw[edge](D)--(G1);
+    \draw[edge](A)--(G2);
+    \draw[edge](B)--(G3);    \draw[edge](C)--(G4);
+    \draw[edge](m_1) -- (\x-1.35,\y+0.35);
+    \draw[edge](m_4) -- (\x+2.35,\y+0.35);
+    \draw[edge](m_2) -- (\x-0.35,\y+0.35);
+    \draw[edge](m_3) -- (\x+1.35,\y+0.35);
+\end{tikzpicture}
+\end{align}
+
+为保证概率之和为一，我们可以选择建模未归一化的平方根概率，因为正如后文所见，当概率张量处于 TT 格式时，归一化常数的计算非常容易。于是我们假设
+$$\PP(X_1=i_1,\cdots,X_N=i_N) = \frac{(\Tt_{i_1,\cdots,i_N})^2}{\zeta},$$
+其中 $\zeta = \sum_{i_1,\cdots,i_N}(\Tt_{i_1,\cdots,i_N})^2$ 为归一化常数。与第~\ref{sec:efficient-operations} 节介绍的 TT 格式高效运算类似，该归一化因子同样可以在 TT 格式下高效计算： 
+$$\zeta= \sum_{i_1,\cdots,i_4}\Tt_{i_1,\cdots,i_4}^2
+=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{-0.35}
+    \def\x{0}
+  \node[tensor,fill=red!30!white] (D) at (\x-1,\y-0.25){$\Gt_1$};
+  \node[tensor,fill=red!50!white] (A) at (\x,\y-0.25){\scalebox{0.85}{$\Gt_2$}};
+    \node[tensor,fill=blue!50!white] (B) at (\x+1,\y-0.25){$\Gt_3$};
+    \node[tensor,fill=blue!20!white] (C) at (\x+2,\y-0.25){$\Gt_4$};
+     \node[tensor,fill=red!30!white] (G1) at (\x-1,\y+1){$\Gt_1$};
+    \node[tensor,fill=red!50!white] (G2) at (\x,\y+1){\scalebox{0.85}{$\Gt_2$}};
+    \node[tensor,fill=blue!50!white] (G3) at (\x+1,\y+1){$\Gt_3$};
+    \node[tensor,fill=blue!20!white] (G4) at (\x+2,\y+1){$\Gt_4$};
+
+    \draw[edge](G1) -- (G2)node [midway,above] {\edgelabel{$R_1$}};
+    \draw[edge](G2) -- (G3)node [midway,above] {\edgelabel{$R_2$}};
+    \draw[edge](G3) -- (G4)node [midway,above] {\edgelabel{$R_3$}};
+    \draw[edge](D) -- (A) node [midway,above] {\edgelabel{$R_1$}};
+    \draw[edge](A) -- (B) node [midway,above] {\edgelabel{$R_2$}};
+    \draw[edge](B) -- (C) node [midway,above] {\edgelabel{$R_3$}};
+    \draw[edge](G1)--(D);
+    \draw[edge](G2)--(A);
+    \draw[edge](G3)--(B);
+    \draw[edge](G4)--(C);
+\end{tikzpicture}.
+$$
+上述思想也被称为\emph{Born 机器}~\citep{glasser2019expressive,han2018unsupervised}。
+与第~\ref{sub:probs} 节所示类似，TT 参数化的概率分布的边缘分布同样可以用张量网络来计算~（见式~\eqref{eqn:parametrized-prob}）：
+\begin{enumerate}
+    \item %
+    利用全概率公式，$X_2,X_3$ 和 $X_4$ 的边缘分布可以表示为 
+    \begin{align*}
+    \PP(X_2=i_2, X_3=i_3, X_4=i_4) 
+    &= \sum_{i_1=1}^{d_1}\PP(X_1=i_1,\cdots,X_4=i_4)\\ 
+    &=
+    \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{-0.35}
+    \def\x{0}
+  \node[tensor,fill=red!30!white] (D) at (\x-1,\y-0.25){$\Gt_1$};
+  \node[tensor,fill=red!50!white] (A) at (\x,\y-0.25){\scalebox{0.85}{$\Gt_2$}};
+  \node[tensor,fill=blue!50!white] (B) at (\x+1,\y-0.25){$\Gt_3$};
+   \node[tensor,fill=blue!20!white] (C) at (\x+2,\y-0.25){$\Gt_4$};
+   \node[tensor,fill=red!30!white] (G1) at (\x-1,\y+1){$\Gt_1$};
+  \node[tensor,fill=red!50!white] (G2) at (\x,\y+1){\scalebox{0.85}{$\Gt_2$}};
+  \node[tensor,fill=blue!50!white] (G3) at (\x+1,\y+1){$\Gt_3$};
+   \node[tensor,fill=blue!20!white] (G4) at (\x+2,\y+1){$\Gt_4$};
+    \draw[edge](G1) -- (G2)node [midway,above] {\edgelabel{$R_1$}};
+    \draw[edge](G2) -- (G3)node [midway,above] {\edgelabel{$R_2$}};
+    \draw[edge](G3) -- (G4)node [midway,above] {\edgelabel{$R_3$}};
+    \draw[edge](D) -- (A) node [midway,above] {\edgelabel{$R_1$}};
+    \draw[edge](A) -- (B) node [midway,above] {\edgelabel{$R_2$}};
+    \draw[edge](B) -- (C) node [midway,above] {\edgelabel{$R_3$}};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_1) at (\x-1,\y+0.35) {};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_2) at (\x,\y+0.35) {};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_3) at (\x+1,\y+0.35) {};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_4) at (\x+2,\y+0.35) {};
+    \draw[edge](D)--(G1);
+    \draw[edge](A)--(G2);
+    \draw[edge](B)--(G3);    \draw[edge](C)--(G4);
+    \draw[edge](m_1) -- (\x-1.35,\y+0.35);
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m) at (\x-1.35,\y+0.35) {};
+    \draw[edge](m_4) -- (\x+2.35,\y+0.35) node [right] {\scalebox{0.7}{\indcolor{$i_4$}}};;
+    \draw[edge](m_2) -- (\x-0.35,\y+0.35) node [left] {\scalebox{0.7}{\indcolor{$i_2$}}};;
+    \draw[edge](m_3) -- (\x+1.35,\y+0.35) node [right] {\scalebox{0.7}{\indcolor{$i_3$}}};;
+\end{tikzpicture}
+=
+\sum_{i_1}^{d_1}\Tt_{i_1,\cdots,i_4},
+    \end{align*}
+对任意 $i_2\in[d_1],i_3\in[d_3]$ 和 $i_4\in[d_4]$ 成立。 
+\item 其余的边缘分布可以类似地表示。例如，$X_2$ 的边缘分布可以写为
+\begin{align*}
+    \PP(X_2=i_2) 
+    &= \sum_{i_1,i_3,i_4=1}^{d_1,d_3,d_4}\PP(X_1=i_1,\cdots,X_4=i_4)\\ 
+    &=
+    \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{-0.35}
+    \def\x{0}
+  \node[tensor,fill=red!30!white] (D) at (\x-1,\y-0.25){$\Gt_1$};
+  \node[tensor,fill=red!50!white] (A) at (\x,\y-0.25){\scalebox{0.85}{$\Gt_2$}};
+  \node[tensor,fill=blue!50!white] (B) at (\x+1,\y-0.25){$\Gt_3$};
+   \node[tensor,fill=blue!20!white] (C) at (\x+2,\y-0.25){$\Gt_4$};
+   \node[tensor,fill=red!30!white] (G1) at (\x-1,\y+1){$\Gt_1$};
+  \node[tensor,fill=red!50!white] (G2) at (\x,\y+1){\scalebox{0.85}{$\Gt_2$}};
+  \node[tensor,fill=blue!50!white] (G3) at (\x+1,\y+1){$\Gt_3$};
+   \node[tensor,fill=blue!20!white] (G4) at (\x+2,\y+1){$\Gt_4$};
+    \draw[edge](G1) -- (G2)node [midway,above] {\edgelabel{$R_1$}};
+    \draw[edge](G2) -- (G3)node [midway,above] {\edgelabel{$R_2$}};
+    \draw[edge](G3) -- (G4)node [midway,above] {\edgelabel{$R_3$}};
+    \draw[edge](D) -- (A) node [midway,above] {\edgelabel{$R_1$}};
+    \draw[edge](A) -- (B) node [midway,above] {\edgelabel{$R_2$}};
+    \draw[edge](B) -- (C) node [midway,above] {\edgelabel{$R_3$}};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_1) at (\x-1,\y+0.35) {};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_2) at (\x,\y+0.35) {};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_3) at (\x+1,\y+0.35) {};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_4) at (\x+2,\y+0.35) {};
+    \draw[edge](D)--(G1);
+    \draw[edge](A)--(G2);
+    \draw[edge](B)--(G3);    
+    \draw[edge](C)--(G4);
+    \draw[edge](m_1) -- (\x-1.35,\y+0.35);
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_5) at (\x-1.35,\y+0.35) {};
+    \draw[edge](m_4) -- (\x+2.35,\y+0.35);
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_6) at (\x+2.35,\y+0.35) {};
+    \draw[edge](m_2) -- (\x-0.35,\y+0.35) node [left] {\scalebox{0.7}{\indcolor{$i_2$}}};;
+    \draw[edge](m_3) -- (\x+1.35,\y+0.35);
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_7) at (\x+1.35,\y+0.35) {};
+\end{tikzpicture}
+=
+\sum_{i_1,i_3,i_4=1}^{d_1,d_3,d_4}\Tt_{i_1,\cdots,i_4},
+    \end{align*}
+\end{enumerate}
+\subsection{计算随机张量网络的期望} 
+下面说明张量网络形式体系如何帮助我们推导随机张量的复杂性质。 
+本节先给出两个非常有用的命题。
+第一条只是期望的线性性的直接推论，但在本节中十分有用。
+\begin{proposition}\label{prop:inner-expectation}
+    设 $\At$ 与 $\Bt$ 为两个独立的随机张量网络。张量网络。则二者内积的期望为 
+$$\EE\left(\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!blue!50!white] (At) at (\x,\y){\scalebox{0.85}{$\At$}};
+    \node[tensor,fill=red!30!blue!50!white] (Bt) at (\x+1,\y){\scalebox{0.85}{$\Bt$}};
+    \draw[edge] (At) -- (Bt);
+    \draw[edge] (At) to [out=45,in=135] (Bt);
+    \draw[edge] (At) to [out=-45,in=-135] (Bt);
+    \draw[edge](At)--(\x-0.85,\y);
+    \draw[edge](At)--(\x-0.75,\y+0.5);    \draw[edge](At)--(\x-0.75,\y-0.5);
+    \draw[edge](Bt)--(\x+1.85,\y);
+    \draw[edge](Bt)--(\x+1.75,\y+0.5);    \draw[edge](Bt)--(\x+1.75,\y-0.5);
+\end{tikzpicture} \right)
+=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.8cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!blue!50!white] (At) at (\x,\y){\scalebox{0.85}{$\EE(\At)$}};
+    \node[tensor,fill=red!30!blue!50!white] (Bt) at (\x+1.5,\y){\scalebox{0.85}{$\EE(\Bt)$}};
+    \draw[edge] (At) -- (Bt);
+    \draw[edge] (At) to [out=45,in=135] (Bt);
+    \draw[edge] (At) to [out=-45,in=-135] (Bt);
+    \draw[edge](At)--(\x-0.85,\y);
+    \draw[edge](At)--(\x-0.75,\y+0.5);    \draw[edge](At)--(\x-0.75,\y-0.5);
+    \draw[edge](Bt)--(\x+2.35,\y);
+    \draw[edge](Bt)--(\x+2.25,\y+0.5);    \draw[edge](Bt)--(\x+2.25,\y-0.5);
+\end{tikzpicture}.
+$$
+\begin{proof}
+结论直接由期望的线性性以及 $\At$ 与 $\Bt$ 的独立性得到。
+\end{proof}
+\end{proposition}
+第二条给出一个有趣的性质：对于元素取自高斯分布的矩阵，其与自身的外积的期望归结为一个非常简单的张量网络。 
+\begin{proposition}\label{prop:outer-prod}设 $\Ab\in\RR^{m\times n}$ 为随机矩阵，其元素独立同分布于标准正态分布。$\Ab$ 与自身的外积的期望为 
+$$\EE\left(
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.15}
+    \def\x{0}
+    \node[tensor,fill=green!50!blue!20!white] (A) at (\x,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=green!50!blue!20!white] (B) at (\x+1.5,\y){\scalebox{0.85}{$\Ab$}};
+    \draw[edge](A) -- (\x-0.55,\y-0.55);
+    \node[draw=none] () at (\x-0.5,\y-0.3) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge](A) -- (\x+0.55,\y-0.55);
+    \node[draw=none] () at (\x+0.5,\y-0.3) {\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge](B) -- (\x+1,\y-0.55);
+    \node[draw=none] () at (\x+1,\y-0.3) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge](B) -- (\x+2,\y-0.55);
+    \node[draw=none] () at (\x+2,\y-0.3) {\scalebox{0.7}{\dimcolor{$n$}}};
+\end{tikzpicture}
+\right)
+=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \draw[edge] (\x+1.45,\y-0.1) to [out=100,in=80] (\x+3,\y-0.1);
+    \node[draw=none] () at (\x+2.25,\y+0.5) {\scalebox{0.6}{\dimcolor{$n$}}};
+    \node[draw=none] () at (\x+1,\y+0.5) {\scalebox{0.6}{\dimcolor{$m$}}};
+\end{tikzpicture},
+$$
+其中右端
+是两个克罗内克 $\delta$ 的外积~（即 $
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \draw[edge] (\x+1.45,\y-0.1) to [out=100,in=80] (\x+3,\y-0.1);
+    \node[draw=none] () at (\x+0.15,\y-0.25) {\scalebox{0.7}{\indcolor{$i_1$}}};
+    \node[draw=none] () at (\x+3,\y-0.25) {\scalebox{0.7}{\indcolor{$i_4$}}};
+    \node[draw=none] () at (\x+1.85,\y-0.25) {\scalebox{0.7}{\indcolor{$i_3$}}};
+    \node[draw=none] () at (\x+1.45,\y-0.25) {\scalebox{0.7}{\indcolor{$i_2$}}};
+\end{tikzpicture}
+=\delta_{i_1i_3}\delta_{i_2i_4}$，对任意 $i_1,i_3\in[m]$ 和 $i_2,i_4\in[n]$ 成立。）
+\begin{proof}
+由于 $\Ab$ 的元素独立取自 $\mathcal{N}(0,1)$，其向量化服从多元正态分布，$\vectorize(\Ab) \sim \mathcal{N}(\mathbf{0},\Ib_{mn})$，因而 $\EE(\vectorize(\Ab)\vectorize(\Ab)^\ts) = \Ib_{mn}$。这意味着 
+$$ \EE(\Ab_{i_1i_2}\Ab_{i_3i_4})=
+\begin{cases}
+        1 & \text{ if } i_1=i_3\text{ and } i_2=i_4\\
+        0 & \text{ otherwise, }
+    \end{cases} 
+    $$
+于是 $\EE(\Ab\outprod\Ab)_{i_1i_2i_3i_4}=\EE(\Ab_{i_1i_2}\Ab_{i_3i_4}) = \delta_{i_1i_3}\delta_{i_2i_4}=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \draw[edge] (\x+1.45,\y-0.1) to [out=100,in=80] (\x+3,\y-0.1);
+    \node[draw=none] () at (\x+0.15,\y-0.25) {\scalebox{0.7}{\indcolor{$i_1$}}};
+    \node[draw=none] () at (\x+3,\y-0.25) {\scalebox{0.7}{\indcolor{$i_4$}}};
+    \node[draw=none] () at (\x+1.85,\y-0.25) {\scalebox{0.7}{\indcolor{$i_3$}}};
+    \node[draw=none] () at (\x+1.45,\y-0.25) {\scalebox{0.7}{\indcolor{$i_2$}}};
+\end{tikzpicture}$，对任意 $i_1,i_3\in[m]$ 和 $i_2,i_4\in[n]$ 成立。
+

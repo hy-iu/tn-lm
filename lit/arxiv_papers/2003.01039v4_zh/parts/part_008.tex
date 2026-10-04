@@ -1,0 +1,17 @@
+\subsection{Regularization}
+
+由正则表达式 $R$ 定义的 normalization 函数 $\Z_{R}$ 给出分配给所有匹配 $R$ 的字符串的未归一化概率。我们首先证明，对于无歧义的 $R$，这一概率可以被恰当地归一化。
+%
+\begin{theorem}
+\label{thm:regularization}
+考虑一个 u-MPS 模型和满足与定理 \ref{thm:sample} 中相同条件的无歧义正则表达式 $R$。那么 u-MPS 分配给匹配 $R$ 的字符串集合的概率 $P(R) = \sum_{s \in R} P(s)$ 可以被精确计算为 $P(R) = \Z_R / \Z_*$。
+\end{theorem}
+%
+定理~\ref{thm:regularization} 的实际重要性在于，可以在自动微分库内部计算任意 $\Z_R = \Tr(\alphamat \ER_R(\omegamat))$，必要时还可借助 \citep{liao2019} 中描述的技术。通过使 $P(R)$ 成为 u-MPS 参数 $\mc{A}$、$\alpha$ 和 $\omega$ 的可直接计算的函数，这一概率便可在训练过程中作为一个 regularization 项（即一个可微的损失项）被纳入。
+
+尽管如何理解这种``regex regularizers''并非一目了然，我们仍给出三个可在 u-MPS 模型基于梯度的训练中使用的例子。首先，可以将 $P(R)$ 直接加到损失中，促使模型的梯度更新最小化属于 $R$ 的字符串的概率。在语言模型的背景下，这可以用来避免学到训练数据中出现的冒犯性短语，例如选取 $R = \Sigma^* S \Sigma^*$，其中 $S$ 是从辱骂性语言数据集中提取的字符串的并集。
+
+一个相关的损失是 $\mc{L} = |P(R_1) - P(R_2)|$，它惩罚分配给正则表达式 $R_1$ 和 $R_2$ 的概率之间的差异。这样的 regularization 在正则表达式 $R_1$ 与 $R_2$ 构造相似时最为有效，此时损失强制模型对这两个选项保持无差异。这可以应用于缓解语言模型中的性别偏见，例如选取每个 $R_i$ 为 $R_i = \Sigma^* s_i \Sigma^*$，其中 $s_1$ 和 $s_2$ 是一对相同但性别指向相反的短语（例如``his career''与``her career''，或``he cooks''与``she cooks''）。
+
+最后，使用损失 $\mc{L} = -\log(P(R))$ 促使最大化属于 $R$ 的字符串的概率。当模型产生的所有字符串都应属于某个正则语言时，这种类型的 regularization 是自然的，例如在代码补全任务中选取一个语法上合法的变量名。将定理~\ref{thm:sample} 和 \ref{thm:regularization} 推广到 \emph{上下文无关}（context-free）语言将极大拓宽这些方法在语言建模中的应用范围，因为上下文无关文法在自然语言的结构化中扮演着根本性的角色。
+

@@ -1,0 +1,219 @@
+\section{讨论}
+\label{sec:future-directions}
+本节讨论面向 LLM 的张量方法所面临的挑战、鸿沟与未来研究方向。
+
+\subsection{压缩-实现鸿沟}
+% \color{blue}
+张量化模型一个反复出现的问题是：参数量大幅减少，却很少能在训练或推理中转化为成比例的加速。我们在此不报告新的测量结果；目的在于为这一现象命名、区分它的两个来源，并确定一套使它在不同方法之间可比较的协议。直观上，我们关心的量是
+\begin{equation*}
+  \rho_{\rm gap} = \frac{\text{theoretical compression}}{\text{practical speedup}},
+\end{equation*}
+其分子是论文通常所宣称的，分母则是用户实际所得的。设 $B$ 表示字节总数，$F$ 表示浮点运算次数（FLOPs），$T$ 表示实际运行时间（wall-clock time），下标``dense''与``TN''分别指基线稠密模型及其张量化对应模型。我们将字节压缩、FLOPs 压缩与加速比定义为
+\begin{equation}
+  C_B = \frac{B_{\rm dense}}{B_{\rm TN}}, \quad
+  C_F = \frac{F_{\rm dense}}{F_{\rm TN}}, \quad
+  S_T = \frac{T_{\rm dense}}{T_{\rm TN}}.
+\end{equation}
+这些量只有在共同的实验设置下才可比，我们要求该设置满足：(i) 相同的设备与数值精度，从而共享峰值吞吐量；(ii) 经过优化的稠密基线；(iii) 稠密模型与 TN 模型质量相当；(iv) 三个量具有相同的范围，或按模块、或端到端；以及 (v) 声明所处的运行区间，并将预填充（prefill）与解码分别报告，因为它们分处计算受限/内存受限边界的两侧。
+
+我们将\emph{压缩-实现鸿沟}（compression-realization gap）定义为
+\begin{equation}
+  \rho_{\rm gap} = \frac{C_B}{S_T}
+  = \underbrace{\frac{C_B}{C_F}}_{\text{algorithmic}} \times
+    \underbrace{\frac{C_F}{S_T}}_{\text{realization}},
+  \label{eq:rho-gap}
+\end{equation}
+它把这一鸿沟拆分为两个互补且可分别施策的部分。算法项只取决于分解方式与缩并方案，而与硬件无关；当分解特有的秩增大时 FLOPs 增长快于内存，或使用了次优的缩并顺序时，它就大于一。实现项则可以用硬件利用率来精确解读。模型 FLOPs 利用率（Model FLOPs utilization）是相对设备峰值吞吐量定义的，即 $\mathrm{MFU} = F / (T \cdot F_{\rm peak})$，从而 $T = F / (\mathrm{MFU} \cdot F_{\rm peak})$。将其代入 $S_T$，并利用条件 (i) 所保证的共享 $F_{\rm peak}$，我们得到
+\begin{equation}
+  \frac{C_F}{S_T} = \frac{\mathrm{MFU}_{\rm dense}}{\mathrm{MFU}_{\rm TN}}.
+\end{equation}
+这一恒等式只有在计算受限区间才有意义，此时 FLOPs 主宰运行时间。在内存受限区间，运行时间由所搬运的字节数决定，与之类似的量是实际达到的内存带宽利用率。
+
+$\rho_{\rm gap} = 1$ 意味着系统将理想化的字节压缩因子全部兑现为加速。典型情形是 $\rho_{\rm gap} > 1$，两个因子将其归因于：或是某种以算术为代价换取内存的分解，或是某个对设备利用得比稠密 GEMM 更差的模型。在内存受限区间，$\rho_{\rm gap} < 1$ 也可能出现——此时缩减权重或 KV 缓存恰恰减少了制约运行时间的那种资源，因而加速可能超过字节压缩。由于该度量只是将名义压缩与实现的加速作对比，它同样适用于量化 \cite{frantar2023gptq, dettmers2022llmint8, liu2023llmqat}、稀疏化 \cite{frantar2023sparsegpt, ashkboos2024slicegpt} 以及 IO 感知的注意力内核 \cite{dao2022flashattention}，从而为比较张量方法与非张量方法提供了共同基础；我们将在 \cref{subsec:gaps} 中回到这一点。
+% \color{black}
+
+% \subsection{Challenges and Pitfalls}
+% \label{sec:challenges}
+% Despite their promise, tensor methods for language models face several significant challenges that are often underreported in the literature.
+% \begin{itemize}
+% \item{Rank Selection and Sensitivity}
+% Choosing the right tensor ranks is a critical hyperparameter that is often treated heuristically. For TT/MPS, increasing ranks by 1 can dramatically increase the parameter count (by $O(I R)$), making rank search expensive. Moreover, the optimal rank varies across layers: attention projections may require higher ranks than FFN projections \cite{vadlamannati2023partial}. The sensitivity of downstream performance to rank choices is rarely quantified systematically.
+
+% \item{Hardware Compatibility}
+% Tensor decompositions introduce irregular memory access patterns and small matrix multiplications that are poorly optimized on modern GPUs. While GEMM operations (large matrix multiplications) achieve near-peak FLOP utilization, the sequential contractions in TT/MPS often achieve only 10-30\% of peak performance \cite{goto2008anatomy}. This creates a $\rho_{\rm gap}$ (Eq.~\ref{eq:rho-gap}) between theoretical parameter reduction and actual speedup.
+
+% \item{Training Instability}
+% Training tensorized models from scratch can be unstable due to the constrained parameter space \cite{chekalina2023ttm}. Gradient magnitudes can vary significantly across tensor factors, requiring careful learning rate scheduling. Some methods \cite{yang2024comera} address this with adaptive rank allocation, but the problem is not fully solved.
+
+% \item{Evaluation Pitfalls}
+% Many tensor method papers report parameter counts without measuring actual memory usage or latency. This is problematic because:
+% \begin{itemize}
+%     \item Tensor factors may not be contiguous in memory
+%     \item Small tensor operations introduce kernel launch overhead
+%     \item Quantization is often applied in addition to tensor decomposition, conflating the benefits
+% \end{itemize}
+% We recommend that future work report the complete memory footprint (including overhead) and end-to-end latency for realistic sequence lengths.
+% \end{itemize}
+
+\subsection{鸿沟、挑战与可能的解决方案}
+\label{subsec:gaps}
+本小节汇集被综述工作自身所报告的开放问题。我们从所综述论文的局限性与未来工作章节中提取这些问题，并按主题加以归类。对每一处鸿沟，我们都描述其中出现的挑战以及可能解决它们的方向。\Cref{tab:gap-map} 以紧凑的形式呈现这些内容，随后的段落则更详细地讨论每一处鸿沟。
+
+\begin{table}[!htbp]
+\centering
+\caption{\footnotesize 张量方法文献中的鸿沟与挑战概览。}
+\label{tab:gap-map}
+\footnotesize
+\begin{tblr}{
+  width = \textwidth,
+  colspec = {Q[4.0cm,m,c]Q[5.5cm,m,c]X[m,c]},
+  row{1} = {font=\bfseries},
+  rowsep = 3pt,
+  hline{1,10} = {1pt},
+  hline{2} = {0.6pt},
+  hline{3,4,5,6,7,8,9} = {0.6pt, gray7},
+}
+鸿沟 & 挑战 & 可能的解决方案 \\
+硬件兼容性 & 小规模、顺序且不规则的缩并未能充分利用 GPU 并行性，因此参数更少未必意味着计算更快 & 提供融合且结构感知内核的开源 Triton/CUDA 库，并通过实测 $\rho_{\rm gap}$ 进行评估 \\
+秩选择 & 最优秩在不同层与组件类型之间各不相同；矩阵自适应方案难以直接推广到张量秩 & 自适应秩分配算法，并与固定秩启发式方法进行基准对比 \\
+张量化方案 & 参数量相同的方案在质量与缩并代价上各有差异；方案选择是一次复杂搜索，其目标函数评估代价高昂 & 构造一个可采纳的方案集合并对其进行高效搜索，按验证损失、内存与缩并代价为候选方案打分 \\
+新型张量网络 & 更丰富的拓扑引入更复杂的秩/方案选择，并抬高缩并代价与延迟 & 按组件/阶段评估尚未充分探索的拓扑，同时报告质量、内存与延迟 \\
+训练/优化动力学 & 由于张量参数化改变了损失景观，而优化器却是为稠密权重矩阵调校的，训练可能不稳定 & 对各核的梯度尺度与初始化进行诊断；采用考虑张量结构的优化例程 \\
+规模化 & 在大规模下从零训练张量化模型超出了多数学术机构的算力，这对预训练阶段影响最大 & 测量质量与压缩率如何随规模变化，从而给出张量化模型的类标度律 \\
+与相邻效率方法的兼容性 & 与其他效率方法的正交性在原则上成立，但收益能否叠加、误差如何复合仍属未知 & 通过消融实验将张量化的贡献与其他方法的贡献分离开来 \\
+基准测试与评估 & 各方法使用不同的基线、数据集与逐篇调参，因此所报告的收益无法直接比较 & 在共享基线上按阶段建立基准测试，将压缩-实现鸿沟与质量一并报告 \\
+\end{tblr}
+\end{table}
+
+\paragraph{硬件兼容性。} 
+
+所有组件与阶段的张量化都面临一个共同挑战：硬件兼容性。现代 GPU 是为稠密 GEMM 而设计的——后者规模大、规则且高度可并行，而张量缩并却是小规模、顺序且不规则的，因此参数更少的模型未必运行得更快。
+% This discrepancy between theoretical and practical speedup is what $\rho_{\rm gap}$ (\cref{eq:rho-gap}) measures.
+弥合这一压缩-实现鸿沟很可能是一个内核层面的问题。有两类 GPU 内核可以应对它。融合内核将一连串缩并合并为单次启动，从而消除每次启动的开销，并把中间因子保留在快速存储器中，而不必写回全局内存。结构感知内核则利用分解施加于各因子上的结构（例如稀疏核），而不将其视为稠密数组。一个切实可行的方案是实现此类内核的开源 Triton 或 CUDA 库，并以实测 $\rho_{\rm gap}$（式 \ref{eq:rho-gap}）报告其收益。
+
+\paragraph{秩选择。}
+
+秩是张量化模型的主要调控旋钮。统一的秩选择是一种便捷的启发式方法，但并非最优，因为最优秩在不同层与组件类型之间可能各不相同。原则上，自适应分配秩的算法在同等参数预算下应优于统一分配。与此同时，将诸如 AdaLoRA \cite{zhang2023adalora} 之类的矩阵自适应方案推广到张量秩并非易事。若干被综述的研究 \cite{yang2024comera}、\cite{lopezpiqueres2025metatt}，以及超出本文范围的工作 \cite{hawkins2019rankselection1}、\cite{hawkins2021rankselection2}、\cite{gu2022heat}，都提出了用于自动秩分配的自适应方案。
+% CoMERA \cite{yang2024comera} treats the rank as an optimization variable of its modified TT parametrization and adjusts it during training.
+% MetaTT \cite{lopezpiqueres2025metatt} exploits DMRG-style alternating minimization for adaptive rank tuning.
+然而，一种通用且普遍适用的自适应秩分配方法仍然缺失。
+
+% As a possible step in this direction, rank allocation could be made sensitivity-aware.
+% Let $\varepsilon_m(\set{R}_m)$ be the approximation error of module $m \in \set{M}$ for
+% given ranks $\set{R}_m$, and let $s_m$ be its downstream sensitivity. One can then
+% select ranks by solving
+% \begin{equation}
+% \begin{aligned}
+%   & \min_{\set{R}_1,\ldots,\set{R}_{|\set{M}|}}\sum_{m=1}^{|\set{M}|}s_m\,\varepsilon_m(\set{R}_m) \\
+%   \rm s.t. \quad & \sum_{m=1}^{|\set{M}|} \operatorname{Mem}_m (\set{R}_m)\le \operatorname{Mem}_0,
+% \end{aligned}
+% \end{equation}
+% where $\operatorname{Mem}_m(\cdot)$ is the memory cost of module $m$ and
+% $\operatorname{Mem}_0$ is the memory budget. This would allocate more rank to modules
+% whose errors affect activations, logits, or other downstream behaviors.
+
+\paragraph{张量化方案。}
+
+第二个设计选择关乎张量化方案本身，即模型参数如何成为张量对象，以及在实际中哪种可采纳的映射效果最佳。例如，在施加式设定中（\cref{sec:tensor-strategies}），将权重矩阵 $\mat{W}$ 变为张量 $\ten{W}$ 需要选择模的数目及其大小，而这些选择并不显然。不同的选择可能给出相同的参数量，却在逼近质量与缩并代价上有所不同。这一领域在理论上仍显不足。
+
+% although the problem can be stated formally. Let
+% $\operatorname{Mem}(\cdot, \cdot)$ and $\operatorname{Contr}(\cdot, \cdot)$ denote
+% memory and contraction cost, respectively. To find the optimal tensor shape
+% $\phi^{\star}$ among admissible reshapes $\Phi$, one can pose the following
+% optimization problem:
+% \begin{equation}
+% \phi^{\star}=\arg\min_{\phi\in\Phi}
+% \left[
+% \mathcal{L}_{\rm val}\bigl(f_{\theta}(\phi,\set{R})\bigr)
+% +\lambda \operatorname{Mem}(\phi,\set{R})
+% +\gamma \operatorname{Contr}(\phi,\set{R})
+% \right],
+% \end{equation}
+% where $f_{\theta}(\phi,\set{R})$ is the trained tensorized model with shape $\phi$ and
+% ranks $\set{R}$, $\mathcal{L}_{\rm val}$ is the validation loss, and $\lambda,\gamma$
+% are tradeoff hyperparameters. The open question is how to construct an admissible
+% $\Phi$ and how to optimize over it efficiently.
+
+
+\paragraph{新型张量网络。}
+
+应用新型张量网络是一个自然且有前景的方向。例如，在施加式张量化设定中，原则上没有任何东西将可用的张量网络限定为 TTM；更丰富的拓扑同样有效。深层张量网络在表达能力与内存效率上可能优于诸如 TTM 之类的浅层链式拓扑，并且它们已在 LLM 与 NLP 之外的领域展现出可喜的结果 \cite{adtn}，这提示它们或许也能迁移到 LLM 设定中。然而，张量网络越深、越复杂，计算延迟就越高，因为缩并代价随之增长。张量环 \cite{zhao2016tensorring}、树结构 \cite{gracedyck2010h_tucker}、全连接 \cite{zheng2021fctn}、PEPS \cite{verstraete2008peps}、受 MERA 启发 \cite{vidal2008mera} 以及 Kronecker 张量分解 \cite{batselier2017ktd} 等网络，在 LLM 张量化中仍有待深入探索。
+
+
+\paragraph{训练与优化动力学。} 
+
+使用标准技术与优化器训练张量化模型可能并不稳定 \cite{barratt2022tnunstabletraining}。一个原因在于，张量参数化显著改变了损失景观，因此为稠密权重矩阵设计与调校的优化器（如 Adam）对张量化模型而言未必最优 \cite{yang2024comera}。目前仍然缺失的，是对张量化训练在这一景观中如何表现的理解，包括梯度幅值如何在各核之间分布、核的初始化如何影响收敛，以及这些量在训练过程中如何演化。此类诊断还能指明优化器实际上需要纠正什么。随后，研究考虑张量结构的优化例程便有望让训练既更快又更稳定；一些方法（如 MetaTT \cite{lopezpiqueres2025metatt}）正指向这一方向。
+
+\paragraph{规模化。} 
+
+从零训练一个张量化语言模型代价高昂，而在多个规模上训练、乃至在大规模上训练，更是超出了多数学术团队的算力 \cite{chekalina2023ttm}。这对预训练阶段影响最大。悬而未决的问题是：随着模型增大，张量化的收益如何变化——具体而言，压缩率与质量在各个规模上表现如何，从而为张量化语言模型提供一类比于标度律 \cite{kaplan2020scalinglaws} 的规律。现有证据离此尚远（\cref{tab:pre-training-methods}）。在其他阶段，规模化同样是一个现实问题，因为一个模型能被压缩到何种程度取决于它是如何训练的。近期的模型往往经过蒸馏，可能更难压缩 \cite{solgi2025saten}。因此，在某一模型上测得的压缩率未必能推广到更新或更大的模型。
+
+\paragraph{与相邻效率方法的兼容性。} 
+
+\Cref{sec:neighboring-methods} 讨论了张量方法与量化、剪枝、蒸馏及其他效率技术之间的关系。原则上，它们大多与张量化正交，但其实际交互——包括收益能否叠加以及误差如何复合——仍是一个悬而未决的问题。
+
+
+\paragraph{基准测试与评估。}
+
+不同论文所报告的数字往往无法直接比较：各方法在不同的基线与数据集上评估，且分别调参，因此所报告质量的差异可能来自实验设置，而不仅仅来自方法本身。要断言某方法优于另一方法，需要在共享基线上进行比较，并以同一套流程为每种方法调校超参数。基准测试能够提供这一点，而且很可能每个阶段都应各有一套，因为各阶段所优化的目标并不相同。无论哪个阶段，此类基准测试都必须将压缩-实现鸿沟（式 \ref{eq:rho-gap}）与质量一并报告。否则，一个在纸面上节省参数、却未在 GPU 上节省时间的方法，就与一个两者兼省的方法无从区分。
+
+% \subsection{Multimodality}
+% Multimodal tensor objects can be written as
+% \begin{equation}
+% \ten{F}\in\R^{M\times L\times T_m\times d},
+% \end{equation}
+% where $M$ indexes modality, $L$ layer, $T_m$ modality-specific position, and $d$ feature dimension. Tucker or block-term decompositions could separate modality-specific factors from shared reasoning cores. This connects tensor methods to visual-language models such as Flamingo and LLaVA-style systems \cite{alayrac2022flamingo,liu2024visual}.
+
+\subsection{未来方向}
+
+上一小节聚焦于为使现有张量方法变得可靠且高效而必须清除的障碍。这里我们强调一些更长期的方向，它们改变张量化在模型生命周期中的切入点、其所作用的对象，或其意图提供的能力。这些方向将针对具体阶段的文献延伸至张量原生的语言模型设计。
+
+\paragraph{词元化。} 
+
+尚无张量方法触及词元化器（\cref{subsec:tokenization}），尽管词元之间的关联一旦使用词表便告丢失：由 BPE 及其变体构建的词表是一组子词字符串，但每个字符串仅通过其索引被使用。因此，共享同一词素的两个词元可能获得毫不相关的嵌入。张量方法是施加反映这种关联之结构的自然途径。MorphTE \cite{gan2022morphte} 为嵌入这样做了，但它从外部分析器获取分词结果，并保持词表不变。更广泛地说，词表与嵌入表仍是先后依次构建的；如何联合构建二者仍是一个未解问题。其障碍在于，词元化器是一个离散、不可微的映射，因此不存在可供分解的连续对象。
+
+\paragraph{可解释性。}
+可解释性之所以未被充分探索，原因恰恰相反。这一阶段并非空白，而是新生，并且在我们看来最具前景。除记号方面的工作外，\cref{subsec:interpretability} 中综述的每一种方法都是在过去一年中出现的。它们共同表明，多重线性结构能够以三种方式支撑理解。它可以被\emph{添加}到分析工具中，如 PolySAE \cite{koromilas2026polysae}；也可以从一个本身即为多重线性、却未如此书写的模型中被\emph{重构}出来，如 TensorLens \cite{atad2026tensorlens}；还可以在训练时作为归纳偏置被\emph{施加}进去，如双线性层 \cite{pearce2025bilinearmlp}。最后一条路径要求最高，因为它需要从零进行预训练，同时影响也最深远，因为它把可解释性变成了对架构的一项设计约束。
+
+另一个独立的机会是图形化张量记号 \cite{taylor2024interpretabilitysurvey4}。它的直接收益在于阐释：一张图能够说明某方法对哪些模进行缩并、共享或截断；据此，我们鼓励张量可解释性方法的作者以这种方式绘制其构造。除此之外，这种记号本身就是一件推理工具，因为追问一个网络容许哪些缩并顺序、分解方式与共享因子，能够揭示新的机制。
+
+\paragraph{生命周期级协同设计。}
+现有方法大多只在生命周期的某一个阶段优化张量化，而将其周边阶段视为固定不变。相反，一个张量原生的模型可以协同设计嵌入分解、基础模型秩、适配子空间、训练后压缩与推理时的缩并调度。这种耦合很重要，因为一个使预训练损失最小的秩模式可能并不适合后续的 PEFT，而一个在代数上紧凑的分解可能在解码期间难以高效执行。因此，一种有用的表述是多目标的：在明确的资源预算下，联合选择张量化方案与秩，以优化质量、训练内存、适配容量、服务延迟与能耗。结果应以 Pareto 前沿的形式报告。
+
+\paragraph{张量化训练状态与分布式学习。}
+现有文献主要关注模型权重、适配器与 KV 缓存，但大规模训练还需存储激活、梯度、优化器矩以及通信缓冲区。这些对象天然带有与层、微批次、序列位置、注意力头或专家以及设备相关联的模。跨此类模利用低秩结构，既能减少加速器内存，也能减少设备间通信，从而将张量化从模型表示扩展到完整的训练状态。核心难点在于，这些张量是瞬态且非平稳的：它们的有效秩可能在训练过程中发生变化，而逼近误差会随优化不断累积。因此，未来工作应当将收敛性、数值稳定性、通信字节数、同步代价与端到端训练吞吐量一并评估。
+
+\paragraph{条件式与弹性张量化。}
+几乎所有被综述的方法都使用对每个输入保持固定的秩与缩并图。一个更灵活的模型则可以按层、词元、上下文长度、任务或置信度有条件地分配张量容量，仅当额外的核或秩分量足以改善预测时才激活它们。这将把秩从静态的架构超参数转变为运行时的计算预算，并可提供可控的质量--延迟权衡。系统层面的挑战相当可观：可变的缩并形状会干扰批处理、编译与融合内核。因此，评估必须包含最坏情况内存与尾延迟，而不仅仅是平均 FLOPs 或平均秩。
+
+\paragraph{多模态与模块化架构。}
+多模态语言模型与专家混合架构暴露出单一稠密文本模型所不具备的语义模，包括模态、专家、路由组、空间位置与时间位置。Tucker 分解、块项分解、树结构分解或共享核分解，可以将全局共享的语言学因子与特定于模态或专家的因子分离开来。这或许为在各模块间复制完整投影矩阵与适配器矩阵的做法提供了一种有原则的替代方案。悬而未决的问题在于：如何在保留特定模态容量、路由均衡与稀有专家行为的同时，避免因共享核限制过严而产生负迁移。这一方向还将检验：语义上有意义的张量模在大规模下是否比施加式重排更为鲁棒。
+
+% \paragraph{\rev{Canonicalization and longitudinal analysis.}}
+% \rev{Tensor factors are generally non-unique because of permutation, scaling, rotation, and gauge freedoms. This ambiguity is harmless when only reconstruction quality matters, but it obstructs interpretability and makes factors difficult to compare across random seeds, checkpoints, ranks, or model variants. Canonical gauges, factor-alignment procedures, and uncertainty estimates for recovered components would make tensor explanations more reproducible. They would also enable longitudinal questions that current methods cannot answer cleanly: whether a factor emerges early or late in training, persists through adaptation and compression, or splits and merges as rank changes. Connecting factor stability to calibration, robustness, and knowledge retention would provide a stronger test of whether a tensor component reflects a genuine mechanism rather than an arbitrary parameterization.}
+
+
+\section{结论}
+\label{sec:conclusion}
+% \color{olive}
+本综述透过统一的张量理论视角考察了面向语言模型的张量方法，并沿 LLM 生命周期的七个阶段对相关文献加以梳理。这一综合归纳出两点发现。其一，某一组件可用的张量化策略取决于其各模是否承载语义。注意力张量与堆叠投影张量容许按模特定的分解，而前馈网络与嵌入表通常依赖施加式重排以及诸如 TT 与 TTM 之类的链式张量网络。其二，同一族分解在不同阶段反复出现；例如 TT 与 TTM 就出现在嵌入、预训练、PEFT 与压缩之中。尽管如此，各阶段的目标并不相同：预训练在参数预算下优化语言建模损失，而压缩则优化重构误差或激活感知的失真。这一区分对方法设计与评估具有实际意义。
+
+生命周期视角还使这一领域覆盖的不均衡变得可见。词元化尚未被张量方法触及，可解释性是最新的阶段、且在我们看来最具前景，而预训练则缺乏用以说明张量化如何与标度律相互作用的多规模证据。贯穿各阶段的核心障碍是压缩-实现鸿沟，因为节省参数很少能转化为成比例的加速。我们将其形式化为度量 $\rho_{\rm gap}$，它把由分解与缩并方案决定的算法项，与由模型对设备利用得好坏决定的实现项分离开来。我们所勾画的方向兼顾这一问题的两侧。融合内核与结构感知内核针对实现侧，而自适应秩分配、被理解得更透彻的张量化方案以及更丰富的张量网络拓扑则针对算法侧。这些方向还应辅之以按阶段设立、将 $\rho_{\rm gap}$ 与质量一并报告的基准测试。
+
+总体而言，本综述将张量方法视为 LLM 研究内部一个自洽的子领域。我们希望它既能作为对现有工作的一份参考，也能成为下一代张量化语言模型的一个切入点。
+
+% \color{blue}
+% This survey has examined tensor methods for language models through a unified algebraic lens, organizing the literature across the seven stages of the LLM lifecycle. Several findings emerge from this synthesis. First, the tensorization strategies available to a given component depend critically on whether its modes carry semantic meaning: attention tensors and stacked projection tensors admit mode-specific factor sharing, while feed-forward networks and embedding tables typically rely on imposed reshaping and chain-like tensor networks such as TT and TTM. Second, the same decomposition families recur across multiple lifecycle stages---TT and TTM appear in embeddings, pre-training, PEFT, and compression---yet the optimization objectives differ fundamentally: training from scratch optimizes for task loss under a parameter budget, whereas post-hoc compression optimizes for reconstruction error or activation-aware distortion. This distinction has practical consequences for method design and evaluation.
+
+% The survey also reveals notable gaps. The tokenization stage remains entirely unaddressed by tensor methods, despite the structural relatedness of subword units being a natural target for tensor factorization. The pre-training stage lacks systematic evidence on how tensorization interacts with scaling laws; the available results (Table~7) are limited to two methods at modest scales. The inference stage is represented by a single mature approach to KV-cache tensorization, with several others appearing only in concurrent work. Interpretability, while the most recent and promising direction, is still in its formative phase, with three distinct approaches---bilinear layers, polynomial sparse autoencoders, and end-to-end tensor reformulation---that have not yet been compared or integrated.
+
+% Looking forward, we identify several concrete directions that emerge directly from these gaps. Hardware compatibility is the most immediate obstacle: tensorized models reduce parameters but often increase latency due to small, sequential contractions that underutilize GPU parallelism. Addressing this requires kernel-level work---fused contractions and structure-aware kernels---and systematic reporting of \(\rho_{\mathrm{gap}}\) to ensure that theoretical compression translates to practical gains. Rank selection remains an open problem, with uniform heuristics dominating despite the clear non-uniformity of optimal ranks across layers and component types. Finally, the relationship between tensor methods and neighboring efficiency techniques---quantization, pruning, distillation---is underexplored; the gains may be orthogonal, but how errors compose is unknown.
+
+% This survey provides a foundation for treating tensor methods as a coherent subfield within LLM research. We hope it serves both as a reference for existing work and as a starting point for the next generation of tensor-native language models.
+%  \color{black}
+% Tensor methods offer a principled algebraic language for describing, compressing, adapting, and interpreting large language models across their entire training and deployment lifecycle. The survey has organized existing work into a seven-stage lifecycle framework and identified structural gaps: the tokenization stage is essentially untouched; pre-training-time tensorization lacks scaling-law characterization; KV-cache tensorization is represented by only one mature paper; and tensor-based interpretability remains an open problem. \textcolor{red}{The proposed $\rho_{\rm gap}$ metric and rank-sensitivity allocation framework offer concrete tools for the community to bridge the gap between theoretical compression ratios and practical system-level gains.}
+
+{\sloppy\printbibliography}
+
+
+\end{document}

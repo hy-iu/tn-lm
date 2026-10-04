@@ -1,0 +1,83 @@
+\section{Relationship between TTLM and some RNNs}
+\label{sec: TTLM generalization}
+
+We now demonstrate the relationship between TTLM and Second-order RNNs,  Recurrent Arithmetic Circuits (RACs) and Multiplicative Integration RNNs (MI-RNNs).  
+
+To avoid symbol clutter when representing  different RNNs, the notation is:  $\mW^{hx} \in \mathbb{R}^{R \times |V|}$ denotes the input-to-hidden  matrix, $\mW^{hh} \in \mathbb{R}^{R \times R}$ denotes hidden-to-hidden  matrix, $\phi(\cdot)$ is an element-wise nonlinear activation function. Also, different hidden states are denoted as: Second-order RNNs ($\vh^{(t)}_\textrm{2nd}$), RACs ($\vh^{(t)}_\textrm{RAC}$) and MI-RNNs ($\vh^{(t)}_\textrm{MI}$).
+
+
+\subsection{Relation to Second-order RNNs}
+\label{appendix: seecond}
+
+Unlike Vanilla-RNNs \citep{mikolov2012context} that have \textit{additive} blocks, Second-order RNNs have interaction between hidden states and input data in \textit{multiplicative} form.   This is achieved by a third-order tensor $\tT$ with the $i$-th coordinate of the hidden states $\vh^{(t)}_\textrm{2nd}$ defined as \citep{hochreiter1997long, maupome-meurs-2020-language}:
+%
+\begin{equation} \small
+\label{eq: second-order-rnn}
+h^{(t)}_{\textrm{2nd}_i}  = \phi(\vf(x^{(t)})^T \tT_{i, :, :}\vh^{(t-1)}_\textrm{2nd} + \vb)
+\end{equation}
+%
+
+where $\tT_{i, :, :} \in\mathbb{R}^{M \times R}$ is the $i$th slice of tensor $\tT\in\mathbb{R}^{M\times R \times R}$, and $\vb$ is a bias vector. For simplicity, we will ignore  $\vb$ for other variants of RNNs since $\vb$  can be seen as $0$th component of $\vf (x^{(t)})$ which equals to 1. \cite{rabusseau2019connecting} has provided that Tensor Trains can  generalize linear Second-order RNNs. We here provide a basic proof from the perspective of recursive property in TTLM.
+
+\begin{claim}
+\label{cm: G and T}
+The third-order tensor $\tT$ in Second-order RNNs equals the TT cores in TTLM. There is a nonlinear activation $\phi$ such that the hidden states of Second-order RNNs is identical to that of TTLM when they are accompanied by $\phi$.
+\end{claim}
+
+\begin{proof} The proof is based on the following observation: We recursively unfold the calculation of TTLM in Eq. \ref{eq: ttlm_general}: 
+
+\begin{equation} \small
+\begin{aligned}
+\label{eq: TTLM_unfold}
+p(X) &= \sum_{{i_ = 1}}^{|V|} f(x^{(1)})_{i_1}\etG^{(1)}_{i_1\alpha_{1}}  \cdots \\
+&= \sum_{{i_1,i_2 = 1}}^{|V|} \sum_{\alpha_1 = 1}^R   f(x^{(1)})_{i_1}\etG^{(1)}_{i_1\alpha_{1}} f(x^{(2)})_{i_2} \etG_{\alpha_{1}i_2\alpha_{2}} \cdots  \\
+&  \quad\quad\vdots \\
+&= \sum_{i_1, \cdots, i_N = 1}^{|V|} 
+    \sum_{\alpha_1, \cdots ,\alpha_{N-1} =1}^{R}  f(x^{(1)})_{i_1}\etG^{(1)}_{i_1\alpha_1}
+    f(x^{(2)})_{i_2}\etG_{\alpha_1i_2\alpha_2} \cdots f(x^{(N)})_{i_N}\etG^{(N)}_{\alpha_{N-1}i_N}   \\
+\end{aligned}
+\end{equation}
+%
+Observe in the above, that at each time step,
+$\tG$ has two sources of ``input'': the information from the previous recursive unfolding (\textit{e.g.}, in the second line, the first line is the previous information), and the input data $\vf(x^{(t)})$. 
+From this perspective, $\tG$ acts as a bilinear map $\tG: \mathbb{R}^{|V|} \times \mathbb{R}^R \rightarrow \mathbb{R}^R $, and we can regard the information in the previous line as a hidden state $\vh^{(t)}_\text{TTLM}$, given by: 
+%
+\begin{equation} \small
+\begin{split}
+    \label{eq: ttlm cell}
+    h^{(t)}_{\textrm{TTLM}_{\alpha_{t}}}
+    & = \sum_{{i_t = 1}}^{|V|} \sum_{{\alpha_t = 1}}^{R} f(x^{(t)})_{i_t}\etG_{i_t\alpha_{t}\alpha_{t-1}}  h^{(t-1)}_{\textrm{TTLM}_{\alpha_{t-1}}} \\
+\end{split}
+\end{equation}
+%
+where we permute the indices  of  $\etG_{\alpha_{t-1}i_t\alpha_{t}}$ as $\etG_{i_t\alpha_{t}\alpha_{t-1}}$  ( note that this does not change the number of indices). 
+
+We can also represent the hidden states in Second-order RNNs shown by Eq. \ref{eq: second-order-rnn} in element-wise fashion:
+%
+\begin{equation} \small
+\begin{split}
+    \label{eq: second_element}
+    h^{(t)}_{\textrm{2nd}_i}
+    &= \phi(\vf(x^{(t)})^T \tT_{i, :, :}\vh^{(t-1)}_\textrm{2nd}) \\
+    &= \phi\left(\sum^{|V|}_{j=1}\sum^{R}_{k=1} f(x^{(t)})_j\etT_{jik} h^{(t-1)}_{\textrm{2nd}_{k}}\right) \\
+\end{split} 
+\end{equation}
+%
+where $j,k$ are the dummy indices as $i_t, \alpha_{t}$;  $i$ specifies the coordinate of $\vh^{(t)}_{2nd}$ just like  $\alpha_t$ for $\vh^{(t)}_\text{TTLM}$. Thus,  $\tT$ and $\tG$ are the same-sized trainable bi-linear map. 
+
+After demonstrating that the third-order tensor $\tT$ in Second-order RNNs equals the TT cores $\tG$, the only difference between the hidden states in Eq. \ref{eq: second_element}  and in Eq. \ref{eq: ttlm cell} is $\phi$. If we add $\phi$ for $\vh^{(t)}_\text{TTLM}$, the hidden states of Second-order RNNs and TTLM are identical,  as shown in Fig. \ref{fig:rnns}a. 
+
+
+\end{proof}
+
+\begin{comment}
+
+\begin{figure}[t]
+    \centering
+    \vspace{-15pt}
+    \includegraphics[width=3in]{figure/T and G.png}
+    \caption{$\tT[i]$ in Eq. \ref{eq: second-order-rnn} and $\tG[w_t]$ in Eq. \ref{eq: ttlm_general} are slices of the same-sized third-order tensor in different directions.}
+    \label{fig:t_and_g}
+\end{figure}
+\end{comment}
+

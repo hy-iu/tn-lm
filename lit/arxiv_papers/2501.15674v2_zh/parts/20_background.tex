@@ -1,0 +1,94 @@
+
+\section{背景}
+\subsection{数学符号}
+
+本文使用的数学符号汇总于表 \ref{math_notation}。我们采用与文献 \cite{cichocki2015tensor} 相同的符号约定。
+
+\begin{table}[htbp]
+\scriptsize
+  \caption{数学符号}
+  \label{math_notation}
+  \centering
+  \begin{tabular}{cc}
+    \toprule
+      符号   & 含义 \\
+    \midrule
+    $a$, $\mathbf{a}$, $\mathbf{A}$, $\mathcal{A}$    & 标量、向量、矩阵、张量  \\
+    $(\cdot)^T$ & 矩阵转置 \\
+    $\|\cdot\|_F$ & Frobenius 范数 \\
+    $\mathcal{A}_{[i_1, i_2, \dots, i_N]}$ & $N$ 维张量中的第 $(i_1, i_2, \dots, i_N)$ 个元素 \\
+    $\mathbf{a} \circ \mathbf{b}$ & 两个向量的外积 \\
+    $\mathbf{a} \cdot \mathbf{b}$ & 两个向量的内积 \\
+    $\mathcal{A} \times_n \mathbf{B}$ & 张量与矩阵之间的模-$n$ 积 \\
+    diag$\left(\lambda_1, \lambda_2, \dots, \lambda_R \right)$ & 对角矩阵  \\
+    diag$_N \left(\lambda_1, \lambda_2, \dots, \lambda_R \right)$ & $N$ 维对角张量 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+
+\subsection{张量预备知识}
+
+\paragraph{定义} 张量 $\mathcal{A} \in \mathbb{R}^{I_1 \times I_2 \times \dots \times I_N}$ 是一个多维数组。该张量中模（维度）的个数称为其阶数 $N$。沿第 $n^{th}$ 个维度，其第 $n$ 个模的大小为 $I_n$，其中 $n \in [1, N]$ \cite{kolda2009tensor}。
+
+例如，标量 $a$ 是 $0$ 维张量。将多个标量堆叠在一起，便构成 $1$ 维张量 $\mathbf{a}$，通常称为向量。进一步推广，将多个向量堆叠在一起得到 $2$ 维张量 $\mathbf{A}$，即矩阵。最后，将多个矩阵堆叠在一起产生 $3$ 维张量 $\mathcal{A}$。这一过程可以推广，通过迭代地堆叠低维张量来构造更高维的张量。
+
+\paragraph{模-$n$ 积} 张量 $\mathcal{A} \in \mathbb{R}^{I_1 \times I_2 \times \dots \times I_N}$ 与矩阵 $\mathbf{B} \in \mathbb{R}^{J_n \times I_n}$ 的模-$n$ 积得到张量 $\mathcal{C} \in \mathbb{R}^{I_1 \times \dots \times I_{n-1} \times J_n \times I_{n+1} \times I_N}$。其数学定义为
+\begin{equation}
+    \mathcal{C} = \mathcal{A} \times_n \mathbf{B},
+\label{eq:mode_n_product}
+\end{equation}
+$\mathcal{C}$ 的逐元素定义为
+\begin{equation}
+    \mathcal{C}_{[i_1,\dots,i_{n-1}, j_n, i_{n+1}, i_N]} = \sum_{i_n=1}^{I_n} \mathcal{A}_{[i_1,\dots,i_{n-1}, i_n, i_{n+1}, i_N]} \mathbf{B}_{[j_n, i_n]}.
+\label{eq:mode_n_product_index_notation}
+\end{equation}
+\subsection{奇异值分解（SVD）}
+在线性代数中，SVD 将任意矩阵 $\mathbf{A} \in \mathbb{R}^{m \times n}$ 分解为若干秩-1 矩阵之和，可表示为
+\begin{equation}
+\begin{split}
+    \mathbf{A} &=  \sum_{i=1}^{r} \sigma_i \mathbf{u}_i \mathbf{v}_i^T = \sum_{i=1}^{r} \sigma_i \left( \mathbf{u}_i \circ \mathbf{v}_i \right)\\
+    &= \mathbf{U} \boldsymbol{\Sigma} \mathbf{V}^T,
+\end{split}
+\label{eq:SVD}
+\end{equation}
+其中 $\mathbf{u}_i \in \mathbb{R}^m$ 是 $\mathbf{A}\mathbf{A}^T$ 的特征向量，$\mathbf{U} = \left[\mathbf{u}_1, \mathbf{u}_2, \dots, \mathbf{u}_m \right] \in \mathbb{R}^{m \times m}$ 是由 $\mathbb{R}^{m}$ 中一组正交归一特征向量构成的矩阵。类似地，$\mathbf{v}_i \in \mathbb{R}^n$ 是 $\mathbf{A}^T\mathbf{A}$ 的特征向量，$\mathbf{V} = \left[\mathbf{v}_1, \mathbf{v}_2, \dots, \mathbf{v}_n \right] \in \mathbb{R}^{n \times n}$ 是由 $\mathbb{R}^{n}$ 中一组正交归一特征向量构成的矩阵。此外，$\mathbf{u}_i \circ \mathbf{v}_i$ 表示两个向量的外积；$\sigma_i$ 是 $\mathbf{A}$ 的奇异值，即 $\mathbf{A}^T\mathbf{A}$ 特征值的平方根；$\boldsymbol{\Sigma} = \text{diag}\left( \sigma_1, \sigma_2, \dots, \sigma_r \right) \in \mathbb{R}^{m \times n}$ 是对角矩阵，其中 $r$ 为矩阵 $\mathbf{A}$ 的秩。SVD 通过丢弃与最小奇异值相关联的秩-1 因子来实现低秩近似——这些因子很可能包含数据中的噪声成分与较少有用信息，从而起到去噪作用。
+
+
+\subsection{Tucker 分解}
+
+Tucker 分解 \cite{tucker1966some} 是 SVD 的推广 \cite{de2000multilinear, vasilescu2002multilinear}，它将原始张量分解为若干因子矩阵与一个较小核心张量的乘积，如式 (\ref{eq:tucker}) 所示。因此，Tucker 分解能够以高维低秩结构逼近原始张量，从而实现对原始张量的去噪，其定义为
+\begin{equation}
+\begin{split}
+    \mathcal{T} &= \sum_{r_1=1}^{R_1} \sum_{r_2=1}^{R_2} \dots \sum_{r_N=1}^{R_N} \mathcal{G}_{[r_1, r_2, \dots, r_N]} \\
+    & \quad \ \left(\mathbf{u}^{(1)}_{r_1} \circ \mathbf{u}_{r_2}^{(2)} \circ \dots \circ \mathbf{u}_{r_N}^{(N)} \right)\\
+    &= \mathcal{G} \times_1 \mathbf{U}^{(1)} \times_2 \mathbf{U}^{(2)} \times_3 \dots \times_N \mathbf{U}^{(N)}.
+\end{split}
+\label{eq:tucker}
+\end{equation}
+在该表述中，$\mathcal{T} \in \mathbb{R}^{I_1 \times I_2 \times \dots \times I_N}$ 是一个 $N$ 维张量。核心张量 $\mathcal{G}_{[r_1, r_2, \dots, r_N]} \in \mathbb{R}^{R_1 \times R_2 \times \cdots \times R_N}$ 表示缩放系数；$\mathbf{u}_{r_n}^{(n)} \in \mathbb{R}^{I_n}$ 表示第 $n$ 个维度的因子向量，而第 $n$ 个维度的因子矩阵定义为 $\mathbf{U}^{(n)} = \left[ \mathbf{u}_1^{(n)}, \mathbf{u}_2^{(n)}, \dots \mathbf{u}_{R_n}^{(n)} \right] \in \mathbb{R}^{I_n \times R_n}$，其中 $1\leq n \leq N$。Tucker 分解中的因子矩阵刻画了原始张量在某个子空间上的投影。$N$ 元组 $(R_1, R_2, \dots, R_N)$ 通常称为多重线性秩，是矩阵秩向高维的推广，一般被视为超参数。如何高效地确定最优秩组合是一个活跃的研究领域，近期有大量研究聚焦于张量秩搜索的先进方法 \cite{iacovides2024towards, 10655696}。通过对 $1\leq n \leq N$ 设置 $R_n \ll I_n$，Tucker 分解能够在参数量意义上实现压缩。
+
+\subsection{Transformer 架构}
+当前 LLM 所使用的 Transformer 架构 \cite{vaswani2017attention} 可分为仅编码器与仅解码器两类，通常由 $N$ 个相同的 Transformer 层组成，如图 \ref{fig:methodology} 中间部分所示。每一层由两个主要组件构成：一个 MHA 块和一个 FFN 块。为增强稳定性并便于学习，这些块之间还应用了层归一化 \cite{lei2016layer} 与残差连接。
+
+\paragraph{多头注意力（MHA）}
+
+单头可学习自注意力由输入的查询（$\mathbf{Q} \in \mathbb{R}^{L \times d_{model}}$）、键（$\mathbf{K} \in \mathbb{R}^{L \times d_{model}}$）与值（$\mathbf{V} \in \mathbb{R}^{L \times d_{model}}$）矩阵计算得到，定义为 \cite{vaswani2017attention}：
+\begin{multline} 
+    \text{Attention}(\mathbf{Q}\mathbf{W}^Q_i, \mathbf{K}\mathbf{W}^K_i, \mathbf{V}\mathbf{W}^V_i) = \\ 
+\text{softmax}\left(\frac{\left(\mathbf{Q}\mathbf{W}^Q_i \right) \left(\mathbf{K}\mathbf{W}^K_i \right)^T}{\sqrt{d_{v}}}\right) \left(\mathbf{V}\mathbf{W}^V_i \right),
+\label{eq:self_attention} 
+\end{multline}
+其中 $\mathbf{W}^Q_i \in \mathbb{R}^{d_{model} \times d_{v}}, \mathbf{W}^K_i \in \mathbb{R}^{d_{model} \times d_{v}}$ 与 $\mathbf{W}^V_i \in \mathbb{R}^{d_{model} \times d_{v}}$（$1\leq i \leq h$）是单个注意力头的可学习投影矩阵。这里 $L$ 表示序列长度，$d_{model}$ 表示模型嵌入的维度，$h$ 为注意力头数，$d_v = \frac{d_{model}}{h}$ 表示每个头的维度。
+
+多头注意力 \cite{vaswani2017attention} 的主要作用是增强模型在潜在空间中捕捉复杂模式的能力，其中每个头独立地学习输入数据的不同表示。对于含 $h$ 个头的注意力块，所有注意力头的输出被拼接起来，并通过输出投影矩阵 $\mathbf{W}^O$ 投影回原潜在空间，即
+\begin{equation}
+\begin{split}
+   & \text{MultiHead}(\mathbf{Q}, \mathbf{K}, \mathbf{V}) = \text{Concat}(\text{head}_1, \ldots, \text{head}_h) \mathbf{W}^O, \\
+ & \text{where} \  \text{head}_i = \text{Attention}(\mathbf{Q}\mathbf{W}^Q_i, \mathbf{K}\mathbf{W}^K_i, \mathbf{V}\mathbf{W}^V_i).
+\end{split}
+\label{eq:MHA}
+\end{equation}
+因此，注意力块中的四个权重矩阵分别为：查询投影权重 $\mathbf{W}^Q = \left[\mathbf{W}^Q_1, \mathbf{W}^Q_2, \ldots, \mathbf{W}^Q_h \right] \in \mathbb{R}^{d_{model} \times h \cdot d_v}$、键投影权重 $\mathbf{W}^K = \left[\mathbf{W}^K_1, \mathbf{W}^K_2, \ldots, \mathbf{W}^K_h \right] \in \mathbb{R}^{d_{model} \times h \cdot d_v}$、值投影权重 $\mathbf{W}^V = \left[\mathbf{W}^V_1, \mathbf{W}^V_2, \ldots, \mathbf{W}^V_h \right] \in \mathbb{R}^{d_{model} \times h \cdot d_v}$，以及输出投影权重 $\mathbf{W}^{O} = \left[\mathbf{W}^O_1, \mathbf{W}^O_2, \ldots, \mathbf{W}^O_h \right] \in \mathbb{R}^{h \cdot d_v \times d_{model}}$。我们将 $\mathbf{W}^Q, \mathbf{W}^K, \mathbf{W}^V, \text{and } \mathbf{W}^O$ 统称为 MHA 权重矩阵。\par
+通过以张量网络图 \cite{orus2014practical} 表示 MHA 权重，图 \ref{fig:tensor_network} 展示了 LASER、TRAWL 与我们所提方法中使用的共享因子矩阵 Tucker 分解（见第 \ref{methodology} 节）作用于这些权重时的区别。注意，在这些图中，张量用圆圈表示，从圆圈引出的每条线对应一个张量维度指标；连接两条指标线意味着对相连的指标求和（缩并）。
+

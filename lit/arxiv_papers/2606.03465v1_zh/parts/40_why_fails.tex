@@ -1,0 +1,362 @@
+% \section{Partial Explanation Through Operator Norm}
+% \label{ref:theory}
+
+% % The representation collapse across tensor formats can be partially explained through operator norms. Reshaping a weight matrix $W$ into a tensor $\mathcal{T}$ preserves the ambient Euclidean geometry ($\|W\|_F = \|\mathcal{T}\|_F$), but fundamentally alters the operator isometry. 
+
+% % Standard tensor decompositions optimize the Frobenius error $\|\mathcal{T}-\hat{\mathcal{T}}\|_F$, effectively treating the parameters as a flat array. However, mathematically, a norm is a function from a vector space to the $\mathbb{R}_+$. Because neural network weights act as linear operators transforming activations between spaces, a natural operator-level quantity is the induced spectral norm, $\|W\|_2 = \sup_{\|x\|_2=1} \|Wx\|_2$. 
+
+% % Comparing these error functionals reveals a strict hierarchy between the tensor approximation and its matrix unraveling \citep{hackbusch2012tensor}:
+% % $$ \|\mathcal{T} - \hat{\mathcal{T}}\|_2 \leq \|W - \hat{W}\|_2 \leq \|\mathcal{T} - \hat{\mathcal{T}}\|_F. $$
+% % While the Frobenius error technically upper-bounds the operator error, this bound is loose in high dimensions. Since the gap between $\| \cdot \|_2$ and $\| \cdot \|_F$ scales with the rank, minimizing the global Frobenius mass does not tightly constrain the effective matrix operator error $\|W-\hat{W}\|_2$. Consequently, a seemingly accurate tensor approximation can easily conceal severe spectral distortions.
+
+% % In LLMs, non-uniform parameter distributions and outliers amplify this vulnerability: tensor truncation can discard components with little Frobenius mass but large spectral impact. As activations propagate, these perturbations accumulate, producing the representation collapse -- reduced angular diversity and distorted norms, as seen in Figure~\ref{fig:activation_geometry}.
+% % Добавить про различия в структуре после адама и муона?
+
+% % \section{Why Tensorization Fails as Post-Training Compression}
+% \label{sec:theory}
+
+% We formalize the failure of Frobenius-optimal tensor decompositions
+% (HOSVD, TT-SVD, Tucker-ALS) as post-training LLM compression through next
+% results: (i) tensorization is a Frobenius but not an operator isometry;
+% (ii) the gap between the two scales with $\sqrt{\min(m,n)}$ on heavy-tailed
+% % spectra; (iii) per-layer spectral errors compound multiplicatively across
+% % depth; and (iv) low-rank tensor formats impose a separable subspace
+% % structure that is incompatible with the head- and neuron-wise heterogeneity
+% % of trained Transformers.
+
+% % =====================================================================
+% %  Revised sections: Setup, Tensorization, Spectral Gap, Superweights
+% %
+% %  Fixes applied with respect to the previous draft:
+% %   1. Setup no longer claims HOSVD/TT-SVD are Frobenius-optimal;
+% %      it introduces them as quasi-optimal.
+% %   2. Notation unified: d = tensor order, N = ambient unfolding size.
+% %   3. Mode index renamed to \ell to avoid collision with truncation rank k.
+% %   4. The Frobenius bound is now stated as the standard HOSVD/TT-SVD
+% %      sum-of-tails bound across all modes, not (1+eps)^2 times one tail.
+% %   5. The empirical regime alpha in [1/2, 1] is acknowledged; the
+% %      strongest dimension-dependent blowup is presented as a worst-case
+% %      result, with the realistic boundary case alpha = 1/2 highlighted.
+% %   6. Logarithmic vs square-root-logarithmic factor corrected.
+% %   7. "Hitchcock-Banach" replaced by a definition-based justification
+% %      and NP-hardness cited correctly to Hillar & Lim (2013).
+% %   8. The "superweights" paragraph rewritten as a precise lemma with
+% %      a clean statement and a one-line proof sketch.
+% % =====================================================================
+
+% \paragraph{Notation}
+% Let $W \in \mathbb{R}^{m \times n}$ be a layer weight matrix and
+% $\varphi : \mathbb{R}^{m \times n} \to \mathbb{R}^{I_1 \times \cdots \times I_d}$
+% a reshape with $\prod_{\ell=1}^{d} I_\ell = mn$ and $d \geq 2$. Set
+% $\mathcal{T} = \varphi(W)$, and let $\widehat{\mathcal{T}}$ be a
+% \emph{quasi-optimal} low-rank approximation of $\mathcal{T}$ in a
+% low-rank manifold $\mathcal{M}_{\mathbf{r}}$, obtained by HOSVD
+% (Tucker rank $\mathbf{r} = (r_1, \ldots, r_d)$) or by TT-SVD
+% (TT rank $(r_1, \ldots, r_{d-1})$). We write
+% $\widehat{W} = \varphi^{-1}(\widehat{\mathcal{T}})$. The mode-$\ell$
+% unfolding of $\mathcal{T}$ is denoted $\mathcal{T}_{(\ell)}$ and has
+% singular values $\sigma_{\ell,1} \geq \cdots \geq \sigma_{\ell, N_\ell}$
+% with $N_\ell := \min(I_\ell,\, \prod_{j \neq \ell} I_j)$. When the mode
+% is clear from context we drop the first subscript and write $\sigma_i$.
+
+% \subsection{Tensorization preserves Frobenius but not operator geometry}
+% \label{sec:isometry}
+
+% Since $\varphi$ merely permutes entries,
+% \begin{equation}
+%     \|\varphi(A)\|_F = \|A\|_F, \qquad \forall A \in \mathbb{R}^{m \times n}.
+%     \label{eq:frob_iso}
+% \end{equation}
+% The tensor spectral (injective) norm is defined as
+% \begin{equation}
+%     \|\mathcal{T}\|_{\sigma}
+%     \;:=\; \sup_{\|u^{(\ell)}\|_2 = 1}
+%     \bigl\langle \mathcal{T},\, u^{(1)} \otimes \cdots \otimes u^{(d)} \bigr\rangle.
+%     \label{eq:tensor_spec}
+% \end{equation}
+% Because the supremum in~\eqref{eq:tensor_spec} ranges over rank-one
+% unit tensors --- a strictly smaller set than the unit ball of matrix
+% operator norm when $d \geq 3$ --- we have
+% $\|\varphi(W)\|_{\sigma} \leq \|W\|_2$, with equality only when
+% $\varphi(W)$ is rank-one. For $d \geq 3$, computing
+% $\|\mathcal{T}\|_{\sigma}$ is NP-hard~\citep{hillar2013most}, and the
+% ratio
+% \begin{equation}
+%     \frac{\|W\|_2}{\|\varphi(W)\|_{\sigma}}
+%     \;\in\; \bigl[\,1,\; \sqrt{\min(m,n)}\,\bigr]
+%     \label{eq:ratio}
+% \end{equation}
+% is generically bounded away from $1$~\citep{friedland2018nuclear}.
+% Hence $\varphi$ fails to be an isometry between
+% $(\mathbb{R}^{m \times n}, \|\cdot\|_2)$ and
+% $(\mathbb{R}^{I_1 \times \cdots \times I_d}, \|\cdot\|_{\sigma})$.
+
+% \subsection{Frobenius-optimal truncation is spectrally suboptimal
+% on heavy-tailed spectra}
+% \label{sec:spectral_gap}
+
+% Fix a target mode $\ell \in \{1, \ldots, d\}$, write
+% $W_\ell := \mathcal{T}_{(\ell)}$ for the corresponding unfolding, set
+% $N := N_\ell$, and let $\sigma_1 \geq \cdots \geq \sigma_N$ denote its
+% singular values. We compare two truncation strategies at a target
+% matrix rank $k$: the Eckart--Young~\citep{eckart1936approximation}
+% optimum $\widehat{W}_{\mathrm{EY}}$, and the unfolding
+% $\widehat{W} := (\widehat{\mathcal{T}})_{(\ell)}$ of the tensor
+% truncation $\widehat{\mathcal{T}}$.
+
+% \paragraph{Quasi-optimality of tensor truncation.}
+% HOSVD and TT-SVD do not minimise the Frobenius error over
+% $\mathcal{M}_{\mathbf{r}}$; they achieve the quasi-optimal bound
+% \begin{equation}
+% \begin{split}
+%     \|\mathcal{T} - \widehat{\mathcal{T}}\|_F
+%     \;&\leq\; (1 + \varepsilon)\,
+%     \min_{\mathcal{S} \in \mathcal{M}_{\mathbf{r}}}
+%     \|\mathcal{T} - \mathcal{S}\|_F, \\
+%     &\varepsilon \;\leq\; \sqrt{d} - 1,
+%     \label{eq:quasi_optimal}
+%     \end{split}
+% \end{equation}
+% with the analogous factor $\sqrt{d-1} - 1$ for
+% TT-SVD~\citep{de2000multilinear, oseledets2011tensor,
+% grasedyck2010hierarchical}. The standard upper bound on the
+% HOSVD error is the sum of mode-wise tails,
+% \begin{equation}
+%     \|\mathcal{T} - \widehat{\mathcal{T}}\|_F^{\,2}
+%     \;\leq\; \sum_{n=1}^{d} \sum_{i > r_n}
+%         \sigma_{n,i}^{\,2}
+%     \;\leq\; d \cdot \max_{n}
+%         \sum_{i > r_n} \sigma_{n,i}^{\,2}.
+%     \label{eq:hosvd_bound}
+% \end{equation}
+% Specialising to mode $\ell$ with $r_\ell = k$ and using
+% $\|W_\ell - \widehat{W}\|_F = \|\mathcal{T} - \widehat{\mathcal{T}}\|_F$
+% (reshape is an isometry in Frobenius), we obtain
+% \begin{equation}
+%     \|W_\ell - \widehat{W}\|_F^{\,2}
+%     \;\leq\;
+%     d \cdot \max_n \sum_{i > r_n} \sigma_{n,i}^{\,2}.
+%     \label{eq:loose_frob}
+% \end{equation}
+% Under the assumption that all mode unfoldings have comparable spectral
+% profiles, which we adopt henceforth for clarity, the right-hand side is
+% of order $d \sum_{i > k} \sigma_i^{\,2}$.
+
+% \paragraph{Spectral suboptimality.}
+% The Eckart--Young optimum in spectral norm is
+% $\|W_\ell - \widehat{W}_{\mathrm{EY}}\|_2 = \sigma_{k+1}$. Combining
+% $\|\cdot\|_2 \leq \|\cdot\|_F$ with~\eqref{eq:loose_frob} yields
+% \begin{equation}
+%     \frac{\|W_\ell - \widehat{W}\|_2}{\sigma_{k+1}}
+%     \;\leq\;
+%     \sqrt{d} \cdot
+%     \sqrt{\,1 + \sum_{i > k+1}
+%     \bigl(\sigma_i / \sigma_{k+1}\bigr)^{2}\,}.
+%     \label{eq:suboptimality}
+% \end{equation}
+% The first factor reflects the geometry of $\mathcal{M}_{\mathbf{r}}$;
+% the second depends only on the \emph{spectral profile} of $W_\ell$ and
+% is the quantity of interest below.
+
+% \paragraph{Power-law spectra.}
+% Empirical Transformer spectra are well modelled by a power law
+% $\sigma_i \asymp i^{-\alpha}$ over a wide range of
+% indices~\citep{martin2021implicit, superweight}.Under this model,
+% \begin{equation}
+%     \sum_{i = k+1}^{N} \sigma_i^{\,2}
+%     \;\asymp\;
+%     \begin{cases}
+%         N^{1 - 2\alpha},   & 0 \leq \alpha < 1/2, \\[2pt]
+%         \log(N / k),       & \alpha = 1/2, \\[2pt]
+%         k^{1 - 2\alpha},   & \alpha > 1/2.
+%     \end{cases}
+%     \label{eq:tail}
+% \end{equation}
+% The tail is dominated by the ambient dimension $N$ in the heavy-tailed
+% regime $\alpha < 1/2$, by a logarithmic factor at the boundary, and by
+% the cutoff $k$ in the light-tailed regime $\alpha > 1/2$.
+
+% % \paragraph{Scaling of the spectral gap.}
+% % Substituting $\sigma_{k+1} \asymp (k+1)^{-\alpha}$
+% % into~\eqref{eq:suboptimality} gives
+% % \begin{equation}
+% %     \sqrt{\,1 + \sum_{i > k+1} (\frac{\sigma_i} { \sigma_{k+1}})^{2}\,}
+% %     \;\asymp\;
+% %     \begin{cases}
+% %         k^{\alpha} \cdot N^{(1 - 2\alpha)/2}, & 0 \leq \alpha < 1/2, \\[2pt]
+% %         \sqrt{k \, \log(N/k)},                & \alpha = 1/2, \\[2pt]
+% %         \mathcal{O}(1),                       & \alpha > 1/2.
+% %     \end{cases}
+% %     \label{eq:gap_scaling}
+% % \end{equation}
+% As a consequence, for $\alpha < 1/2$ the spectral gap grows polynomially in $N$; at the
+% empirically relevant boundary $\alpha = 1/2$ it grows as
+% $\sqrt{k \log(N/k)}$; for $\alpha > 1/2$ it is bounded by a constant.
+
+% \begin{table}[t]
+% \centering
+% \caption{Fitted power-law exponents $\alpha_k$ ($\sigma_i \propto i^{-\alpha_k}$) of the three mode unfoldings on Qwen-30B-A3B. All values $< 1/2$: the heavy-tailed regime in which (6) is binding.}
+% \label{tab:power_law_exponents}
+% \centering
+% \begin{adjustbox}{max width=0.9\linewidth}
+% \begin{tabular}{lccc}
+% \toprule
+% Layer / projection & $\alpha_0$ (expert) & $\alpha_1$ (output) & $\alpha_2$ (input) \\
+% \midrule
+% Layer 0  / gate & 0.160 & 0.075 & 0.402 \\
+% Layer 0  / up   & 0.187 & 0.062 & 0.358 \\
+% Layer 12 / gate & 0.047 & 0.050 & 0.197 \\
+% Layer 12 / up   & 0.040 & 0.045 & 0.190 \\
+% Layer 24 / gate & 0.039 & 0.053 & 0.202 \\
+% Layer 24 / up   & 0.025 & 0.046 & 0.195 \\
+% Layer 47 / gate & 0.052 & 0.051 & 0.142 \\
+% Layer 47 / up   & 0.048 & 0.051 & 0.134 \\
+% \bottomrule
+% \end{tabular}%
+% \end{adjustbox}
+% \end{table}
+
+% % Even in the bounded regime, the multiplicative $\sqrt{d}$ overhead
+% % from~\eqref{eq:quasi_optimal} remains. Hence, on heavy- and
+% % boundary-tailed spectra, the spectral error of a Frobenius-optimal
+% % truncation can exceed the Eckart--Young optimum by a factor that
+% % depends on the unfolding dimension, the target rank, and the tensor
+% % order.
+
+% % \paragraph{Consequence for superweights.}
+% % We now make the activation-geometry implication precise. Decompose
+% % $W = W_{\mathrm{bulk}} + W_{\mathcal{S}}$, where
+% % $W_{\mathcal{S}}$ is supported on a small set
+% % $\mathcal{S} \subseteq [m] \times [n]$ of
+% % \emph{superweight}~\citep{yu2024super, sun2026spike} coordinates
+% % satisfying
+% % \begin{equation}
+% %     \|W_{\mathcal{S}}\|_F \;\ll\; \|W\|_F,
+% %     \qquad
+% %     \|W_{\mathcal{S}}\|_2 \;\asymp\; \|W\|_2.
+% %     \label{eq:superweight_def}
+% % \end{equation}
+% % That is, $W_{\mathcal{S}}$ carries a negligible fraction of the energy
+% % but a constant fraction of the operator norm.
+
+% % \begin{lemma}[Frobenius truncation cannot preserve superweight directions]
+% % \label{lem:superweight}
+% % Let $\widehat{W}$ be obtained by HOSVD/TT-SVD truncation of $W$ at any
+% % target multilinear rank $\mathbf{r}$ for which
+% % \begin{equation}
+% %     \|W_{\mathcal{S}}\|_F^{\,2}
+% %     \;\leq\;
+% %     d \cdot \sum_{i > k} \sigma_{\mathrm{bulk},\,i}^{\,2},
+% %     \label{eq:superweight_loss}
+% % \end{equation}
+% % where $\sigma_{\mathrm{bulk},\,i}$ are the singular values of
+% % $W_{\mathrm{bulk}}$ and $k$ the unfolding-mode rank. Then
+% % \begin{equation}
+% %     \bigl\| (W - \widehat{W})\, u \bigr\|_2
+% %     \;\gtrsim\; \|W\|_2
+% %     \label{eq:superweight_loss_2}
+% % \end{equation}
+% % for some unit vector $u$ aligned with the top singular direction of
+% % $W_{\mathcal{S}}$, i.e.\ a constant fraction of the operator norm of
+% % $W$ is lost along the superweight subspace.
+% % \end{lemma}
+
+% % \begin{proof}[Proof sketch]
+% % The Frobenius objective treats $W_{\mathcal{S}}$ and $W_{\mathrm{bulk}}$
+% % as additive contributions to total energy. Under~\eqref{eq:superweight_loss},
+% % allocating capacity to $W_{\mathcal{S}}$ is not Frobenius-justified, so
+% % the truncation prefers to fit $W_{\mathrm{bulk}}$. Since
+% % $\|W_{\mathcal{S}}\|_2 \asymp \|W\|_2$ by~\eqref{eq:superweight_def}, the
+% % omitted component contributes a constant fraction of $\|W\|_2$ along its
+% % top singular direction.
+% % \end{proof}
+
+% % The condition~\eqref{eq:superweight_loss} is precisely the regime in
+% % which $\|W_\mathcal{S}\|_F$ is small relative to the bulk Frobenius
+% % tail --- which, by~\eqref{eq:tail}, is large whenever
+% % $\alpha \leq 1/2$. This is the same regime in which the spectral gap
+% % of~\eqref{eq:gap_scaling} is dimension-dependent, and it produces the
+% % spectral mass loss documented in our activation-geometry diagnostics
+% % (Figs.~\ref{fig:activation_geometry},~\ref{fig:llama_activation_geometry}).
+
+
+
+\section{张量化为何失败：算子分析的视角}
+\label{sec:theory}
+
+诸如图~\ref{fig:matrix_decomps}）中 FFN 张量化下的急剧退化、残差流的几何漂移（图~\ref{fig:activation_geometry}）、对秩截断的病态敏感性（图~\ref{fig:superweigths}），以及 \textsc{TD-MoE} 与基于矩阵的 \textsc{MoBE} 之间一贯存在的差距（图~\ref{fig:moe_main}）之类的经验规律，指向的是一个\textit{结构性}而非方法论层面的原因。我们通过两个环环相扣的障碍将其形式化：Frobenius 最优的张量分解（HOSVD、TT-SVD、Tucker）(i)~所优化的范数与算子范数的保持并不一致；(ii)~在 Transformer 权重所呈现的重尾谱上，其谱误差超出矩阵最优误差一个随层宽多项式增长的因子。
+
+\paragraph{设定。}
+设 $W \in \mathbb{R}^{m \times n}$ 为某层的权重矩阵，$\varphi : \mathbb{R}^{m \times n} \to \mathbb{R}^{I_1 \times \cdots \times I_d}$ 为满足 $\prod \limits_{\ell = 1}^d I_\ell = mn$ 且 $d \geq 2$ 的重排。令 $\mathcal{T} = \varphi(W)$，并设 $\widehat{\mathcal{T}} \in \mathcal{M}_{\mathbf{r}}$（其中 $\mathcal{M}_{\mathbf{r}}$ 为固定的秩流形）是 Frobenius 最优的低秩逼近（经 HOSVD 得到 Tucker 秩 $\mathbf{r}=(r_1,\dots,r_d)$，或经 TT-SVD 得到 TT 秩 $(r_1,\dots,r_{d-1})$），且 $\widehat{W} = \varphi^{-1}(\widehat{\mathcal{T}})$。模-$\ell$ 展开 $\mathcal{T}_{(\ell)}$ 的奇异值为 $\sigma_{\ell,1} \geq \sigma_{\ell,2} \geq \dots$；在不会引起混淆时我们省略模下标。
+
+\paragraph{张量化保持 Frobenius 几何但不保持算子几何。} 由于 $\varphi$ 只是对元素进行置换，对一切 $A$ 有 $\|\varphi(A)\|_F = \|A\|_F$。张量谱（内射）范数
+\begin{equation}
+\|\mathcal{T}\|_\sigma \;:=\; \sup_{\|u^{(\ell)}\|_2 = 1} \bigl\langle \mathcal{T},\, u^{(1)} \otimes \cdots \otimes u^{(d)} \bigr\rangle,
+\label{eq:tensor-spectral}
+\end{equation}
+的上确界取遍秩一单位张量：当 $d \geq 3$ 时，这是算子范数单位球的一个真子集。因此 $\|\varphi(W)\|_\sigma \leq \|W\|_2$，且等号仅在 $\varphi(W)$ 为秩一时成立。当 $d \geq 3$ 时计算 $\|\mathcal{T}\|_\sigma$ 在计算上是困难的，且两种范数之间可以存在多项式量级的分离。
+
+\begin{proposition} [\citealp{friedland2018nuclear}]
+\label{prop:gap}
+对重排为阶数 $d \geq 3$ 的 $W \in \mathbb{R}^{m \times n}$，
+\begin{equation}
+\frac{\|W\|_2}{\|\varphi(W)\|_\sigma} \;\in\; \Bigl[\,1,\; \sqrt{\min(m,n)}\,\Bigr],
+\label{eq:gap-bound}
+\end{equation}
+且该上界在奇异向量非局域化的矩阵上通常是可达的。
+\end{proposition}
+
+因此，$\varphi$ 是 Frobenius 等距，但并不是 $(\mathbb{R}^{m \times n}, \|\cdot\|_2)$ 与 $(\mathbb{R}^{I_1 \times \cdots \times I_d}, \|\cdot\|_\sigma)$ 之间的等距。Eckart--Young--Mirsky 结果没有张量版本：Frobenius 最优与算子最优并不重合。
+
+\paragraph{重尾谱上的谱次优性。} 固定目标模 $\ell$ 与矩阵秩 $k$，记 $W_\ell := \mathcal{T}_{(\ell)}$。我们比较秩为 $k$ 的 Eckart--Young 最优解 $\widehat{W}^{\mathrm{EY}}$ 与张量截断的展开 $\widehat{W} := (\widehat{\mathcal{T}})_{(\ell)}$。HOSVD 与 TT-SVD 并不精确求解 $\mathcal{M}_\mathbf{r}$ 上的 Frobenius 问题，但满足准最优界 $\|\mathcal{T} - \widehat{\mathcal{T}}\|_F \leq (1 + \varepsilon)\, \min_{\mathcal{S} \in \mathcal{M}_\mathbf{r}} \|\mathcal{T} - \mathcal{S}\|_F$，其中 $\varepsilon \leq \sqrt{d-1} - 1$~\citep{oseledets2011tensor}。结合逐模尾部估计与重排的等距性，在各模谱相当这一工作假设下可得 $\|W_\ell - \widehat{W}\|_F^2 \leq d \sum_{i > k} \sigma_i^2$。
+
+\begin{corollary}[谱范数与 Frobenius 范数的差距]
+\label{cor:spectral-gap}
+将 $\|\cdot\|_2 \leq \|\cdot\|_F$ 与上述界结合，
+\begin{equation}
+\frac{\|W_\ell - \widehat{W}\|_2}{\sigma_{k+1}} \;\leq\; \sqrt{d} \cdot \sqrt{1 + \!\!\sum_{i > k+1}\! \bigl(\sigma_i / \sigma_{k+1}\bigr)^2}.
+\label{eq:spectral-suboptimality}
+\end{equation}
+流形几何只贡献因子 $\sqrt{d}$；起决定作用的是 $W_\ell$ 的谱轮廓。
+\end{corollary}
+
+\paragraph{幂律特例。}
+在很宽的指标范围内，权重矩阵的谱可以用 $\sigma_i \propto i^{-\alpha}$ 很好地建模~\citep{martin2021implicit}。对维数 $N$ 聚合求和，
+\begin{equation}
+\sum_{i = k+1}^{N} \sigma_i^2 \;\asymp\; \begin{cases}
+N^{1 - 2\alpha}, & \alpha < 1/2, \\
+\log(N/k), & \alpha = 1/2, \\
+k^{1 - 2\alpha}, & \alpha > 1/2.
+\end{cases}
+\label{eq:power-law-tail}
+\end{equation}
+代入式~\eqref{eq:spectral-suboptimality}可知：当 $\alpha < 1/2$ 时谱次优性以 $\Theta(N^{1/2 - \alpha})$ 增长，在边界情形以 $\Theta(\sqrt{\log(N/k)})$ 增长，而当 $\alpha > 1/2$ 时有常数上界。恰恰在重尾情形下，尾部由\emph{环境维数} $N$ 而非截断点 $k$ 主导。该界只有在 $\alpha < 1/2$ 时才有实质后果。为验证这正是实际所处的区域，我们对 Qwen3-30B-A3B 中堆叠专家 FFN 张量的各模展开拟合 $\sigma_i \propto i^{-\alpha_k}$（模 0：专家；模 1：输出；模 2：输入）。表~\ref{tab:alpha} 报告了若干代表性层上的指数：\emph{所有实测 $\alpha_k$ 都远低于 $1/2$}，其中专家模与输出模通常低于 $0.1$，输入模低于 $0.4$。因此，式~\eqref{eq:spectral-suboptimality} 的界并非渐近意义上的点缀，而是在实际使用的维数与秩下切实起约束作用的界。
+
+
+\begin{table}[t]
+\centering
+\small
+\caption{对 Qwen3-30B-A3B 专家张量的三个模展开拟合得到的幂律指数 $\alpha_k$（$\sigma_i \propto i^{-\alpha_k}$）。}
+\label{tab:alpha}
+\begin{tabular}{lccc}
+\toprule
+层 / 投影 & $\alpha_0$（专家） & $\alpha_1$（输出） & $\alpha_2$（输入） \\
+\midrule
+第 0 层 / gate  & 0.160 & 0.075 & 0.402 \\
+第 0 层 / up    & 0.187 & 0.062 & 0.358 \\
+第 12 层 / gate & 0.047 & 0.050 & 0.197 \\
+第 12 层 / up   & 0.040 & 0.045 & 0.190 \\
+第 24 层 / gate & 0.039 & 0.053 & 0.202 \\
+第 24 层 / up   & 0.025 & 0.046 & 0.195 \\
+第 47 层 / gate & 0.052 & 0.051 & 0.142 \\
+第 47 层 / up   & 0.048 & 0.051 & 0.134 \\
+\bottomrule
+\end{tabular}
+\vspace{-2mm}
+\end{table}
+
+\paragraph{与经验发现的对照。} 命题~\ref{prop:gap} 与推论~\ref{cor:spectral-gap} 共同表明：任何 Frobenius 最优的张量化虽然控制了 $\|W - \widehat{W}\|_F$，却容许算子残差 $\|W - \widehat{W}\|_2$ 达到矩阵最优值的至多 $\sqrt{\min(m,n)}$ 倍。由于残差流的传播受算子范数而非 Frobenius 范数支配，Frobenius 最优性与决定功能保持的那个量并不一致。
+
+这一解释调和了第~\ref{sec:compression}~节的发现。图~\ref{fig:activation_geometry} 中的角度漂移与范数收缩追踪的是算子误差，而图~\ref{fig:superweigths} 的恢复曲线则反映出：关键的奇异方向深藏于谱的尾部，恰是 Frobenius 截断最先丢弃的部分。图~\ref{fig:moe_main} 中 \textsc{TD-MoE} 与 \textsc{MoBE} 的差距是同一效应的放大：沿专家轴张量化引入了一个展开后重尾程度最严重的模（表~\ref{tab:alpha}，中间层处 $\alpha_0 \approx 0.03\text{--}0.05$），使本已严格的界再乘上一个因子。这些失败都无法通过重新加权 Frobenius 损失或重排模的顺序来缓解；它们要么需要一个算子感知的目标函数，要么需要比本文所用的轻量 LoRA 沉重得多的分解后修复。
+
+

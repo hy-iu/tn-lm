@@ -1,0 +1,264 @@
+\subsection{张量分解}
+\label{subsec:tensor-decompositions}
+本节回顾与本文工作相关的主要张量分解格式。我们涵盖 CP 分解（典范秩一项之和）、Tucker 分解（核心张量配以各模专属因子矩阵，及其 Tucker-1/2/3 变体）、TT 分解及其矩阵变体（TTM），以及同时推广 CP 与 Tucker 的块项分解。对每种模型，我们给出数学表述，强调其关键性质，并讨论唯一性与取舍。在本节中，$\ten{X} \in \R^{I_1 \times I_2 \times \cdots \times I_N}$ 表示一个 $N$ 阶张量。
+
+
+\subsubsection{CP 分解}
+% The CP decomposition \cite{hitchcock1927cp} represents a tensor as a sum of rank-one outer tensors as folllows,
+% \begin{equation}\label{cp_eq}
+% \begin{gathered}
+%     \ten{X} = \sum_{r=1}^{R}\lambda_r \vecb{a}^{(1)}_r\circ\vecb{a}^{(2)}_r\circ\cdots\circ\vecb{a}^{(N)}_r, \\
+%     \ten{X}_{i_1, i_2, \dots, i_N} = \sum_{r=1}^{R}\lambda_r \mat{A}^{(1)}_{i_1, r}\mat{A}^{(2)}_{i_2, r}\cdots\mat{A}^{(N)}_{i_N, r},
+% \end{gathered}
+% \end{equation}
+% where $\mat{A}^{(n)} = [\vecb{a}^{(n)}_1, \vecb{a}^{(n)}_2, \dots, \vecb{a}^{(n)}_R] \in \mathbb{R}^{I_n \times R}$ is the factor matrix for mode $n$, and $\lambda_r$ are scaling coefficients. The second expression in \eqref{cp_eq} is the component-wise representation of the tensor. The minimum number of rank-1 tensor respensing a tensor exactly as in \eqref{cp_eq}, is called  tensor rank or CP rank. Unlike matrices, finding the CP rank is an NP-hard problem \cite{haastad1990tensor,hillar2013most}. If we can represent a tensor exactly with a minimum number of rank-1 tensors, such a decomposition is called canonical polyadic decomposition (CPD); otherwise, it is only called polyadic decomposition. In reality, due to the NP-hardness of CPD rank, we only consider an approximation of a tensor, that is the equality in \eqref{cp_eq}, is replaced with approximation.
+% The CP decomposition is compact and often interpretable, but optimization can be ill-conditioned and rank selection is difficult \cite{de2008tensor}, \cite{kolda2009tensor}. % Add after CP equation:
+% The CP decomposition is unique up to trivial scaling and column permutations under the Kruskal condition: $\sum_{n=1}^N k_{\mat{A}^{(n)}} \ge 2R + (N-1)$, where $k_{\mat{A}}$ is the Kruskal rank of the factor matrix \cite{kruskal1977three}, \cite{kolda2009tensor}. In practice, for language model tensors, this condition is often violated, leading to non-unique decompositions that can complicate interpretability. For this reason, additional constraints (non-negativity, orthogonality, or sparsity) are often imposed to improve stability and interpretability \cite{cichocki2015tensor}.
+
+
+%\color{blue}
+%CORRECTED: 
+CP（canonical polyadic）分解 \cite{hitchcock1927cp}, \cite{carroll1970analysis}, \cite{harshman1970foundations} 用一组秩一外积之和来近似张量
+\begin{equation}
+\label{eq:cp-decomposition}
+    \ten{X} \approx \sum_{r=1}^{R}\lambda_r \vecb{a}^{(1)}_r\circ\vecb{a}^{(2)}_r\circ\cdots\circ\vecb{a}^{(N)}_r,
+\end{equation}
+或等价地写成标量形式
+\begin{equation}
+\label{eq:cp-decomposition-scalar}
+    \ten{X}_{i_1, i_2, \dots, i_N} \approx \sum_{r=1}^{R}\lambda_r \mat{A}^{(1)}_{i_1, r}\mat{A}^{(2)}_{i_2, r}\cdots\mat{A}^{(N)}_{i_N, r},
+\end{equation}
+其中 $\mat{A}^{(n)} = [\vecb{a}^{(n)}_1, \vecb{a}^{(n)}_2, \dots, \vecb{a}^{(n)}_R] \in \mathbb{R}^{I_n \times R}$ 是第 $n$ 模的因子矩阵，$\lambda_r$ 是缩放系数。
+当式 \eqref{eq:cp-decomposition} 与式 \eqref{eq:cp-decomposition-scalar} 中的等号成立时，分解是精确的，我们称之为 $\ten{X}$ 的一个 \emph{CP 表示}。这种表示中 $R$ 的最小允许值称为 $\ten{X}$ 的张量秩，即 CP 秩。
+在 Kruskal 条件 $\sum_{n=1}^N k_{\mat{A}^{(n)}} \ge 2R + (N-1)$ 下，精确表示在平凡的缩放与列置换意义下是唯一的；该条件是充分的但非必要，其中 $k_{\mat{A}}$ 是因子矩阵的 k-秩 \cite{kruskal1977three}, \cite{sidiropoulos2000cpuniqueness}, \cite{kolda2009tensor}。
+CP 分解紧凑且往往可解释，但由于计算 CP 秩是 NP 难问题，它作为逼近问题的性态很差 \cite{haastad1990tensor}, \cite{hillar2013most}。因此 $R$ 只能凭启发式选取，且在固定 $R \ge 2$ 时，最优秩 $R$ 近似在一个具有正体积的张量集合上可能不存在 \cite{de2008tensor}。拟合算法继承了这些困难，在高阶情形下还会出现数值不稳定 \cite{kolda2009tensor}, \cite{cichocki2015tensor}。
+因此，人们常施加非负性、正交性或稀疏性等额外约束，以提高稳定性与精度，并放宽唯一性条件 \cite{cichocki2015tensor}。
+
+%\color{black}
+
+% \subsubsection{Tucker Decomposition}
+% The Tucker decomposition \cite{tucker1966some} admits the following model
+% \begin{equation}
+% \ten{X}\approx \ten{G}\times_1\mat{A}^{(1)}\times_2\mat{A}^{(2)}\cdots\times_N\mat{A}^{(N)},
+% \end{equation}
+% where $\ten{G}$ is a core tensor and each mode has its own rank. Tucker is useful when modes have different meanings, such as layer, head, feature, and modality, but the core can grow quickly. $\ten{G} \in \mathbb{R}^{R_1 \times R_2 \times \cdots \times R_N}$ is the core tensor, with $R_i$ denoting the Tucker ranks; the core dictates how the different modes interact with each other. Each $\mat{A}^{(i)} \in \mathbb{R}^{I_i \times R_i}$ is a factor matrix, playing a role analogous to principal components for that specific mode. In scalar form, the decomposition expresses each element of $\ten{X}$ as 
+% \[
+% \ten{X}_{i_1 i_2 \cdots i_N} 
+% \approx \sum_{r_1=1}^{R_1} \sum_{r_2=1}^{R_2} \cdots \sum_{r_N=1}^{R_N}
+% \ten{G}_{r_1 r_2 \cdots r_N} 
+% \cdot \mat{A}^{(1)}_{i_1, r_1}
+% \cdot \mat{A}^{(2)}_{i_2, r_2}
+% \cdots
+% \mat{A}^{(N)}_{i_N, r_N}.
+% \]
+% The Tucker decomposition can be made unique by imposing orthonormality constraints on the factor matrices: $(\mat{A}^{(n)})^\top \mat{A}^{(n)} = \mat{I}_{R_n}$ for $n=1,2,\ldots,N$, making it analogous to higher-order SVD \cite{kolda2009tensor}.
+
+% The Tucker-3 decomposition (also called third-order Tucker) applies Tucker decomposition specifically to a 3rd-order tensor, i.e.,
+% \begin{equation}
+% \mathcal{X} \approx \mathcal{G} \times_1 \mathbf{A}^{(1)} \times_2 \mathbf{A}^{(2)} \times_3 \mathbf{A}^{(3)},
+% \end{equation}
+% where the factor matrices capture interactions along each of the three modes. 
+
+% If a third-order tensor \( \mathcal{X} \in \mathbb{R}^{I \times J \times K} \) has only two modes of large size (say, \( I \) and \( J \)), and a dimensionality reduction is required only along those modes, the corresponding decomposition is called the Tucker-2 model. Mathematically, it is written as:
+% \[
+% \mathcal{X} \approx \mathcal{G} \times_1 \mathbf{A} \times_2 \mathbf{B},
+% \]
+% where \( \mathcal{G} \in \mathbb{R}^{R_1 \times R_2 \times K} \) is the core tensor,
+%      \( \mathbf{A} \in \mathbb{R}^{I \times R_1} \) and \( \mathbf{B} \in \mathbb{R}^{J \times R_2} \) are factor matrices for the two large modes,
+%      \( R_1 < I \) and \( R_2 < J \) are the reduced ranks,
+%      the third mode (\( K \)) remains uncompressed. 
+%     Similarly, if the tensor has only one mode of large size (say, \( I \)), and reduction is needed only in that mode, the model is called the Tucker-1 model. This is equivalent to a truncated singular value decomposition (SVD) along that mode:
+% \[
+% \mathcal{X} \approx \mathcal{G} \times_1 \mathbf{A},
+% \]
+% with \( \mathcal{G} \in \mathbb{R}^{R_1 \times J \times K} \),
+%     \( \mathbf{A} \in \mathbb{R}^{I \times R_1} \),
+%      \( R_1 < I \).
+
+% In both cases, the core tensor retains the remaining uncompressed modes in full, making these models efficient when only a subset of modes exhibit high dimensionality.
+
+\subsubsection{Tucker 分解}
+% The Tucker decomposition \cite{tucker1966some} admits the following model:
+% \begin{equation}
+% \ten{X} = \ten{G}\times_1\mat{A}^{(1)}\times_2\mat{A}^{(2)}\cdots\times_N\mat{A}^{(N)},
+% \end{equation}
+% where $\ten{G} \in \R^{R_1 \times R_2 \times \cdots \times R_N}$ is an $N$th-order core tensor with $R_n$ denoting the Tucker ranks; each $\mat{A}^{(n)} \in \mathbb{R}^{I_n \times R_n}$ is an $n$-th-mode factor matrix. The core dictates how the different modes interact with each other, while factors play a role analogous to principal components for that specific mode. In scalar form, the decomposition expresses each element of $\ten{X}$ as: 
+% \begin{equation}
+% \ten{X}_{i_1 i_2 \cdots i_N} = \sum_{r_1=1, \dots, r_N=1}^{R_1, \dots, R_N}
+% \ten{G}_{r_1, r_2, \dots, r_N} \mat{A}^{(1)}_{i_1, r_1} \mat{A}^{(2)}_{i_2, r_2} \cdots \mat{A}^{(N)}_{i_N, r_N}.
+% \end{equation}
+% The Tucker decomposition is not unique in general, as it suffers from rotational ambiguities within each mode.  
+% Specifically, for any invertible matrix $\mathbf{A}^{(n)}$ applied to the $n$-th mode factor, the core tensor can be transformed via $\mathcal{G} \times_n \mathbf{U}^{(n)-1}$ to yield an equivalent representation.  
+% This non-uniqueness arises because the factor matrices can be arbitrarily rotated without altering the reconstructed tensor, provided the core is adjusted accordingly.  
+% To achieve uniqueness, additional constraints such as orthogonality, sparsity, or non-negativity are typically imposed on the factor matrices or the core tensor. Under such restrictions, the Tucker decomposition can become essentially unique up to trivial permutations and sign flips of the components.
+
+% The Tucker-3 decomposition (also called third-order Tucker) applies the Tucker decomposition specifically to a 3rd-order tensor, i.e.,
+% \begin{equation}
+% \mathcal{X} \approx \mathcal{G} \times_1 \mat{A} \times_2 \mat{B} \times_3 \mat{C},
+% \end{equation}
+% where the factor matrices capture interactions along each of the three modes. 
+
+% If a third-order tensor \( \mathcal{X} \in \mathbb{R}^{I \times J \times K} \) has only two modes of large size (say, \( I \) and \( J \)), and a dimensionality reduction is required only along those modes, the corresponding decomposition is called the Tucker-2 model. Mathematically, it is written as:
+% \[
+% \mathcal{X} \approx \mathcal{G} \times_1 \mat{A} \times_2 \mat{B},
+% \]
+% where \( \mathcal{G} \in \mathbb{R}^{R_1 \times R_2 \times K} \) is the core tensor;
+%      \( \mat{A} \in \mathbb{R}^{I \times R_1} \) and \( \mat{B} \in \mathbb{R}^{J \times R_2} \) are factor matrices for the two large modes;
+%      \( R_1 < I \) and \( R_2 < J \) are the reduced ranks;
+%      and the third mode (\( K \)) remains uncompressed.
+%     Similarly, if the tensor has only one mode of large size (say, \( I \)), and reduction is needed only in that mode, the decomposition is called the Tucker-1 model. This is equivalent to a truncated singular value decomposition (SVD) along that mode:
+% \[
+% \mathcal{X} \approx \mathcal{G} \times_1 \mat{A},
+% \]
+% with \( \mathcal{G} \in \mathbb{R}^{R_1 \times J \times K} \),
+%     \( \mat{A} \in \mathbb{R}^{I \times R_1} \),
+%      \( R_1 < I \). 
+% In both cases, the core tensor retains the remaining uncompressed modes in full, making these models efficient when only a subset of modes exhibit high dimensionality.
+
+% \color{blue}
+
+% CORRECTED: 
+
+Tucker 分解 \cite{tucker1966some} 采用如下模型：
+\begin{equation}
+\label{eq:tucker-decomposition}
+\ten{X} \approx \ten{G}\times_1\mat{A}^{(1)}\times_2\mat{A}^{(2)} \times_3 \cdots \times_N\mat{A}^{(N)},
+\end{equation}
+其中 $\ten{G} \in \R^{R_1 \times R_2 \times \cdots \times R_N}$ 是 $N$ 阶核心张量，每个 $\mat{A}^{(n)} \in \R^{I_n \times R_n}$ 是第 $n$ 模的因子矩阵。写成标量形式，该分解将 $\ten{X}$ 的每个元素表示为：
+\begin{equation}
+\label{eq:tucker-decomposition-scalar}
+\ten{X}_{i_1, i_2, \dots, i_N} \approx \sum_{r_1=1, \dots, r_N=1}^{R_1, \dots, R_N}
+\ten{G}_{r_1, r_2, \dots, r_N} \mat{A}^{(1)}_{i_1, r_1} \mat{A}^{(2)}_{i_2, r_2} \cdots \mat{A}^{(N)}_{i_N, r_N}.
+\end{equation}
+若式 \eqref{eq:tucker-decomposition} 与式 \eqref{eq:tucker-decomposition-scalar} 中严格取等号，我们称之为 $\ten{X}$ 的一个 \emph{Tucker 表示}；使这种表示存在的、按元素意义下最小的 $N$ 元组 $(R_1, R_2, \dots, R_N)$ 称为 $\ten{X}$ 的 Tucker 秩或多重线性秩（这样的元组总是存在，其中每个 $R_n$ 等于 $\ten{X}$ 第 $n$ 模矩阵化的秩 \cite{kolda2009tensor}）。
+Tucker 分解是不唯一的：对任意可逆矩阵 $\mat{S}_n \in \R^{R_n \times R_n}$，将因子矩阵 $\mat{A}^{(n)}$ 替换为 $\mat{A}^{(n)}\mat{S}_n$ 并在核心中以 $\mat{S}_n^{-1}$ 作补偿，重构张量保持不变。正交性可以限制但一般不能消除这种规范自由度。更强的唯一性结论需要额外假设，例如各模奇异子空间非退化，以及指定某种典范约定。
+因此，HOSVD \cite{lathauwer2000hosvd} 等常用算法会固定一种特定选择，产生正交因子矩阵 $(\mat{A}^{(n)})^\top \mat{A}^{(n)} = \mat{I}_{R_n}$ 以及带有额外约束的核心张量（详见 \cite{lathauwer2000hosvd}）。
+由于这种不唯一性，与 CP 分解不同，Tucker 因子给出的向量与核心中的数值不能直接解释。
+
+
+对三阶情形还有额外术语，按被压缩的模的个数来标记。Tucker-3 指对三阶张量施行的标准 Tucker 分解，三个模全部被压缩。
+若 $\ten{X} \in \R^{I \times J \times K}$ 只有两个模尺寸很大（比如 $I$ 与 $J$），且只需沿这两个模降维，则相应的分解称为 Tucker-2 模型，$\ten{X} \approx \ten{G} \times_1 \mat{A} \times_2 \mat{B}$，
+其中 $\ten{G} \in \R^{R_1 \times R_2 \times K}$，$\mat{A} \in \R^{I \times R_1}$，$\mat{B} \in \R^{J \times R_2}$；$R_1 < I$、$R_2 < J$ 是缩减后的秩；第三个模（$K$）保持未压缩。
+类似地，若张量只有一个模尺寸很大（比如 $I$），且只需在该模上降维，则分解称为 Tucker-1 模型，$\ten{X} \approx \ten{G} \times_1 \mat{A}$，
+其中 $\ten{G} \in \R^{R_1 \times J \times K}$，$\mat{A} \in \R^{I \times R_1}$，$R_1 < I$；这退化为沿第一模的截断奇异值分解（SVD）。
+在这两种情形下，核心张量都完整保留其余未压缩的模，因此当只有一部分模呈现高维性时，这些模型十分高效。
+
+
+\color{black}
+
+
+% \subsubsection{Tensor Train (TT) Decomposition}
+% The TT/MPS representation \cite{oseledets2011tensor} expresses a higher-order tensor $\ten{X}\in\mathbb{R}^{I_1\times I_2\times \cdots\times I_N}$, in component-wise form as follows:
+% \begin{equation}
+% \ten{X}(i_1,\ldots,i_N)=\mat{G}_1(i_1)\mat{G}_2(i_2)\cdots\mat{G}_N(i_N),
+% \end{equation}
+% where $\mat{G}_n(i_n)\in\R^{R_{n-1}\times R_n}$ and $R_0=R_N=1$. TT/MPS is attractive for language models because it scales well with order and can represent large embeddings or operators through chains of small cores. Here, each $\mat{G}_n(i_n)$ is a matrix that depends on the index $i_n$ of the $n$-th mode; for each fixed value of $i_n$, we obtain a distinct $R_{n-1} \times R_n$ matrix. The product $\mat{G}_1(i_1)\mat{G}_2(i_2)\cdots\mat{G}_N(i_N)$ is a standard matrix multiplication, but because $R_0 = R_N = 1$, the first matrix $\mat{G}_1(i_1)$ is actually a row vector of size $1 \times R_1$, and the last matrix $\mat{G}_N(i_N)$ is a column vector of size $R_{N-1} \times 1$. Consequently, the product of all $N$ matrices collapses to a scalar, which is exactly the value of $\ten{X}$ at the multi-index $(i_1, \ldots, i_N)$. Each core $\mat{G}_n$ can be viewed as a third-order tensor of size $R_{n-1} \times I_n \times R_n$, where the index $i_n$ selects the "slice" along the middle dimension, yielding the matrix $\mat{G}_n(i_n)$. This chain-like structure ensures that the total number of parameters grows only as $\mathcal{O}(N \cdot I \cdot R^2)$ (assuming uniform dimensions and ranks), which is linear in the order $N$, in stark contrast to the exponential growth of the full tensor. This favorable scaling makes TT/MPS particularly suitable for representing large-scale embeddings, attention matrices, or weight tensors in language models, where the order $N$ can be large.
+
+% The Tensor Train Matrix (TTM) format \cite{oseledets2010approximation} generalizes the TT decomposition to matrices. More precisely, a given matrix is reshaped to a higher-order tensor after which it is compressed in the TT decomposition. For a matrix $\mat{W}\in\R^{d_{\rm in}\times d_{\rm out}}$ with 
+% $d_{\rm in}=\prod_{n=1}^N I_n$ and $d_{\rm out}=\prod_{n=1}^N J_n$, the TTM representation is
+% \begin{equation}
+% \mat{W}(i_1,\ldots,i_N,j_1,\ldots,j_N) = \sum_{\alpha_0,\ldots,\alpha_N} \mathcal{G}_1(i_1,j_1,\alpha_0,\alpha_1)\cdots\mathcal{G}_N(i_N,j_N,\alpha_{N-1},\alpha_N),
+% \end{equation}
+% where each core $\mathcal{G}_n$ is a 4th-order tensor of size $R_{n-1}\times I_n\times J_n\times R_n$ with $R_0=R_N=1$.
+
+\subsubsection{张量列（TT）分解}
+% The TT (also known as MPS) representation \cite{oseledets2011tensor} expresses a higher-order tensor $\ten{X}\in\mathbb{R}^{I_1\times I_2\times \cdots\times I_N}$ in chain-like form as follows:
+% \begin{equation}
+%     \ten{X} = \ten{G}^{(1)} \leftindex_{-1} \times^{1} \ \ten{G}^{(2)} \leftindex_{-1} \times^{1} \ \cdots \leftindex_{-1} \times^{1} \ \ten{G}^{(N)},
+% \end{equation}
+% where the $-1$ in the left contraction index denotes the last mode of the left tensor, following Python-style indexing. In scalar form, this is equivalent to:
+% \begin{equation}
+% \ten{X}_{i_1, i_2,\dots, i_N} = \sum_{\alpha_0, \alpha_1, \dots, \alpha_N=1}^{R_0, R_1, \dots, R_N} \ten{G}^{(1)}_{\alpha_0, i_1, \alpha_1} \ten{G}^{(2)}_{\alpha_1, i_2, \alpha_2} \cdots \ten{G}^{(N)}_{\alpha_{N-1}, i_N, \alpha_N},
+% \end{equation}
+% where each core $\ten{G}^{(n)} \in \R^{R_{n-1} \times I_n \times R_n}$ is 3rd-order, and the values $(R_0, R_1, \ldots, R_N)$ are called the TT-ranks, where $R_0=R_N=1$ always holds. This decomposition can also be expressed in terms of matrix slices of the cores:
+% \begin{equation}
+% \ten{X}_{i_1, i_2,\dots, i_N} = \mat{G}^{(1)}_{i_1}\mat{G}^{(2)}_{i_2}\cdots\mat{G}^{(N)}_{i_N},
+% \end{equation}
+% where $\mat{G}^{(n)}_{i_n} = \ten{G}^{(n)}(:, i_n, :) \in\R^{R_{n-1}\times R_n}$. This can be viewed from the following perspective: each core $\ten{G}^{(n)}$ is a third-order tensor of size $R_{n-1} \times I_n \times R_n$, where the index $i_n$ selects the ``slice'' along the middle dimension, yielding the matrix $\mat{G}^{(n)}_{i_n}$ of size $R_{n-1} \times R_n$. From this representation the second name -- Matrix Product State (MPS) -- arises, as the tensor is expressed as a product of matrices.
+% TT is attractive for high-order tensors because it scales well with order and can represent large tensors through chains of small cores. This chain-like structure ensures that the total number of parameters grows only as $\mathcal{O}(N I R^2)$ (assuming uniform dimensions and ranks), which is linear in the order $N$, in stark contrast to the exponential growth of the full tensor. The TT decomposition is unique only up to gauge transformations, unlike the Tucker decomposition which has rotational ambiguities within each mode. Specifically, for any sequence of invertible matrices inserted between adjacent cores, the cores can be transformed via \(\mathbf{G}^{(n)}_{i_n} \mapsto \mathbf{M}_{n-1} \mathbf{G}^{(n)}_{i_n} \mathbf{M}_n^{-1}\) without changing the reconstructed tensor. This non-uniqueness is a fundamental property of the TT format, but it can be eliminated by enforcing orthogonality conditions on the cores, such as left- or right-orthogonality. Under such canonical constraints, the decomposition becomes unique up to trivial permutations and sign flips of the components.
+
+
+% The Tensor Train Matrix (TTM) format \cite{oseledets2010approximation} generalizes the TT decomposition to matrices. More precisely, a given matrix $\mat{T}$ is reshaped into a higher-order tensor $\ten{T}$, which is then compressed via the TT decomposition. For a matrix $\mat{T}\in\R^{I\times J}$ with $I=\prod_{n=1}^N I_n$ and $J=\prod_{n=1}^N J_n$, the TTM representation is:
+% \begin{equation}
+%     \ten{T} = \ten{G}^{(1)} \leftindex_{-1} \times^{1} \ \ten{G}^{(2)} \leftindex_{-1} \times^{1} \ \cdots \leftindex_{-1} \times^{1} \ \ten{G}^{(N)},
+% \end{equation}
+% where $-1$ again denotes the last mode of the left tensor, and, unlike the TT decomposition, each core $\ten{G}^{(n)} \in \R^{R_{n-1} \times I_n \times J_n \times R_n}$ is 4th-order. In scalar form, this can be expressed as:
+% \begin{equation}
+% \ten{T}_{i_1, j_1,\ldots,i_N ,j_N} = \sum_{\alpha_0, \alpha_1, \dots, \alpha_N=1}^{R_0, R_1, \ldots, R_N} \ten{G}^{(1)}_{\alpha_0, i_1, j_1, \alpha_1} \ten{G}^{(2)}_{\alpha_1, i_2, j_2, \alpha_2} \cdots\ten{G}^{(N)}_{\alpha_{N-1},i_N,j_N, \alpha_N},
+% \end{equation}
+% where $(R_0, R_1, \ldots, R_N)$ are the TTM ranks, with $R_0=R_N=1$. The advantage of TTM is that it natively handles matrices, representing them as a multilinear operator and thereby preserving the operator structure, in contrast to TT. That is why in quantum physics, TTM is often referred to as Matrix Product Operator (MPO) \cite{schollwock2011dmrg}. We will refer to TTM and MPO interchangeably, preferring TTM, while using MPO when it is the terminology adopted by the paper under discussion.
+
+% \color{blue}
+%CORRECTED:
+张量列（tensor train, TT）分解 \cite{oseledets2011tensor} 将高阶张量 $\ten{X}\in\R^{I_1\times I_2\times \cdots\times I_N}$ 表示为如下链式形式：
+\begin{equation}
+    \ten{X} \approx \ten{G}^{(1)} \leftindex_{-1} \times^{1} \ \ten{G}^{(2)} \leftindex_{-1} \times^{1} \ \cdots \leftindex_{-1} \times^{1} \ \ten{G}^{(N)},
+\end{equation}
+其中左侧缩并指标里的 $-1$ 按 Python 风格索引表示左边张量的最后一个模。写成标量形式，它等价于
+\begin{equation}
+\ten{X}_{i_1, i_2,\dots, i_N} \approx \sum_{\alpha_0, \alpha_1, \dots, \alpha_N=1}^{R_0, R_1, \dots, R_N} \ten{G}^{(1)}_{\alpha_0, i_1, \alpha_1} \ten{G}^{(2)}_{\alpha_1, i_2, \alpha_2} \cdots \ten{G}^{(N)}_{\alpha_{N-1}, i_N, \alpha_N},
+\end{equation}
+其中每个核心 $\ten{G}^{(n)} \in \R^{R_{n-1} \times I_n \times R_n}$ 是三阶的，$(N+1)$ 元组 $(R_0, R_1, \ldots, R_N)$ 称为 TT 秩，且恒有 $R_0=R_N=1$。该分解也可以用核心的切片来表示：
+\begin{equation}
+\ten{X}_{i_1, i_2,\dots, i_N} \approx \mat{G}^{(1)}_{i_1}\mat{G}^{(2)}_{i_2}\cdots\mat{G}^{(N)}_{i_N},
+\end{equation}
+其中 $\mat{G}^{(n)}_{i_n} = \ten{G}^{(n)}_{:, i_n, :} \in\R^{R_{n-1}\times R_n}$。
+分解的这种形式是其别名矩阵积态（MPS）的由来。
+若上述各式中的等号成立，我们称之为 $\ten{X}$ 的一个 \emph{TT 表示}。
+TT 分解仅在规范变换意义下唯一。具体而言，对在相邻核心之间插入的任意一列可逆矩阵 $\mat{S}_n$，核心可经变换 $\mat{G}^{(n)}_{i_n} \mapsto \mat{S}_{n-1} \mat{G}^{(n)}_{i_n} \mat{S}_n^{-1}$ 而重构张量不变。这种不唯一性是 TT 分解的基本性质，不过对核心施加正交条件可以限制这种规范自由度并给出典范形式 \cite{cichocki2015tensor}。
+TT 分解对高阶张量颇具吸引力，因为它随阶数的标度行为十分有利。具体而言，链式结构保证参数总数仅以 $\mathcal{O}(N I R^2)$ 增长（假设各维数与各秩相同），即关于阶数 $N$ 是线性的，与完整张量的指数增长形成对比。
+
+张量列矩阵（Tensor Train Matrix, TTM）格式 \cite{oseledets2010ttm} 将 TT 分解应用于矩阵。更确切地说，给定矩阵 $\mat{T}\in\R^{I\times J}$（其中 $I=\prod_{n=1}^N I_n$，$J=\prod_{n=1}^N J_n$），先将其重排为高阶张量 $\ten{T} \in \R^{I_1 \times J_1 \times \dots \times I_N \times J_N}$，再用类 TT 结构加以近似
+\begin{equation}
+\label{eq:ttm-decomposition}
+    \ten{T} \approx \ten{G}^{(1)} \leftindex_{-1} \times^{1} \ \ten{G}^{(2)} \leftindex_{-1} \times^{1} \ \cdots \leftindex_{-1} \times^{1} \ \ten{G}^{(N)},
+\end{equation}
+其中与 TT 分解不同，每个核心 $\ten{G}^{(n)} \in \R^{R_{n-1} \times I_n \times J_n \times R_n}$ 是四阶的。写成标量形式，它可以表示为
+\begin{equation}
+\label{eq:ttm-decomposition-scalar}
+  \ten{T}_{i_1, j_1,\ldots,i_N ,j_N} \approx \sum_{\alpha_0, \alpha_1, \dots, \alpha_N=1}^{R_0, R_1, \ldots, R_N} \ten{G}^{(1)}_{\alpha_0, i_1, j_1, \alpha_1} \ten{G}^{(2)}_{\alpha_1, i_2, j_2, \alpha_2} \cdots\ten{G}^{(N)}_{\alpha_{N-1},i_N,j_N, \alpha_N},
+\end{equation}
+其中 $(R_0, R_1, \ldots, R_N)$ 是 TTM 秩，且 $R_0=R_N=1$。与 TT 的 MPS 形式一样，TTM 也可以用核心的矩阵切片来表示
+\begin{equation}
+\label{eq:ttm-decomposition-slice}
+  \ten{T}_{i_1, j_1,\dots, i_N, j_N} \approx \mat{G}^{(1)}_{i_1, j_1}\mat{G}^{(2)}_{i_2, j_2}\cdots\mat{G}^{(N)}_{i_N, j_N},
+\end{equation}
+其中 $\mat{G}^{(n)}_{i_n, j_n} = \ten{G}^{(n)}_{:, i_n, j_n, :} \in\R^{R_{n-1}\times R_n}$。
+在 TTM 分解中，$\ten{T}$ 的第 $(i_1, j_1, \ldots, i_N, j_N)$ 个元素与 $\mat{T}$ 的第 $(\overline{i_1, \ldots, i_N}, \overline{j_1, \ldots, j_N})$ 个元素一一对应，其中 $\overline{i_1, \ldots, i_N}$ 表示\emph{多重指标}，且等于
+\begin{equation*}
+\overline{i_1, \ldots, i_N} = i_1 + (i_2 - 1)I_1 + \cdots + (i_N - 1)I_1 \ldots I_{N - 1}.
+\end{equation*}
+由于这一映射是双射，若式 \eqref{eq:ttm-decomposition}、式 \eqref{eq:ttm-decomposition-scalar} 与式 \eqref{eq:ttm-decomposition-slice} 中的等号成立，我们就称之为矩阵 $\mat{T}$ 本身的一个 \emph{TTM 表示}。
+TTM 的优点在于它天然处理矩阵，将其表示为多重线性算符，从而保留算符结构，这一点与 TT 不同。正因如此，在量子物理中 TTM 常被称为矩阵积算符（MPO）\cite{schollwock2011dmrg}。我们将不加区分地使用 TTM 与 MPO，优先用 TTM，而在所讨论论文采用 MPO 这一术语时则用 MPO。
+%\color{black}
+
+\subsubsection{块项分解}
+% The block-term decomposition \cite{lathauwer2008btd} writes $\ten{X}$ as a sum of $K$ Tucker terms,
+% \begin{equation}
+% \ten{X} = \sum_{k=1}^{K}\ten{G}_k\times_1\mat{A}_k^{(1)}\times_2\mat{A}_k^{(2)}\cdots\times_N\mat{A}_k^{(N)},
+% \end{equation}
+% where each $\ten{G}_k\in\R^{R_{k1}\times R_{k2}\times \cdots\times R_{kN}}$ is a small core tensor and each $\mat{A}_k^{(n)}\in\R^{I_{kn}\times R_{kn}}$ is a factor matrix associated with term $k$; the ranks $(R_{k1},R_{k2},\ldots,R_{kN})$ need not be shared across terms, so each term can have its own core size, in addition to its own core and factor matrices. In scalar form:
+% \begin{equation}
+% \ten{X}_{i_1\cdots i_N} = \sum_{k=1}^{K} \left[ \sum_{l_1=1, \dots, l_N=1}^{R_{k1}, \ldots, R_{kN}} (\ten{G}_k)_{l_1, \dots, l_N}\,(\mat{A}_k^{(1)})_{i_1,l_1}\cdots(\mat{A}_k^{(N)})_{i_N,l_N} \right].
+% \end{equation}
+% BTT interpolates between CP and Tucker. Setting $K=1$ removes the outer sum and recovers the Tucker decomposition with core $\ten{G}_1$ and ranks $(R_{11},R_{12},\ldots,R_{1N})$. Setting $R_{kn}=1$ for every term $k$ and mode $n$ instead collapses every core $\ten{G}_k$ to a scalar $\lambda_k$, recovering the CP decomposition as a sum of $K$ rank-one terms. The total parameter count is $\sum_{k}\Bigl[\Pi_nR_{kn}+\sum_nI_{kn}R_{kn}\Bigr]$. By choosing $K$ and the per-term ranks $(R_{k1},R_{k2},\ldots,R_{kN})$ jointly, BTT can trade off CP's compactness against Tucker's per-mode flexibility, at the cost of more hyperparameters and a more involved fitting procedure than either decomposition alone \cite{lathauwer2008btd}. Its uniqueness is more nuanced than that of the standard Tucker decomposition: while the overall decomposition can be essentially unique under suitable rank conditions, each individual block still suffers from the same rotational ambiguity as in Tucker, meaning the factor matrices of each block can be arbitrarily transformed by invertible matrices if the core is adjusted inversely. Additionally, the blocks themselves can be permuted arbitrarily without changing the reconstructed tensor, since the sum is commutative. Therefore, the BTD is unique only up to within-block linear transformations and block permutations, but these ambiguities can be resolved by imposing orthogonality on the factor matrices and fixing a canonical ordering of the blocks.
+
+% \color{blue}
+%CORRECTED: 
+
+块项（block term, BT）分解 \cite{lathauwer2008btd} 将 $\ten{X}$ 写成 $K$ 个 Tucker 项之和
+\begin{equation}
+\label{eq:btd}
+\ten{X} \approx \sum_{k=1}^{K} \left[ \ten{G}_k\times_1\mat{A}_k^{(1)}\times_2\mat{A}_k^{(2)}\cdots\times_N\mat{A}_k^{(N)} \right],
+\end{equation}
+其中每个 $\ten{G}_k\in\R^{R_{k1}\times R_{k2}\times \cdots\times R_{kN}}$ 是一个小核心张量，每个 $\mat{A}_k^{(n)}\in\R^{I_{n}\times R_{kn}}$ 是与第 $k$ 项相关联的因子矩阵；各秩 $(R_{k1},R_{k2},\ldots,R_{kN})$ 不必在各项之间共享，因此每一项除了拥有自己的核心与因子矩阵外，还可以有自己的核心尺寸。写成标量形式：
+\begin{equation}
+\label{eq:btd-scalar}
+\ten{X}_{i_1, \dots, i_N} \approx \sum_{k=1}^{K} \left[ \sum_{l_1=1, \dots, l_N=1}^{R_{k1}, \ldots, R_{kN}} (\ten{G}_k)_{l_1, \dots, l_N}\,(\mat{A}_k^{(1)})_{i_1,l_1}\cdots(\mat{A}_k^{(N)})_{i_N,l_N} \right].
+\end{equation}
+当式 \eqref{eq:btd} 与式 \eqref{eq:btd-scalar} 中的等号成立时，我们称之为 $\ten{X}$ 的一个 \emph{BT 表示}。BT 分解介于 CP 与 Tucker 之间：取 $K=1$ 便去掉外层求和，恢复出以 $\ten{G}_1$ 为核心、以 $(R_{11},R_{12},\ldots,R_{1N})$ 为秩的 Tucker 分解；而对每一项 $k$ 和每个模 $n$ 取 $R_{kn}=1$，则每个核心 $\ten{G}_k$ 塌缩为标量 $\lambda_k$，恢复出作为 $K$ 个秩一项之和的 CP 分解。
+它的唯一性比标准 Tucker 分解更微妙：BT 分解在每个块中都带有 Tucker 的块内歧义，此外 $K$ 个块还可以任意置换。要在这些不确定性之外获得唯一性，需要对因子矩阵施加额外条件，这类条件对三阶张量已知 \cite{lathauwer2008btd}。
+它的主要特点是：通过联合选择 $K$ 与各项的秩 $(R_{k1},R_{k2},\ldots,R_{kN})$，BT 分解可以在 CP 的紧凑性与 Tucker 的逐模灵活性之间进行权衡，代价是超参数更多、拟合过程比单独使用任一分解更复杂 \cite{lathauwer2008btd}。
+
+\color{black}
+

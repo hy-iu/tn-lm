@@ -1,0 +1,52 @@
+\subsection{Implementations}
+\label{sec:implementations}
+
+
+\begin{table}[ht] \small
+    \centering
+    \begin{tabular}{ll}
+    \toprule
+        Model & Training Parameters \\
+        \midrule
+        Vanilla-RNN & $\mW^{xe}\in \mathbb{R}^{E\times |V|}$, $\mW^{eh}\in \mathbb{R}^{E\times H}$, \\ 
+        & $\mW^{hh}\in \mathbb{R}^{H\times H}$, $\mP\in\mathbb{R}^{H\times E}$, \\
+        & $\mV\in\mathbb{R}^{E\times|V|}$  \\
+        \hline
+        MI-RNNs & $\mW^{xe}\in \mathbb{R}^{E\times |V|}$, $\mW^{eh}\in \mathbb{R}^{E\times H}$, \\ 
+        & $\mW^{hh}\in \mathbb{R}^{H\times H}$, $\mP\in\mathbb{R}^{H\times E}$, \\
+        & $\mV\in\mathbb{R}^{E\times|V|}$  \\
+       
+        \hline
+        RACs & $\mW^{xe}\in \mathbb{R}^{E\times |V|}$, $\mW^{eh}\in \mathbb{R}^{E\times H}$, \\
+        & $\mW^{hh}\in \mathbb{R}^{H\times H}$, $\mP\in\mathbb{R}^{H\times E}$, \\
+        & $\mV\in\mathbb{R}^{E\times|V|}$\\
+        \hline
+        Second-order RNNs & $\mW^{xe} \in \mathbb{R}^{E\times |V|}$, $\tT \in \mathbb{R}^{H\times H \times H}$, \\         
+        & $\mW^{hh}\in \mathbb{R}^{E \times H}$, $\mP\in\mathbb{R}^{H\times E}$, \\
+        & $\mV\in\mathbb{R}^{E\times|V|}$ \\
+        \hline
+        TTLM & $\tG\in \mathbb{R}^{R\times |V|\times R}$, $\mG^{(t)}\in \mathbb{R}^{R \times |V|}$, \\ 
+        
+        & $\mG^{(1)} \in \mathbb{R}^{R \times |V|}$ \\
+        \hline
+        TTLM-Tiny & $\tW^{xe}\in \mathbb{R}^{R\times |V| \times R}$, $\mW^{hh}\in\mathbb{R}^{R\times R}$, \\
+        & $\tP\in\mathbb{R}^{R\times R\times R}$, $\tV\in\mathbb{R}^{R\times R\times |V|}$\\
+        
+        \hline
+        TTLM-Large & $\tW^{xe}\in\mathbb{R}^{R\times |V|\times R}$, \\ & $\tW^{eh}\in\mathbb{R}^{R\times R\times R\times R}$, \\
+        & $\mW^{hh}\in\mathbb{R}^{R\times R}$, $\tP\in\mathbb{R}^{R\times R\times R}$, \\
+        &  $\tV\in\mathbb{R}^{R\times R\times |V|}$\\
+    \bottomrule
+    \end{tabular}
+    \caption{Training parameters in our implementation. $E$ is the embedding size, $H$ is the hidden units in RNNs, and $R$ is the rank in the TTLM.  We set $H=R$ and $E=R^2$ to make the parameters of all models in the same scale. The parameters of $\mW^{xe}$ are uniformly initialized in the interval $[-0.1,0.1]$, $\mW^{eh}$ and $\mW^{hh}$ are uniformly initialized between $[-\frac{1}{\sqrt{H}}, \frac{1}{\sqrt{H}}]$.}
+    \label{tab:my_label}
+\end{table}
+
+We implement all models using PyTorch on GPU A100 with one single card. 
+
+We use the PyTorch version of the standard Transformer \citep{vaswani2017attention}.\footnote{The code is available at \url{https://pytorch.org/tutorials/beginner/transformer_tutorial.html}.} For RNNs, there are five matrix parameters: $\mW^{xe}\in \mathbb{R}^{E\times |V|}$ is the input embedding matrix, $\mW^{eh}\in
+\mathbb{R}^{E\times H}$ is the embedding-to-hidden matrix, $\mW^{hh}\in \mathbb{R}^{H\times H}$ is the hidden-to-hidden matrix. We tie (share the same training parameters) the input embedding  $\mW^{xe}$ and output embedding $\mV$, which has been proved to lead to a significant reduction in perplexity \citep{press2016using}. So there is a projection matrix $\mP\in\mathbb{R}^{H\times E}$ before the output embedding. All this process is introduced in  \citep{press2016using}. 
+
+For TTLM models, we tie the input tensor $\tW^{xe}$ and $\tV$. The implementation of $\delta$ is functioned by a reshape function, so the interaction between hidden and input can be computed by matrix product. We also let $\tG^{(1)}$ have the same parameters along the dimension $|V|$ (i.e., $\tG^{(1)}$ is simplified into a  $\mG^{(1)}\in\mathbb{R}^{1\times R}$ and thus it can be viewed as the initial hidden state).  
+
+

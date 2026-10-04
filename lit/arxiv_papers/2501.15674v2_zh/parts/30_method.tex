@@ -1,0 +1,74 @@
+
+\section{所提方法}\label{methodology}
+通过利用 MHA 背后的直觉 \cite{clark2019does, vig2019multiscale,vig2019analyzing}，我们提出一种新颖且直观的多头张量化方法。该方法首先将 MHA 权重张量化为一组 3D 张量，每个张量对应一个注意力头；然后对单个 Transformer 层中每个注意力头张量化后的权重施加 Tucker 分解，并在这些分解之间共享同一组因子矩阵。独特之处在于，这确保了不同注意力头的权重处于由同一组因子矩阵刻画的共享子空间中。通过使用共享的高维低秩结构对注意力权重进行结构性去噪，我们发现所提框架既能提升 LLM 的推理能力，又能同时实现 LLM 中 MHA 块的压缩。
+
+\subsection{多头张量化}\label{tensorisation}
+尽管具有多头结构，MHA 权重矩阵通常以 2D 格式存储以加速计算。为了由这些矩阵构建张量，我们对模型进行张量化：先将权重折叠为更高维的格式，再对所得权重张量施加张量分解以实现压缩。为此，我们基于关于 MHA 的直觉，发展出一种多头张量化技术，从而自然地将原始的 2D 查询、键、值与输出投影权重矩阵张量化为一组 3D 张量。更具体地说，如图 \ref{fig:methodology} 左部的步骤 1 和步骤 2 所示，张量化过程首先将单个 Transformer 层中的四个全局权重矩阵 $\mathbf{W}^Q, \mathbf{W}^K, \mathbf{W}^V, \text{and } {\mathbf{W}^O}^T \in \mathbb{R}^{d_{model} \times h \cdot d_v}$ 拆分为属于每个注意力头 $i$（$1\leq i \leq h$）的局部子矩阵 $\mathbf{W}^Q_i, \mathbf{W}^K_i, \mathbf{W}^V_i, {\mathbf{W}^O_i}^T \in \mathbb{R}^{d_{model} \times  d_v}$。接着，对每个注意力头，将四个 2D 子矩阵 $\mathbf{W}^Q_i, \mathbf{W}^K_i, \mathbf{W}^V_i, {\mathbf{W}^O_i}^T$ 堆叠为一个 3D 张量 $\mathcal{W}_i \in \mathbb{R}^{d_{model} \times d_v \times 4}$，即
+\begin{equation}
+    \mathcal{W}_{i [:,:,j]} = 
+    \begin{cases} 
+        \mathbf{W}^Q_i & \text{if } j = 1, \\
+        \mathbf{W}^K_i & \text{if } j = 2, \\
+        \mathbf{W}^V_i & \text{if } j = 3, \\
+        {\mathbf{W}^O_i}^T & \text{if } j = 4. \\
+    \end{cases}
+    \label{eq:single_head_weight}
+\end{equation}
+对所有 $h$ 个头重复这一过程，再将全部张量 $\{\mathcal{W}_i \}_{i=1}^h$ 堆叠在一起，即可把单个 Transformer 层的全部 MHA 权重矩阵张量化为一个 4D 张量 $\mathcal{W}_{all} \in \mathbb{R}^{d_{model} \times d_v \times 4 \times h}$，即
+\begin{equation}
+    \mathcal{W}_{all[:,:,:,i]} = \mathcal{W}_i ,\text{ for  } 1\leq i \leq h.
+    \label{eq:allweights}
+\end{equation}
+这样的多头张量化过程将注意力权重矩阵转换为更高维的格式，为利用 Tucker 分解做好准备。
+
+
+\subsection{共享因子矩阵的 Tucker 分解}
+如图 \ref{fig:methodology} 所示，Tucker 分解将一个高维张量分解为一个较小规模的核心张量（其阶数与原始大规模张量相同）与多个因子矩阵。从物理意义上讲，核心张量表示由因子矩阵所指定的子空间中的变化信息。这使得我们可以对多个注意力权重张量施加 Tucker 分解，让它们共享同一组因子矩阵，从而迫使不同的信息驻留在同一子空间内。
+
+为此，在我们的方法中，对式 (\ref{eq:single_head_weight}) 中定义的 $h$ 个 3D 张量 $\{\mathcal{W}_i \}_{i=1}^h$ 分别施加 Tucker 分解，同时共享同一组因子矩阵 $\mathbf{U}^{(1)} \in \mathbb{R}^{d_{model} \times R_1}, \mathbf{U}^{(2)} \in \mathbb{R}^{d_{v} \times R_2}, \mathbf{U}^{(3)} \in \mathbb{R}^{4 \times R_3}$。设第 $i$ 个注意力头权重经 Tucker 分解后的变化信息包含在 3D 张量 $\mathcal{G}_i \in \mathbb{R}^{R_1 \times R_2 \times R_3}$ 中，则每个注意力头的权重 $\mathcal{W}_i$ 可表示为
+\begin{equation}
+    \mathcal{W}_i = \mathcal{G}_i \times_1 \mathbf{U}^{(1)} \times_2 \mathbf{U}^{(2)} \times_3 \mathbf{U}^{(3)}, \text{ for } 1\leq i \leq h.
+\label{eq:tucker_with_shared_factors_1}
+\end{equation}
+注意到，这一表达式可以方便地写成 4D 张量 Tucker 分解的一种特殊变体，形式为
+\begin{equation}
+    \mathcal{W}_{all} = \mathcal{G}_{all} \times_1 \mathbf{U}^{(1)} \times_2 \mathbf{U}^{(2)} \times_3 \mathbf{U}^{(3)} \times_4 \mathbf{I},
+\label{eq:tucker_with_shared_factors}
+\end{equation}
+或其逐元素定义形式
+\begin{equation}
+\begin{split}
+&\mathcal{W}_{all[i_1, i_2, i_3, i_4]} =  \\
+&\quad \sum_{r_1=1}^{R_1} \sum_{r_2=1}^{R_2} \sum_{r_3=1}^{R_3} \mathcal{G}_{all [r_1, r_2, r_3, i_4]} \mathbf{U}^{(1)}_{[i_1, r_1]} \mathbf{U}^{(2)}_{[i_2, r_2]} \mathbf{U}^{(3)}_{[i_3, r_3]},
+\end{split}
+\label{eq:tucker_with_shared_factors_index_notation}
+\end{equation}
+其中 $\mathcal{W}_{all} \in \mathbb{R}^{d_{model} \times d_v \times 4 \times h}$ 由式 (\ref{eq:allweights}) 定义，表示包含单个 Transformer 层中全部注意力权重的张量；$\mathbf{U}^{(1)}, \mathbf{U}^{(2)}, \text{and } \mathbf{U}^{(3)}$ 为共享因子矩阵。项 $\mathbf{I} \in \mathbb{R}^{h\times h}$ 是可以省略的单位矩阵，而 4D 核心张量 $\mathcal{G}_{all} \in \mathbb{R}^{R_1 \times R_2 \times R_3 \times h}$ 定义为
+\begin{equation}
+    \mathcal{G}_{all [:,:,:,i]} = \mathcal{G}_i ,\text{ for  } 1\leq i \leq h.
+    \label{eq:tucker_core_all}
+\end{equation}
+去噪过程通过使用 Tucker 分解逼近每个注意力头的原始权重张量来实现；换言之，给定一组多重线性秩，我们通过最小化下式来去噪张量化后的 MHA 权重：
+\begin{equation}
+\frac{1}{2} \left\| \sum_{i=1}^h \mathcal{W}_i - \sum_{i=1}^h \mathcal{G}_i \times_1 \mathbf{U}^{(1)} \times_2 \mathbf{U}^{(2)} \times_3 \mathbf{U}^{(3)} \right\|^2_F
+\label{eq:compact_tucker_objective_ori}
+\end{equation}
+或等价形式
+\begin{equation}
+\frac{1}{2} \left\|\mathcal{W}_{all} - \mathcal{G}_{all} \times_1 \mathbf{U}^{(1)} \times_2 \mathbf{U}^{(2)} \times_3 \mathbf{U}^{(3)} \right\|^2_F.
+\label{eq:compact_tucker_objective}
+\end{equation}
+在实践中，我们利用 TensorLy 库 \cite{tensorly}，基于高阶正交迭代（Higher Order Orthogonal Iterations, HOOI）算法 \cite{de2000best} 实现了 Tucker 分解的这一特殊变体。
+\begin{rem}
+从式 (\ref{eq:compact_tucker_objective_ori}) 可以观察到，每个注意力头的权重共享同一组因子矩阵 $\mathbf{U}^{(1)}, \mathbf{U}^{(2)}$ 与 $\mathbf{U}^{(3)}$；与此同时，每个注意力头又被赋予其自己的 Tucker 核心张量。我们推测，这一设计与如下直觉相吻合：单个 Transformer 层内的注意力头以不同的专门化方式捕捉相似抽象层级的模式。
+\end{rem} 
+
+\begin{rem}
+式 (\ref{eq:tucker_with_shared_factors})--(\ref{eq:compact_tucker_objective}) 中的张量分解过程使我们能够按照共享的高维低秩结构对注意力权重矩阵进行结构性去噪。此外，通过以尺寸更小的因子来表示原始权重张量，该过程还实现了参数压缩。
+\end{rem}
+
+% In tensor network diagrams \cite{orus2014practical} shown in Fig. \ref{fig:tensor_network}, a tensor is denoted by a circle, with each line emanating from the circle corresponding to a tensor dimension index. Also, connecting two index lines implies a summation over the connected indices. 
+% \begin{rem}
+%     Note that while both LASER and TRAWL obtained significant performance improvements only when applied to the FFN weights, they could have equally applied to the MHA weights. Fig. \ref{fig:tensor_network} illustrates the difference between the SVD used in LASER, the tensor decomposition used in TRAWL, and the Tucker decomposition with shared factor matrices used in our method, when applied to the MHA weights.
+% \end{rem}
+

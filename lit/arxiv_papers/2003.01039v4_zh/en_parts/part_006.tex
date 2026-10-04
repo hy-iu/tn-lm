@@ -1,0 +1,39 @@
+\section{Regex Sampling and Regularization}
+\label{sec:sampling}
+%
+\begin{algorithm}[tb]
+\caption{Regex sampling algorithm for u-MPS}
+\label{alg:sampling}
+\begin{algorithmic}
+\Function{\Sample}{$R, Q_\ell, Q_r$}
+  \If{$R = s$} \hspace{4.0em} 
+    \MYCOMMENT{Sample a string literal $s \in \Sigma^*$}
+    \State\Return{$s$}
+  \ElsIf{$R = R_1 R_2$} \hspace{0.0em} 
+    \MYCOMMENT{Sample a sequence of expressions}
+    \State $s_1 = \Sample(R_1, \QL, \ER_{R_2}(\QR))$
+    \State $s_2 = \Sample(R_2, \EL_{s_1}(\QL), \QR)$
+    \State\Return{$s_1 s_2$}
+  \ElsIf{$R = R_1 | R_2$} \hspace{-0.2em} 
+    \MYCOMMENT{Sample a union of expressions}
+    \State Sample random $i \in \{1, 2\}$, with probs 
+    \State \hspace{0.7cm} $p(i) = \Z_{R_i}(\QL, \QR) \ / \ \Z_{R_1 | R_2}(\QL, \QR)$
+    \State $s_i = \Sample(e_i, \QL, \QR)$
+    \State\Return{$s_i$}
+  \ElsIf{$R = S^*$} \hspace{1.0em} 
+    \MYCOMMENT{Sample regex $S$ zero or more times}
+    \State Sample random $i \in \{\textrm{HALT}, \textrm{GO}\}$, with probs 
+    \State \hspace{0.7cm} $p(\textrm{HALT}) = \Tr(\QL \QR) / \Z_{S^*}(\QL, \QR)$, 
+    \State \hspace{0.7cm} $p(\textrm{GO}) = 1 - p(\textrm{HALT})$
+    \If{$i = \textrm{HALT}$} \hspace{0.0em} \MYCOMMENT{Return empty string}
+      \State\Return{$\varepsilon$}
+    \Else \hspace{6.0em} \MYCOMMENT{Sample one or more chars}
+      \State\Return{$\Sample(SS^*, \QL, \QR)$}
+    \EndIf
+  \EndIf
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+%
+The correspondence developed above between syntactic operations on regex and linear-algebraic operations on transfer operators endows u-MPS models with surprising capabilities unavailable to probabilistic models based on neural networks. We discuss the application of these techniques for sampling from conditional distributions of strings matching a target regex, as well as for utilizing a novel form of task-specific regularization during training.
+

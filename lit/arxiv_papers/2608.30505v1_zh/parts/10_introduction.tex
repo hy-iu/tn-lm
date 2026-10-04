@@ -1,0 +1,92 @@
+\section{引言}
+\label{sec:introduction}
+
+基于 Transformer 架构 \cite{vaswani2017attention} 的大语言模型（LLM）重塑了深度学习与人工智能，历代模型不断展现出广泛的能力与性能提升 \cite{brown2020gpt3, openai2024gpt4, touvron2023llama}。其成功源于三个因素：高度可并行、能随模型规模与算力高效扩展的架构 \cite{vaswani2017attention}；在互联网规模文本语料上的自监督预训练 \cite{radford2019language, raffel2023t5}；以及扩展这一组合所带来的可预测的改进 \cite{kaplan2020scalinglaws, hoffmann2022scalinglaws2}。
+如今的生产级 LLM，如 Qwen \cite{yang2025qwen3}、DeepSeek \cite{deepseekai2026deepseekv4} 与 Kimi \cite{kimiteam2026kimik3}，参数量达数百亿至数千亿，并已大规模部署，训练与推理（inference）都需要消耗大量计算资源。
+
+与此同时，过去几十年间，数值线性代数界对张量分解与张量网络的研究蓬勃发展。
+这些工具分别独立发端于心理测量学 \cite{tucker1966some, carroll1970analysis, harshman1970foundations} 与量子多体物理 \cite{orus2014practical, verstraete2008peps, vidal2008mera}，此后逐渐进入通用计算代数领域。
+在此过程中，研究者用数值分析的语言重新表述了既有格式，并发展出用于计算它们的稳定算法 \cite{lathauwer2000hosvd, oseledets2011tensor, zhao2016tensorring}；同时还有更广泛的理论工作，致力于将由此形成的研究版图加以系统化与统一 \cite{kolda2009tensor, cichocki2015tensor, cichocki2015tensor2}。
+这一日益活跃的研究反过来激发了将张量方法应用于深度学习的兴趣 \cite{wang2025tnmeetnn}，也反映出一种更广泛的共识：数值线性代数居于现代神经架构的核心 \cite{baggag2025linalg}。
+
+
+\paragraph{动机。}
+尽管能力出众，现代 LLM 仍面临三个长期存在的挑战。训练前沿模型需要大量加速器时间 \cite{grattafiori2024llama3}。大规模推理需要高内存带宽，而在长上下文应用中，KV 缓存可能成为最主要的内存瓶颈 \cite{kwon2023paggedattn}。与此同时，包括激活与权重在内的内部表示在很大程度上仍是不透明的，这些模型进行推理（reasoning）与存储知识的机制也远未被理解，这促使可解释性研究不断增多 \cite{elhage2021mathematical, elhage2022superposition}。
+这些挑战通常被分开处理，但张量视角为三者提供了共同的语言。按照惯例，LLM 以矩阵方式来描述和实现：Transformer 的计算在很大程度上归结为批量矩阵乘法，这虽然方便且经过高度优化，但在概念上并不完备。许多 Transformer 对象——包括堆叠的多头注意力（MHA）投影、层的集合、激活流与 KV 缓存——天然是高阶的，而纯粹以矩阵为中心的视角使其多重线性结构未得到充分利用。
+
+
+\begin{table}[!htbp]
+\centering
+\caption{\footnotesize 围绕张量方法与语言模型的文献集群。}
+\label{tab:literature-clusters}
+\footnotesize
+\begin{tblr}{
+width = \textwidth,
+colspec = {Q[4.9cm,m,c]Q[4.9cm,m,c]X[m,c]},
+row{1} = {font=\bfseries},
+rowsep = 3pt,
+hline{1,6} = {1pt},
+hline{2} = {0.6pt},
+hline{3,4,5} = {0.6pt, gray7},
+}
+集群 & 主要对象或方法 & 就本综述而言的具体空缺 \\
+经典张量分解与张量网络 \newline \cite{kolda2009tensor}, \cite{cichocki2015tensor}, \cite{cichocki2015tensor2}, \cite{orus2014practical} & 张量、张量代数运算；分解、秩；计算算法 & 对张量作抽象讨论；未给出张量在 LLM 中的应用 \\
+面向机器学习 \newline 与神经网络的张量方法 \newline \cite{sidiropoulos2017tensorsforspandml, ji2019tensorsformlsurvey1, panagakis2021tensorsfornn1, xinwei2024tensorsfornn2, wang2025tnmeetnn, he2026tensorsfornn3}  & 张量化机器学习；通用神经模块与层的张量化及分解 & 往往早于仅解码器（decoder-only）LLM；遗漏了 KV 缓存等 LLM 特有对象  \\
+LLM 高效化技术 \newline \cite{wan2024efficientllmsurvey1, wang2025peftsurvey1, zhu2024compressionsurvey1, tang2024compressionsurvey2, kim2025peftcompressionsurvey1, wang2024compressioninferencesurvey1, zhou2024efficientinferencesurvey1, yuan2024efficientinferencesurvey2, li2025kvcachesurvey1, miao2025efficientservingsurvey1, Laura2026lowranksurvye}  & PEFT；压缩：量化、剪枝、知识蒸馏；高效注意力；高效推理；KV 缓存压缩 & 通常略去对应的张量方法；未将张量方法作为独立类别加以强调 \\
+LLM 机制可解释性 \newline \cite{somvanshi2026interpretabilitysurvey1, rai2025interpretabilitysurvey2, bereska2024interpretabilitysurvey3} &  特征、激活、logits、神经元、注意力头、回路；激活补丁、消融、SAE & 忽视了多重线性结构——无论是作为描述语言还是作为分析工具 \\
+\end{tblr}
+\end{table}
+
+\paragraph{文献现状。}
+
+关于张量与 LLM 的文献分散于若干部分重叠的集群之中，\cref{tab:literature-clusters} 对其作了总结。我们引用了各集群的代表性综述与评述，以便读者就每个领域查阅更完整的论述。表中每一行都对应一个拥有自身对象、方法与术语的学术共同体；本节余下部分将逐一讨论各集群，并指出就一份连接张量方法与 LLM 的综述而言，各集群留下的具体空缺。
+
+第一个集群是经典张量分解文献 \cite{kolda2009tensor, cichocki2015tensor, cichocki2015tensor2, orus2014practical}。该集群的工作在数学上十分深入，对记号、算法以及张量秩等理论概念而言不可或缺。虽然这些文献为张量计算提供了普遍的代数与数值基础，但它们并未将这些概念映射到 LLM 特有的对象之上。
+
+第二类工作将张量分解与张量网络应用于经典机器学习 \cite{sidiropoulos2017tensorsforspandml, ji2019tensorsformlsurvey1} 与神经网络（NN）\cite{panagakis2021tensorsfornn1, xinwei2024tensorsfornn2, wang2025tnmeetnn, he2026tensorsfornn3}。这些文献确立了神经网络张量化这一通用设计原则。然而，其中大部分工作早于现代仅解码器 LLM，或聚焦于通用层、卷积神经网络（CNN）与循环神经网络（RNN），未涉及 LLM 特有的对象与约束。
+
+第三类工作覆盖了 LLM 高效化技术这一更广阔的版图，过去几年扩张迅速，涉及众多方向 \cite{wan2024efficientllmsurvey1}。其中一些工作面向参数高效微调（PEFT）\cite{wang2025peftsurvey1} 以及量化、剪枝与知识蒸馏（KD）等训练后压缩技术 \cite{zhu2024compressionsurvey1, tang2024compressionsurvey2, wang2024compressioninferencesurvey1}；另一些则将 PEFT 与压缩合并讨论 \cite{kim2025peftcompressionsurvey1}。还有工作面向推理时效率 \cite{zhou2024efficientinferencesurvey1, yuan2024efficientinferencesurvey2, li2025kvcachesurvey1} 与服务部署 \cite{miao2025efficientservingsurvey1}；而 \cite{Laura2026lowranksurvye} 则按结构而非应用横切上述所有方向，综述了权重、适配器与梯度中的低秩矩阵分解。在每个子集群内部，张量分解只是偶尔出现，被当作众多技术中的一种提及。然而，所有这些子集群中的张量方法都建立在同一套底层代数理论之上，这提示应将它们作为一个独立类别来考察。
+
+第四个集群是机制可解释性，它已成为一个活跃且快速增长的研究方向，旨在借助激活补丁、消融与稀疏自编码器（SAE）等工具，从特征、激活、神经元、注意力头与回路的角度，对语言模型的内部计算进行逆向工程 \cite{somvanshi2026interpretabilitysurvey1, rai2025interpretabilitysurvey2, bereska2024interpretabilitysurvey3}。在这一更宽泛的领域内，有一个较小的群体专门透过张量网络的视角、使用图形化张量记号来研究 Transformer 回路 \cite{taylor2024interpretabilitysurvey4}。除记号之外，少数几项非常近期的工作把多重线性结构本身作为分析对象，而现有的可解释性综述均未涵盖它们。本综述将这些记号与方法作为一个独立方向来处理（\cref{subsec:interpretability}）。
+
+\paragraph{范围。} 
+
+同样的多重线性结构在全部四个集群中反复出现，但各集群使用它的方式不同。经典张量文献发展出一套普遍理论，而张量化神经模块、LLM 高效化技术与机制可解释性通常只在特定任务中局部运用这套理论。本综述通过一个以 LLM 特有对象为根基的统一张量理论视角，将这些工作路线连接起来。其特色在于两种互补组织方式的结合：一是组件视角，追问 Transformer 内部\emph{什么}被张量化；二是生命周期视角，追问张量化\emph{何时以及为何}被引入。据我们所知，现有综述均未将这种双视角组织，与统一记号、协议感知的比较，以及关于理论压缩是否在实践中兑现的系统层面分析结合起来。
+
+% \color{brown}
+% \textbf{Contributions} This survey makes four contributions:
+
+% \begin{enumerate}
+%     \item \textbf{We propose a novel lifecycle taxonomy} that organizes the tensorization of language models across seven key stages: tokenization, embeddings, pre-training, parameter-efficient fine-tuning (PEFT), compression, inference, and interpretability. This taxonomy provides a structured framework that clarifies the distinct objectives, challenges, and opportunities for tensor methods at each point, offering a high-level roadmap for the field and bridging the gap between isolated ``component-wise'' tensorization and a holistic, process-oriented view.
+    
+%     \item \textbf{We provide a systematic and comparative analysis} of tensor methods within this lifecycle. Unlike previous surveys that are either abstract or application-specific, our work critically evaluates methods side-by-side, with careful comparison tables that explicitly note differences in evaluation protocols, model scales, and reported metrics. This analysis synthesizes disparate literature to reveal common themes, identify strengths and weaknesses, and surface underexplored areas, such as the tokenization and interpretability stages.
+    
+%     \item \textbf{We develop a unified theoretical and notational framework} tailored for Transformer-like language models. The paper systematically repurposes and reformulates classical tensor decompositions (CP, Tucker, TT, TTM, and BT) and their mathematical properties in the specific context of LLMs. We explicitly map each decomposition to its most structurally compatible Transformer components (e.g., embedding layers, attention mechanisms, and feed-forward networks), effectively establishing a standardized ``algebraic language'' for describing, comparing, and implementing tensorized LLMs. This framework is augmented with extensive use of tensor-network diagrams to improve both understanding and accessibility.
+    
+%     \item \textbf{We identify critical open challenges and propose a concrete, actionable metric---\(\rho_{\mathrm{gap}}\)---to bridge the divide between theoretical compression and practical system-level gains.} This metric formalizes the ``compression-realization gap'' (e.g., the discrepancy between parameter savings and actual wall-clock speedup), providing the community with a quantitative tool to evaluate the true efficiency of tensorized models. Furthermore, we outline key future directions, including hardware-aware kernel design, adaptive rank allocation, and the exploration of new tensor network topologies, setting a concrete research agenda for the next generation of tensor-native language models.
+% \end{enumerate}
+
+
+\paragraph{贡献}
+本综述做出四方面贡献：
+\begin{enumerate}[leftmargin=*]
+  \item 我们将张量化确立为作用于词元表示、权重、适配更新、缓存与激活的共同结构原则，并以一个七阶段的\emph{生命周期分类法}组织相关文献：词元化、嵌入、预训练、适配、压缩、推理与可解释性。
+  \item 我们以针对嵌入、注意力与前馈网络的\emph{组件视角}补充生命周期分类法。两种视角相结合，可以把某种分解与模型对象在结构上的兼容性，与使用该分解所要达成的训练或部署目标区分开来。
+  \item 我们为类 Transformer 语言模型中的张量运算、张量分解与张量网络提供统一的记号与理论基础，并在比较各方法时明确记录模型规模、基线、评测协议与报告指标方面的差异。我们还将张量方法与相邻的高效化技术以及概率张量网络联系起来。
+  \item 我们归纳了开放挑战，并借助 $\rho_{\rm gap}$ 形式化地刻画「压缩-实现鸿沟」；该指标将算法开销与硬件兑现分离开来，并清楚地说明为何仅减少参数量并不意味着端到端加速。
+\end{enumerate}
+
+% \color{blue}
+% \begin{enumerate}[leftmargin=*]
+%   \item We frame tensorization as a common structural principle operating at several orthogonal levels of a language model: representations, weights, adaptation updates, caches, and activations. To organize the resulting body of work, we propose a \emph{lifecycle taxonomy} spanning the seven stages a language model passes through: tokenization, embeddings, pre-training, adaptation, compression, inference, and interpretability.
+%   \item Following this taxonomy, we provide a comparative analysis of tensor methods at each stage of the lifecycle. Cutting across the stages, we additionally give a structural account of tensorized Transformer components.
+%   \item We provide a unified notation and theory for tensor operations, tensor decompositions, and tensor networks in the context of Transformer-like language models, presenting several methods as tensor network diagrams.
+%   \item We discuss open challenges and outline future directions for tensorized language models, and we propose the metric $\rho_{\rm gap}$ to quantify the gap between theoretical compression and realized system-level gains.
+% \end{enumerate}
+% \color{black}
+
+\paragraph{综述结构。}
+
+本文其余部分组织如下。\Cref{sec:preliminaries} 给出数学预备知识，包括记号、张量网络图、张量分解，并对 Transformer 架构作简要回顾。\Cref{sec:lifecycle-overview} 引入生命周期分类法，并以 LLaMA-3-8B 为贯穿案例，展示每个已填充阶段的张量化。\Cref{sec:components} 针对各个 Transformer 模块展开组件视角，而 \cref{sec:lifecycle-analysis} 则通过形式化的问题定义、文献综述以及在覆盖范围允许时的比较表格来展开生命周期视角。\Cref{sec:neighboring-methods} 将张量方法置于 LLM 高效化技术的更广阔版图之中，\cref{sec:prob-tensor-nets} 则厘清其与概率张量网络的联系。\Cref{sec:software-overview} 综述相关软件并给出案例研究。\Cref{sec:future-directions} 定义压缩-实现鸿沟，指出开放挑战，并勾画未来研究方向。最后，\cref{sec:conclusion} 对全文作结。
+
+

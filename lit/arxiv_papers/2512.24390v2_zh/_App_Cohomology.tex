@@ -1,0 +1,72 @@
+\section{群上同调（Group cohomology）}\label{sec:GroupCohomology}
+在本节中，我们阐述如何利用文献~\cite{Bulmash2020,Vancraeynest2022}中发展的简单线性代数方法，计算任意有限群 $G$（带有在 $\rU(1)$ 上的群作用 $\beta$）的上同调群 $H^n(G,U(1)^\beta)$。作为副产物，我们还将获得每个上同调类的代表元上循环（cocycle）。
+
+\bigskip\noindent 首先介绍我们的记号与相关定义。我们将所有函数 $G^n\rightarrow \rU(1)$ 的集合记作 $C^n(G,\rU(1))$，这些函数称为 \emph{n-余链}（n-cochain）。\emph{余边界映射}（coboundary map）$\partial^{n+1}:C^n(G,\rU(1))\rightarrow C^{n+1}(G,\rU(1))$ 随后定义为：
+\begin{equation}
+\begin{split}
+&(\partial^{n+1}\omega)(g_1,g_2,\dots,g_{n+1}) := \beta_{g_1}(\omega(g_2,g_3,\dots,g_{n+1})) \\
+&\hfill\times \prod_{i=1}^n [\omega(g_1,g_2, \dots,g_{i-1},g_ig_{i+1},\dots,g_{n+1})]^{(-1)^i} \times  [\omega(g_1,g_2,\dots,g_n)]^{(-1)^{n + 1}} = 0.
+\end{split}
+\end{equation}
+这里，$\beta$ 表示 $G$ 在（$G$-模）$\rU(1)$ 上的群作用。在对称群包含\emph{反幺正}（antiunitary）元素的情形下（正如正文中所涉及的时间反演与空间反射），当 $g$ 为反幺正时 $\beta_g(\bullet)$ 通过复共轭起作用，否则为恒等作用。容易验证这些映射是幂零的，即 $\partial^{n+1}\circ \partial^n = 1$。随后我们将 \emph{n-上循环}（n-cocycle）与 \emph{n-余边界}（n-coboundary）的阿贝尔群分别定义为：
+\begin{align}
+    Z^n(G,\rU(1)^\beta) &:= \ker(\partial^{n+1}),\\
+    B^n(G,\rU(1)^\beta) &:= {\rm im}(\partial^n).
+\end{align}
+由余边界映射的幂零性可知，$B^n(G,\rU(1)^\beta)$ 是 $Z^n(G,\rU(1)^\beta)$ 的子群，因此可将 $G$ 的\emph{第 n 个上同调群}定义为商群
+\begin{equation}
+    H^n(G,\rU(1)^\beta) = Z^n(G,\rU(1)^\beta)/B^n(G,\rU(1)^\beta).
+\end{equation}
+
+\bigskip\noindent 计算 $H^n(G,\rU(1)^\beta)$ 并求解代表元上循环的核心思路如下。对\emph{上循环条件} $\partial^{n+1}\omega=1$ 两边取对数，并将未知相位 $\omega(g_1,\dots,g_n)$ 汇集在向量 $\bm{\omega}$ 中，该条件可写为在模 $2\pi$ 意义下必须满足的线性方程组：
+\begin{equation}
+	\Omega \bm{\omega} = \vec{0}, \mod 2\pi.
+	\label{eq:System}
+\end{equation}
+这里，系数矩阵 $\Omega$ 源自余边界映射 $\partial^{n+1}$，且仅包含整数。$\bm{\omega}$ 的维数是 $|G|^n$，而 $\Omega$ 的维数是 $|G|^{n+1}\times|G|^n$。由于 $\Omega$ 仅包含整数，我们可将 $\Omega$ 写为其 \emph{Smith normal form}：
+\begin{equation}
+	\Omega = P\Lambda R.
+\end{equation}
+在此分解中，$P$ 与 $R$ 分别是维数为 $\left|G\right|^{n+1}\times \left|G\right|^{n+1}$ 和 $\left|G\right|^n\times \left|G\right|^n$ 的矩阵，它们仅包含整数且行列式为 1（因此具有整数矩阵逆）。$\Lambda$ 同样仅包含整数，维数为 $\left|G\right|^{n+1}\times \left|G\right|^n$，其形式为
+\begin{equation}
+	\Lambda
+	=
+	\begin{pmatrix}
+		\begin{array}{c|c}
+			\text{diag}\left(d_1,d_2,...,d_r\right) & 0_{r,n-r} \\
+		      \hline
+		      0_{n+1-r,r} & 0_{n+1-r,n-r}
+		\end{array}
+	\end{pmatrix}
+	,
+\end{equation}
+其中对角线上的非零元素 $d_1,...,d_r$（其中部分可能为 1）按递增顺序排列 $d_1\leq d_2\leq...$，且每个元素均整除下一个元素 $d_i \mid d_{i+1}$。Smith normal form $\Lambda$ 是唯一的。将此分解代入方程组~(\ref{eq:System})，可得解
+\begin{equation}
+	\bm{\omega} = 2\pi R^{-1}\Lambda^+\bm{\nu}.
+	\label{eq:Sol2Cocyc}
+\end{equation}
+在上述方程中，$\Lambda^+$ 表示 $\Lambda$ 的（唯一）Moore-Penrose 伪逆，满足 $\Lambda\Lambda^+\Lambda = \Lambda$，其显式形式为
+\begin{equation}
+	\Lambda^+
+	=
+	\begin{pmatrix}
+		\begin{array}{c|c}    \text{diag}\left(d_1^{-1},d_2^{-1},...,d_r^{-1}\right) & 0_{r,n-r} \\
+		\hline
+		0_{n+1-r,r} & 0_{n+1-r,n-r}
+		\end{array}
+	\end{pmatrix}.
+\end{equation}
+向量 $\bm{\nu}$ 包含任意整数。将解~(\ref{eq:Sol2Cocyc})写为各分量形式为
+\begin{equation}
+	\omega_i = \sum_{j=1}^r 2\pi\left(R^{-1}\right)_{ij}\frac{\nu_j}{d_j}.
+	\label{eq:Sol2CocyBis}
+\end{equation}
+由于 $\bm{\nu}$ 可自由选取，我们可以依次选取 $\nu_i = \delta_{1,i}, \delta_{2,i},...,\delta_{r,i}$，从而获得解空间的一组基，可写为
+\begin{equation}
+	(\bm{\omega}_j)_i = \frac{2\pi}{d_j}\left(R^{-1}\right)_{ij}, \quad \forall j\in\{1,...,r\}.
+\end{equation}
+因此，$n$-上循环 $\bm{\omega}$ 正是 $R^{-1}$ 的各列。由于 $R$ 是满秩的，所有这些解 $\bm{\omega}$ 均线性无关。特别地，（下文的）非平凡上循环不能通过余边界相联系：$\bm{\omega}'=\bm{\omega} + \Omega'\bm{\varphi}$，其中 $\Omega'$ 表示 $n-1$ 阶的余边界映射，$\bm{\varphi}$ 是包含任意实数的 $|G|$ 维向量。为了对所有可能的解进行分类，我们现在考察 $\Lambda$ 的对角元。
+
+由~(\ref{eq:Sol2CocyBis})以及 $R^{-1}$ 仅包含整数的事实可知，对于每一个对角元 $d_i=1$，均得到平凡解 $\omega_i=0 \mod 2\pi$。非平凡解对应于那些 $d_i>1$ 的对角元。由~(\ref{eq:Sol2CocyBis})以及解空间是 $\mathbb{Z}$-线性的事实可知，对应于某个 $d_j$ 的上循环 $\bm{\omega}_j$ 生成一个循环群。注意到并非 $\bm{\omega}_j$ 的所有元素都能被 $d_j$ 或其任意素因子整除，否则将与 $R^{-1}$ 行列式为 1 相矛盾。因此，由 $\bm{\omega}_j$ 生成的循环群正是 $\mathbb{Z}_{d_j}$。最后，$\Lambda$ 中的零元在上同调中亦可舍弃，因为它们对应于上循环方程的平凡解（可乘以任意相位，因而对应于余边界）。
+
+综上所述，我们得到如下图像。给定群 $G$，可以写出余边界映射 $\Omega$ 的矩阵表示，并将其化为 Smith normal form $P\Lambda R$。$\Lambda$ 的对角元 $d_1,d_2,...,d_r$ 决定了上同调群，其形式为 $\mathbb{Z}_{d_1}\times\mathbb{Z}_{d_2}\times ... \times \mathbb{Z}_{d_r}$，其中理解为 $\mathbb{Z}_1=\{e\}$ 表示平凡群，所有为零的对角元均可舍弃。在某种任意 gauge 下，非平凡的 n-上循环对应于 $R^{-1}$ 的各列，并按式~\cref{eq:Sol2CocyBis}乘上适当的权重因子 $2\pi/d_j$。

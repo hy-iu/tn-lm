@@ -1,0 +1,387 @@
+\documentclass[conference]{IEEEtran}
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{url} 
+\usepackage{algorithmic}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage[fontset=macnew]{ctex}
+\usepackage{hyperref}
+\usepackage[dvipsnames]{xcolor}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\makeatletter
+\def\thm@headfont{\bfseries}
+\def\@begintheorem#1#2{\par\noindent\textbf{#1\ #2.}\ \it}
+\def\@opargbegintheorem#1#2#3{\par\noindent\textbf{#1\ #2.\ (#3).}\ \it}
+\makeatother
+ 
+\newtheorem{thm}{定理}
+\newtheorem{rem}{\bf{注记}}
+
+% IEEEtran 固定标题词改为中文
+\renewcommand{\figurename}{图}
+\renewcommand{\tablename}{表}
+\renewcommand{\abstractname}{摘要}
+\renewcommand{\IEEEkeywordsname}{索引词}
+\renewcommand{\refname}{参考文献}
+
+\begin{document}
+
+\title{TensorLLM：面向大语言模型推理增强与压缩的多头注意力张量化方法}
+
+% \author{\IEEEauthorblockN{Anonymous Authors}}
+\author{
+Yuxuan Gu, Wuyang Zhou, Giorgos Iacovides, Danilo Mandic \\
+\textit{Department of Electrical and Electronic Engineering}\\
+\textit{Imperial College London, United Kingdom}\\
+\{yuxuan.gu21, wuyang.zhou19, giorgos.iacovides20, d.mandic\}@imperial.ac.uk
+}
+
+\maketitle
+
+\begin{abstract}
+通过对大语言模型（Large Language Model, LLM）的权重进行结构性去噪，可以改善其推理（reasoning）能力；然而现有技术主要着眼于对 Transformer 块中前馈网络（Feed-Forward Network, FFN）的去噪，无法有效利用 Transformer 架构的核心——多头注意力（Multi-Head Attention, MHA）块。为解决这一问题，我们提出一个新颖且直观的框架，其核心在于通过多头张量化过程与 Tucker 分解实现 MHA 压缩。通过在多个注意力头的权重之间强制施加一个共享的高维子空间，该方法能够以更高维的方式对 MHA 权重进行结构化去噪与压缩。我们的实验表明，该方法在多个基准测试数据集上、对仅编码器（encoder-only）与仅解码器（decoder-only）两类架构，均能持续提升 LLM 的推理能力，同时使 MHA 权重获得至多约 $\sim 250$ 倍的压缩率，且全程无需任何额外数据、训练或微调。此外，我们还证明所提方法可与现有仅针对 FFN 的去噪技术无缝结合，从而进一步提升 LLM 的推理性能。\footnote{代码可在 \href{https://github.com/guyuxuan9/TensorLLM}{https://github.com/guyuxuan9/TensorLLM} 获取。}
+\end{abstract}
+
+\begin{IEEEkeywords}
+大语言模型，多头注意力，张量化，Tucker 分解，推理（reasoning），压缩
+\end{IEEEkeywords}
+
+\section{引言}
+基于 Transformer 架构的大语言模型（LLM），例如 GPT 系列 \cite{ brown2020language, achiam2023gpt} 与 LLaMA 系列 \cite{touvron2023LLaMA, llama2, dubey2024LLaMA}，已在自然语言处理（Natural Language Processing, NLP）的各类应用中取得了巨大成功 \cite{wang-etal-2019-learning-deep, irie19b_interspeech, liu2019text}。这归因于此类模型极其庞大的参数规模与其训练所用的海量数据。事实上，参数更多或训练数据更大的 Transformer 模型往往全面优于其较小规模的前代模型 \cite{brown2020language,touvron2023LLaMA}，因为它们能够捕捉更复杂的模式。\par
+LLM 的成功表明，大规模过参数化在训练阶段是有益的 \cite{overparam}；然而，越来越多的研究表明，基于 Transformer 的模型乃至一般的神经网络（Neural Network, NN），并不需要保留全部学到的参数即可维持其性能 \cite{sajjad2023effect, Fan2020Reducing}。这促使研究者探索训练后压缩技术，旨在使 LLM 在真实应用中（尤其是资源受限的环境中）更加高效、实用。压缩过程应当在不显著损害其推理（inference）性能与生成能力的前提下完成 \cite{sharma2023truth,eff_inference_3, calvi2019compression, xu2023tensorgpt}。\par
+鉴于 LLM 存在严重的过参数化，在对其参数进行结构性压缩的同时保持甚至提升其推理能力，也就不足为奇了。例如，在层选择秩缩减（LAyer-SElective Rank reduction, LASER）模型 \cite{sharma2023truth} 中，作者证明：对单个权重矩阵施加奇异值分解（Singular Value Decomposition, SVD），并移除对应最小奇异值的因子，可以提升 LLM 的推理性能；对前馈网络（FFN）权重矩阵进行压缩时效果尤为显著。作者认为，对单个权重矩阵进行结构性压缩，本质上是在去除训练过程中随机性所引入的权重噪声。然而，LASER 仅对单个权重矩阵施加 SVD，无法利用权重矩阵之间共享的信息。\par
+为克服这一局限，文献 \cite{luo2024trawl} 的作者提出了张量缩减与近似权重（Tensor Reduced and Approximated Weights, TRAWL）模型，该模型采用基于张量的方法：将多头注意力（MHA）块或 FFN 块中的权重矩阵简单堆叠为更高维的张量，再对其施加张量分解。TRAWL 能够利用权重中固有的张量结构来挖掘矩阵间的相关性，在某些实验中甚至优于 LASER，但人们发现它只对 FFN 块的去噪有效，对 MHA 块则无效。\par
+
+现有 FFN 块去噪方法 \cite{sharma2023truth, luo2024trawl} 的成功，也凸显了一个开放问题：如何在 MHA 块中获得类似的去噪收益。事实上，现有方法 \cite{sharma2023truth, luo2024trawl} 通常在去噪 FFN 块的权重矩阵时取得最佳性能增益；然而，当将其应用于 MHA 块权重的去噪时，却未观察到类似的性能提升。这一差异十分显著，也颇为出人意料，因为 MHA 机制被广泛认为是 Transformer 架构乃至整个 LLM 的核心。为此，本文指出：先前方法应用于 MHA 之所以无效，是因为它们没有利用领域知识——每一层中的多个注意力头应当以协同一致的方式工作，而非彼此独立。
+
+\begin{figure*}[ht]
+\centering
+\includegraphics[width=\textwidth]{methodology.pdf} 
+\caption{我们所提出的用于压缩 MHA 块的框架，与适用于 FFN 块的现有方法（如 LASER）的结构对比。\textbf{左}：应用于 MHA 块的三步去噪流程（\textbf{本文方法}）：(1) 将权重矩阵拆分为多个注意力头；(2) 将每个注意力头的矩阵张量化为一个 3D 张量；(3) 对这一组 3D 张量施加 Tucker 分解，并共用同一组因子矩阵以完成去噪。\textbf{中}：标准的（原味）仅解码器或仅编码器 Transformer 架构。\textbf{右}：应用于 FFN 块的现有方法；LASER 的示意图。}
+\label{fig:methodology}
+\end{figure*}
+
+关于 MHA 的设计直觉与现有文献 \cite{clark2019does, vig2019multiscale, vig2019analyzing} 均表明：
+\begin{enumerate}
+    \item 同一层内的注意力头捕捉相同层级的模式；
+    \item 同一层内不同的注意力头学习不同的专门知识。
+\end{enumerate} 更具体地说，文献 \cite{clark2019does} 的作者通过分析对应注意力头输出之间的 Jensen-Shannon 散度，为这些直觉提供了实证依据。他们的分析揭示了 Transformer 各层内注意力头的明显聚类，表明同层的注意力头往往关注相似类型的信息，尽管存在一定程度的差异。此外，文献 \cite{vig2019multiscale, vig2019analyzing} 的作者在多个尺度上对注意力进行了可视化，展示了不同注意力头的专门功能，例如捕捉位置与词汇模式、检测命名实体，以及识别句法和语义关系。\par
+
+借助这些关于 MHA 的直觉与领域知识，我们推测：单个 Transformer 层中 MHA 的权重，在多个注意力头共享的一个子空间内包含与推理相关的信息。我们围绕这一问题展开探索并阐述该推测，以期缓解现有工作的局限：
+\begin{itemize}
+    \item 能否通过在单个 Transformer 层内、对多个注意力头的权重强制施加一个共享的高维子空间，来提升 LLM 的推理能力？
+\end{itemize} 
+为回答这一问题，我们提出一个新颖且直观的框架，其基于多头张量化与 Tucker 分解的一种特殊变体，按照跨多个注意力头共享的高维低秩结构对原始 MHA 权重进行去噪。通过迫使每个注意力头的权重处于由同一组 Tucker 因子矩阵所刻画的公共高维子空间之中，该方法使每个注意力头在同一子空间内包含不同的信息。与仅关注 FFN 权重的现有方法相反，我们证明该方法以更高维的形式对 MHA 权重进行结构化去噪与压缩，从而提升 LLM 的推理能力。\par
+本工作的主要贡献有以下三点：
+\begin{itemize}
+    \item 基于关于 MHA 的先验知识、直觉与实证依据，提出了一种新颖的训练后权重去噪框架，在提升 LLM 推理能力的同时实现参数压缩。这是通过一种独特的多头张量化技术与作用于 MHA 权重矩阵的 Tucker 分解特殊变体来实现的。
+    \item 我们证明，所提框架可与现有的 FFN 层去噪方法联合使用，从而在 LLM 推理能力上获得更大的提升。
+    \item 在四个基准测试数据集上、跨三个成熟的 LLM（参数规模从数百万到数十亿、架构涵盖仅编码器与仅解码器）进行了大量实验。结果表明，我们的方法既能提升未经压缩的 LLM 的推理能力，也能提升现有仅去噪 FFN 层方法的效果，且全程无需任何额外数据、训练或微调。
+\end{itemize}
+    
+\begin{figure*}[ht]
+\centering
+\includegraphics[width=\textwidth]{tensor_network.pdf} 
+\caption{不同分解方法作用于单个 Transformer 层 MHA 权重时的张量网络 \cite{orus2014practical} 拓扑结构。注意，尽管 LASER 与 TRAWL 均只报告了应用于 FFN 块时的性能，它们同样可以应用于 MHA 权重。符号 $d_{model}$ 表示嵌入维度，$h$ 为注意力头数，而 $d_v = \frac{d_{model}}{h}$ 表示每个头的维度。($\mathbf{a}, \mathbf{d}$) LASER \cite{sharma2023truth}：将单个权重矩阵分解为 $\mathbf{U} \in \mathbb{R}^{d_{model} \times R}$、$\mathbf{V} \in \mathbb{R}^{h \cdot d_v \times R}$ 与对角矩阵 $\boldsymbol{\Sigma} \in \mathbb{R}^{R \times R}$。($\mathbf{b},\mathbf{e}$) TRAWL \cite{luo2024trawl}：将 3D 张量分解为因子矩阵 $\mathbf{A} \in \mathbb{R}^{4 \times R_3}, \mathbf{B} \in \mathbb{R}^{h \cdot d_v \times R_2}$ 与 $\mathbf{C} \in \mathbb{R}^{d_{model} \times R_1}$，以及核心张量 $\mathcal{G} \in \mathbb{R}^{R_1 \times R_2 \times R_3}$。($\mathbf{c}, \mathbf{f}$) \textbf{本文方法}——共享因子矩阵的 Tucker 分解：使用 Tucker 分解对一组 3D 张量进行分解，同时共用同一组共享因子矩阵 $\mathbf{U}^{(1)} \in \mathbb{R}^{d_{model} \times R_1}, \mathbf{U}^{(2)} \in \mathbb{R}^{d_{v} \times R_2} , \mathbf{U}^{(3)} \in \mathbb{R}^{4 \times R_3} $，并以 $\mathcal{G}_{all} \in \mathbb{R}^{R_1 \times R_2 \times R_3 \times h}$ 作为核心张量。}
+\label{fig:tensor_network}
+\end{figure*}
+
+
+\section{背景}
+\subsection{数学符号}
+
+本文使用的数学符号汇总于表 \ref{math_notation}。我们采用与文献 \cite{cichocki2015tensor} 相同的符号约定。
+
+\begin{table}[htbp]
+\scriptsize
+  \caption{数学符号}
+  \label{math_notation}
+  \centering
+  \begin{tabular}{cc}
+    \toprule
+      符号   & 含义 \\
+    \midrule
+    $a$, $\mathbf{a}$, $\mathbf{A}$, $\mathcal{A}$    & 标量、向量、矩阵、张量  \\
+    $(\cdot)^T$ & 矩阵转置 \\
+    $\|\cdot\|_F$ & Frobenius 范数 \\
+    $\mathcal{A}_{[i_1, i_2, \dots, i_N]}$ & $N$ 维张量中的第 $(i_1, i_2, \dots, i_N)$ 个元素 \\
+    $\mathbf{a} \circ \mathbf{b}$ & 两个向量的外积 \\
+    $\mathbf{a} \cdot \mathbf{b}$ & 两个向量的内积 \\
+    $\mathcal{A} \times_n \mathbf{B}$ & 张量与矩阵之间的模-$n$ 积 \\
+    diag$\left(\lambda_1, \lambda_2, \dots, \lambda_R \right)$ & 对角矩阵  \\
+    diag$_N \left(\lambda_1, \lambda_2, \dots, \lambda_R \right)$ & $N$ 维对角张量 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+
+\subsection{张量预备知识}
+
+\paragraph{定义} 张量 $\mathcal{A} \in \mathbb{R}^{I_1 \times I_2 \times \dots \times I_N}$ 是一个多维数组。该张量中模（维度）的个数称为其阶数 $N$。沿第 $n^{th}$ 个维度，其第 $n$ 个模的大小为 $I_n$，其中 $n \in [1, N]$ \cite{kolda2009tensor}。
+
+例如，标量 $a$ 是 $0$ 维张量。将多个标量堆叠在一起，便构成 $1$ 维张量 $\mathbf{a}$，通常称为向量。进一步推广，将多个向量堆叠在一起得到 $2$ 维张量 $\mathbf{A}$，即矩阵。最后，将多个矩阵堆叠在一起产生 $3$ 维张量 $\mathcal{A}$。这一过程可以推广，通过迭代地堆叠低维张量来构造更高维的张量。
+
+\paragraph{模-$n$ 积} 张量 $\mathcal{A} \in \mathbb{R}^{I_1 \times I_2 \times \dots \times I_N}$ 与矩阵 $\mathbf{B} \in \mathbb{R}^{J_n \times I_n}$ 的模-$n$ 积得到张量 $\mathcal{C} \in \mathbb{R}^{I_1 \times \dots \times I_{n-1} \times J_n \times I_{n+1} \times I_N}$。其数学定义为
+\begin{equation}
+    \mathcal{C} = \mathcal{A} \times_n \mathbf{B},
+\label{eq:mode_n_product}
+\end{equation}
+$\mathcal{C}$ 的逐元素定义为
+\begin{equation}
+    \mathcal{C}_{[i_1,\dots,i_{n-1}, j_n, i_{n+1}, i_N]} = \sum_{i_n=1}^{I_n} \mathcal{A}_{[i_1,\dots,i_{n-1}, i_n, i_{n+1}, i_N]} \mathbf{B}_{[j_n, i_n]}.
+\label{eq:mode_n_product_index_notation}
+\end{equation}
+\subsection{奇异值分解（SVD）}
+在线性代数中，SVD 将任意矩阵 $\mathbf{A} \in \mathbb{R}^{m \times n}$ 分解为若干秩-1 矩阵之和，可表示为
+\begin{equation}
+\begin{split}
+    \mathbf{A} &=  \sum_{i=1}^{r} \sigma_i \mathbf{u}_i \mathbf{v}_i^T = \sum_{i=1}^{r} \sigma_i \left( \mathbf{u}_i \circ \mathbf{v}_i \right)\\
+    &= \mathbf{U} \boldsymbol{\Sigma} \mathbf{V}^T,
+\end{split}
+\label{eq:SVD}
+\end{equation}
+其中 $\mathbf{u}_i \in \mathbb{R}^m$ 是 $\mathbf{A}\mathbf{A}^T$ 的特征向量，$\mathbf{U} = \left[\mathbf{u}_1, \mathbf{u}_2, \dots, \mathbf{u}_m \right] \in \mathbb{R}^{m \times m}$ 是由 $\mathbb{R}^{m}$ 中一组正交归一特征向量构成的矩阵。类似地，$\mathbf{v}_i \in \mathbb{R}^n$ 是 $\mathbf{A}^T\mathbf{A}$ 的特征向量，$\mathbf{V} = \left[\mathbf{v}_1, \mathbf{v}_2, \dots, \mathbf{v}_n \right] \in \mathbb{R}^{n \times n}$ 是由 $\mathbb{R}^{n}$ 中一组正交归一特征向量构成的矩阵。此外，$\mathbf{u}_i \circ \mathbf{v}_i$ 表示两个向量的外积；$\sigma_i$ 是 $\mathbf{A}$ 的奇异值，即 $\mathbf{A}^T\mathbf{A}$ 特征值的平方根；$\boldsymbol{\Sigma} = \text{diag}\left( \sigma_1, \sigma_2, \dots, \sigma_r \right) \in \mathbb{R}^{m \times n}$ 是对角矩阵，其中 $r$ 为矩阵 $\mathbf{A}$ 的秩。SVD 通过丢弃与最小奇异值相关联的秩-1 因子来实现低秩近似——这些因子很可能包含数据中的噪声成分与较少有用信息，从而起到去噪作用。
+
+
+\subsection{Tucker 分解}
+
+Tucker 分解 \cite{tucker1966some} 是 SVD 的推广 \cite{de2000multilinear, vasilescu2002multilinear}，它将原始张量分解为若干因子矩阵与一个较小核心张量的乘积，如式 (\ref{eq:tucker}) 所示。因此，Tucker 分解能够以高维低秩结构逼近原始张量，从而实现对原始张量的去噪，其定义为
+\begin{equation}
+\begin{split}
+    \mathcal{T} &= \sum_{r_1=1}^{R_1} \sum_{r_2=1}^{R_2} \dots \sum_{r_N=1}^{R_N} \mathcal{G}_{[r_1, r_2, \dots, r_N]} \\
+    & \quad \ \left(\mathbf{u}^{(1)}_{r_1} \circ \mathbf{u}_{r_2}^{(2)} \circ \dots \circ \mathbf{u}_{r_N}^{(N)} \right)\\
+    &= \mathcal{G} \times_1 \mathbf{U}^{(1)} \times_2 \mathbf{U}^{(2)} \times_3 \dots \times_N \mathbf{U}^{(N)}.
+\end{split}
+\label{eq:tucker}
+\end{equation}
+在该表述中，$\mathcal{T} \in \mathbb{R}^{I_1 \times I_2 \times \dots \times I_N}$ 是一个 $N$ 维张量。核心张量 $\mathcal{G}_{[r_1, r_2, \dots, r_N]} \in \mathbb{R}^{R_1 \times R_2 \times \cdots \times R_N}$ 表示缩放系数；$\mathbf{u}_{r_n}^{(n)} \in \mathbb{R}^{I_n}$ 表示第 $n$ 个维度的因子向量，而第 $n$ 个维度的因子矩阵定义为 $\mathbf{U}^{(n)} = \left[ \mathbf{u}_1^{(n)}, \mathbf{u}_2^{(n)}, \dots \mathbf{u}_{R_n}^{(n)} \right] \in \mathbb{R}^{I_n \times R_n}$，其中 $1\leq n \leq N$。Tucker 分解中的因子矩阵刻画了原始张量在某个子空间上的投影。$N$ 元组 $(R_1, R_2, \dots, R_N)$ 通常称为多重线性秩，是矩阵秩向高维的推广，一般被视为超参数。如何高效地确定最优秩组合是一个活跃的研究领域，近期有大量研究聚焦于张量秩搜索的先进方法 \cite{iacovides2024towards, 10655696}。通过对 $1\leq n \leq N$ 设置 $R_n \ll I_n$，Tucker 分解能够在参数量意义上实现压缩。
+
+\subsection{Transformer 架构}
+当前 LLM 所使用的 Transformer 架构 \cite{vaswani2017attention} 可分为仅编码器与仅解码器两类，通常由 $N$ 个相同的 Transformer 层组成，如图 \ref{fig:methodology} 中间部分所示。每一层由两个主要组件构成：一个 MHA 块和一个 FFN 块。为增强稳定性并便于学习，这些块之间还应用了层归一化 \cite{lei2016layer} 与残差连接。
+
+\paragraph{多头注意力（MHA）}
+
+单头可学习自注意力由输入的查询（$\mathbf{Q} \in \mathbb{R}^{L \times d_{model}}$）、键（$\mathbf{K} \in \mathbb{R}^{L \times d_{model}}$）与值（$\mathbf{V} \in \mathbb{R}^{L \times d_{model}}$）矩阵计算得到，定义为 \cite{vaswani2017attention}：
+\begin{multline} 
+    \text{Attention}(\mathbf{Q}\mathbf{W}^Q_i, \mathbf{K}\mathbf{W}^K_i, \mathbf{V}\mathbf{W}^V_i) = \\ 
+\text{softmax}\left(\frac{\left(\mathbf{Q}\mathbf{W}^Q_i \right) \left(\mathbf{K}\mathbf{W}^K_i \right)^T}{\sqrt{d_{v}}}\right) \left(\mathbf{V}\mathbf{W}^V_i \right),
+\label{eq:self_attention} 
+\end{multline}
+其中 $\mathbf{W}^Q_i \in \mathbb{R}^{d_{model} \times d_{v}}, \mathbf{W}^K_i \in \mathbb{R}^{d_{model} \times d_{v}}$ 与 $\mathbf{W}^V_i \in \mathbb{R}^{d_{model} \times d_{v}}$（$1\leq i \leq h$）是单个注意力头的可学习投影矩阵。这里 $L$ 表示序列长度，$d_{model}$ 表示模型嵌入的维度，$h$ 为注意力头数，$d_v = \frac{d_{model}}{h}$ 表示每个头的维度。
+
+多头注意力 \cite{vaswani2017attention} 的主要作用是增强模型在潜在空间中捕捉复杂模式的能力，其中每个头独立地学习输入数据的不同表示。对于含 $h$ 个头的注意力块，所有注意力头的输出被拼接起来，并通过输出投影矩阵 $\mathbf{W}^O$ 投影回原潜在空间，即
+\begin{equation}
+\begin{split}
+   & \text{MultiHead}(\mathbf{Q}, \mathbf{K}, \mathbf{V}) = \text{Concat}(\text{head}_1, \ldots, \text{head}_h) \mathbf{W}^O, \\
+ & \text{where} \  \text{head}_i = \text{Attention}(\mathbf{Q}\mathbf{W}^Q_i, \mathbf{K}\mathbf{W}^K_i, \mathbf{V}\mathbf{W}^V_i).
+\end{split}
+\label{eq:MHA}
+\end{equation}
+因此，注意力块中的四个权重矩阵分别为：查询投影权重 $\mathbf{W}^Q = \left[\mathbf{W}^Q_1, \mathbf{W}^Q_2, \ldots, \mathbf{W}^Q_h \right] \in \mathbb{R}^{d_{model} \times h \cdot d_v}$、键投影权重 $\mathbf{W}^K = \left[\mathbf{W}^K_1, \mathbf{W}^K_2, \ldots, \mathbf{W}^K_h \right] \in \mathbb{R}^{d_{model} \times h \cdot d_v}$、值投影权重 $\mathbf{W}^V = \left[\mathbf{W}^V_1, \mathbf{W}^V_2, \ldots, \mathbf{W}^V_h \right] \in \mathbb{R}^{d_{model} \times h \cdot d_v}$，以及输出投影权重 $\mathbf{W}^{O} = \left[\mathbf{W}^O_1, \mathbf{W}^O_2, \ldots, \mathbf{W}^O_h \right] \in \mathbb{R}^{h \cdot d_v \times d_{model}}$。我们将 $\mathbf{W}^Q, \mathbf{W}^K, \mathbf{W}^V, \text{and } \mathbf{W}^O$ 统称为 MHA 权重矩阵。\par
+通过以张量网络图 \cite{orus2014practical} 表示 MHA 权重，图 \ref{fig:tensor_network} 展示了 LASER、TRAWL 与我们所提方法中使用的共享因子矩阵 Tucker 分解（见第 \ref{methodology} 节）作用于这些权重时的区别。注意，在这些图中，张量用圆圈表示，从圆圈引出的每条线对应一个张量维度指标；连接两条指标线意味着对相连的指标求和（缩并）。
+
+
+\section{所提方法}\label{methodology}
+通过利用 MHA 背后的直觉 \cite{clark2019does, vig2019multiscale,vig2019analyzing}，我们提出一种新颖且直观的多头张量化方法。该方法首先将 MHA 权重张量化为一组 3D 张量，每个张量对应一个注意力头；然后对单个 Transformer 层中每个注意力头张量化后的权重施加 Tucker 分解，并在这些分解之间共享同一组因子矩阵。独特之处在于，这确保了不同注意力头的权重处于由同一组因子矩阵刻画的共享子空间中。通过使用共享的高维低秩结构对注意力权重进行结构性去噪，我们发现所提框架既能提升 LLM 的推理能力，又能同时实现 LLM 中 MHA 块的压缩。
+
+\subsection{多头张量化}\label{tensorisation}
+尽管具有多头结构，MHA 权重矩阵通常以 2D 格式存储以加速计算。为了由这些矩阵构建张量，我们对模型进行张量化：先将权重折叠为更高维的格式，再对所得权重张量施加张量分解以实现压缩。为此，我们基于关于 MHA 的直觉，发展出一种多头张量化技术，从而自然地将原始的 2D 查询、键、值与输出投影权重矩阵张量化为一组 3D 张量。更具体地说，如图 \ref{fig:methodology} 左部的步骤 1 和步骤 2 所示，张量化过程首先将单个 Transformer 层中的四个全局权重矩阵 $\mathbf{W}^Q, \mathbf{W}^K, \mathbf{W}^V, \text{and } {\mathbf{W}^O}^T \in \mathbb{R}^{d_{model} \times h \cdot d_v}$ 拆分为属于每个注意力头 $i$（$1\leq i \leq h$）的局部子矩阵 $\mathbf{W}^Q_i, \mathbf{W}^K_i, \mathbf{W}^V_i, {\mathbf{W}^O_i}^T \in \mathbb{R}^{d_{model} \times  d_v}$。接着，对每个注意力头，将四个 2D 子矩阵 $\mathbf{W}^Q_i, \mathbf{W}^K_i, \mathbf{W}^V_i, {\mathbf{W}^O_i}^T$ 堆叠为一个 3D 张量 $\mathcal{W}_i \in \mathbb{R}^{d_{model} \times d_v \times 4}$，即
+\begin{equation}
+    \mathcal{W}_{i [:,:,j]} = 
+    \begin{cases} 
+        \mathbf{W}^Q_i & \text{if } j = 1, \\
+        \mathbf{W}^K_i & \text{if } j = 2, \\
+        \mathbf{W}^V_i & \text{if } j = 3, \\
+        {\mathbf{W}^O_i}^T & \text{if } j = 4. \\
+    \end{cases}
+    \label{eq:single_head_weight}
+\end{equation}
+对所有 $h$ 个头重复这一过程，再将全部张量 $\{\mathcal{W}_i \}_{i=1}^h$ 堆叠在一起，即可把单个 Transformer 层的全部 MHA 权重矩阵张量化为一个 4D 张量 $\mathcal{W}_{all} \in \mathbb{R}^{d_{model} \times d_v \times 4 \times h}$，即
+\begin{equation}
+    \mathcal{W}_{all[:,:,:,i]} = \mathcal{W}_i ,\text{ for  } 1\leq i \leq h.
+    \label{eq:allweights}
+\end{equation}
+这样的多头张量化过程将注意力权重矩阵转换为更高维的格式，为利用 Tucker 分解做好准备。
+
+
+\subsection{共享因子矩阵的 Tucker 分解}
+如图 \ref{fig:methodology} 所示，Tucker 分解将一个高维张量分解为一个较小规模的核心张量（其阶数与原始大规模张量相同）与多个因子矩阵。从物理意义上讲，核心张量表示由因子矩阵所指定的子空间中的变化信息。这使得我们可以对多个注意力权重张量施加 Tucker 分解，让它们共享同一组因子矩阵，从而迫使不同的信息驻留在同一子空间内。
+
+为此，在我们的方法中，对式 (\ref{eq:single_head_weight}) 中定义的 $h$ 个 3D 张量 $\{\mathcal{W}_i \}_{i=1}^h$ 分别施加 Tucker 分解，同时共享同一组因子矩阵 $\mathbf{U}^{(1)} \in \mathbb{R}^{d_{model} \times R_1}, \mathbf{U}^{(2)} \in \mathbb{R}^{d_{v} \times R_2}, \mathbf{U}^{(3)} \in \mathbb{R}^{4 \times R_3}$。设第 $i$ 个注意力头权重经 Tucker 分解后的变化信息包含在 3D 张量 $\mathcal{G}_i \in \mathbb{R}^{R_1 \times R_2 \times R_3}$ 中，则每个注意力头的权重 $\mathcal{W}_i$ 可表示为
+\begin{equation}
+    \mathcal{W}_i = \mathcal{G}_i \times_1 \mathbf{U}^{(1)} \times_2 \mathbf{U}^{(2)} \times_3 \mathbf{U}^{(3)}, \text{ for } 1\leq i \leq h.
+\label{eq:tucker_with_shared_factors_1}
+\end{equation}
+注意到，这一表达式可以方便地写成 4D 张量 Tucker 分解的一种特殊变体，形式为
+\begin{equation}
+    \mathcal{W}_{all} = \mathcal{G}_{all} \times_1 \mathbf{U}^{(1)} \times_2 \mathbf{U}^{(2)} \times_3 \mathbf{U}^{(3)} \times_4 \mathbf{I},
+\label{eq:tucker_with_shared_factors}
+\end{equation}
+或其逐元素定义形式
+\begin{equation}
+\begin{split}
+&\mathcal{W}_{all[i_1, i_2, i_3, i_4]} =  \\
+&\quad \sum_{r_1=1}^{R_1} \sum_{r_2=1}^{R_2} \sum_{r_3=1}^{R_3} \mathcal{G}_{all [r_1, r_2, r_3, i_4]} \mathbf{U}^{(1)}_{[i_1, r_1]} \mathbf{U}^{(2)}_{[i_2, r_2]} \mathbf{U}^{(3)}_{[i_3, r_3]},
+\end{split}
+\label{eq:tucker_with_shared_factors_index_notation}
+\end{equation}
+其中 $\mathcal{W}_{all} \in \mathbb{R}^{d_{model} \times d_v \times 4 \times h}$ 由式 (\ref{eq:allweights}) 定义，表示包含单个 Transformer 层中全部注意力权重的张量；$\mathbf{U}^{(1)}, \mathbf{U}^{(2)}, \text{and } \mathbf{U}^{(3)}$ 为共享因子矩阵。项 $\mathbf{I} \in \mathbb{R}^{h\times h}$ 是可以省略的单位矩阵，而 4D 核心张量 $\mathcal{G}_{all} \in \mathbb{R}^{R_1 \times R_2 \times R_3 \times h}$ 定义为
+\begin{equation}
+    \mathcal{G}_{all [:,:,:,i]} = \mathcal{G}_i ,\text{ for  } 1\leq i \leq h.
+    \label{eq:tucker_core_all}
+\end{equation}
+去噪过程通过使用 Tucker 分解逼近每个注意力头的原始权重张量来实现；换言之，给定一组多重线性秩，我们通过最小化下式来去噪张量化后的 MHA 权重：
+\begin{equation}
+\frac{1}{2} \left\| \sum_{i=1}^h \mathcal{W}_i - \sum_{i=1}^h \mathcal{G}_i \times_1 \mathbf{U}^{(1)} \times_2 \mathbf{U}^{(2)} \times_3 \mathbf{U}^{(3)} \right\|^2_F
+\label{eq:compact_tucker_objective_ori}
+\end{equation}
+或等价形式
+\begin{equation}
+\frac{1}{2} \left\|\mathcal{W}_{all} - \mathcal{G}_{all} \times_1 \mathbf{U}^{(1)} \times_2 \mathbf{U}^{(2)} \times_3 \mathbf{U}^{(3)} \right\|^2_F.
+\label{eq:compact_tucker_objective}
+\end{equation}
+在实践中，我们利用 TensorLy 库 \cite{tensorly}，基于高阶正交迭代（Higher Order Orthogonal Iterations, HOOI）算法 \cite{de2000best} 实现了 Tucker 分解的这一特殊变体。
+\begin{rem}
+从式 (\ref{eq:compact_tucker_objective_ori}) 可以观察到，每个注意力头的权重共享同一组因子矩阵 $\mathbf{U}^{(1)}, \mathbf{U}^{(2)}$ 与 $\mathbf{U}^{(3)}$；与此同时，每个注意力头又被赋予其自己的 Tucker 核心张量。我们推测，这一设计与如下直觉相吻合：单个 Transformer 层内的注意力头以不同的专门化方式捕捉相似抽象层级的模式。
+\end{rem} 
+
+\begin{rem}
+式 (\ref{eq:tucker_with_shared_factors})--(\ref{eq:compact_tucker_objective}) 中的张量分解过程使我们能够按照共享的高维低秩结构对注意力权重矩阵进行结构性去噪。此外，通过以尺寸更小的因子来表示原始权重张量，该过程还实现了参数压缩。
+\end{rem}
+
+% In tensor network diagrams \cite{orus2014practical} shown in Fig. \ref{fig:tensor_network}, a tensor is denoted by a circle, with each line emanating from the circle corresponding to a tensor dimension index. Also, connecting two index lines implies a summation over the connected indices. 
+% \begin{rem}
+%     Note that while both LASER and TRAWL obtained significant performance improvements only when applied to the FFN weights, they could have equally applied to the MHA weights. Fig. \ref{fig:tensor_network} illustrates the difference between the SVD used in LASER, the tensor decomposition used in TRAWL, and the Tucker decomposition with shared factor matrices used in our method, when applied to the MHA weights.
+% \end{rem}
+
+
+\section{实验}
+我们进行了全面的实验，以验证所提框架在四个基准推理数据集与三个 LLM（涵盖仅编码器与仅解码器两类架构）上的性能。实验中，与文献 \cite{sharma2023truth} 类似，我们的框架以层选择的方式应用，以实现公平比较。例如，我们每次仅对单个 Transformer 层应用第 \ref{methodology} 节所提出的方法。结果表明，我们的模型能够在实现参数压缩的同时，显著提升原始 LLM 的推理能力。此外，实验结果显示，我们的方法可与现有的仅压缩 FFN 的方法（如通过去噪 FFN 权重来提升 LLM 推理能力的 LASER \cite{sharma2023truth}）联合使用。最后，我们通过一项消融研究验证了所提框架：将本文方法与对 Transformer 层中查询、键、值、输出权重矩阵分别构成的独立张量进行去噪的方案进行对比。实验在 NVIDIA A100 GPU 上进行。
+
+\begin{table}[htbp]
+\centering
+\caption{RoBERTa、GPT-J 与 LLaMA2 在应用与未应用本文方法时，于四个基准数据集上的性能比较。每个模型与数据集组合下的最高准确率 $\uparrow$ 与最低损失 $\downarrow$ 以粗体标出。CR $\uparrow$ 表示单个 Transformer 层中 MHA 参数的压缩率。``-" 表示未压缩。}
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{|c c|p{0.95cm}<{\centering}|p{0.8cm}<{\centering}!{\vrule width 1pt}p{0.95cm}<{\centering}|p{0.8cm}<{\centering}!{\vrule width 1pt}p{0.95cm}<{\centering}|p{0.8cm}<{\centering}|}
+\hline
+& & \multicolumn{6}{c|}{模型名称} \\
+\quad 数据集  & & \multicolumn{2}{c!{\vrule width 1pt}}{RoBERTa} & \multicolumn{2}{c!{\vrule width 1pt}}{GPT-J} & \multicolumn{2}{c|}{LLaMA2} \\ 
+& &  原始 & 本文 & 原始 & 本文 & 原始 & 本文 \\ \hline
+\multirow{3}{*}{\textit{HotPotQA}} & Acc & 6.1  & \textbf{7.33} & 19.6 & \textbf{20.15}  & 16.5  & \textbf{18.44}  \\ 
+ & Loss & 10.99 & \textbf{10.00} & \textbf{3.40}  & 4.49 & \textbf{3.15} & 9.80 \\
+ & CR & - & 1.12 & - & 247.30 & - & 3.54 \\ \hline
+\multirow{3}{*}{\textit{FEVER}} & Acc & 50.0 & \textbf{50.45}  & 50.2  & \textbf{58.94} & 59.3 &  \textbf{66.75} \\ 
+ & Loss & 2.5 & \textbf{1.47} & 1.24  & \textbf{1.02} & 1.02 & \textbf{1.01} \\ 
+  & CR & - & 3.74 & - & 14.69 & - & 3.54 \\ \hline
+ \multirow{3}{*}{\makecell{\textit{Bios} \\ \textit{Profession}}} & Acc & 64.5 & \textbf{72.57} & 75.6 & \textbf{81.18} & 85.0  & \textbf{86.61} \\ 
+& Loss & \textbf{4.91} & 6.64 & 4.64  & \textbf{4.57} & \textbf{4.19}  & 4.54 \\ 
+& CR & - & 8.78 & - & 74.68 & - & 3.54 \\ \hline
+ \multirow{3}{*}{\makecell{\textit{BigBench-} \\ \textit{WikidataQA}}} & Acc & 28.0 & \textbf{32.72}  & 51.8 & \textbf{68.81} &  59.5 & \textbf{60.37}  \\ 
+ & Loss & 9.07 & \textbf{8.72} & 3.52 & \textbf{2.63} & 4.19  & \textbf{2.38} \\ 
+ & CR & - & 2.52  & - & 46.77 & - & 5.81 \\ \hline
+\end{tabular}
+\label{tab:performance}
+\end{table}
+
+
+\subsection{LLM 模型}
+我们在三个 LLM 模型上测试了所提方法：RoBERTa 125M \cite{liu2019RoBERTa}、GPT-J 6B \cite{gpt-j} 与 LLaMA 2 7B \cite{llama2}。
+\begin{itemize}
+    \item RoBERTa 采用仅编码器架构，用于预测给定上下文中缺失的词元。因此，我们在每个问题后追加五个 $<$\texttt{mask}$>$ 词元，再输入 RoBERTa 模型。
+    \item GPT-J 与 LLaMA 2 均为仅解码器模型，可以基于前面的词元预测下一个词元，从而自回归地直接生成词元。
+\end{itemize}
+
+
+
+\begin{table*}
+\centering
+\caption{LLM 压缩与推理的单独方法与混合方法的性能。情形 1：LASER 应用于 FFN 块中的一个权重矩阵；情形 2：LASER 同时应用于 MHA 与 FFN 块；情形 3：本文方法应用于 MHA 块，LASER 应用于 FFN 块。每个模型与数据集组合下的最高准确率 $\uparrow$ 与最低损失 $\downarrow$ 以粗体标出。}
+\begin{tabular}{|c c|c|c|c!{\vrule width 1pt}c|c|c!{\vrule width 1pt}c|c|c|}
+\hline
+& & \multicolumn{9}{c|}{模型名称} \\ 
+\centering 数据集 & & \multicolumn{3}{c!{\vrule width 1pt}}{RoBERTa} & \multicolumn{3}{c!{\vrule width 1pt}}{GPT-J} & \multicolumn{3}{c|}{LLaMA2} \\ 
+& & 情形 1 & 情形 2  & 情形 3 & 情形 1 & 情形 2 & 情形 3 & 情形 1 & 情形 2 & 情形 3 \\
+& & & & (本文) & & & (本文) & & & (本文) \\ \hline
+\multirow{ 2}{*}{\textit{HotPotQA}} & Acc  & 6.7 & 5.24 & \textbf{7.05} & 19.5 & 19.62 & \textbf{19.91} & 17.2 & 18.88 & \textbf{19.22} \\ 
+ & Loss & 10.53 & \textbf{8.60} & 9.87 & \textbf{3.39} & 5.08 & 5.07 & \textbf{2.97} & 9.33 & 9.99 \\ \hline
+\multirow{ 2}{*}{\textit{FEVER}} & Acc  & 52.3 & 53.6 & \textbf{55.23} & 56.2 & 55.59 & \textbf{58.98} & 64.5 & 65.13  & \textbf{66.39} \\ 
+ & Loss & 1.76 & \textbf{1.18} & 2.61 & \textbf{1.27} & 1.28 & 1.39 & \textbf{0.91} & 1.11 & 1.33 \\ \hline
+\multirow{ 2}{*}{\textit{Bios Profession}} & Acc  & 72.5 & 71.14 & \textbf{72.51} & 82.1 & 81.28 & \textbf{82.52} & 86.7 & 86.07 & \textbf{87.07} \\ 
+ & Loss & \textbf{6.44} & 6.62 & 7.42 & 4.91 & 4.61 & \textbf{4.52} & \textbf{4.05} & 4.20 & \textbf{4.05} \\ \hline
+\multirow{ 2}{*}{\textit{BigBench-WikidataQA}} & Acc  & 30.7 & 34.49 & \textbf{37.40} & 65.9 & 65.68 & \textbf{68.20} & \textbf{62.0} & 61.21 & 61.78 \\ 
+& Loss & \textbf{7.69} & 8.25 & 7.86 & 2.86 & 2.89  & \textbf{2.59} & \textbf{2.31} & 2.35 & 2.34 \\ \hline
+\end{tabular}
+\label{tab:exp2}
+\end{table*}
+
+\subsection{数据集} \label{datasets}
+对于四个基准推理数据集——\textit{HotPotQA} \cite{yang2018HotPotQA}、\textit{FEVER} \cite{thorne2018FEVER}、\textit{Bios Profession} \cite{de2019bias} 与 \textit{BigBench-WikidataQA} \cite{bowman2015large}——我们采用与 LASER \cite{sharma2023truth} 相同的数据预处理流程。
+\paragraph{\textit{HotPotQA}} 
+\textit{HotPotQA} 是一个大规模问答数据集。我们从其训练集与验证集中抽取问答对。输入文本使用 LLaMA 2 \cite{llama2} 的分词器进行词元化，超过 15 个词元的样本被丢弃。提示词的格式为 ``$<$\texttt{question}$>$ The answer is”，其中 $<$\texttt{question}$>$ 被替换为实际问题。模型最多可生成 $\texttt{max\_len}$ 个词元，若答案出现在生成的文本中，则视为回答正确。
+\paragraph{\textit{FEVER}}
+事实抽取与验证（Fact Extraction and VERification, \textit{FEVER}）数据集用于评估事实核查系统。它包含二元标签：0（假）与 1（真）。标签相互矛盾的陈述被过滤，以确保一致性。我们从其验证集与测试集中抽取问答对。提示词的结构为：“Consider the following claim: $<$\texttt{claim}$>$. Is this claim true or false? The claim is”，其中 $<$\texttt{claim}$>$ 被替换为实际陈述。若某陈述为真的概率超过其为假的概率，则将该陈述判为真，否则判为假。
+\paragraph{\textit{Bios Profession}}
+\textit{Bios Profession} 数据集是分析职业与专业语境中性别偏见的基准。任务是根据人物传记预测其职业。问答对取自验证集，聚焦于 LASER 论文中使用的同 10 种职业。提示词的结构为：``Consider the following text: $<$\texttt{bio}$>$. What is the profession of the person in this text? The profession of this person is"，其中 $<$\texttt{bio}$>$ 被替换为实际传记。模型需要在 10 种可能的职业中输出概率最高的职业。
+\paragraph{\textit{BigBench-WikidataQA}}
+在 Beyond the Imitation Game Benchmark（BIG-Bench）数据集中，WikidataQA 子集专注于利用来自 Wikidata 的结构化知识进行问答（Question Answering, QA）。问答对取自训练集与验证集。模型最多可生成 $\texttt{max\_len}$ 个词元，若答案出现在生成的文本中，则视为回答正确。
+
+\subsection{实验结果}
+为评估所提框架对 LLM 推理能力的增强，我们将该方法应用于三个 LLM，并在第 \ref{datasets} 节提到的四个推理数据集上评估其性能。表 \ref{tab:performance} 展示了在 MHA 块上应用与未应用本文方法时，各 LLM 的准确率、损失与压缩率。准确率是衡量模型推理性能的关键评估指标，以测试集中预测正确的样本百分比来度量。测试准确率在每个数据集的最后 20\% 数据上评估。损失是一种间接的性能度量，反映模型的不确定性，即与真实目标分布的偏离程度。列出损失是为了完整起见，其以真实词元的负对数似然来度量。压缩率（Compression Ratio, CR）量化模型规模的缩减程度，计算方式为 $\text{CR}= \frac{N_{original}}{N_{compressed}}$，其中 $N_{original}$ 与 $N_{compressed}$ 分别表示原始单个 Transformer 层与压缩后单个 Transformer 层中 MHA 权重的参数总数。表 \ref{tab:performance} 显示，我们提出的方法在全部四个推理数据集上、就测试准确率而言，一致地提升了三个原始模型的性能，并使 MHA 权重获得了至多 $247.3$ 倍的压缩率。\par 
+
+\begin{rem}
+我们的方法应用于 MHA 块，因此可与现有方法联合使用，以进一步提升 LLM 的推理能力。例如，可与在应用于 FFN 块时性能最佳的 LASER \cite{sharma2023truth} 相结合。
+\label{rem:hypbrid}
+\end{rem}
+
+为评估注记 \ref{rem:hypbrid} 中提到的此类``混合''情形，我们考察了以下三种情形：
+\begin{itemize}
+    \item 情形 1：LASER \cite{sharma2023truth} 应用于 FFN 块中的一个矩阵；
+    \item 情形 2：LASER \cite{sharma2023truth} 应用于 FFN 与 MHA 块中的所有矩阵；
+    \item 情形 3：本文方法应用于 MHA 块；LASER \cite{sharma2023truth} 应用于 FFN 块中的矩阵。
+\end{itemize}
+情形 1 的结果直接引自文献 \cite{sharma2023truth} 所报告的最佳性能。此外，正如文献 \cite{sharma2023truth} 的作者所指出的，对其方法在多个权重矩阵上多次应用可以带来进一步的提升。为此，在情形 2 中，我们将 LASER 方法同时应用于 FFN 块与 MHA 块，以获得 LASER 的最佳性能，从而与情形 3 进行公平比较——在情形 3 中，本文方法应用于 MHA 块，而 LASER 应用于 FFN 块。表 \ref{tab:exp2} 给出了上述三种情形的结果。除 LLaMA2 在 \textit{BigBench-WikidataQA} 数据集上之外，情形 3 在三个模型、四个数据集上均取得了最高的测试准确率。这进一步凸显了我们聚焦 MHA 权重的方法背后的直觉。通过对张量化过程的精心设计以及对当前 MHA 领域知识的利用，我们的方法能够按照「单个 Transformer 层内各注意力头共享一个高维子空间」这一直觉，对 MHA 权重进行结构性去噪。这不仅增强了我们方法的可解释性，还表明我们的框架可以作为一个通用模块，与仅针对 FFN 权重设计的方法联合使用，从而在 LLM 中实现更强的推理能力与压缩效果。
+
+\subsection{消融研究}
+为评估将查询、键、值与输出权重矩阵堆叠为张量的影响，我们将本文框架与如下方案进行了比较：将相同方法分别应用于 MHA 中四类权重矩阵（查询、键、值与输出）之一。表 \ref{tab:ablation} 显示，我们提出的方法在全部四个推理数据集上均能一致地取得最佳性能。这验证了我们「将单个 Transformer 层中全部 MHA 权重共同张量化」这一基础推测。
+
+
+\begin{table}[t]
+\centering
+\caption{分别压缩与共同压缩 $\mathbf{W}^Q$、$\mathbf{W}^K$、$\mathbf{W}^V$ 与 $\mathbf{W}^O$ 的影响。我们提出的方法同时压缩单个 Transformer 层中的全部 MHA 权重。每个数据集下的最高准确率 $\uparrow$ 与最低损失 $\downarrow$ 以粗体标出。}
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{|c c|p{0.95cm}<{\centering}|p{0.8cm}<{\centering}|p{0.8cm}<{\centering}|p{0.8cm}<{\centering}|p{0.8cm}<{\centering}|p{0.8cm}<{\centering}|}
+\hline
+& & \multicolumn{6}{c|}{GPT-J} \\
+\centering 数据集  & & 原始 & $\mathbf{W}^Q$ & $\mathbf{W}^K$  & $\mathbf{W}^V$ & $\mathbf{W}^O$ & 本文 \\ \hline
+\multirow{2}{*}{\textit{HotPotQA}} & Acc  & 19.6 &  19.19 & 19.25 & 19.70 & 19.62 & \textbf{20.15} \\ 
+ & Loss & \textbf{3.4} & 4.45 & 4.45 & 4.43 & 4.44 & 4.49 \\ \hline
+\multirow{2}{*}{\textit{FEVER}} & Acc & 50.2 & 54.41 & 53.40 & 55.86 & 56.07 & \textbf{58.94} \\ 
+ & Loss & 1.24 & 1.22 & 1.22 & 1.23 & 1.15 & \textbf{1.02} \\ \hline
+\multirow{2}{*}{\makecell{\textit{Bios} \\ \textit{Profession}}} & Acc & 75.6 & 76.06 & 74.97 & 79.39 & 79.71 & \textbf{81.18} \\ 
+ & Loss & 4.64 & 4.54 & 4.59 & 4.46 & \textbf{4.41} & 4.57 \\ \hline
+\multirow{2}{*}{\makecell{\textit{BigBench-} \\ \textit{WikidataQA}}} & Acc & 51.8 & 49.72 & 51.01 & 48.82 & 48.87 & \textbf{68.81} \\ 
+ & Loss & 3.52 & 3.66 & 3.58 & 3.69 & 3.69 & \textbf{2.63} \\ \hline
+\end{tabular}
+\label{tab:ablation}
+\end{table}
+
+
+\section{结论}
+我们提出了一种新颖的框架，在提升 LLM 推理能力的同时实现参数压缩。这是通过利用关于 LLM 中多头注意力的领域知识与实证依据，结合独特的多头张量化与 Tucker 分解的一种特殊变体来实现的。借此，我们的框架探索了按照注意力头之间共享的高维低秩结构，对单个 Transformer 层中每个注意力头的权重进行结构性去噪。由此确保每个注意力头的权重在由公共 Tucker 因子矩阵刻画的同一高维子空间内编码不同的信息。我们的方法已被证明能够在仅编码器与仅解码器的 LLM（参数规模从数亿到数十亿）中实现参数压缩与推理增强。此外，我们的框架可与现有提升 LLM 推理能力的方法（如基于 FFN 权重去噪的方法）联合使用，以获得进一步的性能增益。通过消融研究，我们验证了所提多头张量化过程带来的优势与性能提升。
+\paragraph{局限性}
+与其他现有权重去噪方法类似，我们发现对于不同的数据集，本文方法在不同的超参数设置下取得最佳结果。我们未来的工作将致力于为本文方法及其他现有方法找到统一且可泛化的超参数设置。
+
+
+\bibliography{reference}
+\bibliographystyle{ieeetr}
+
+\end{document}

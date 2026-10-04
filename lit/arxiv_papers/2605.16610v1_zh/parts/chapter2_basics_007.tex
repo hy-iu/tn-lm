@@ -1,0 +1,113 @@
+\subsection{张量网络中的矩阵分解}
+与任何其他运算一样，张量分解也可以用张量网络图来描绘。本节将介绍矩阵分解的图形化图示。更高阶张量的一般分解将在第~\ref{chapter:tensor-decomposition}章中讨论。在张量网络中，分解是指把一个节点拆分为多个节点；我们称其逆运算为合并（merging），即把多个节点组合成一个节点。这一过程可以由下面的张量网络图清晰地说明：
+\begin{align*}
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (A) at (\x,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!50!white] (B) at (\x+2,\y){\scalebox{0.85}{$\Bb$}};
+    \node[tensor,fill=blue!30!red!30!white] (C) at (\x+1,\y-1){\scalebox{0.85}{$\Cb$}};
+    \node[tensor,fill=red!80!blue!60!white] (D) at (\x+3,\y-1){\scalebox{0.85}{$\Db$}};
+    \draw[edge](A) -- (C) node [midway,above] {\scalebox{0.7}{\dimcolor{$r_1$}}};
+    \draw[edge](C) -- (D) node [midway,above] {\scalebox{0.7}{\dimcolor{$r_2$}}};
+    \draw[edge](B) -- (D) node [midway,above] {\scalebox{0.7}{\dimcolor{$r_3$}}};
+    \draw[edge](B) -- (C) node [midway,above] {\scalebox{0.7}{\dimcolor{$r_3$}}};
+    \draw[edge](A) -- (\x-0.8,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge](B) -- (\x+2.8,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \node[draw=none]() at (\x+4.5,\y-0.15){\scalebox{1}{$\xrightarrow[]{\text{merging}}$}};
+    \node[draw=none]() at 
+    (\x+4.5,\y-0.75){\scalebox{1}{$\xleftarrow[\text{factorizing}]{}$}};
+    \node[tensor,fill=red!30!blue!50!white] (M) at (\x+6.5,\y-0.5){\scalebox{0.85}{$\Mb$}};
+    \draw[edge](M) -- (\x+7.5,\y-0.5) node [midway,above] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge](M) -- (\x+5.5,\y-0.5) node [midway,above] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+\end{tikzpicture}
+\end{align*}
+因此，任何矩阵分解都可以用张量网络图来表示。后续章节将会看到，QR 分解和奇异值分解（SVD）是张量网络算法中常用于拆分节点的两种分解。这两种分解都把矩阵写成若干矩阵的乘积，其中一些因子满足正交性约束。我们将用视觉线索在张量网络图中表示这类正交性约束：
+\paragraph{左、右标准正交矩阵与张量}
+若把矩阵 $\Ub\in\RR^{m\times n}$ 的转置与它自身从左侧收缩得到单位矩阵~（$\Ub^\ts\Ub = \Ib_{n}$），则称该矩阵为\emph{左标准正交}矩阵。
+类似地，若矩阵 $\Vb\in\RR^{m\times n}$ 与它的转置从右侧收缩得到单位矩阵
+（$\Vb\Vb^\ts = \Ib_{m}$），则称其为\emph{右标准正交}矩阵。在张量网络图中，我们用半着色节点来表示这种正交结构，使得用未着色部分的边连接一个正交节点的两个副本时，结果就是单位矩阵。例如，左标准正交矩阵 $\Ub\in\RR^{m\times n}$ 将表示为
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0};
+
+    
+    \node[tensor, path picture={
+    \fill[fill=red!30!white](path picture bounding box.south east)
+        -- 
+    (path picture bounding box.north east) --
+    (path picture bounding box.north west) -- cycle;
+    }, shift={(\x,\y)}] (Ut) {$\Ub$};
+    \draw[edge](Ut) -- (\x-1,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge](Ut) -- (\x+1,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$n$}}};
+\end{tikzpicture}，由此得到 
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0};
+
+    \node[tensor, path picture={
+    \fill[fill=red!30!white](path picture bounding box.south west)
+    -- 
+    (path picture bounding box.north east) --
+    (path picture bounding box.north west) -- cycle;
+    }, shift={(\x,\y)}] (U) {$\Ub$};
+    
+    \node[tensor, path picture={
+    \fill[fill=red!30!white](path picture bounding box.south east)
+        -- 
+    (path picture bounding box.north east) --
+    (path picture bounding box.north west) -- cycle;
+    }, shift={(\x+1,\y)}] (Ut) {$\Ub$};
+
+    \draw[edge] (U) -- (Ut) node [midway,above] {\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge](Ut) -- (\x+2,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge](U) -- (\x-1,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$n$}}};
+    \node[draw=none] () at (\x+2.3,\y) {\scalebox{0.8}{\dimcolor{$=$}}};
+    \draw[edge](\x+2.5,\y) -- (\x+4,\y)node [midway,above] {\scalebox{0.7}{\dimcolor{$n$}}};
+    \node[draw=none] () at (\x+4.3,\y) {\scalebox{0.8}{\dimcolor{$=$}}};
+\end{tikzpicture} $\Ib_n$。 
+类似地，右标准正交矩阵 $\Vb\in\RR^{m\times n}$ 将画成 
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0};
+
+    \node[tensor, path picture={
+    \fill[fill=red!30!white](path picture bounding box.south west)
+    -- 
+    (path picture bounding box.north east) --
+    (path picture bounding box.north west) -- cycle;
+    }, shift={(\x,\y)}] (Vt) {$\Vb$};
+    \draw[edge](Vt) -- (\x-1,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge](Vt) -- (\x+1,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$n$}}};
+\end{tikzpicture}，而我们有
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0};
+
+    \node[tensor, path picture={
+    \fill[fill=red!30!white](path picture bounding box.south west)
+    -- 
+    (path picture bounding box.north east) --
+    (path picture bounding box.north west) -- cycle;
+    }, shift={(\x,\y)}] (U) {$\Vb$};
+    
+    \node[tensor, path picture={
+    \fill[fill=red!30!white](path picture bounding box.south east)
+        -- 
+    (path picture bounding box.north west) --
+    (path picture bounding box.north east) -- cycle;
+    }, shift={(\x+1,\y)}] (Ut) {$\Vb$};
+
+    \draw[edge] (U) -- (Ut) node [midway,above] {\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge](Ut) -- (\x+2,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge](U) -- (\x-1,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$m$}}};
+    \node[draw=none] () at (\x+4.3,\y) {\scalebox{0.8}{\dimcolor{$=$}}};
+    \node[draw=none] () at (\x+2.3,\y) {\scalebox{0.8}{\dimcolor{$=$}}};
+    \draw[edge](\x+2.5,\y) -- (\x+4,\y)node [midway,above] {\scalebox{0.7}{\dimcolor{$m$}}};
+\end{tikzpicture} $\Ib_m$。
+

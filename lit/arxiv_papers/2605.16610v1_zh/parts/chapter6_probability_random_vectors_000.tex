@@ -1,0 +1,171 @@
+\section{概率分布与随机张量网络}\label{chapter:prob}
+本章讨论张量网络的一类非常有用的应用：以直观且计算高效的方式表示高维概率分布。例如，TT 等张量网络分解能够高效编码概率分布及其边缘分布~\citep{gardiner2024tensor, glasser2019expressive}。我们先说明如何用张量网络高效地建模概率分布，随后把重心转向研究随机张量彼此收缩所得张量的统计性质。本章两部分都将表明，张量网络能帮助我们轻松地得到涉及概率分布与高阶张量的非平凡结论。 
+\subsection{概率分布与张量分解}
+本节讨论如何用张量网络参数化概率分布。
+\subsubsection{作为张量的概率分布}\label{sub:probs}
+ 用张量网络建模概率分布的一种常见做法，是直接表示概率本身。考虑 $N$ 个离散随机变量的多元概率质量函数 $\PP(X_1,\cdots,X_N)$。这一联合概率分布可以看作一个元素非负、且元素之和为一的 $N$ 阶张量： 
+\begin{definition}\label{def:probability}
+设 $\PP$ 是 $N$ 个离散随机变量 $X_1,\cdots,X_N$ 上的联合分布，它们分别取值于 $[d_1], [d_2], \cdots,[d_N]$。 
+称由 $\Tt_{i_1\cdots i_N} = \PP(X_1=i_1,\cdots,X_N=i_N)$ 定义的张量 $\Tt\in\RR^{d_1\times\cdots\times d_N}$ \emph{表示}概率 $\PP$，并记为 $\Tt \simeq  \PP(X_1,\cdots,X_N)$。由构造可知，$\Tt$ 的元素非负且总和为一： 
+$$
+\sum_{i_1,\cdots,i_N}\Tt_{i_1,\cdots,i_N} 
+=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{0}
+    \def\y{0}
+    \node[tensor,fill=blue!20!white] (T) at (\x+1,\y) {$\Tt$};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_1) at (\x,\y-0.65) {};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_2) at (\x+0.5,\y-0.65) {};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_3) at (\x+2,\y-0.65) {};
+    \node[draw=none] at (\x+1.25,\y-0.65){$\dots$};
+    \draw[edge] (T) -- (m_1)node [very near end,above]
+    {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (T) -- (m_2)node [very near end,right]
+    {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (T) -- (m_3)node [very near end,above]
+    {\scalebox{0.7}{\dimcolor{$d_N$}}};
+\end{tikzpicture}
+= 1,
+$$
+其中 $
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{0}
+    \def\y{0}
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_1) at (\x,\y) {};
+    \draw[edge](m_1)--(\x+1,\y);
+    \end{tikzpicture}
+$
+是全 1 向量~(见命题~\ref{prop:copy.tensor} 中的条目~\ref{itm:one-copy-tensor})。
+\end{definition}
+下面说明如何用张量网络记法表示边缘概率与条件概率。
+\paragraph{边缘概率}
+设 $\Tt\in\RR^{d_1\times d_2\times d_3}$ 为表示概率分布 $\PP(X_1, X_2, X_3)$ 的张量，则 
+\begin{enumerate}
+    \item 由全概率公式，$X_2$ 与 $X_3$ 的边缘分布可表示为
+    
+\begin{align*}
+    \PP(X_2=i_2,X_3=i_3) 
+    &=
+    \sum_{i_1=1}^{d_1}\PP(X_1= i_1,X_2=i_2,X_3=i_3) \\
+    &= 
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.25}
+    \def\x{0}
+    \node[tensor,fill=blue!20!white] (T) at (\x,\y) {$\Tt$};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_1) at (\x-0.5,\y-0.65) {};
+    \draw[edge] (T) -- (m_1);
+    \draw[edge](T) -- (\x,\y-0.65)node [very near end,below]
+    {\scalebox{0.7}{\indcolor{$i_2$}}};
+    \draw[edge](T) -- (\x+0.5,\y-0.65)node [very near end,below]
+    {\scalebox{0.7}{\indcolor{$i_3$}}};
+\end{tikzpicture}
+ = \sum_{i_1=1}^{d_1}\Tt_{i_1,i_2,i_3},
+\end{align*}
+对所有 $i_2,i_3$ 成立。这表明，表示边缘分布的张量可由表示联合分布的张量经一次简单运算得到，即
+\begin{align*}
+    \text{If}~~~ \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.25}
+    \def\x{0}
+    \node[tensor,fill=blue!20!white] (T) at (\x,\y) {$\Tt$};
+    \draw[edge] (T) -- (\x-0.5,\y-0.65);
+    \draw[edge] (T) -- (m_1);
+    \draw[edge](T) -- (\x,\y-0.65);
+    \draw[edge](T) -- (\x+0.5,\y-0.65);
+\end{tikzpicture}\simeq\PP(X_1, X_2, X_3),~~~\text{then}~~~
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.25}
+    \def\x{0}
+    \node[tensor,fill=blue!20!white] (T) at (\x,\y) {$\Tt$};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_1) at (\x-0.5,\y-0.65) {};
+    \draw[edge] (T) -- (m_1);
+    \draw[edge](T) -- (\x,\y-0.65);
+    \draw[edge](T) -- (\x+0.5,\y-0.65);
+\end{tikzpicture}\simeq\PP(X_2, X_3).
+\end{align*}
+\item
+类似地，$X_2$ 的边缘分布可表示为
+\begin{align*}
+\PP(X_2=i_2) 
+&= \sum_{i_1,i_3=1}^{d_1,d_3}\PP(X_1=i_1,X_2= i_2, X_3=i_3)\\
+&=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.25}
+    \def\x{0}
+    \node[tensor,fill=blue!20!white] (T) at (\x,\y) {$\Tt$};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_1) at (\x-0.5,\y-0.65) {};        \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_2) at (\x+0.5,\y-0.65) {};
+    \draw[edge] (T) -- (m_1);
+    \draw[edge](T) -- (m_2);
+    \draw[edge](T) -- (\x,\y-0.65)node [very near end,below]
+    {\scalebox{0.7}{\indcolor{$i_2$}}};
+\end{tikzpicture}=\sum_{i_1,i_3=1}^{d_1,d_3}\Tt_{i_1,i_2,i_3},
+\end{align*}
+对所有 $i_2$ 成立。因此在张量网络记法下，$X_2$ 的边缘分布可表示为：
+\begin{align*}
+    \text{If}~~~ \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.25}
+    \def\x{0}
+    \node[tensor,fill=blue!20!white] (T) at (\x,\y) {$\Tt$};
+    \draw[edge] (T) -- (\x-0.5,\y-0.65);
+    \draw[edge] (T) -- (m_1);
+    \draw[edge](T) -- (\x,\y-0.65);
+    \draw[edge](T) -- (\x+0.5,\y-0.65);
+\end{tikzpicture}\simeq\PP(X_1, X_2, X_3),~~~\text{then}~~~
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.25}
+    \def\x{0}
+    \node[tensor,fill=blue!20!white] (T) at (\x,\y) {$\Tt$};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_1) at (\x-0.5,\y-0.65) {};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_2) at (\x+0.5,\y-0.65) {};
+    \draw[edge] (T) -- (m_1);
+    \draw[edge](T) -- (\x,\y-0.65);
+    \draw[edge](T) -- (\x+0.5,\y-0.65);
+\end{tikzpicture}\simeq\PP(X_2).
+\end{align*}
+\end{enumerate}
+下文为简便起见，用 $\PP(i_1,\cdots,i_N)$ 表示概率 $\PP(X_1=i_1,\cdots,X_N=i_N)$。 
+可见，要在张量网络记法中表示边缘分布，只需用全 1 向量与相应的边收缩。
+类似地，我们也能表示条件概率分布。
+\paragraph{条件概率}
+设 
+$\PP(i_n \mid i_1, \dots, i_{n-1})
+$
+表示在前 $n-1$ 个随机变量取值 $i_1, \dots, i_{n-1}$ 的条件下 $X_n = i_n$ 的条件概率。  
+对三阶概率张量 $\Tt\in \RR^{d_1 \times d_2 \times d_3}$，这些条件概率可用张量网络记法紧凑地表示：
+\begin{enumerate}
+    \item 
+有 $
+\PP(i_1|i_2) = \frac{\PP(i_1,i_2)}{\PP(i_2)} = \frac{\sum_{i_3}\PP(i_1,i_2,i_3)}{\sum_{i_1,i_3}\PP(i_1,i_2,i_3)} = 
+\frac{\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{0}
+    \def\y{0}
+    \node[tensor,fill=blue!20!white] (T) at (\x,\y) {$\Tt$};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_1) at (\x+0.5,\y-0.65) {};
+    \draw[edge] (T) -- (\x-0.5,\y-0.65)node [very near end,below]
+    {\scalebox{0.7}{\indcolor{$i_1$}}};
+    \draw[edge](T) -- (\x,\y-0.75)node [very near end,below]
+    {\scalebox{0.7}{\indcolor{$i_2$}}};
+    \draw[edge](T) -- (m_1);
+\end{tikzpicture}}{\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{0}
+    \def\y{0}
+    \node[tensor,fill=blue!20!white] (T) at (\x,\y) {$\Tt$};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_1) at (\x-0.5,\y-0.65) {}; 
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_2) at (\x+0.5,\y-0.65) {};
+    \draw[edge] (T) -- (m_1);
+    \draw[edge](T) -- (m_2);
+    \draw[edge](T) -- (\x,\y-0.75)node [very near end,below]
+    {\scalebox{0.7}{\indcolor{$i_2$}}};
+\end{tikzpicture}},
+$
+对所有 $i_1, i_2$ 成立。 
+

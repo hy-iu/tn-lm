@@ -1,0 +1,46 @@
+\section{TTLM Variants}
+
+To show the versatility and practical applicability of the TTLM framework, we now propose two new variants: TTLM-Large and TTLM-Tiny in Sec. \ref{sec: Tinyttlm}.  We briefly summarize the relationship between TTLM and some widely-used RNNs in Sec.\ \ref{sec: Existing  TTLM variants}.
+
+\subsection{New Variants: TTLM-Large and TTLM-Tiny}
+\label{sec: Tinyttlm}
+
+The TT core $\tG$ in TTLM is an entire third-order tensor. In the two variants, we decompose $\tG$ into several separate tensors without violating the TT format, as shown in Fig.\ \ref{fig: TTLM}b and Fig.\ \ref{fig: TTLM}c. We define TTLM-Tiny and TTLM-Large as follows:
+
+\begin{equation}
+\begin{split}
+& \vh^{(t)}_{\textrm{Tiny}} = \vf (x^{(t)})^T \tW^{xe} \bm{\delta} \mW^{hh}\vh^{(t-1)}_{\textrm{Tiny}}\\
+& \vh^{(t)}_{\textrm{Large}}  = \vf (x^{(t)})^T \tW^{xe} \tW^{eh}  \bm{\delta} \mW^{hh}\vh^{(t-1)}_{\textrm{Large}}\\
+\end{split}
+\end{equation}
+
+where $\mW^{hh} \in \mathbb{R}^{R \times R}$ is the hidden-to-hidden matrix;  $\tW^{xe} \in \mathbb{R}^{|V| \times R \times R}$ is the input-to-hidden tensor; $\tW^{eh} \in \mathbb{R}^{R \times R \times R \times R}$; and $\bm{\delta} \in  \mathbb{R}^{R \times R \times R \times R}$ is a fourth-order diagonal tensor such that $\delta_{ijkl} = 1$ if{f} the $i = j = k = l$, and $\delta_{ijkl} = 0$ otherwise.  
+
+
+The relationship between our proposed models and TTLM is as follows: $\tW^{xe}$ in both models take the same role as $\tG^{(t)}$ in TTLM (i.e. input-to-hidden and hidden-to-output), while  $\tG = \tW^{xe} \bm{\delta} \mW^{hh}$ in TTLM-Tiny and $\tG = \tW^{xe} \tW^{eh} \bm{\delta} \mW^{hh}$ in TTLM-Large.   
+
+
+As in RNNs, we compute the conditional probability recursively for TTLM-Large and TTLM-Tiny as:
+
+\begin{equation}
+\vy^{(t)} = \psi (\tV\tP\vh^{(t)})
+\end{equation}
+
+where $\tV\in\mathbb{R}^{R \times |V|\times R}$ is an output embedding tensor, $\tP\in\mathbb{R}^{R \times R\times R}$ is a projector tensor. Then we tie the input tensor $\tW^{xe}$ to the output embedding tensor $\tV$ (we provide a detailed explanation in Sec. \ref{sec:implementations}).
+
+One obvious advantage of our models is to utilize information from the hidden layer and input data separately. Such interaction, particularly TTLM-Tiny, can potentially avoid overfitting, similarly to \cite{wu_multiplicative_2016} where \textit{multiplication integration} between two sources of "input" can outperform many other methods. In Sec \ref{sec: rank}, we provide relevant experimental evidence.
+
+
+
+\subsection{Existing  TTLM Variants} 
+\label{sec: Existing  TTLM variants}
+Given the fact that TT scores of TTLM can vary,  Appendix \ref{sec: TTLM generalization} provides a detailed illustration that three existing models, namely Second-order RNNs,  Recurrent Arithmetic Circuits (RACs), and Multiplicative Integration RNNs (MI-RNNs)  can be considered as one of the ”special” implementations of TTLM. 
+
+We briefly summarize the differences between the three models: 1) Second-order RNNs use the third-order $\tT$ as the TT cores with an activation function given Eq. \ref{eq: second-order-rnn}; 2)
+RACs use $\mW^{hx} \odot \mW^{hh}$ as the TT cores given Eq.\ \ref{eq: RAC_simple};  3) MI-RNNs use $\mW^{hx} \odot \mW^{hh}$  as the TT cores with an activation function given Eq. \ref{eq: mirnn}. 
+
+Along with our two proposed models, we study the experimental performance of second-order RNNs, RACs and MI-RNNs compared to TTLM-Large and TTLM-Tiny in Sec. \ref{sec: experiments}.
+
+
+
+

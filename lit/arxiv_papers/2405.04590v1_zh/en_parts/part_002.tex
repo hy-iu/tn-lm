@@ -1,0 +1,17 @@
+\section{Related Work}
+
+Previous studies on tensor networks in machine learning have mainly been devoted to analyzing the theoretical properties of neural networks. A better understanding of feed-forward, convolutional and recurrent architectures has been gained, including compression parameters \citep{novikov2015tensorizing}, expressive power \citep{cohen2016expressive, cohen2016convolutional, khrulkov2018expressive}, and depth efficiency for long-term memory \citep{levine2018benefits}. For sequence modeling tasks in NLP, there are two stages of the previous research.
+
+\paragraph{Theoretical Proposals.}
+\citep{pestun2017tensor} propose a tensor network language model aims to construct the long-range correlation in real-world language modeling, \citep{pestun2017language} propose a quantum statistical language model on a one-dimensional lattice which is called trace-density model. 
+To the best of our knowledge, these tensor network language models have remained a theoretical proposal instead of an empirical one. 
+
+
+\paragraph{Sequence Modeling.} \cite{novikov2021tensor} propose a new efficient tensor train-based approach to tensor-train density estimation that allows efficient computation of probability density function. \cite{miller2021tensor} apply a recurrent tensor network, uniform matrix product state, to the probabilistic sequence modeling while opening significant new research directions in the design of sequential generative models. However, probably due to the efficiency issue, most of the existing models have only been tested on small vocabulary size and simple datasets like Tomita grammars \citep{tomita1982dynamic}, further evaluation on moderately-scaled natural language datasets is necessary to fully assess their performance. We provide a comparison of the datasets we used with related work in the Appendix: \ref{sec:datasets}.
+
+This paper is the first work to  derive a tensor network language model in a way that can be applied to real-world language modeling datasets. The efforts to improve efficiency are twofold. First, we do not calculate the probability normalization term used for the total probability law; instead, we turn to  calculate conditional probabilities based on context representations, as described in Sec. \ref{sec:recursive probability}.
+Second, we further decompose TT cores and use  low-scale hidden units, see in Sec. \ref{sec: Tinyttlm}.
+
+
+\input{sections/Preliminaries}
+

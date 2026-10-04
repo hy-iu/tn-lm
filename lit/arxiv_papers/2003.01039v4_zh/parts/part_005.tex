@@ -1,0 +1,44 @@
+\section{正则表达式与 u-MPS}
+\label{sec:regex}
+%
+\begin{table}[t]
+\setlength\aboverulesep{0.1pt}
+\setlength\belowrulesep{0.1pt}
+\renewcommand{\arraystretch}{1.7}
+\caption{给出正则表达式（regex）与和 u-MPS 相关联的广义转移算符（generalized transfer operator）之间对应关系的对照表（注意 $\EL_{R_1 R_2}$ 中顺序的颠倒）。给出 $\ER_{S^*}(\QR)$ 的无穷和可以用部分和高效地近似，或者作为线性方程 $(I - \ER_S)\QR^* = \QR$ 的解 $\QR^*$ 来计算（对 $\EL_{S^*}(\QL)$ 同理）。}
+\label{tab:regex_cp}
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{c|c|c}
+    \textbf{正则表达式} $\mathbf{R}$ & $\bm{\ER_R(\QR)}$ & $\bm{\EL_R(\QL)}$ \\
+    \midrule
+    $\mathbf{s}$ &         $\mc{A}_s \QR \mc{A}_s^T$                             & $\mc{A}_s^T \QL \mc{A}_s$ \\
+    $\mathbf{R_1 R_2}$ &   $\ER_{R_1}(\ER_{R_2}(\QR))$                           & $\EL_{R_2}(\EL_{R_1}(\QL))$ \\
+    $\mathbf{R_1 | R_2}$ & $\ER_{R_1}(\QR) + \ER_{R_2}(\QR)$                     & $\EL_{R_1}(\QL) + \EL_{R_2}(\QL)$ \\
+    $\mathbf{S^*}$ &       $\sum_{n=0}^\infty (\ER_S)^{\circ n}(\QR)$ & $\sum_{n=0}^\infty (\EL_S)^{\circ n}(\QL)$
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+%
+虽然如上定义的转移算符在量子多体物理中是标准工具，我们现在展示这一转移算符演算如何在序列数据的情形下得到丰富的推广。我们在大小为 $d$ 的字母表 $\Sigma$ 上的正则表达式（regex）$R$ 上工作，正则表达式可以递归地定义为：(a) 字符串字面量 $s\in\Sigma^*$，(b) 正则表达式的拼接（concatenation）$R = R_1 R_2$，(c) 正则表达式的并 $R = R_1 | R_2$，以及 (d) 正则表达式的 Kleene 闭包（Kleene closure）$R = S^*$。我们用 $\Sigma$ 表示由所有单个字符 $c \in \Sigma$ 构成的并正则表达式，用 $\Sigma^n$ 表示 $\Sigma$ 与其自身拼接 $n$ 次。
+
+任何正则表达式 $R$ 都定义了一个集合 $\Lang(R) \subset \Sigma^*$，即与 $R$ 所规定的模式相匹配的字符串构成的语言。虽然 $\Lang(R)$ 由 $R$ 唯一确定，但通常可以选取多个定义同一语言的正则表达式。以下我们假定已经选取了一个无歧义的正则表达式 $R$，使得每个字符串 $s \in \Lang(R)$ 恰好匹配 $R$ 一次。这并不失一般性，因为任何有歧义的正则表达式都可以替换为定义同一语言的无歧义正则表达式~\citep{book1971}。在这种情形下，我们也用 $R$ 来表示子集 $\Lang(R)$。
+
+对每个正则表达式 $R$，我们关联一对广义转移算符 $\ER_{R}$ 和 $\EL_{R}$，它们通过对语言 $R$ 中所有字符串求和而构成，并按如下方式作用在矩阵上
+%
+\begin{align}
+\label{eq:transfer_op}
+\ER_R(\QR) &= \sum_{s\in R} \mc{A}(s) \QR \mc{A}(s)^T, \nonumber\\
+\EL_R(\QL) &= \sum_{s\in R} \mc{A}(s)^T \QL \mc{A}(s).
+\end{align}
+%
+尽管~\eqnref{eq:transfer_op} 中出现的朴素求和可能包含无穷多项，此类 CP map 的作用仍然可以借助正则表达式本身的递归定义被高效且精确地计算。表~\ref{tab:regex_cp} 给出了上面引入的四种基本正则表达式运算与 CP map 上相应运算之间的对应关系。关于这些递归运算与 \eqnref{eq:transfer_op} 在无歧义正则表达式情形下的一致性的证明，以及一个对任意正则表达式都成立的广义对应关系，见附录~\ref{sec:appendix_a}。
+
+表~\ref{tab:regex_cp} 中的大多数正则表达式运算都很直接，但 Kleene 闭包 $\ER_S$ 涉及一个无穷求和，只要 $\ER_S$ 的谱范数满足 $\rho(\ER_S) < 1$，该求和便保证收敛。我们把这个收敛和的值记为 $\QR^*$，它可以用有限多个求和项来近似，或者作为线性方程 $(I - \ER_S)\QR^* = \QR$ 的解来计算（参见~\citep{balle2019}）。
+
+解释转移算符 $\ER_R$ 和 $\EL_R$ 的一种富有成效的方式，是将它们视为 u-MPS 采样分布的 normalization 函数。我们定义量 $\Z_R(\QL, \QR) = \Tr(\QL \ER_R(\QR))$ 为在边界矩阵 $\QL, \QR$ 存在时与正则表达式 $R$ 相关联的（未归一化）概率，并定义量 $\Z_R = \Z_R(\alphamat, \omegamat)$ 为使用 u-MPS 的边界矩阵时的相应量。由 \eqnref{eq:transfer_op} 可知，$\Z_R = \sum_{s \in R}\Pt(s)$ 确实给出与所有匹配 $R$ 的字符串 $s$ 相关联的未归一化概率。前面定义的量 $\Z_n = \Z_{\Sigma^n}$ 和 $\Z_* = \Z_{\Sigma^*}$ 是它的特殊情形。
+

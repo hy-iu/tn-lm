@@ -1,0 +1,37 @@
+\section{Conclusion}\label{chapter:conclusion}
+
+This manuscript presents a self-contained graphical language for tensor networks, progressing from foundational notation and basic concepts to tensor decompositions, gradient computation, and probability distributions. Its primary objective is to provide practical frameworks for performing operations, ranging from simple to complex, on high-dimensional objects.
+A central theme throughout the manuscript is that the graphical language of tensor
+networks is not merely a notational convenience. Rather, it offers a clear and precise mathematical framework that brings together many classical results into a single, unified structure.
+Several examples illustrate this point. The bounds on the matricization rank are determined by the weight of any cut that separates the row legs from the column legs in a tensor diagram (Theorem~\ref{thm: matricization-rank}). The gradient rules of Chapter~\ref{chapter:gradients}~(Theorems~\ref{thm:gradients} and~\ref{thm:multiple-tensors-gradients}) reduce the computation
+of Jacobians of complex tensor network expressions to a single diagrammatic operation,
+node removal, recovering classical identities such as
+$\partial(\Ab\xb)/\partial \Ab = \xb \outprod \Ib$ and $\partial \tr(\Ab)/\partial \Ab = \Ib$
+as immediate corollaries. The probabilistic computations of Chapter~\ref{chapter:prob} show that
+non-trivial results, including the mean of the Wishart distribution (Proposition~\ref{prop:wishart-mean}), Isserlis' theorem for Gaussian tensors~(Theorem~\ref{thm:isserlis}), and the expected norm of the product of Gaussian random matrices (Proposition~\ref{prop:expected-norm}), admit concise derivations using tensor network notation.
+
+Taken together, these examples highlight a general principle: when working with
+high-dimensional tensors, organizing computations as tensor network contractions
+and reasoning diagrammatically leads to representations that are both compact and
+conceptually transparent.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section*{Acknowledgments}
+The authors thank Jacob Miller for fruitful discussions and for being part of the initial motivation to write this manuscript.
+We would like to gratefully acknowledge the Canadian Institute for Advanced Research (CIFAR AI chair program), the Natural Sciences and Engineering
+Research Council of Canada (Discovery program, RGPIN-2019-05949) and IVADO for funding this research.

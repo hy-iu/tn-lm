@@ -1,0 +1,16 @@
+\section{Conclusion}
+
+We develop a u-MPS model for probabilistic modeling of sequence data, which we show has distinctive capabilities regarding parallelism, sampling, and regularization, in a manner which mirrors the structure of regular languages. Although our results are derived in the specific context of u-MPS, the underlying techniques used to demonstrate these capabilities are applicable to other models with a similar mathematical layout, such as WFA, HMM, and PSR. As a result, our Theorems~\ref{thm:sample} and \ref{thm:regularization} should generalize to other such models. We expect the algorithms developed here to be associated with different runtimes when applied to other models, leading to different performance tradeoffs of parallelization, sampling, and regularization methods than what is reported here. For example, the parallel evaluation method used here requires $\bigO(n D^3)$ resources for a u-MPS, compared with $\bigO(n D^6)$ for a HQMM. 
+
+Beyond these immediate generalizations, a more interesting extension of our results is the generalization of Theorems~\ref{thm:sample} and \ref{thm:regularization} to the setting of context-free languages. While all regular languages are context-free, the latter has significantly greater expressive power and relevance for applications in natural language processing and automatic code generation. Surprisingly, we have found that such languages can indeed be sampled from and employed for regularizers within u-MPS models, although with a higher cost of $\bigO(D^6)$.
+
+Given the ability we demonstrate to use grammars to constrain the probability distribution of u-MPS models, a natural question is whether the inverse process is possible: Namely, given a trained u-MPS model, do there exist automatic means of identifying grammatical rules which account for some portion of the correlations present within the learned probability distribution? Such techniques would represent a qualitatively new type of grammatical inference, where grammar rules and language models interact in a two-way manner. 
+
+Finally, a natural next step is scaling up u-MPS for real-world sequence modeling tasks, notably language modeling. Some current obstacles to this process are (a) the $\bigO(D^3)$ cost of certain u-MPS operations, and (b) the absence of well-established best-practices for training large tensor networks with gradient descent. We expect these obstacles to be overcome by dedicated engineering effort and the rapidly growing number of software libraries for manipulating tensor networks, along with the adoption of powerful computational methods developed by the many-body physics community into machine learning. Considering the unexpected benefits demonstrated here, we expect recurrent tensor network architectures to have a bright future. 
+
+\section*{Acknowledgements}
+This research is supported by the Canadian Institute for Advanced Research (CIFAR AI chair program).
+
+\appendix
+\onecolumn
+

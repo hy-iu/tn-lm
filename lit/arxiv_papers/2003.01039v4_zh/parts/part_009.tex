@@ -1,0 +1,105 @@
+\section{实验}
+\label{sec:experiments}
+%
+\begin{table}[t]
+\caption{在 Tomita 文法 3--7 上的实验（这些文法的定义见附录~\ref{sec:appendix_d}），其中训练数据是从属于该文法、长度介于 1 与 15 之间的字符串中随机选取的。训练得到的模型用于采样长度为 16 和 30 的字符串，表中报告的是语法正确的样本所占的百分比。u-MPS 在不同长度上一致地给出更好的泛化能力（在 Tomita 5 上相当显著），唯一的例外是 Tomita 6，两个模型都无法学会它。大多数 Tomita 文法规模太小，无法用超过 1,000 个字符串进行训练，但 Tomita 5 和 6 允许使用更大的数据集做实验。}
+\label{tab:tomita}
+\setlength\aboverulesep{0.1pt}
+\setlength\belowrulesep{0.1pt}
+\renewcommand{\arraystretch}{1.1}
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{lc|cccc}
+    Tomita & 采样 & \multirow{2}{*}{u-MPS} & \multirow{2}{*}{HMM} & \multirow{2}{*}{LSTM} & \multirow{2}{*}{TR} \\
+    ($N_{\mathrm{train}}$) & 长度 &  &  &  \\
+    \midrule
+    3 (1K)  & 16 & \textbf{100.0} & 91.6          & 90.2          & 28.8 \\
+    3 (1K)  & 30 & \textbf{100.0} & 82.0          & 85.6          & 9.4  \\
+    4 (1K)  & 16 & \textbf{99.9}  & 99.4          & 85.4          & 50.7 \\
+    4 (1K)  & 30 & 99.5           & \textbf{99.6} & 64.7          & 32.5 \\
+    % 5 (1K)  & 16 & \textbf{50.5}  &  & 49.0          &  \\
+    % 5 (1K)  & 30 & 49.1           &  & \textbf{50.2} &  \\
+    5 (10K) & 16 & \textbf{100.0} & 52.0          & 49.9          & 51.1 \\
+    5 (10K) & 30 & \textbf{99.9}  & 49.8          & 52.8          & 50.5 \\
+    % 6 (1K)  & 16 & 32.1           &  & \textbf{33.1} &  \\
+    % 6 (1K)  & 30 & 33.9           &  & \textbf{34.2} &  \\
+    6 (10K) & 16 & \textbf{35.9}  & 34.4          & 33.1          & 32.9 \\
+    6 (10K) & 30 & 33.1           & 33.1          & \textbf{34.4} & 32.7 \\
+    7 (1K)  & 16 & \textbf{99.3}  & 98.1          & 89.2          & 51.3 \\
+    7 (1K)  & 30 & \textbf{89.4}  & 79.3          & 29.1          & 10.0 \\
+
+    % Tomita \# & \multicolumn{4}{c|}{Samp. Len. 16} & \multicolumn{4}{c}{Samp. Len. 30} \\
+    % 3 (1K) & \textbf{100.0} &  & 90.2 &  & \textbf{100.0} &  & 85.6 &  \\
+    % 4 (1K) & \textbf{99.9} &  & 85.4 &  & \textbf{99.5} &  & 64.7 &  \\
+    % 5 (1K) & \textbf{50.5} &  & 49.0 &  & 49.1 &  & \textbf{50.2} &  \\
+    % 5 (10K) & \textbf{100.0} &  & 49.9 &  & \textbf{99.9} &  & 52.8 &  \\
+    % 6 (1K) & 32.1 &  & \textbf{33.1} &  & 33.9 &  & \textbf{34.2} &  \\
+    % 6 (10K) & \textbf{35.9} &  & 33.1 &  & 33.1 &  & \textbf{34.4} &  \\
+    % 7 (1K) & \textbf{99.3} &  & 89.2 &  & \textbf{89.4} &  & 29.1 &  \\
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+%
+\begin{table}[t]
+\caption{在上下文无关的 Motzkin 文法上的实验，其中训练集固定为仅包含长度为 15 的字符串。我们同时探索了定长采样（Samp）与字符补全（Comp）两类任务：模型或者从零开始采样一个字符串，或者在给定前缀和后缀的条件下预测参考字符串中缺失的一个字符。在每种情形下，同一个训练好的 u-MPS、HMM 与 Transformer 被同时用于生成采样数据和字符补全数据。双向 LSTM 在字符补全任务中于较短的字符串上表现最好，但随着参考字符串长度的增加，其准确率迅速下降。}
+\label{tab:motzkin}
+\setlength\aboverulesep{0.1pt}
+\setlength\belowrulesep{0.1pt}
+\renewcommand{\arraystretch}{1.1}
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{lc|cccc}
+    任务 & 字符串 & \multirow{2}{*}{u-MPS} & \multirow{2}{*}{HMM} & \multirow{2}{*}{LSTM} & \multirow{2}{*}{TR} \\
+    ($N_{\mathrm{train}}$) & 长度 &      &  &  &  \\
+    \midrule
+    Samp (1K)  & 1  & \textbf{89.4} & 37.4 & 41.7           & 39.1 \\
+    Samp (1K)  & 16 & \textbf{74.4} & 30.3 & 41.2           & 2.3  \\
+    Samp (1K)  & 50 & \textbf{32.5} & 12.6 & 0.0            & 0.6  \\
+    Samp (10K) & 1  & \textbf{99.3} & 36.0 & 35.7           & 36.2 \\
+    Samp (10K) & 16 & \textbf{99.8} & 34.3 & 60.4           & 0.5  \\
+    Samp (10K) & 50 & \textbf{91.6} & 12.4 & 5.4            & 0.2  \\
+    Comp (1K)  & 1  & 89.4          & 39.2 & \textbf{99.9}  & 32.1 \\
+    Comp (1K)  & 16 & 69.6          & 29.1 & \textbf{99.5}  & 30.7 \\
+    Comp (1K)  & 50 & 58.8          & 13.1 & \textbf{61.3}  & 30.2 \\
+    Comp (10K) & 1  & 99.3          & 36.3 & \textbf{100.0} & 33.5 \\
+    Comp (10K) & 16 & 99.8          & 31.7 & \textbf{100.0} & 34.5 \\
+    Comp (10K) & 50 & \textbf{92.4} & 14.8 & 69.1           & 33.7 \\
+
+    % Samp (1K)  & \textbf{89.4} & 41.7 &  & \textbf{74.4} & 41.2 &  & \textbf{32.5} & 0.0 &  \\
+    % Samp (10K) & \textbf{99.3} & 35.7 &  & \textbf{99.8} & 60.4 &  & \textbf{91.6} & 5.4 &  \\
+    % Comp (1K)  & 89.4 & \textbf{99.9} &  & 69.6 & \textbf{99.5} &  & 58.8 & \textbf{61.3} &  \\
+    % Comp (10K) & 99.3 & \textbf{100.0} &  & 99.8 & \textbf{100.0} &  & \textbf{92.4} & 69.1 &  \\
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+%
+\begin{table}[t]
+\caption{使用键维为 50 的 u-MPS、对一批 100 个长度为 500 的字符串在 CPU 或 GPU 上计算损失及关于模型参数的梯度所需的运行时间。CPU 上的计算偏好串行求值，因为其总体代价更低；而并行求值所固有的较低并行深度，使得在具备 GPU 硬件加速时运行时间得以缩短。}
+\label{tab:runtime}
+\renewcommand{\arraystretch}{1.1}
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{c|cc}
+          & 串行求值 & 并行求值   \\
+          & 运行时间 (ms)     & 运行时间 (ms) \\
+\hline
+CPU 计算 & \textbf{73.0}    & 232.7 \\
+GPU 计算 & 49.9             & \textbf{45.2}  \\
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+
+我们通过在合成（synthetic）数据集与真实结构化文本数据集上的实验，来评估 u-MPS 在概率序列建模与文法推断（grammatical inference）方面的性能，并验证 u-MPS 在并行化、正则表达式（regex）采样以及 regularization 方面的优势。
+

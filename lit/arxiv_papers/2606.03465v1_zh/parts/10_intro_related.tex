@@ -1,0 +1,120 @@
+\section{引言}
+\label{sec:intro}
+
+近年来，大语言模型（LLM）的规模大幅增长，
+推高了存储与部署成本，也限制了其在资源受限场景下的
+适用性。因此，压缩技术被广泛用于在保持质量的同时提升效率。
+
+模型压缩的首要目标是减少冗余，同时保留模型的功能行为。
+标准方法包括：剪枝，即移除冗余组件以缩减模型规模 \citep{OBC_2022, LLM_pruner_2023, unreasonable_ineffectiveness_2024}；量化，即用更低精度的数据类型表示权重与激活 \citep{GPTQ_2022, QUIP_2023, AQLM_2024, AWQ_2024, harp}；以及知识蒸馏（KD），即训练一个紧凑的学生模型来逼近更大的教师模型的行为 \citep{HintonDistil_2015, GKD_2023}。
+然而，要借助这些技术达到最先进的性能，通常需要大量微调或数据驱动的校准。
+
+一种自然的替代方案是矩阵与张量分解，其成熟的理论背景颇具吸引力。
+此类方法将稠密层分解为若干较小因子的乘积，在近似保持原有层功能的同时实现参数缩减。
+对于权重矩阵 $W \in \mathbb{R}^{m \times n}$，奇异值分解（SVD）给出 $W = U\Sigma V^\top$；截断保留前 $r$ 个奇异值即得
+\begin{equation}
+\label{eq:svd}
+\vspace{-1mm}
+\widehat{W} = U_r\Sigma_r V_r^\top, 
+\end{equation}
+根据 Eckart--Young--Mirsky 定理~\citep{Eckart_Young_1936, Eckart_Young_Mirsky_1960}，该近似在任何酉不变范数下都是全局最优的。
+张量分解将这一思想推广到多头注意力（MHA）~\citep{Attention_Is_All_You_Need_2017} 与专家混合（MoE）~\citep{MoE_2022} 中的多维权重张量：Tucker 分解~\citep{tucker1966some, kolda2009tensor} 通过一个
+压缩的核心张量 $\mathcal{G} \in \mathbb{R}^{R_1 \times \cdots \times R_N}$
+以及各模的因子矩阵 $U^{(n)} \in \mathbb{R}^{I_n \times R_n}$ 来逼近张量
+$\mathcal{X} \in \mathbb{R}^{I_1 \times \cdots \times I_N}$：
+\begin{equation}
+    \label{eq:tucker}
+    \vspace{-2mm}
+    \mathcal{X} \approx \mathcal{G} \times_1 U^{(1)} \times_2 U^{(2)}
+    \cdots \times_N U^{(N)},
+\end{equation}
+其中 $(R_1,\ldots,R_N)$ 为 Tucker 秩。
+
+张量列（TT）~\citep{oseledets2011tensor} 将三维核心串接起来：
+\begin{equation}
+% \small
+    \label{eq:tt}
+    % \resizebox{0.89\linewidth}{!}
+    \vspace{-2mm}
+    \mathcal{X}_{i_1,\ldots,i_N} \approx \!\!\sum\nolimits_{r_1,\ldots,r_{N-1}}\!\! \mathcal{G}^{(1)}_{1,i_1,r_1}\mathcal{G}^{(2)}_{r_1,i_2,r_2} \cdots \mathcal{G}^{(N)}_{r_{N-1},i_N,1},
+\end{equation}
+其中 $\mathcal{G}^{(n)} \in \mathbb{R}^{R_{n-1} \times I_n \times R_n}$，$R_0 = R_N = 1$，$(R_1,\ldots,R_{N-1})$ 为 TT 秩。
+
+% However, the existing literature \citep{tensorllm2025,li2026lestd} leaves a significant discrepancy between the theoretical elegance of these methods and their actual utility. Although there have been positive reports of application of tensor decompositions, these outcomes often stem from evaluation protocols that may not adequately address the constraints associated with full-scale deployment. Therefore, the applicability of such methods raises serious questions. 
+
+% To address this gap, we conduct a systematic and rigorous study of decomposition methods in practical LLM compression scenarios. We provide implementations of decomposition methods across tensor-based layers in various real-world setups and analyze their end-to-end performance. In addition, we propose a theoretical justifications that partially explain why standard decomposition techniques fail to scale, offering a more grounded perspective on their limitations.
+尽管张量分解在理论上颇具吸引力，但现有的张量
+分解研究~\citep{tensorllm2025,li2026lestd} 报告积极结果时所依据的
+评估协议并未反映全规模部署的约束，
+使得这些方法在真实场景下的实用性仍不明朗。为此，我们作出如下贡献：
+
+$\bullet$ \textbf{对矩阵与张量分解的系统性实证验证与深入诊断。} 我们在真实部署条件下开展了首个关于训练后张量分解的大规模研究，涵盖稠密与 MoE 架构，以困惑度、下游准确率以及一个轻量级 LoRA 修复基线进行评估。在所有设置下，张量格式在相同压缩率下均未能胜过对应的矩阵方法。我们将此归因于一种一致的失效机制——该机制通过困惑度、各项指标与残差流几何得以识别——并进一步给出超级权重~\citep{superweight} 恢复对 Frobenius 最优截断敏感性的消融分析。
+
+$\bullet$ \textbf{部分理论解释。} 我们形式化了三重环环相扣的障碍，它们使得任何 Frobenius 最优的张量分解在不进行大量微调的情况下都无法成为 Transformer 权重的有效压缩器。
+
+\section{相关工作}
+
+\paragraph{低秩矩阵压缩。}
+% LASER~\citep{LASER_2024} shows that rank reduction of specific layers can sometimes improve reasoning, indicating that not all singular components are functionally important. Concretely, it replaces a selected Transformer weight matrix, from either attention or the MLP, with a truncated-SVD approximation chosen by searching over the layer, matrix type, and retained rank, without retraining. The reported gains are strongest for later MLP matrices and are interpreted as a denoising effect: removing smaller-singular-value components can suppress generic or competing answers and expose weakly learned facts, although language-modeling perplexity may slightly worsen. SliceGPT~\citep{slicegpt2024} exploits a computational invariance of RMSNorm-connected Transformers: orthogonal changes of basis can be absorbed into adjacent linear layers without changing the model output. It uses calibration activations to choose PCA bases for each block, then deletes low-variance principal directions by removing corresponding rows and columns, producing smaller dense matrices and a reduced embedding dimension that can yield real inference speedups without sparse kernels. Dobi-SVD~\citep{wang2025dobisvd} rethinks the SVD compression objective by arguing that the optimal truncation target is the activation, not the weight matrix itself. It makes the truncation position differentiable, optimising it on calibration data while keeping weights frozen, then reconstructs the compressed weights using IPCA and a remapping step that ensures lower ranks translate to actual memory savings. HASSLE-free
+% \citep{hasslefree2025} takes a complementary approach: it replaces each
+% dense weight with a sparse low-rank sum, optimised via alternating
+% minimisation to minimise the layer-wise reconstruction error on calibration
+% data.
+如第~\ref{sec:intro} 节所述，截断 SVD（式~\ref{eq:svd}）保证全局最优的低秩近似。
+
+% Low-rank compression of Transformer weight matrices is grounded in the
+% Eckart–Young–Mirsky theorem, which guarantees that truncated SVD yields
+% the globally optimal low-rank approximation in any unitarily invariant
+% norm~\citep{Eckart_Young_1936,Eckart_Young_Mirsky_1960}.
+
+LASER~\citep{LASER_2024} 直接对选定的
+权重矩阵施加截断 SVD，无需重新训练。
+% interpreting gains as a denoising
+% effect on low-salience singular directions.
+SliceGPT~\citep{slicegpt2024} 利用 RMSNorm 连接的
+Transformer 的旋转不变性，将 PCA 基吸收进相邻层。
+% removing low-variance directions and producing smaller dense matrices
+% with real inference speedups.
+SVD-LLM~\citep{svdllm2025} 通过截断感知的数据白化
+与逐层闭式更新来改进秩的选择。
+% that
+% compensates for truncation error.
+Dobi-SVD~\citep{wang2025dobisvd} 将截断位置设为
+可微，在校准数据上针对激活
+对其进行优化。
+% rather than the weight matrix.
+SoLA~\citep{huang2025sola} 以稠密形式保留一小部分激活范数较高的
+FFN 神经元，仅对
+其余部分施加低秩分解。
+% with rank allocation formulated as integer programming.
+FLAT-LLM~\citep{tian2025flatllm} 对注意力块采用逐头 PCA，
+对 MLP 块采用 Nystr\"{o}m 近似。
+HASSLE-free~\citep{hasslefree2025} 将每个权重分解为稀疏分量
+与低秩分量之和。COALA~\cite{parkina2026coala} 针对上下文感知低秩压缩固有的数值不稳定性，用稳定的基于 QR 的投影取代显式的 Gram 矩阵构造与求逆，从而避免了 SVD-LLM 等既有方法中出现的奇异性问题。
+% jointly minimised via alternating updates over
+% the layer-wise reconstruction objective.
+
+\paragraph{面向 LLM 的张量分解。}
+% TensorLLM~\citep{tensorllm2025} tensorizes the QKVO projections of multi-head attention by splitting them into heads and applies Tucker decomposition with shared factor matrices as a post-training attention denoising/compression method. LeSTD~\citep{li2026lestd} follows the same attention-centric Tucker setting, but learns a shared basis and sparsifies the Tucker core to improve high-ratio data-free post-training compression. TD-MoE~\citep{tdmoe2026} instead targets sparse expert models by stacking MoE expert feed-forward network (FFN) weights into a three-dimensional tensor and applying Tucker decomposition with whitening and rank allocation. TRAWL~\citep{luo2024trawl} uses a different cross-matrix tensorization: it stacks related QKVO or FC/FFN weights across layers, segments, or individual layers and applies tensor decomposition, mainly CP/Tucker-style rather than TT, as a training-free denoising intervention.
+TensorLLM~\citep{tensorllm2025} 与 LeSTD~\citep{li2026lestd} 将 Tucker
+分解应用于多头注意力投影，其中 LeSTD 还额外
+对 Tucker 核心进行稀疏化，以获得更高的压缩率。
+TD-MoE~\citep{tdmoe2026} 通过将专家权重堆叠为三维张量，
+把 Tucker 分解推广到稀疏 MoE 模型。
+TRAWL~\citep{luo2024trawl} 跨层堆叠相关的权重矩阵，
+并施加 CP/Tucker 式分解，作为一种免训练的
+去噪干预手段。
+另一条研究路线将 TT 用于参数高效微调
+而非训练后压缩：LoRETTA~\citep{yang2024loretta}
+提出基于 TT 的适配器，TT-LoRA~\citep{anjum2024ttlora} 用 TT 核心
+参数化适配更新，AdaZeta~\citep{yang2024adazeta}
+则将张量化适配器与零阶微调相结合。
+% A separate line of work uses Tensor Train for adaptation rather than direct post-training compression of pretrained weights. LoRETTA~\citep{yang2024loretta} introduces TT-based tensorized adapters and TT reparameterizations for PEFT; TT-LoRA~\citep{anjum2024ttlora} parameterizes low-rank adaptation updates with TT cores; and AdaZeta~\citep{yang2024adazeta} combines tensorized adapters with zeroth-order fine-tuning for memory-efficient adaptation.
+
+\begin{figure*}[!b] 
+  \centering
+  \vspace{-2mm}\includegraphics[width=0.9\textwidth]{emnlp/figs/pruning_c4_variant1.pdf}
+  \caption{剪枝下的困惑度（PPL）。图中显示对每一层单独剪枝后的最终 PPL。}
+  \label{fig:full_width_graph}
+  \vspace{-2mm}
+\end{figure*}

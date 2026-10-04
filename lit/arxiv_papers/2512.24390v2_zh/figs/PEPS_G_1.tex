@@ -1,0 +1,18 @@
+\begin{tikzpicture}[x={(1,0)},z={(.5,.5)},baseline={([yshift=-.5ex]current bounding box.center)}]
+    \def\lx{.9};
+    \def\ly{.9};
+    \def\d{.5};
+    \def\h{.35};
+
+    \draw[obj2, dotted, rounded corners=3pt] (-\lx,-\ly,0) -- (-\lx,\ly,0) -- (\lx,\ly,0) -- (\lx,-\ly,0) -- cycle;
+    
+    \draw[obj1,->1-=.20,rounded corners=2pt] (-\lx-\d,0,0) -- (-\lx+\d,0,0) --+ (0,0,\h);
+    \draw[obj1,->1-=.94,rounded corners=2pt] (\lx-\d,0,\h) -- (\lx-\d,0,0) -- (\lx+\d,0,0);
+    \draw[obj1,-<1-=.04,rounded corners=2pt] (0,-\ly-\d,0) -- (0,-\ly+\d,0) --+ (0,0,\h);
+    \draw[obj1,-<1-=.80,rounded corners=2pt] (0,\ly-\d,\h) -- (0,\ly-\d,0) -- (0,\ly+\d ,0);
+
+    \node[mpotensor,inner sep=2pt] at (-\lx,0,0) {$\sss g$};
+    \node[mpotensor,inner sep=2pt] at (\lx,0,0) {$\sss \bar g$};
+    \node[mpotensor,inner sep=2pt] at (0,-\ly,0) {$\sss \bar g$};
+    \node[mpotensor,inner sep=2pt] at (0,\ly,0) {$\sss g$};
+\end{tikzpicture}

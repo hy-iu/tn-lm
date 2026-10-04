@@ -1,0 +1,385 @@
+% \section{Why Tensorization Fails as Post-Training Compression}
+% \label{sec:theory}
+
+% We formalize the failure of Frobenius-optimal tensor decompositions
+% (HOSVD, TT-SVD, Tucker-ALS) as post-training LLM compression through four
+% results: (i) tensorization is a Frobenius but not an operator isometry;
+% (ii) the gap between the two scales with $\sqrt{\min(m,n)}$ on heavy-tailed
+% spectra; (iii) per-layer spectral errors compound multiplicatively across
+% depth; and (iv) low-rank tensor formats impose a separable subspace
+% structure that is incompatible with the head- and neuron-wise heterogeneity
+% of trained Transformers.
+
+% \subsection{Setup}
+% \label{sec:setup}
+
+% Let $W \in \mathbb{R}^{m \times n}$ be a layer weight and
+% $\varphi : \mathbb{R}^{m \times n} \to \mathbb{R}^{I_1 \times \cdots \times I_N}$
+% a reshape with $\prod_k I_k = mn$. Set $\mathcal{T} = \varphi(W)$, and let
+% $\widehat{\mathcal{T}}$ be its Frobenius-optimal approximation in a low-rank
+% manifold $\mathcal{M}_{\mathbf{r}}$ (Tucker rank $\mathbf{r} = (r_1, \ldots, r_N)$
+% or TT rank $(r_1, \ldots, r_{N-1})$); $\widehat{W} = \varphi^{-1}(\widehat{\mathcal{T}})$.
+% Singular values of $W$ are $\sigma_1 \geq \cdots \geq \sigma_{\min(m,n)} \geq 0$.
+
+% \subsection{Tensorization preserves Frobenius but not operator geometry}
+% \label{sec:isometry}
+
+% Since $\varphi$ permutes entries,
+% \begin{equation}
+%     \|\varphi(A)\|_F = \|A\|_F, \qquad \forall A \in \mathbb{R}^{m \times n}.
+%     \label{eq:frob_iso}
+% \end{equation}
+% For the spectral norm, however, the Hitchcock–Banach
+% result~\citep{hillar2013most, friedland2018nuclear} gives
+% \begin{equation}
+%     \|\mathcal{T}\|_{\sigma}
+%     := \sup_{\|u^{(k)}\|_2 = 1}
+%     \langle \mathcal{T},\, u^{(1)} \otimes \cdots \otimes u^{(N)} \rangle
+%     \;\leq\; \|W\|_2,
+%     \label{eq:tensor_spec}
+% \end{equation}
+% with equality only when $\mathcal{T}$ is rank-one. For $N \geq 3$, computing
+% $\|\mathcal{T}\|_{\sigma}$ is difficult to calculate \citep{comptensornorm}, and the ratio
+% \begin{equation}
+%     \frac{\|W\|_2}{\|\varphi(W)\|_{\sigma}}
+%     \;\in\; \bigl[1,\; \sqrt{\min(m,n)}\bigr]
+%     \label{eq:ratio}
+% \end{equation}
+% is generically bounded away from $1$~\citep{friedland2018nuclear}. Hence
+% $\varphi$ fails to be an isometry between $(\mathbb{R}^{m \times n}, \|\cdot\|_2)$
+% and $(\mathbb{R}^{I_1 \times \cdots \times I_N}, \|\cdot\|_{\sigma})$.
+
+% \subsection{Frobenius-optimal truncation is spectrally suboptimal on
+% heavy-tailed spectra}
+% \label{sec:spectral_gap}
+
+% By Eq.~\eqref{eq:frob_iso}, HOSVD/TT-SVD solve
+% \begin{equation}
+%     \widehat{\mathcal{T}}
+%     \in \arg\min_{\mathcal{S} \in \mathcal{M}_{\mathbf{r}}}
+%     \|\mathcal{T} - \mathcal{S}\|_F
+%     \quad \Longleftrightarrow \quad
+%     \widehat{W}
+%     \in \arg\min_{\mathrm{tens.\ rank} \leq \mathbf{r}}
+%     \|W - \widehat{W}\|_F.
+%     \label{eq:frob_objective}
+% \end{equation}
+% The induced spectral guarantee is the loose bound
+% \begin{equation}
+%     \|W - \widehat{W}\|_2
+%     \;\leq\; \|W - \widehat{W}\|_F
+%     \;=\; \biggl(\sum_{i > k} \sigma_i^2\biggr)^{1/2} \cdot (1 + \varepsilon),
+%     \label{eq:loose_spectral}
+% \end{equation}
+% where $\varepsilon \in [0,\, \sqrt{N} - 1]$ is the HOSVD
+% quasi-optimality factor~\citep{de2000multilinear, grasedyck2010hierarchical}.
+% The Eckart–Young~\citep{eckart1936approximation} optimum for matrix rank-$k$
+% truncation is $\sigma_{k+1}$, so the spectral suboptimality of tensor
+% truncation is
+% \begin{equation}
+%     \frac{\|W - \widehat{W}\|_2}{\sigma_{k+1}}
+%     \;\leq\; (1 + \varepsilon) \cdot
+%     \sqrt{\,1 + \sum_{i > k+1} (\sigma_i / \sigma_{k+1})^2\,}.
+%     \label{eq:suboptimality}
+% \end{equation}
+% Empirical Transformer spectra follow a power law $\sigma_i \sim i^{-\alpha}$
+% with $\alpha \in [0.5,\, 1]$~\citep{martin2021implicit, yu2024super}, so
+% \begin{equation}
+%     \sum_{i > k} \sigma_i^2
+%     \;\asymp\;
+%     \begin{cases}
+%         k^{1 - 2\alpha}, & \alpha < 1/2, \\
+%         \log(\min(m,n) / k), & \alpha = 1/2, \\
+%         \mathrm{const}, & \alpha > 1/2,
+%     \end{cases}
+%     \label{eq:tail}
+% \end{equation}
+% and the spectral error of a Frobenius-optimal truncation can exceed the
+% Eckart–Young optimum by a factor scaling as $\sqrt{\min(m,n)}$ in the
+% heavy-tailed regime $\alpha < 1/2$.
+
+% \paragraph{Consequence for superweights.}
+% Let $\mathcal{S} \subseteq [m] \times [n]$ index the
+% \emph{superweight}~\citep{yu2024super, sun2026spike} coordinates with
+% $|\mathcal{S}| \ll mn$ and $\|W_{\mathcal{S}}\|_F \ll \|W\|_F$ but
+% $\|W e_j\|_2 \gg \|W\|_2 / \sqrt{n}$ for some $j$ supported on $\mathcal{S}$.
+% Frobenius-optimal truncation discards $\mathcal{S}$ whenever
+% \begin{equation}
+%     \|W_{\mathcal{S}}\|_F^2
+%     \;<\;
+%     \sum_{i > k} \sigma_i^2 \big|_{\text{non-superweight}},
+%     \label{eq:superweight_loss}
+% \end{equation}
+% yet the resulting layer satisfies $\|\widehat{W} e_j\|_2 \ll \|W e_j\|_2$
+% on the superweight directions, producing the spectral mass loss documented
+% in our activation-geometry diagnostics
+% (Figure~\ref{fig:activation_geometry}).
+
+% \subsection{Multiplicative error compounding across depth}
+% \label{sec:depth}
+
+% For a residual Transformer with blocks $f_\ell(x) = x + W_\ell \,\phi_\ell(x)$,
+% let $\Delta_\ell = W_\ell - \widehat{W}_\ell$ and $L_\ell$ the Lipschitz
+% constant of $\phi_\ell$ on the relevant activation manifold. A standard
+% discrete Grönwall argument~\citep{bartlett2017spectrally, neyshabur2017pac}
+% yields
+% \begin{equation}
+%     \|x_L - \widehat{x}_L\|_2
+%     \;\leq\;
+%     \sum_{\ell = 1}^{L}
+%     \|\Delta_\ell\|_2 \, L_\ell
+%     \prod_{k = \ell+1}^{L} \bigl(1 + \|\widehat{W}_k\|_2 \, L_k\bigr).
+%     \label{eq:gronwall}
+% \end{equation}
+% Substituting the spectral bound from Eq.~\eqref{eq:loose_spectral} and
+% assuming uniform per-layer Frobenius budget
+% $\|\Delta_\ell\|_F^2 \leq \delta^2$ and a typical block gain
+% $\kappa = (1 + \|\widehat{W}_k\|_2 L_k) > 1$,
+% \begin{equation}
+%     \|x_L - \widehat{x}_L\|_2
+%     \;\leq\;
+%     \delta \cdot (1 + \varepsilon) \cdot
+%     \frac{\kappa^{L} - 1}{\kappa - 1}
+%     \;=\; \mathcal{O}\bigl(\delta \cdot \kappa^{L}\bigr).
+%     \label{eq:compound}
+% \end{equation}
+% The end-to-end perturbation grows exponentially in the number of compressed
+% blocks $L$, with base $\kappa$ governed by the spectral -- not
+% Frobenius -- norms of the perturbed layers. This explains the rapid
+% collapse observed when extending the compressed range from $L = 1$ to $L = 8$
+% in Fig.~\ref{fig:c4_perplexity_vs_bits}.
+
+% \subsection{Subspace separability mismatch}
+% \label{sec:subspace}
+
+% Tucker and TT formats impose a \emph{separable} factorization: the column
+% space of every mode-$k$ unfolding $\widehat{W}_{(k)}$ lies in a fixed
+% $r_k$-dimensional subspace shared across all slices of the orthogonal modes.
+% Formally, with Tucker factors $\{U^{(k)}\}_{k=1}^{N}$,
+% \begin{equation}
+%     \mathrm{range}\bigl(\widehat{\mathcal{T}}_{(k)}\bigr)
+%     \;\subseteq\;
+%     \mathrm{range}\bigl(U^{(k)}\bigr),
+%     \qquad \dim = r_k,
+%     \label{eq:tucker_range}
+% \end{equation}
+% and analogously for TT cores. For multi-head attention with $H$ heads of
+% dimension $d_h$, denote the per-head projection $W_h \in \mathbb{R}^{d \times d_h}$.
+% The Tucker constraint of rank $r_1 < H$ on the head mode forces
+% \begin{equation}
+%     W_h \;=\; \sum_{j = 1}^{r_1} c_{h,j} \, B_j,
+%     \qquad B_j \in \mathbb{R}^{d \times d_h},
+%     \label{eq:head_collapse}
+% \end{equation}
+% collapsing $H$ functionally distinct heads into $r_1$ shared
+% templates~\citep{michel2019sixteen, voita2019analyzing} and contradicting
+% the empirical heterogeneity of attention
+% circuits~\citep{elhage2021framework}. Quantitatively, if the
+% \emph{true} per-mode subspaces $\{V_k^\star\}$ that capture
+% $1 - \eta$ of the spectral mass have effective dimension $r_k^\star$, the
+% Frobenius approximation error of any Tucker model with rank $r_k < r_k^\star$
+% is bounded below by~\citep{vannieuwenhoven2012new}
+% \begin{equation}
+%     \|\mathcal{T} - \widehat{\mathcal{T}}\|_F^2
+%     \;\geq\;
+%     \sum_{k = 1}^{N}
+%     \sum_{i > r_k} \sigma_i^2\bigl(\mathcal{T}_{(k)}\bigr),
+%     \label{eq:tucker_lower_bound}
+% \end{equation}
+% with the right-hand side decaying only as fast as the slowest mode-$k$
+% spectrum. Heterogeneous LLM weights produce slowly decaying mode spectra
+% on at least one mode (typically the head or expert mode), making
+% Eq.~\eqref{eq:tucker_lower_bound} the binding constraint and ruling out
+% high-fidelity compression at practical ranks.
+
+% \subsection{Composite no-go statement}
+% \label{sec:nogo}
+
+% Combining Eqs.~\eqref{eq:ratio}, \eqref{eq:suboptimality},
+% \eqref{eq:compound}, and~\eqref{eq:tucker_lower_bound}: for an $L$-layer
+% Transformer with mode-spectrum exponents $\alpha_k < 1/2$, target Frobenius
+% budget $\delta$, and block gain $\kappa > 1$, the end-to-end perturbation
+% of any Tucker- or TT-compressed model satisfies
+% \begin{equation*}
+%     \boxed{
+%     \|x_L - \widehat{x}_L\|_2
+%     \;=\;
+%     \Omega\bigl(
+%         \sqrt{\min(m,n)} \cdot \delta \cdot \kappa^{L}
+%     \bigr).
+%     }
+%     % \label{eq:nogo}
+% \end{equation*}
+% The bound is tight on heavy-tailed, head-heterogeneous spectra: the
+% $\sqrt{\min(m,n)}$ factor is the spectral-vs-Frobenius gap from
+% \S\ref{sec:spectral_gap}, $\delta$ is the per-layer Frobenius residual that
+% HOSVD/TT-SVD actually minimize, and $\kappa^{L}$ is the multiplicative
+% depth amplification from \S\ref{sec:depth}. No reweighting of the Frobenius
+% objective and no choice of mode order can simultaneously reduce all three
+% factors, which together rule out tensor decomposition as a stand-alone
+% post-training compression method at deployment scale.
+
+% We evaluate TD-MoE on Qwen3-30B-A3B by compressing MoE
+% layers one at a time, starting 
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.6\linewidth]{emnlp/figs/moe_main_left_ppl.pdf}
+  \caption{%
+    Qwen3-30B-A3B 上随 TD-MoE 压缩的 MoE 层数增加时的 WikiText-2 困惑度，
+    取 $\rho \in \{0.2, 0.4\}$。C4 困惑度见正文（图~\ref{fig:moe_main}）。
+  }
+  \label{fig:qwen3_c4_ppl}
+  \vspace{-8mm}
+\end{figure}
+
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\linewidth]{emnlp/figs/qwen3_30b_td_moe_downstream_vs_layers.pdf}
+  \caption{%
+    Qwen3-30B-A3B 上随 TD-MoE 压缩的 MoE 层数增加时的下游任务准确率（\%）。
+  }
+  \label{fig:td_moe_downstream}
+\end{figure*}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\linewidth]{emnlp/figs/gpt_oss_td_moe_downstream_vs_layers.pdf}
+  \vspace{-4mm}
+  \caption{%
+    GPT-OSS-20B 上随 TD-MoE 压缩的 MoE 层数增加时的下游任务准确率（\%），
+    取 $\rho \in \{0.2, 0.4\}$。
+  }
+  \label{fig:gpt_oss_downstream}
+\end{figure*}
+
+\begin{figure*}[h!]
+  \centering
+  \vspace{-4mm}\includegraphics[width=\linewidth]{emnlp/figs/gpt_oss_td_moe_downstream_preserve_vs_compress.pdf}
+  \caption{%
+    GPT-OSS-20B 上在 $\rho{=}0.4$ 时下游准确率（\%）随 TD-MoE 压缩层数的变化。
+    \textsc{preserve} 保持专家 Tucker 秩等于 $K$；
+    \textsc{compress} 还额外压缩专家维数。
+  }
+  \label{fig:gpt_oss_preserve_vs_compress}
+  \vspace{-4mm}
+\end{figure*}
+
+
+
+\paragraph{GPT-OSS-20B 上的困惑度。}
+与 Qwen3-30B-A3B 不同，GPT-OSS-20B 在原始文本上给出的困惑度异常偏高：
+未压缩模型在 WikiText-2 上为 $503.9$，在 C4 上为 $269.9$。
+这是一个已知的假象——GPT-OSS 围绕 \emph{harmony} 聊天格式构建，
+并不打算直接在原始语料上进行因果语言模型的困惑度评测，因此其绝对困惑度
+并非可靠的质量信号。与此一致，随着更多层被压缩，TD-MoE 压缩\emph{降低}了
+困惑度（图~\ref{fig:gpt_oss_ppl}）而非使其升高，因为这一干预把校准失当的
+基线推向了更通用的下一词元统计。因此，我们把下游准确率
+（图~\ref{fig:gpt_oss_downstream}）视为 GPT-OSS-20B 的可靠信号，
+报告困惑度仅为完整起见。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \clearpage
+
+\subsection{GPT-OSS-20B 上的补充实验}
+\label{app:td_moe_gpt_oss}
+\subsubsection{专家模对比}
+我们在 OpenAI GPT-OSS-20B 上以逐层压缩率 $\rho{=}0.4$ 评测 TD-MoE，
+并改变\emph{专家模}的设置：\textsc{preserve} 将专家维数的 Tucker 秩固定为
+$r_1{=}K$（所有专家都保留为彼此不同的潜在方向），而 \textsc{compress}
+还同时压缩专家维数（$r_1 < K$）。在相同目标压缩率下，这会把专家模上省出的
+预算重新分配给特征模：在我们的 GPT-OSS-20B 实验中，\textsc{preserve}
+选取的秩为 $(32,1720,2664)$，而 \textsc{compress} 选取 $(20,2496,2880)$。
+因此，\textsc{compress} 用专家模容量换取更高秩的输入与输出因子，
+使分解能够利用跨专家的冗余，代价是专家多样性下降。
+
+图~\ref{fig:gpt_oss_preserve_vs_compress} 给出了随 TD-MoE 压缩的
+GPT-OSS-20B 层数增加时，\textsc{preserve} 与 \textsc{compress}
+对应的下游准确率曲线。
+
+\subsubsection{与 MoBE 的对比}
+\label{app:gpt_oss_mobe}
+
+我们把第~\ref{sec:td_moe_qwen}~节引入的 \texttt{MoBE} 基线扩展到 GPT-OSS-20B。GPT-OSS-20B 每层只有 32 个专家（Qwen3-30B-A3B 为 128 个），因此 MoBE 的基矩阵数目
+必须满足 $n_B < 32$ 才能产生任何压缩。我们评测 $n_B \in \{8, 16\}$，并按照 MoBE 已发表的惯例把截断 $T$ 固定在最小的单专家维数上。
+这两种设置在节省比特数上分别与 TD-MoE 的 $\rho{=}0.4$ 和 $\rho{=}0.2$ 相匹配，其余所有实验协议细节（渐进式由中间向外的块调度、评测数据集、激活几何探针）均遵循附录~\ref{app:td_moe}。
+
+\begin{figure}[!b]
+  \centering
+  \vspace{-8mm}\includegraphics[width=0.8\linewidth]{emnlp/figs/gpt_oss_td_moe_ppl_vs_layers.pdf}
+  \caption{%
+    GPT-OSS-20B 上随 TD-MoE 压缩的 MoE 层数增加时的 WikiText-2（左）
+    与 C4（右）困惑度，取 $\rho \in \{0.2, 0.4\}$。未压缩基线（虚线）
+    异常偏高，是因为 GPT-OSS 面向 harmony 聊天格式而非原始文本
+    语言建模；因此对该模型而言，困惑度不是可靠的
+    质量指标。
+  }
+  \label{fig:gpt_oss_ppl}
+  \vspace{-4mm}
+\end{figure}
+
+图~\ref{fig:gpt_oss_mobe_ppl} 报告了随更多 MoE 层被压缩时的 C4 困惑度。与仅用 TD-MoE 的实验（图~\ref{fig:gpt_oss_ppl}）一样，GPT-OSS-20B 上的绝对困惑度值
+不能孤立解读，因为未压缩基线在原始文本因果语言模型评测下校准失当。但相对排序仍有信息量：在相同节省比特数下，MoBE 对模型的扰动小于
+TD-MoE。我们依靠图~\ref{fig:gpt_oss_mobe_geometry} 中的激活几何诊断和下游准确率（图~\ref{fig:gpt_oss_downstream}）作为可靠的
+质量信号。
+
+图~\ref{fig:gpt_oss_mobe_geometry} 在残差流层面比较了各方法。每个标记对应一种块调度设置；标记形状编码分解族，标记面积表示相对稠密模型
+节省的比特比例，颜色编码 C4 困惑度。
+
+
+\section{计算代价}
+
+所有模型实验均在 NVIDIA H100 GPU 上运行。附录~\ref{app:gptj_llama_tensor_protocol} 中描述的 GPT-J~6B 与 LLaMA~2~7B 张量分解实验（包括渐进式
+中间层压缩网格、困惑度评测、激活几何诊断以及轻量级 LoRA 修复运行）总共耗费约 $100$ 个 H100 GPU 小时。附录~\ref{app:td_moe} 中描述的 Qwen3-30B-A3B 与 GPT-OSS-20B 张量分解实验（包括渐进式
+中间层压缩网格、困惑度评测、激活几何诊断以及 MoBE 对比）总共耗费约 $60$ 个 H100 GPU 小时。我们报告的 GPU 小时为实际运行时间乘以所用 GPU 数目。
+
+所有模型（GPT-J 6B、LLaMA 2 7B、Qwen3-30B-A3B、GPT-OSS-20B）与基准测试（WikiText-2、C4、ARC-Challenge、HellaSwag、OpenBookQA、PIQA、WinoGrande）均严格用于压缩方法的研究性评测，与其公开声明的研究用途一致。我们不再分发模型权重，也不在研究场景之外衍生产品。
+
+
+
+\begin{figure}[htbp]
+\centering
+\begin{minipage}[t]{0.46\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{emnlp/figs/gpt_oss_main_left_ppl.pdf}
+    \captionof{figure}{%
+        GPT-OSS-20B 上随压缩 MoE 层数增加时的 C4 困惑度，
+        对应 TD-MoE $\rho \in \{0.2, 0.4\}$ 与 MoBE
+        $n_B \in \{8, 16\}$。未压缩的 C4 基线（虚线）
+        异常偏高，是因为 GPT-OSS 面向 harmony 聊天格式
+        而非原始文本语言建模
+        （参见图~\ref{fig:gpt_oss_ppl}）；对该模型而言绝对困惑度不是
+        可靠的质量指标，但其相对排序——在相同节省比特数下
+        MoBE 对模型的扰动小于 TD-MoE——与
+        图~\ref{fig:gpt_oss_mobe_geometry} 中的激活几何诊断一致。%
+    }
+    \label{fig:gpt_oss_mobe_ppl}
+\end{minipage}\hfill%
+\begin{minipage}[t]{0.52\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{emnlp/figs/gpt_oss_main_right_geometry.pdf}
+    \captionof{figure}{%
+        GPT-OSS-20B 上 TD-MoE 与 MoBE 的残差流激活几何。
+        每个标记对应一种块调度设置；标记形状
+        表示分解族，标记面积为相对稠密模型
+        节省的比特比例，颜色编码 C4
+        困惑度。虚线标出无扰动参考
+        （范数比 $=1$）。在相同节省比特数下，MoBE 产生的
+        MoE 输出夹角更小、范数比更接近 1，
+        与 Qwen3-30B-A3B 上的发现（图~\ref{fig:moe_main}）相呼应。%
+    }
+    \label{fig:gpt_oss_mobe_geometry}
+\end{minipage}
+\end{figure}
+
+
+
+% \section*{Information About Use of AI Assistants}
+
+% During the preparation of this work, AI-based tools were consulted to refine the writing, assist in locating related work, and help arrange the final repository layout. The authors retained full control over the content and checked the resulting materials.
+
+\end{appendixpart}
+\end{document}

@@ -1,0 +1,28 @@
+\subsection{电子邮件实验}
+%
+\begin{table}[t]
+\caption{在电子邮件上训练，并评估使用键维 50 的 u-MPS 进行无条件采样的每字符 perplexity（PPL）与精度。使用与正则表达式（regex）$R_e$ 相关联的正则化项（regularizer）——该 regex 近似了有效电子邮件地址的格式——在无条件采样串的句法正确性与整体 perplexity 两方面均带来小幅提升。注意，相对于 $R_e$ 使用\emph{条件}采样将保证生成句法有效的串（定理~\ref{thm:sample}），我们在实验中验证了这一事实。}
+\label{tab:regularization}
+\renewcommand{\arraystretch}{1.1}
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{c|cc}
+           & u-MPS          & u-MPS   \\
+           & 使用 regex 正则化  & 不使用 regex 正则化 \\
+\hline
+正确率 \% & \textbf{37.2}  & 35.4    \\
+测试 PPL   & \textbf{7.3}   & 7.8     \\
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+
+为验证 regex 采样与正则化的正确性及其相对收益，我们在一个包含约 4,000 个电子邮件地址的数据集上训练，该数据集取自 CLAIR 欺诈电子邮件数据集~\citep{radev2008}。虽然电子邮件地址的正确性通常取决于非句法方面的考虑（如域名解析），但我们可以使用 regex $ R_{e} = \verb![\w-.]+@([\w-]+.)+[\w-][\w-]+! $（模式 \texttt{name@site.tld} 的推广）来近似有效电子邮件地址的格式。
+
+我们首先在这个电子邮件地址数据集上用梯度下降训练 u-MPS，并考察留出验证集的 perplexity 以及（无条件）采样串的正确性，分别在使用与不使用与 $R_e$ 相关联的正则化的情况下进行。我们发现，regex 正则化对采样文本的 perplexity 与正确性带来了小幅改进，如表~\ref{tab:regularization} 所示。
+
+虽然条件 regex 采样的正确性已由定理~\ref{thm:sample} 保证，我们仍在训练过程中周期性地使用 regex $R_e$ 产生条件样本，以在实验上证实这一点。我们发现，相对于 $R_e$ 的条件采样确实总是产生匹配目标 regex 的随机串，但生成文本的质量在训练过程中逐渐提升。对随机初始化的 u-MPS 进行条件采样时，产生的是句法有效但除此之外随机的串，例如 {\verb k90@4riuh2600xz1.wz }；而在电子邮件地址数据集上训练该模型后，则开始产生看起来更真实的电子邮件地址，例如 {\verb sail203@yahoo.com }。
+

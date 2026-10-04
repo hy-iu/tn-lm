@@ -1,0 +1,66 @@
+\section{运行时分析}
+\label{sec:appendix_c}
+
+算法~\ref{alg:sampling} 
+\ 以递归过程的形式写出，这使得其运行时分析并不平凡。我们在此证明，这一采样过程在大多数情况下可以以随定义它的正则表达式（regex）$R$ 的长度 $L_R$ 线性增长的计算与存储代价完成。作为一个技术性假设，我们要求 $R$ 的星高（star height）有界，其中星高 $h_*(R)$ 递归地定义为 $h_*(c) = 0$，$h_*(R_1 R_2) = h_*(R_1 | R_2) = \max(h_*(R_1), h_*(R_2))$，以及 $h_*(S^*) = 1 + h_*(S)$。在实践中这一假设是非常宽松的。
+
+\begin{theorem}
+\label{thm:runtime}
+
+考虑核心张量（core tensor）$\mc{A}$ 与长度为 $L_R$ 且星高有界的正则表达式 $R$，其相应的右转移算符（transfer operator）$\ER_R$ 收敛。则调用 $\Sample(R, \QL, \QR)$ 将返回平均长度为 $\langle n \rangle = \bigO(L_R)$ 的随机字符串，其平均情况计算代价为 $C_R = \bigO(L_R d D^3)$，最坏情况内存开销为 $M_R = \bigO(L_R D^2)$。
+
+\end{theorem}
+
+\begin{proof}
+
+我们再次采用归纳证明，并附加假设 $C_R$ 同时也是应用转移算符 $\ER_R$ 的期望代价的上界。对于正则表达式长度 $L_R$，我们把字符 $|$、$($、$)$、$^*$ 以及 $c$（其中 $c \in \Sigma$）视为长度为 1，单字符正则表达式 $\Sigma$ 亦然。这一定义更接近现实世界中的正则表达式，其中元字符（metacharacter）``\texttt{.}'' 对应于我们的 $\Sigma$。
+
+为了在 算法~\ref{alg:sampling} 中利用缓存（caching），
+我们把二元正则表达式拼接 $R = R_1 R_2$ 的简单递归情形替换为较小正则表达式的极大拼接 $R = R_1 R_2 \cdots R_K$，其中每个 $R_i$ 要么是单个字符、正则表达式的并，要么是 Kleene 闭包。这样的拼接是唯一使用缓存的地方，这使我们能够以正则表达式长度 $L_R$ 而非随机字符串长度 $n_R$ 来界定内存用量。我们不计入保存 u-MPS 参数与中间变量所需的非缓存内存用量，它在所有情况下均为 $\bigO(d D^2)$。
+
+鉴于输出样本的长度 $n_R$ 通常是一个随机变量，我们首先证明其平均长度被界定为 $\langle n_R \rangle = \bigO(L_R)$。显然，对于任何不使用 Kleene 闭包构造的正则表达式 $R$，我们有更强的界 $n_R \leq L_R$。因此我们的归纳证明从这一最后剩下的 Kleene 闭包情形入手，证明对所有星高有界的正则表达式 $R$ 均有 $\langle n_R \rangle = \bigO(L_R)$。然后我们利用这一结果刻画 算法~\ref{alg:sampling} 的计算与内存需求。
+
+\paragraph{$\mathbf{R = S^*:}$} 要使 $\ER_{S^*}$ 收敛，必须有 $\ER_S$ 的谱半径（spectral radius）满足 $\lambda_S := \rho(\ER_S) < 1$。注意到这意味着对任意边界矩阵 $\QL, \QR$ 都有 $\Tr(\QL \ER_S(\QR)) \leq \lambda_S \Tr(\QL \QR)$，我们得到取得 $m$ 次 $S$ 出现的概率被上界为
+%
+\begin{equation*}
+p(m) = \Tr(\QL (\ER_S)^{\circ m}(\QR)) / \mc{Z}_R(\QL, \QR) \leq \lambda_S^m \Tr(\QL \QR) / \mc{Z}_R(\QL, \QR) = \lambda_S^m\, p(0).
+\end{equation*}
+%
+鉴于这一指数衰减的上界，$\Sample(S^*)$ 的输出平均而言将由 $\langle m \rangle = \bigO(\chi_S)$ 次对 $\Sample(S)$ 的调用构成，其中 $\chi_S := \lambda_S^{-1}$。假设我们能得到 $\Sample(S)$ 期望长度的一个不依赖于边界的上界，则这就证明了 $\langle n_{S^*} \rangle = \bigO(\chi_S \langle n_S \rangle)$。
+
+如果 $S$ 本身含有深度嵌套的 Kleene 闭包表达式，那么这一任务将变得困难，上述界会转化为 $\langle n_R \rangle = \bigO(\chi^{h_*(R)} L_R)$，其中 $h_*(R)$ 是 $R$ 的星高，$\chi$ 是 $R$ 内所有嵌套子表达式 $(S_i)^*$ 中最大的 $\chi_{S_i}$。然而，如果我们假设 $R$ 的星高有界，那么这就化为 $\langle n_R \rangle = \bigO(\chi^{h_*(R)} L_R) = \bigO(L_R)$，即我们所期望的界。
+
+接下来考虑 $\Sample(S^*)$ 的资源开销，我们作归纳假设：单次调用 $\Sample(S)$ 的平均情况运行时为 $\bigO(L_S d D^3)$，最坏情况内存用量为 $\bigO(L_S D^2)$。此时 算法~\ref{alg:sampling} 
+将从 $S$ 中抽取 $m$ 个样本，每次使用相同的右边界条件 $\QR^*$。由此得到的正则表达式长度、运行时与内存用量为
+%
+\begin{align*}
+    L_R &= L_S + 1 = \bigO(L_S), \qquad C_R = \bigO(\langle m \rangle C_S) = \bigO(\chi_S L_S d D^3) = \bigO(L_R d D^3), \\
+    M_R &= M_S = \bigO(L_S D^2) = \bigO(L_R D^2),
+\end{align*}
+%
+其中 $C_R$ 的最后一个等号利用了 $R$ 的星高有界。最后我们指出，上述关于 $C_R$ 的界同样适用于转移算符 $\ER_{S^*}$，其对 $\QR$ 的作用可以通过 $m$ 次应用 $\ER_S$ 以任意精度 $\epsilon = \exp(\bigO(-m / \chi_S))$ 逼近。
+
+\paragraph{$\mathbf{R = \sigma}$\textbf{，其中 }$\mathbf{\sigma=c}$\textbf{ 或 }$\mathbf{\Sigma:}$} 对于 $R = c$ 的情形，采样不需要任何资源。对于 $R = \Sigma$，采样过程的代价为 $C_\Sigma = \bigO(d D^3)$，这也给出了应用转移算符 $\ER_\sigma$ 代价的上界。此处正则表达式与输出字符串长度均为 1，且不涉及缓存，因此
+%
+\begin{equation*}
+    L_\sigma = 1, \qquad C_\sigma = \bigO(d D^3) = \bigO(L_\sigma d D^3), \qquad M_\sigma = 0 = \bigO(L_\sigma D^2).
+\end{equation*}
+%
+\paragraph{$\mathbf{R = R_1 R_2 \cdots R_K:}$} 在求值 $\Sample(R_1 \cdots R_K, \QL, \QR)$ 时，我们先通过从右到左的扫描，按规则 $\QR^{(K)} = \QR$ 与 $\QR^{(i-1)} = \ER_{R_i}(\QR^{(i)})$ 计算并缓存 $K$ 个右边界矩阵 $\QR^{(1)}, \QR^{(2)}, \ldots, \QR^{(K)}$。这具有内存开销 $M_R = \bigO(K D^2)$。有了这些右边界矩阵之后，我们再通过从左到右的扫描，借助对 $\Sample(R_i, \QL^{(i)}, \QR^{(i)})$ 的反复调用得到字符串 $s_1, s_2, \ldots, s_K$，其中左边界矩阵定义为 $\QL^{(1)} = \QL$ 与 $\QL^{(i+1)} = \EL_{s_i}(\QL^{(i)})$。无需对 $\QL^{(i)}$ 作任何缓存，且对 $\Sample(R_i, \QL^{(i)}, \QR^{(i)})$ 的每次调用通常涉及一些额外的内存用量，它们会在调用结束后立即释放。 
+
+应用我们关于各子表达式 $R_1, \ldots, R_K$ 的转移算符与 $\Sample$ 调用的运行时和内存用量的归纳假设，我们得到
+%
+\begin{align*}
+    L_R &= \sum_{i=1}^K L_{R_i}, \qquad C_R = \bigO\!\left(\sum_{i=1}^K C_{R_i}\right) = \bigO\!\left(\sum_{i=1}^K L_{R_i} d D^3\right) = \bigO(L_R d D^3), \\
+    M_R &= \bigO(K D^2) + \max_{i}(M_{R_i}) = \bigO(K D^2) + \bigO(\max_i(L_{R_i})D^2) = \bigO(L_R D^2).
+\end{align*}
+%
+\paragraph{$\mathbf{R = R_1 | R_2 | \cdots | R_K:}$} 为求值 $\Sample(R_1 | \cdots | R_K, \QL, \QR)$，我们必须先从分布 $p(i) = \mc{Z}_{R_i}(\QL, \QR) / \mc{Z}_R(\QL, \QR)$ 中抽取一个随机的 $i$，然后调用 $\Sample(R_i, \QL, \QR)$。这给出了整体运行时与内存用量的如下刻画
+%
+\begin{align*}
+    L_R &= \bigO\left(\sum_{i=1}^K L_{R_i}\right), \qquad C_R = \bigO\!\left(\sum_{i=1}^K C_{R_i}\right) = \bigO\!\left(\sum_{i=1}^K L_{R_i} d D^3\right) = \bigO(L_R d D^3), \\
+    M_R &= \max_i(M_{R_i}) = \bigO(\max_i(L_{R_i}) D^2) = \bigO(L_R D^2).
+\end{align*}
+
+\end{proof}
+

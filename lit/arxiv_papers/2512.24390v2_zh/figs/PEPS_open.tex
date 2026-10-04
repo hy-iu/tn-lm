@@ -1,0 +1,34 @@
+\begin{tikzpicture}[x={(1,0)},z={(.5,.5)},baseline={([yshift=-.5ex]current bounding box.center)}]
+    \def\l{1.};
+    \def\h{.8};
+
+    \draw[rounded corners, obj1, dotted] (-\l/3,-\l/3) rectangle (7/3*\l,7/3*\l);
+    \node[anchor=north east] at (-\l/3,-\l/3) {$\sss \partial\!\mc A$};
+
+    \foreach \y in {0,...,2}{
+    	\foreach \x in {0,...,2}{
+            \node[circle, inner sep=2pt, fill=white] at (\x*\l,\y*\l,.85*\h) {};
+            \node[circle, inner sep=2pt, fill=white] at (\x*\l,-.3*\l) {};
+            \node[circle, inner sep=2pt, fill=white] at (\x*\l,2.3*\l) {};
+            \node[circle, inner sep=2pt, fill=white] at (-.3*\l,\y*\l) {};
+            \node[circle, inner sep=2pt, fill=white] at (2.3*\l,\y*\l) {};
+        }
+    }
+    \fill[rounded corners, black!5] (-\l/3,-\l/3) rectangle (7/3*\l,7/3*\l);
+    
+    \node[xshift=-5pt] at (0,.5*\l) {$\sss \mc A$};
+    
+    \foreach \y in {0,...,2}{
+    	\draw[obj1] (-.5*\l,\y*\l,0) --++ (3*\l,0,0);
+    }
+    \foreach \x in {0,...,2}{
+    		\draw[obj1] (\x*\l,-.5*\l,0) --++ (0,3*\l,0);
+    }
+    \foreach \y in {0,...,2}{
+    	\foreach \x in {0,...,2}{
+    		\draw[obj1] (\x*\l,\y*\l,0) --+ (0,0,\h);
+    		\node[mpstensor] at (\x*\l,\y*\l,0) {};
+            
+    	}
+    } 
+\end{tikzpicture}

@@ -1,0 +1,19 @@
+\begin{tikzpicture}[baseline=(current bounding box.center)]
+	\def\l{1.2};
+    \def\h{.8};
+    
+    \draw[obj1] (0,0) --+ (2.5*\l,0);
+    \draw[obj1] (0,-\h) --+ (2.5*\l,0);
+    \draw[obj1] (3.5*\l,0) --+ (2.5*\l,0);
+    \draw[obj1] (3.5*\l,-\h) --+ (2.5*\l,0);
+    
+    \node at (3*\l,-\h/2) {$\dots$};
+    \foreach \i in {0,1,2,4,5,6}{
+        \draw[obj1] (\l*\i,0) --+ (0,-\h);
+        \node[mpstensor, inner sep=4pt] at (\l*\i,0) {};
+        \node[mpstensor, inner sep=4pt] at (\l*\i,-\h) {};
+        \node at (\l*\i,0) {$\sss\bar A$};
+        \node at (\l*\i,-\h) {$\sss A$};
+    }
+    
+\end{tikzpicture}

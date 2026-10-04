@@ -1,0 +1,24 @@
+\begin{tikzpicture}[baseline={([yshift=-.5ex]current bounding box.center)}]
+    \def\lx{1.2};
+    \def\ly{.9};
+    \def\d{.5};
+    \def\h{.35};
+
+    \draw[obj2, dotted, rounded corners=3pt]
+        (-\lx,-\ly) -- (-\lx,\ly) -- (\lx,\ly) -- (\lx,-\ly) -- cycle;
+    \draw[obj2,dotted] (-\lx/3,-\ly-\d) -- (-\lx/3,-\ly+\d);
+    
+    \draw[obj1] (-\lx-\d,0) -- (-\lx+\d,0);
+    \draw[obj1] (\lx-\d,0) -- (\lx+\d,0);
+    \draw[obj1] (\lx/3,-\ly-\d) -- (\lx/3,-\ly+\d);
+    \draw[obj1] (0,\ly-\d) -- (0,\ly+\d);
+    
+    \node[mpotensor,inner sep=2pt] at (-\lx,0) {$\sss g$};
+    \node[mpotensor,inner sep=2pt] at (\lx,0) {$\sss g$};
+    \node[mpotensor,inner sep=2pt] at (\lx/3,-\ly) {$\sss g$};
+    \node[mpotensor,inner sep=2pt] at (0,\ly) {$\sss g$};
+
+    \node[draw=black, line width=.7pt, fill=gray!20, circle, inner sep=2.7pt] at (-\lx/3,-\ly) {};
+    \node[anchor=south] at (-\lx/3,-\ly+\d) {$\sss gx\bar g$};
+    \node[anchor=north] at (-\lx/3,-\ly-\d) {$\sss x$};
+\end{tikzpicture}

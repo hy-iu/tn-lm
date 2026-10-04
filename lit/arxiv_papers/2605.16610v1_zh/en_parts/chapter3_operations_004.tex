@@ -1,0 +1,188 @@
+\item The \textbf{Sylvester Identity} is a very useful identity connecting vectorization, matrix product, and Kronecker product: $$\vectorize(\Ab\Xb\Bb) = (\Ab\kron \Bb^\ts)\vectorize(\Xb),$$
+where $\Ab\in\RR^{m\times n},\Xb\in\RR^{n\times p}$ and $\Bb\in\RR^{p\times q}.$
+\begin{proof}
+The proof is rather direct using tensor networks: 
+\begin{align*}
+\vectorize(\Ab\Xb\Bb) &=
+ \vectorize\left(\begin{tikzpicture}[baseline=-0.5ex]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{6}
+    \node[tensor,fill=blue!50!white] (A) at (\x-1,0) {$\Ab$};
+    \node[tensor,fill=green!50!red!50!white] (X) at (\x,0) {$\Xb$};
+    \node[tensor,fill=red!50!white] (B) at (\x+1,0) {$\Bb$};
+    \draw[edge] (A) -- (X) node [midway,above] {\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge] (X) -- (B) node [midway,above] {\scalebox{0.7}{\dimcolor{$p$}}};
+    \draw[edge] (A) -- (\x-1.7,0) node [midway,above] {\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge] (B) -- (\x+1.7,0) node [midway,above] {\scalebox{0.7}{\dimcolor{$q$}}};
+    \end{tikzpicture}\right)
+=
+\begin{tikzpicture}[baseline=-0.5ex]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{6}
+    \node[tensor,fill=blue!50!white] (A) at (\x-1,0) {$\Ab$};
+    \node[tensor,fill=green!50!red!50!white] (X) at (\x,0) {$\Xb$};
+    \node[tensor,fill=red!50!white] (B) at (\x+1,0) {$\Bb$};
+    \draw[edge] (A) -- (X) node [midway,below] {\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge] (X) -- (B) node [midway,below] {\scalebox{0.7}{\dimcolor{$p$}}};
+    \draw[edge] (A) -- (\x-1.5,0) -- (\x-1.5,-0.4) -- (\x-0.05,-0.4)--(\x-0.05,-0.8) node [midway,left] {\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge] (B) -- (\x+1.5,0) -- (\x+1.5,-0.4) -- (\x+0.05,-0.4)--(\x+0.05,-0.8) node [midway,right] {\scalebox{0.7}{\dimcolor{$q$}}};
+\end{tikzpicture}\\
+&=
+\begin{tikzpicture}[baseline=-2ex]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{6}
+    \draw[edge] (\x-0.05,0.25) -- (\x-0.05,0) node [midway, left] {\scalebox{0.7}{\dimcolor{$n$}}}   -- (\x-0.6,0) -- (\x-0.6,-0.25) ; 
+    \draw[edge] (\x+0.05,0.25) -- (\x+0.05,0)   node [midway, right] {\scalebox{0.7}{\dimcolor{$p$}}}  -- (\x+0.6,0) -- (\x+0.6,-0.25);    
+    \draw[edge] (\x-0.05,-1.4) -- (\x-0.05,-1)  node [midway, left] {\scalebox{0.7}{\dimcolor{$m$}}}  -- (\x-0.6,-1) -- (\x-0.6,-0.75) ; 
+    \draw[edge] (\x+0.05,-1.4) -- (\x+0.05,-1)  node [midway, right] {\scalebox{0.7}{\dimcolor{$q$}}}   -- (\x+0.6,-1) -- (\x+0.6,-0.75); 
+     \node[tensor,fill=green!50!red!50!white] (X) at (\x,0.5) {$\Xb$};
+    \node[tensor,fill=blue!50!white] (A) at (\x-0.6,-0.5) {$\Ab$};
+    \node[tensor,fill=red!50!white] (B) at (\x+0.6,-0.5) {$\Bb$};
+\end{tikzpicture}
+=
+(\Ab\kron\Bb^\ts)\vectorize(\Xb).
+\end{align*}
+It is easy in the last diagram to identify the vectorization of $\Xb$ and the Kronecker product of $\Ab$ and $\Bb$, and thus to conclude that this tensor network represents a matrix-vector product between the two. However, when translating the tensor network in classical mathematical notation, some care is required. First, we can see that since $\vectorize(\Xb)$ is of dimension $np$, the Kronecker product has to be between $\Ab$ and $\Bb^\ts$ to obtain a matrix of shape $mq\times np$. Then, we need to know which Kronecker product to use: $\Ab \kron \Bb^\ts$ or $\Bb^\ts \kron \Ab$, which are both of the correct shape. Because in this manuscript we use lexicographic ordering for reshape operations such as $\vectorize$, the correct formulation is  $\Ab \kron \Bb^\ts$. However, if we were to use reverse lexicographic ordering, as in~\citep{kolda2009tensor}, the correct formulation would be $\Bb^\ts \kron \Ab$.
+\end{proof}
+The \emph{Sylvester identity} is a useful identity to solve  systems of equations of the form $\Ab\Xb+\Xb\Bb = \Cb$.
+\end{enumerate}
+\end{remark}
+There are useful relationships between the $n$-mode product, matricization, and Kronecker products: 
+\begin{proposition}
+Let $\Tt\in\RR^{d_1\times d_2\times\dots\times d_p}$, $\Ab_1\in\RR^{d_1\times n_1},
+\Ab_2\in\RR^{d_2\times n_2},\dots,$
+$\Ab_p\in\RR^{d_p\times n_p}$, then 
+\begin{align*}(\Tt\ttm1\Ab_1\ttm2\Ab_2\ttm3\Ab_3\ttm4\dots\ttm p\Ab_p)_{(n)}=
+\Ab_n\Tt_{(n)}(\Ab_1\kron\dots\kron\Ab_{n-1}\kron\Ab_{n+1}\kron\dots\kron\Ab_p)^\ts.
+\end{align*}
+\end{proposition}
+\begin{proof}
+For $p =3$ and $n=1$,
+\begin{align*}
+(\Tt\ttm1\Ab_1\ttm2\Ab_2\ttm3\Ab_3)_{(1)}
+&= 
+ \left(\begin{tikzpicture}[baseline=-0.5ex]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{6}
+    \node[tensor,fill=blue!20!white] (A1) at (\x,-1.05) {$\Ab_1$};
+    \node[tensor,fill=green!50!red!50!white] (At) at (\x,0) {$\Tt$};
+    \node[tensor,fill=red!50!white] (A2) at (\x+1,0) {$\Ab_2$};
+    \node[tensor,fill=blue!50!white] (A3) at (\x-1,0) {$\Ab_3$};
+    \draw[edge] (At) -- (A2) node [midway,above] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (At) -- (A1) node [midway,left] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (At) -- (A3) node [midway,above] {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \draw[edge] (A1) -- (\x,-1.8) node [midway,right] {\scalebox{0.7}{\dimcolor{$n_1$}}};
+    \draw[edge] (A2) -- (\x+1.8,0) node [midway,above] {\scalebox{0.7}{\dimcolor{$n_2$}}};
+    \draw[edge] (A3) -- (\x-1.8,0) node [midway,above] {\scalebox{0.7}{\dimcolor{$n_3$}}};
+    \end{tikzpicture}\right)_{(1)}
+=
+\begin{tikzpicture}[baseline=-0.5ex]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{6}
+    \def\y{0}
+    \node[tensor,fill=blue!20!white] (A1) at (\x,-1.05) {$\Ab_1$};
+    \node[tensor,fill=green!50!red!50!white] (At) at (\x,0) {$\Tt$};
+    \node[tensor,fill=red!50!white] (A2) at (\x+1,\y+0.5) {$\Ab_2$};
+    \node[tensor,fill=blue!50!white] (A3) at (\x+1,\y-0.5) {$\Ab_3$};
+    \draw[edge] (At) -- (A1) node [midway,left] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (At) -- (A3) node [midway,below] {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \draw[edge] (At) -- (A2) node [midway,above] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (A1) -- (\x,-1.8) node [midway,right] {\scalebox{0.7}{\dimcolor{$n_1$}}};
+    \draw[edge] (A2) -- (\x+1.8,\y+0.5) -- (\x+1.8,\y)-- (\x+2.5,\y);
+    \draw[edge] (A3) -- (\x+1.8,\y-0.5) -- (\x+1.8,\y-0.1) -- (\x+2.5,\y-0.1)node [right] {\scalebox{0.7}{\dimcolor{$n_2n_3$}}};
+    \end{tikzpicture}\\
+&=
+\begin{tikzpicture}[baseline=-0.5ex]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{6}
+    \def\y{0}
+    \node[tensor,fill=blue!20!white] (A1) at (\x,-1.05) {$\Ab_1$};
+    \node[tensor,fill=green!50!red!50!white] (At) at (\x,0) {$\Tt$};
+    \node[tensor,fill=red!50!white] (A2) at (\x+1,\y+0.5) {$\Ab_2$};
+    \node[tensor,fill=blue!50!white] (A3) at (\x+1,\y-0.5) {$\Ab_3$};
+    \draw[edge] (At) -- (A1) node [midway,left] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (\x+0.7,\y-0.5) -- (\x+0.4,\y-0.5) -- (\x+0.4,\y) -- (\x+0.25,\y);
+    \draw[edge] (\x+0.7,\y+0.5) -- (\x+0.4,\y+0.5) -- (\x+0.4,\y+0.1) -- (\x+0.25,\y+0.1);
+    \draw[edge] (A1) -- (\x,-1.8) node [midway,right] {\scalebox{0.7}{\dimcolor{$n_1$}}};
+    \draw[edge] (A2) -- (\x+1.6,\y+0.5) -- (\x+1.6,\y)-- (\x+2.35,\y);
+    \draw[edge] (A3) -- (\x+1.6,\y-0.5) -- (\x+1.6,\y-0.1) -- (\x+2.35,\y-0.1)node [right] {\scalebox{0.7}{\dimcolor{$n_2n_3$}}};
+    \node[draw=none] () at (\x+0.6,\y-0.3) {\scalebox{0.6}{\dimcolor{$d_3$}}};
+    \node[draw=none] () at (\x+0.6,\y+0.3) {\scalebox{0.6}{\dimcolor{$d_2$}}};
+\end{tikzpicture}
+=
+\Ab_1\Tt_{(1)}(\Ab_2\kron\Ab_3)^\ts.
+\end{align*}
+\end{proof}
+\begin{proposition}
+    Let $\Tt\in\RR^{d_1\times d_2\times\cdots\times d_p}$  and $\Ab_i\in\RR^{d_i\times n_i}$ for $i\in[p]$. Let $m \in [p]$ and
+$\Tt_{([m])}$ denotes reshaping the tensor $\Tt$ in a matrix of size $d_1d_2\cdots d_m\times d_{m+1}...d_p$ by mapping the first $m$ indices to
+rows and the remaining ones to columns. Then,
+\begin{align*}
+    (\Tt\ttm 1\Ab_1\ttm 2 \Ab_2\cdots\ttm p \Ab_p)_{([m])}=(\Ab_1\kron\Ab_2\kron\cdots\kron\Ab_{m})\Tb_{([m])}(\Ab_{m+1}\kron\Ab_{m+2}\kron\cdots\kron\Ab_{p})^\ts.
+\end{align*}
+This identity can be extended to arbitrary subsets $I\subset [p]$:
+$$ (\Tt\ttm 1\Ab_1\ttm 2 \Ab_2\cdots\ttm p \Ab_p)_{(I)}    = \left(\bigotimes_{i\in I} \Ab_i\right)\Tt_{([m])}\left(\bigotimes_{i\in [p] \setminus I} \Ab_i\right)^\ts.$$
+\begin{proof}
+For $p=6$ and $I = \{1,2,3\}$,
+\begin{align*}
+\left(\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!20!blue!40!white] (T) at (\x,\y){\scalebox{0.85}{$\Tt$}};
+\node[tensor,fill=red!20!white] (A) at (\x+1,\y){\scalebox{0.85}{$\Ab_1$}};
+    \draw[edge](T) -- (A) node [midway,above] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge](A) -- (\x+2,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$n_1$}}};
+\node[tensor,fill=red!40!white] (B) at (\x,\y-1) {\scalebox{0.85}{$\Ab_2$}}; 
+    \draw[edge](T) -- (B) node [midway,left] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge](B) -- (\x,\y-2) node [midway,left] {\scalebox{0.7}{\dimcolor{$n_2$}}};
+\node[tensor,fill=red!60!white] (C) at (\x-1,\y) {\scalebox{0.85}{$\Ab_3$}};
+    \draw[edge](T) -- (C) node [midway,above] {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \draw[edge](C) -- (\x-2,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$n_3$}}};
+\node[tensor,fill=blue!20!white] (D) at (\x,\y+1){\scalebox{0.85}{$\Ab_4$}}; 
+    \draw[edge](T) -- (D) node [midway,right] {\scalebox{0.7}{\dimcolor{$d_4$}}};
+    \draw[edge](D) -- (\x,\y+2) node [midway,right] {\scalebox{0.7}{\dimcolor{$n_4$}}};
+\node[tensor,fill=red!50!blue!10!white] (E) at (\x-0.85,\y+0.85){\scalebox{0.85}{$\Ab_5$}}; 
+   \draw[edge](T) -- (E) node [midway,above] {\scalebox{0.7}{\dimcolor{$d_5$}}};
+    \draw[edge](E) -- (\x-1.5,\y+1.5) node [midway,right] {\scalebox{0.7}{\dimcolor{$n_5$}}};
+\node[tensor,fill=blue!50!white] (F) at (\x+0.85,\y-0.85){\scalebox{0.85}{$\Ab_6$}};
+    \draw[edge](T) -- (F)node [midway,right] {\scalebox{0.7}{\dimcolor{$d_6$}}};
+    \draw[edge](F) -- (\x+1.5,\y-1.5)node [midway,right] {\scalebox{0.7}{\dimcolor{$n_6$}}};
+\end{tikzpicture}\right)_{(\{1,2,3\})}
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[draw=none] at (\x-3.5,\y){$=$};
+    \node[tensor,fill=red!20!blue!40!white] (T) at (\x,\y){\scalebox{0.85}{$\Tb$}};
+    \node[tensor,fill=red!20!white] (A) at (\x-1.5,\y-1){\scalebox{0.85}{$\Ab_1$}};
+    \node[tensor,fill=red!40!white] (B) at (\x-1.5,\y) {\scalebox{0.85}{$\Ab_2$}}; 
+    \node[tensor,fill=red!60!white] (C) at (\x-1.5,\y+1) {\scalebox{0.85}{$\Ab_3$}};
+    \node[tensor,fill=blue!20!white] (D) at (\x+1.5,\y-1){\scalebox{0.85}{$\Ab_4$}};
+\node[tensor,fill=red!50!blue!10!white] (E) at (\x+1.5,\y){\scalebox{0.85}{$\Ab_5$}}; 
+\node[tensor,fill=blue!50!white] (F) at (\x+1.5,\y+1){\scalebox{0.85}{$\Ab_6$}};
+    \draw[edge](T) -- (B);
+    \node[draw=none] at (\x-1.15,\y+0.2) {\scalebox{0.7}{\dimcolor{$d_2$}}};;
+    \node[draw=none] at (\x+1.15,\y+0.2) {\scalebox{0.7}{\dimcolor{$d_5$}}};;
+    \draw[edge](B) -- (\x-2.5,\y);;
+    \draw[edge](\x+0.16,\y+0.2) -- (\x+0.5,\y+0.2) -- (\x+0.5,\y+0.1) -- (\x+1,\y+0.1);
+    \draw[edge](F) -- (\x+1,\y+1) -- (\x+1,\y+0.1)node [midway,left] {\scalebox{0.7}{\dimcolor{$d_6$}}};
+    \draw[edge](F) -- (\x+2,\y+1)--(\x+2,\y+0.1)-- (\x+2.5,\y+0.1)node [near end,above] {\scalebox{0.7}{\dimcolor{$n_6$}}};
+    \draw[edge](\x+0.16,\y-0.2) -- (\x+0.5,\y-0.2) -- (\x+0.5,\y-0.1) -- (\x+1,\y-0.1);
+    \draw[edge](D) -- (\x+1,\y-1) -- (\x+1,\y-0.1)node [midway,left] {\scalebox{0.7}{\dimcolor{$d_4$}}};
+    \draw[edge](D) -- (\x+2,\y-1)--(\x+2,\y-0.1)-- (\x+2.5,\y-0.1)node [near end,below] {\scalebox{0.7}{\dimcolor{$n_4$}}};
+    \draw[edge](T) -- (E);
+    \draw[edge](E) -- (\x+2.5,\y);
+    \draw[edge](\x-0.16,\y+0.2) -- (\x-0.5,\y+0.2) -- (\x-0.5,\y+0.1) -- (\x-1,\y+0.1);
+    \draw[edge](C) -- (\x-1,\y+1) -- (\x-1,\y+0.1)node [midway,right] {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \draw[edge](C) -- (\x-2,\y+1)--(\x-2,\y+0.1)-- (\x-2.5,\y+0.1)node [near end,above] {\scalebox{0.7}{\dimcolor{$n_3$}}};;;
+    \draw[edge](\x-0.16,\y-0.2) -- (\x-0.5,\y-0.2) -- (\x-0.5,\y-0.1) -- (\x-1,\y-0.1);
+    \draw[edge](A) --  (\x-2,\y-1)--(\x-2,\y-0.1)-- (\x-2.5,\y-0.1)node [near end,below] {\scalebox{0.7}{\dimcolor{$n_1$}}};;
+    \draw[edge](A) -- (\x-1,\y-1) -- (\x-1,\y-0.1)node [midway,right] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \node[draw=none] at (\x+2.8,\y){\scalebox{0.7}{\dimcolor{$n_4$}}};
+    \node[draw=none] at (\x-2.8,\y){\scalebox{0.7}{\dimcolor{$n_2$}}};
+\end{tikzpicture}.
+\end{align*}
+\end{proof}
+\end{proposition}
+

@@ -1,0 +1,15 @@
+\begin{tikzpicture}[baseline=(current bounding box.center)]
+	\def\l{1.2};
+    \def\h{.65};
+
+    \draw[obj1] (-\l/2,0) -- (9*\l/2,0);
+    \foreach \i in {0,1,3,4}{
+        \draw[obj1] (\l*\i,0) --+ (0,\h);
+        \node[mpstensor, inner sep=4pt] at (\l*\i,0) {};
+        \node at (\l*\i,0) {$\sss A$};
+    };
+    \draw[obj1] (2*\l,0) --+ (0,\h);
+    \node[mpstensor, inner sep=4pt] at (2*\l,0) {};
+    \node at (2*\l,0) {$\sss B$};
+    \node[yshift=-16pt] at (2*\l,0) {$\msf n$};
+\end{tikzpicture}

@@ -1,0 +1,105 @@
+\section{Experiments}
+\label{sec:experiments}
+%
+\begin{table}[t]
+\caption{Experiments on Tomita grammars 3-7 (see Appendix~\ref{sec:appendix_d} for the definitions of these grammars), where the training data is randomly chosen from strings of lengths between 1 and 15 belonging to the grammar. The trained models are used to sample strings of lengths 16 and 30, with the percentage of grammatically correct samples reported. The u-MPS consistently gives better generalization across different lengths (quite substantially for Tomita 5), except for Tomita 6 which neither model is able to learn. Most of the Tomita grammars are too small to train with more than 1,000 strings, but Tomita 5 and 6 permit experiments with larger datasets.}
+\label{tab:tomita}
+\setlength\aboverulesep{0.1pt}
+\setlength\belowrulesep{0.1pt}
+\renewcommand{\arraystretch}{1.1}
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{lc|cccc}
+    Tomita & Samp. & \multirow{2}{*}{u-MPS} & \multirow{2}{*}{HMM} & \multirow{2}{*}{LSTM} & \multirow{2}{*}{TR} \\
+    ($N_{\mathrm{train}}$) & Len. &  &  &  \\
+    \midrule
+    3 (1K)  & 16 & \textbf{100.0} & 91.6          & 90.2          & 28.8 \\
+    3 (1K)  & 30 & \textbf{100.0} & 82.0          & 85.6          & 9.4  \\
+    4 (1K)  & 16 & \textbf{99.9}  & 99.4          & 85.4          & 50.7 \\
+    4 (1K)  & 30 & 99.5           & \textbf{99.6} & 64.7          & 32.5 \\
+    % 5 (1K)  & 16 & \textbf{50.5}  &  & 49.0          &  \\
+    % 5 (1K)  & 30 & 49.1           &  & \textbf{50.2} &  \\
+    5 (10K) & 16 & \textbf{100.0} & 52.0          & 49.9          & 51.1 \\
+    5 (10K) & 30 & \textbf{99.9}  & 49.8          & 52.8          & 50.5 \\
+    % 6 (1K)  & 16 & 32.1           &  & \textbf{33.1} &  \\
+    % 6 (1K)  & 30 & 33.9           &  & \textbf{34.2} &  \\
+    6 (10K) & 16 & \textbf{35.9}  & 34.4          & 33.1          & 32.9 \\
+    6 (10K) & 30 & 33.1           & 33.1          & \textbf{34.4} & 32.7 \\
+    7 (1K)  & 16 & \textbf{99.3}  & 98.1          & 89.2          & 51.3 \\
+    7 (1K)  & 30 & \textbf{89.4}  & 79.3          & 29.1          & 10.0 \\
+    
+    % Tomita \# & \multicolumn{4}{c|}{Samp. Len. 16} & \multicolumn{4}{c}{Samp. Len. 30} \\
+    % 3 (1K) & \textbf{100.0} &  & 90.2 &  & \textbf{100.0} &  & 85.6 &  \\
+    % 4 (1K) & \textbf{99.9} &  & 85.4 &  & \textbf{99.5} &  & 64.7 &  \\
+    % 5 (1K) & \textbf{50.5} &  & 49.0 &  & 49.1 &  & \textbf{50.2} &  \\
+    % 5 (10K) & \textbf{100.0} &  & 49.9 &  & \textbf{99.9} &  & 52.8 &  \\
+    % 6 (1K) & 32.1 &  & \textbf{33.1} &  & 33.9 &  & \textbf{34.2} &  \\
+    % 6 (10K) & \textbf{35.9} &  & 33.1 &  & 33.1 &  & \textbf{34.4} &  \\
+    % 7 (1K) & \textbf{99.3} &  & 89.2 &  & \textbf{89.4} &  & 29.1 &  \\
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+%
+\begin{table}[t]
+\caption{Experiments on the context-free Motzkin grammar, where the training set is fixed to contain only strings of length 15. We explore both fixed-length sampling (Samp) and character completion (Comp) tasks, where the model either samples a string from scratch, or predicts a missing character in a reference string given access to the character's prefix and suffix. In each case, the same trained u-MPS, HMM, and Transformer are used to generate both sampling and character completion data. The bidirectional LSTM performs best on shorter strings in the character completion task, but quickly degrades in accuracy as the length of the reference strings are increased.}
+\label{tab:motzkin}
+\setlength\aboverulesep{0.1pt}
+\setlength\belowrulesep{0.1pt}
+\renewcommand{\arraystretch}{1.1}
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{lc|cccc}
+    Task & Str. & \multirow{2}{*}{u-MPS} & \multirow{2}{*}{HMM} & \multirow{2}{*}{LSTM} & \multirow{2}{*}{TR} \\
+    ($N_{\mathrm{train}}$) & Len. &      &  &  &  \\
+    \midrule
+    Samp (1K)  & 1  & \textbf{89.4} & 37.4 & 41.7           & 39.1 \\
+    Samp (1K)  & 16 & \textbf{74.4} & 30.3 & 41.2           & 2.3  \\
+    Samp (1K)  & 50 & \textbf{32.5} & 12.6 & 0.0            & 0.6  \\
+    Samp (10K) & 1  & \textbf{99.3} & 36.0 & 35.7           & 36.2 \\
+    Samp (10K) & 16 & \textbf{99.8} & 34.3 & 60.4           & 0.5  \\
+    Samp (10K) & 50 & \textbf{91.6} & 12.4 & 5.4            & 0.2  \\
+    Comp (1K)  & 1  & 89.4          & 39.2 & \textbf{99.9}  & 32.1 \\
+    Comp (1K)  & 16 & 69.6          & 29.1 & \textbf{99.5}  & 30.7 \\
+    Comp (1K)  & 50 & 58.8          & 13.1 & \textbf{61.3}  & 30.2 \\
+    Comp (10K) & 1  & 99.3          & 36.3 & \textbf{100.0} & 33.5 \\
+    Comp (10K) & 16 & 99.8          & 31.7 & \textbf{100.0} & 34.5 \\
+    Comp (10K) & 50 & \textbf{92.4} & 14.8 & 69.1           & 33.7 \\
+    
+    % Samp (1K)  & \textbf{89.4} & 41.7 &  & \textbf{74.4} & 41.2 &  & \textbf{32.5} & 0.0 &  \\
+    % Samp (10K) & \textbf{99.3} & 35.7 &  & \textbf{99.8} & 60.4 &  & \textbf{91.6} & 5.4 &  \\
+    % Comp (1K)  & 89.4 & \textbf{99.9} &  & 69.6 & \textbf{99.5} &  & 58.8 & \textbf{61.3} &  \\
+    % Comp (10K) & 99.3 & \textbf{100.0} &  & 99.8 & \textbf{100.0} &  & \textbf{92.4} & 69.1 &  \\
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+%
+\begin{table}[t]
+\caption{Runtimes for computing the loss and gradient with respect to model parameters using a u-MPS with bond dimension 50, for a batch of 100 strings of length 500 evaluated on a CPU or GPU. While computation on a CPU favors sequential evaluation, owing to its lower overall cost, the reduced parallel depth inherent to parallel evaluation leads to a reduced runtime in the presence of GPU hardware acceleration.}
+\label{tab:runtime}
+\renewcommand{\arraystretch}{1.1}
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{c|cc}
+          & Sequential Eval. & Parallel Eval.   \\
+          & Runtime (ms)     & Runtime (ms) \\
+\hline
+CPU comp. & \textbf{73.0}    & 232.7 \\
+GPU comp. & 49.9             & \textbf{45.2}  \\
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+
+We use experiments on synthetic and real structured text datasets to assess the performance of u-MPS in probabilistic sequence modeling and grammatical inference, as well as to verify the benefits of u-MPS for parallelization, regex sampling, and regularization. 
+

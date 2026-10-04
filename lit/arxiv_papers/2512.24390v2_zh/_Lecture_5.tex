@@ -1,0 +1,310 @@
+\section{第 5 讲：广义对称性（Generalised symmetries）}\label{sec:GenSym}
+\subsection{动机（Motivation）}
+在第~\ref{sec:PhasesOfMatter}讲中，我们对具有群对称性的一维量子点阵模型的相图进行了分类。我们还看到，在一维玻色子系统中，对称性的存在对于产生非平凡的相图是\emph{必要}的。回顾 \cref{sec:Fermions}，对于费米子的情况，由于超选择定则（superselection rule）的存在，费米子系统可以表现出本征拓扑序（topological order），其情形更为微妙。近年来，学术界投入了大量的研究精力来理解超出群对称性范畴的对称性系统~\cite{Gaiotto2014,Thorngren2019,Aasen2020,Komargodski2020,McGreevy2022,Moradi2022,Freed2022,Shao2023,Schafer-Nameki2023,Moradi2023,Bhardwaj2023}。正如我们在第~\ref{sec:PhasesOfMatter}讲引言中所预示的，由融合范畴（fusion category）描述的广义对称性，作为非手征二维拓扑序的\emph{虚拟对称性}出现，因而也表现为其边界哈密顿量的对称性，或者等价地说，表现为描述其边缘模的有效理论的对称性。研究这些广义对称性如何影响系统的相图催生了\emph{广义 Landau 范式}，在此范式下，不同的物态被发现与打破广义对称性的不同方式相对应~\cite{Thorngren2019,Moradi2022,Bhardwaj2023,Lootens2024,Chen2025}。对于非群对称性，我们不能简单地说对称性破缺到了某个子群，因此我们需要探讨：一个系统如何（部分地）破缺一个广义对称性？在展现不同广义对称性破缺方式的系统之间是否存在映射？本讲将对这些问题进行深入阐述。
+
+为什么张量网络是描述此类范畴对称性的理想工具？一个关键的观察在于，为了编码超出局域单点（on-site）形式的对称性，我们需要在相邻自由度上以关联方式起作用的算符。此外，我们希望能够在任意尺寸的系统上定义这些算符，因此我们需要局部地编码这些关联对称性。MPO 正是用于此目的的完美语言。它们由单个局域张量参数化，可以在任意数量的格点上定义，并通过其虚拟自由度在相邻物理自由度之间传递信息。基于这些考虑，我们常常交替使用\emph{广义对称性}、\emph{范畴对称性}与 \emph{MPO 对称性}这几个术语。
+
+事实上，对一般 MPO 对称性的研究表明，在单射性（进一步在 \cref{sec:MPORepresentationTheory} 中讨论）等温和条件下，其底层结构等价于融合范畴。简言之，融合范畴是由（简单）对象构成的半单结合代数结构，非常类似于群是其元素（其简单对象）的结合乘法规则。然而，与群的情形不同的是，融合范畴的简单对象的乘法可能导致简单对象的直和。一个典型范例是融合范畴 $\Rep(G)$，其简单对象是群的不可约表示，其乘法规则由不可约表示张量积的直和分解决定，例如 $1/2\otimes 1/2=0\oplus 1$。融合范畴理论在数学与数学物理中是研究得非常透彻的课题，而 MPO 恰好构成了这些融合范畴在点阵上\emph{表示}的基石，正如矩阵在自旋系统中表示单点群对称性一样。
+
+在最后一讲中，我们将首先研究范畴对称性的 MPO 表示论，并展示\emph{模范畴}（module category）如何标记不同的表示。随后我们将给出三个具体的应用。首先，我们将探讨这些 MPO 对称性如何在 Levin-Wen 弦网（string-net）模型中产生，该模型为所有非手征二维拓扑序提供了微观实现。然后我们提供两种方法来构造这些弦网模型的\emph{边缘理论}。在 \cref{sec:SC} 中，我们将展示这些 PEPS 表示的所谓\emph{奇异关联函数}（strange correlator）如何导出临界模型的二维\emph{经典}配分函数的构造~\cite{Vanhove2018}，从而推广了 Aasen、Mong 和 Fendley 的构造~\cite{Aasen2016}。这种奇异关联函数构造的主要优点在于，它清晰地揭示了临界点阵模型的\emph{拓扑}特征与\emph{几何}或\emph{动力学}特征之间的区别：(2+0) 维配分函数继承了来自 (2+1) 维弦网的 MPO 对称性，因而提供了 TFT/CFT 对应在点阵上的对应物。这种构建具有范畴对称性的边缘理论的全息方法，可以理解为 Kong、Wen 和 Zheng 的范畴构造~\cite{Kong2015}在点阵上的显式实现，它为现在广泛称为 \emph{SymTFT} 或\emph{拓扑全息}（topological holography）的理论提供了坚实的基础~\cite{Apruzzi2021,Chatterjee2022,Freed2022,Delcamp2024,Chen2025}。最后，我们将提供一种系统的方法来构造局域 (1+1) 维 MPO 对称哈密顿量，以及针对广义对称性的广义对偶性（duality）或 gauge 过程。最后，我们讨论范畴对称性的广义 Landau 范式及其若干物理推论。
+
+\subsection{MPO 表示论（MPO representation theory）}\label{sec:MPORepresentationTheory}
+在本节中，我们将遵循与 \cref{sec:YangBaxterFromMPO} 类似的逻辑。假设有一组表示融合代数的单射 MPO，我们推导出融合张量满足的自洽方程。随后我们展示如何利用这些方程的解来构造这些 MPO 和融合张量的表示。我们将说明如何从描述对称性的融合范畴上的\emph{模范畴}所编码的数据中构造出不同的表示。
+
+\bigskip\noindent 具体而言，考虑一组标记为 $a,b,c,\dots$ 的有限单射 MPO，并施加周期性边界条件。我们感兴趣的是结构常数 $N_{ab}^c$ 与周期链格点数无关的 MPO 代数：
+\begin{equation}
+\label{eq:FusionRules}
+    \inputtikz{MPOsStacked} = \sum_{c} N_{ab}^{c} \inputtikz{MPOc}\,\, .
+\end{equation}
+在此处及下文中，求和遍历代数中出现的所有不同 MPO。其中存在一个标记为 $\mbb 1$ 的单位元，满足 $N_{a\mbb 1}^{a'}=N_{\mbb 1 a}^{a'}=\delta_{a,a'}$。非负整数张量 $N$ 定义了一个\emph{含幺结合融合}结构，特别意味着结构常数满足 $\sum_d N_{ab}^dN_{dc}^e = \sum_d N_{bc}^d N_{ad}^e$。利用基本定理~\cref{eq:FundTh}，我们发现通过将以下\emph{融合张量}穿过 MPO 张量，可以在局域上实现 \cref{eq:FusionRules}：
+\begin{equation}
+\label{eq:IntertwinerHorizontal}
+    \inputtikz{MPOIntertwiner_1} \,= \,\,
+    \raisebox{4.5pt}{\inputtikz{MPOIntertwiner_2}}\,\,,
+\end{equation}
+其中重数 $i=1,2,\dots,N_{ab}^c$ 标记线性无关的融合张量。类似于 \cref{sec:SPT2d}，MPO 乘法的结合律意味着存在一组称为 \emph{$F$-符号}或\emph{结合子}的\emph{幺正}矩阵，它们编码基底变换
+\begin{equation}\label{eq:MPOPentagon}
+    \raisebox{-5.5pt}{\inputtikz{MPOPentagon_1}} = \sum_{f,k,l}\big(F^{abc}_{d}\big)_{e,ij}^{f,kl}\,\,\raisebox{-5.5pt}{\inputtikz{MPOPentagon_2}}.
+\end{equation}
+要求四个 MPO 的乘积（可以以两种不同方式重新耦合）具有结合性，揭示了这些 $F$-符号服从一个通称为\emph{五边形方程}（pentagon equation）的自洽条件。示意形式上，五边形方程是如下形式的多元线性方程组：
+\begin{equation}\label{eq:pentagon}
+    FF = \sum FFF,
+\end{equation}
+或者展开写成分量形式为：
+\begin{equation}\label{eq:pent}
+    \sum_o \left(F^{fcd}_e\right)^{h,no}_{g,lm} \left(F^{abh}_e\right)^{i,pq}_{f,ko} = \sum_{j,rst} \left(F^{abc}_g\right)^{j,rs}_{f,kl} \left(F^{ajd}_e\right)^{i,tq}_{g,sm} \left(F^{bcd}_i\right)^{h,np}_{j,rt}.
+\end{equation}
+本质上，由 $N$-符号指定的融合规则连同五边形方程的幺正解构成了\emph{幺正融合范畴} $\mc C$ 中编码的数据。\footnote{注意到五边形方程与通过类似推理应用于群对称性而在 \cref{eq:3cocycle} 中导出的 3-上循环极为相似。事实上，一个有限群连同一个 3-上循环的选择定义了一个称为 $\Vect_G^\omega$ 的融合范畴（如 \cref{sec:cat} 所综述），其 $F$-符号恰与 $\omega$ 重合。}重要的是，对于任意合法的融合结构，在重数指标的基变换意义下，五边形方程的解的数量是有限的。
+
+给定五边形方程的一个解，我们如何找到对应于 \cref{eq:FusionRules} 意义下的 MPO 表示？完全契合 \cref{sec:YangBaxterFromMPO} 的逻辑，我们可以通过将 $F$-符号等同于 \cref{eq:IntertwinerHorizontal} 中定义的融合张量（的分量）以及 MPO 张量来找到表示。在此情况下，\cref{eq:MPOPentagon} 与 \cref{eq:IntertwinerHorizontal} 均等价于五边形方程 \eqref{eq:pent}~\cite{Sahinoglu2014,Bultinck2015,Williamson2017,Molnar2022}。具体来说，非零分量的分配如下\footnote{我们略去了涉及量子维数的常规预因子~\cite{Bultinck2017,Lootens2020}。}：
+\begin{equation}\label{eq:SingleLineLabels}
+    \inputtikz{PEPS_C_single_labels} = \big(F^{abc}_d\big)_{e,ij}^{f,kl}= 
+    \inputtikz{MPO_single_labels}\,.
+\end{equation}
+请注意，每个指标都由一个对象三元组 $a,b,c$ 和取值为 $1,2,\dots,N_{ab}^c$ 的重数指标标记。特别地，为了使分量非零，所有三元组必须同时满足融合规则。此外，这些张量的结构使得一些对象在各指标之间共享。张量的这种内在结构启示我们将其描绘为\emph{三线张量}（triple line tensor）：
+\begin{equation}
+    \inputtikz{PEPS_C_triple}\equiv\inputtikz{PEPS_C_single_labels} ,\quad
+    \inputtikz{MPO_single_labels}\equiv\inputtikz{MPO_triple}\,.
+\end{equation}
+这些张量的缩并是通过识别串联张量链上的简单对象、配对指标并对其求和来进行的，详见文献~\cite{Bultinck2017,Lootens2020}。
+
+由于融合规则的存在，MPO 所作用的希尔伯特空间通常并非简单的张量积空间，而是由融合规则所施加的具有局域\emph{约束}的希尔伯特空间。在这种意义下，此处构造并在下文推广的 MPO 构成了在\emph{任意子链}（anyonic chain）背景下所考虑的拓扑对称性的一种表示和推广~\cite{Feiguin2006,Trebst2008,Gils2013,Buican2017,Huang2021,Jones2024}。例如，原始文献~\cite{Feiguin2006}中考虑的模型就是由 Fibonacci 融合范畴 $\Fib$ 构造的（见 \cref{sec:cat}）。
+
+\bigskip\noindent 上述讨论仅提供了 $\mc C$ 的一种 MPO 表示。正如文献~\cite{Lootens2020}中所展示的，给定融合范畴 $\mc C$ 上的任意\emph{模范畴}都提供了在点阵上实现该对称性的一种不同方式。简言之，一个 $\mc C$-模范畴 $\mc R$ 包含简单对象 $A,B,\dots$ 的有限集合，以及 $\mc C$ 在 $\mc R$ 上的\emph{作用}，可表示为 $a\act A=\sum_{B} N_{aA}^{B}B$。值得注意的是，该 $N$-符号不同于 $\mc C$ 的 $N$-符号，因为它依赖于 $\mc R$ 的两个对象和 $\mc C$ 的一个对象。模范畴还提供了一组幺正的 \emph{$\mF$-符号}或\emph{（左）模结合子}，它们与 $\mc C$ 的 $F$-符号一起服从如下形式的\emph{混合}五边形方程：
+\begin{equation}\label{eq:ModulePentagon}
+    \mF\mF = \sum F\mF\mF.
+\end{equation}
+给定一个 $\mc C$-模范畴及其对应的模结合子，我们可以通过将其分量等同于 $\mF$-符号来构造融合张量——完全遵循 \cref{eq:SingleLineLabels} 并如下文 \cref{eq:TripleLineTensors} 所详述——从而借助 \cref{eq:ModulePentagon} 使得穿透条件 \cref{eq:IntertwinerHorizontal} 得到满足。值得注意的是，每个融合范畴 $\mc C$ 都在其自身上定义了一个模范畴，称为 \emph{regular 模范畴}。在此情况下，我们找回前一段落中的 MPO 表示。在解释 MPO 张量的求值之前，让我们通过一个简单例子来建立对该框架的直觉。
+
+\paragraph{示例：$\mc C = \Vect_G$} 形式上，一个（无反常）有限群对称性由 $G$-分次向量空间的融合范畴 $\Vect_G$ 描述。简单对象对应于群元素，融合规则由群乘法给出，即 $N_{g,h}^k = \delta_{gh,k}$。$\Vect_G$ 上的模范畴与对偶对 $(H,\psi)$ 一一对应，其中 $H\subseteq G$ 是在共轭意义下的子群，$\psi$ 是子群 $H$ 的取值于 $\rU(1)$ 的 2-上循环。细节请参阅 \cref{sec:cat}。让我们聚焦于 $H=G$ 且 $\psi$ 为平凡的情形。对应的模范畴记作 $\Vect$，导出如下 MPO：
+\begin{equation}\label{eq:MPOonsite}
+    \inputtikz{MPOGroupg} \,\,= \bigotimes_\msf i u_\msf i(g).
+\end{equation}
+这里的 $u_\msf i$ 是 $G$ 的（不一定不可约的）幺正表示，并且可以在每个格点上独立选择。MPO 的群结构源自 $u_\msf i(g)u_\msf i(h)=u_\msf i(gh)$，$\forall g,h\in G$，$\forall \msf i$。虚线强调了 MPO 的键维为 $1$。值得注意的是，MPO 作用在张量积希尔伯特空间上这一事实，是选取模范畴 $\Vect$ 的直接结果。对于 $\Vect_G$ 上的其他允许模范畴，如上所述，MPO 通常作用在受约束的希尔伯特空间上。
+
+\bigskip\noindent 注意在局域单点群对称性 \cref{eq:MPOonsite} 的情形下，人们可以把所有由群元素 $g\in G$ 索引的 MPO 张量 $u_\msf i(g)$ 同时化为块对角形式。各块对应于表示 $u_\msf i$ 中所包含的不可约表示。更一般地，我们可以将 MPO 张量的集合视为由块 $a,b,c,\dots$ 标记的算符值矩阵，并在\emph{垂直}方向上对由它们张成的代数进行块分解。关键的洞见在于，这些单射块的标签及其融合规则，即\footnote{注意这些 MPO 在垂直方向延伸——如图形中虚线所示——但在水平方向并不延伸。}
+\begin{equation}
+    \inputtikz{MPOsStackedVertical_1} = \sum_\gamma N_{\alpha\beta}^\gamma \,\, \inputtikz{MPOsStackedVertical_2}\,\,,
+\end{equation}
+由另一个融合范畴 $\mc D$ 所支配，该范畴通常\emph{不同于}对称性范畴 $\mc C$。它的简单对象将用希腊字母 $\alpha,\beta,\gamma,\dots$ 标记。给定 $\mc C$ 与 $\mc R$，$\mc D$ 是完全确定的。换句话说，一旦固定了对称性范畴以及通过所选模范畴 $\mc R$ 在点阵上表示它的方式，$\mc D$ 就被唯一确定。在技术上，$\mc D$ 对应于 $\mc C$ 关于 $\mc R$ 的 \emph{Morita 对偶}（亦见 \cref{sec:cat}），记作 $\mc D=\mc C_\mc R^\star$，且等价地有 $\mc C =\mc D^\star_\mc R$。$\mc C$ 与 $\mc D$ 的 Morita 等价特别保证了 $\mc C$ 与 $\mc D$ 的 \emph{Drinfeld 中心}是等价的：$\mc Z(\mc C)\simeq\mc Z(\mc D)$。在 \cref{sec:SN} 中我们将看到，$\mc Z(\mc D)$ 编码了关于弦网基态区与任意子激发的全部信息，其中弦网的拓扑虚拟对称性由 $\mc C$ 描述。在 \cref{sec:SC} 和 \cref{sec:dualities} 中，Drinfeld 中心的元素将标记弦网边界理论的\emph{拓扑扇区}或\emph{超选择区}。
+
+作为一个融合范畴，$\mc D$ 带有其自身的一组 $F$-符号，我们记作 $\dF$。它们满足类似于 \cref{eq:pentagon} 的五边形方程。Morita 对偶 $\mc D$ 的构造方式使得 $\mc R$ 也是 $\mc D$ 上的模范畴，此时 $\mc D$ 从\emph{右侧}作用于 $\mc R$。因此再次存在对应的 $F$-符号，记作 $\nF$，用以编码 $\mc D$ 在 $\mc R$ 上的作用的结合性。这些符号满足我们遇到的第四个五边形方程，现在涉及 $\mc D$ 的结合子：
+\begin{equation}\label{eq:Pent2}
+    \nF\nF = \sum \dF\nF\nF.
+\end{equation}
+除了同时作为 $\mc C$ 和 $\mc D$ 的模范畴之外，$\mc R$ 还是一个（可逆的）\emph{$(\mc C,\mc D)$-双模范畴}（见 \cref{sec:cat}）。与其双模结构相关联的是最后一组记作 $\rF$ 的 $F$-符号，服从
+\begin{align}
+    \rF\mF &= \sum\mF\rF\rF, \label{eq:Pent3}\\
+    \nF\rF &= \sum\rF\rF\nF \label{eq:Pent4}.
+\end{align}
+MPO 张量的分量等于 $\rF$-符号，而 $\nF$-符号恰好是\emph{垂直}方向融合张量所求得的值。汇总如下：
+\begingroup
+\allowdisplaybreaks
+\begin{align}
+    \inputtikz{PEPS_C_triple_mod}&\equiv\inputtikz{PEPS_C_single_labels_mod} = \big(\mF^{abC}_A\big)_{c,ij}^{B,kl}, \notag\\
+    \inputtikz{PEPS_D_triple}&\equiv\inputtikz{PEPS_D_single_labels}=\big(\nF^{A\alpha\beta}_B\big)_{C,ij}^{\gamma,kl},\label{eq:TripleLineTensors}\\
+    \inputtikz{MPO_triple_mod}&\equiv\inputtikz{MPO_single_labels_mod}=\big(\rF^{aA\alpha}_D\big)_{C,ij}^{B,kl}.\notag
+\end{align}
+\endgroup
+注意在这些三线张量中，模范畴中的对象始终位于外侧的\emph{环圈}上。然后可以验证垂直穿透条件
+\begin{equation}\label{eq:IntertwinerVertical}
+    \inputtikz{MPOIntertwiner_3} =
+    \inputtikz{MPOIntertwiner_4}
+\end{equation}
+借助 \cref{eq:Pent4} 得到满足，而 \cref{eq:IntertwinerHorizontal} 等价于 \cref{eq:Pent3}。这些融合张量进而通过图 \cref{eq:MPOPentagon} 的旋转版本关联起来，该图涉及这些融合张量和 $\dF$-符号，等价于 \cref{eq:Pent2}。
+
+在上面考虑的示例 $\mc C=\Vect_G$、$\mc R=\Vect$ 中，融合范畴 $\mc D$ 为 $\Rep(G)$，其简单对象是群 $G$ 的不可约表示。对应的 $\dF$-符号等于 $G$ 的 6j-符号，而 $\nF$-符号等于 \emph{Clebsch-Gordan 系数}。这些 Clebsch-Gordan 系数将 MPO 张量 $u_\msf i(g)$ 分解为其不可约块，而这些块中的数据编码在 $\rF$ 中，其值由 $G$ 的不可约表示给出。在一般（非群）情形下，$\nF$-符号在下文将被解释为此处构造的 MPO 对称性的\emph{广义} Clebsch-Gordan 系数。与此同时，我们将把 \cref{eq:IntertwinerVertical} 解释为\emph{广义 Wigner-Eckart 定理}，表明 MPO 对称张量是由这些广义 Clebsch-Gordan 系数构建的。
+
+\bigskip\noindent 综上所述，展现出如下完整图像。给定由融合范畴 $\mc C$ 指定的对称性，可通过可逆 $(\mc C,\mc D)$-双模范畴 $\mc R$ 构造其 MPO 表示。该结构以五个 F-符号 $(F,\mF,\rF,\nF,\dF)$ 的形式编码结合子数据，它们满足六个五边形方程。双模结合子 $\rF$ 可用于构造融合范畴 $\mc C$ 的单射 MPO 表示，其张量在局域上通过分别求值为 $\mF$ 和 $\nF$ 的张量在水平方向 \cref{eq:IntertwinerHorizontal} 和垂直方向 \cref{eq:IntertwinerVertical} 融合。两者分别满足涉及 $F$ 和 $\dF$ 的重新耦合恒等式。
+
+\subsection{应用 1：弦网基态与交织算符（string-net ground states \& intertwiners）}\label{sec:SN}
+\emph{弦网（string-net）模型}最早由 Levin 和 Wen 在文献~\cite{Levin2004}中构造。它们构成了一类重整化群（RG）不动点点阵模型，其输入为一个（球形）融合范畴 $\mathcal{D}$，并实现由其 Drinfeld 中心 $\mc Z(\mc D)$ 给出的非手征拓扑序~\cite{Kirillov2011,Hu2015,Kawagoe2024}。这意味着，其基态与有能隙激发重现了编码在 $\mc Z(\mc D)$ 中的拓扑区和任意子统计。\footnote{等价地，它们可以被视为 Turaev--Viro--Barrett--Westbury 拓扑场论的哈密顿量实现~\cite{Turaev1992,Barrett1993,Kirillov2011}。}在 \cref{sec:QuantumDoubles} 中遇到的量子双重模型在选取 $\mc D=\Vect_G$ 时被重现。名称\emph{弦网}源于该模型描述有色弦的凝聚相这一解释，其中允许的弦类型及其相互作用编码在 $\mc D$ 中。哈密顿量是每个面元（plaquette）上的局域对易投影算符之和，从而可以直接导出其基态的 PEPS 表示。
+
+正如文献~\cite{Lootens2020}所示，对于输入 $\mc D$ 上的每一个模范畴 $\mc R$，都存在对应的基态 PEPS 表示。这一观察推广并统一了早期文献中隐含假定 regular 模范畴的情形~\cite{Verstraete2006b,Buerschaper2009,Gu2009,Williamson2017,Bultinck2017}，以及在量子双重模型的具体情形中选取 $\Vect$ 作为 $\Vect_G$ 上的模范畴的情形~\cite{Schuch2010}。从这个角度来看，弦网因而是一个具有特定类型\emph{虚拟}对称性的 PEPS。构成底层 Morita 对偶融合范畴 $\mathcal{C}$ 表示的 MPO 是其对称性，并且它们纯粹作用在张量网络的虚拟自由度上。根据上面讨论的广义 Wigner-Eckart 定理，PEPS 张量如 \cref{eq:TripleLineTensors} 中所示求值为 $\nF$，其物理层指标取值为 $(\alpha\beta\gamma,k)$。
+
+类似于 \cref{sec:QuantumDoubles}，不同的环面基态区和任意子激发（均由 $\mc Z(\mc D)$ 中的元素标记）可以通过\emph{管代数}（tube algebra）来理解。管代数是由 $\mc C$ 中的 MPO 构造的，其中心幂等元与 $\mc Z(\mc C)$ 中的元素一一对应~\cite{Williamson2017,Bultinck2017}。回顾由 $\mc R$ 的可逆性保证了 $\mc Z(\mc D)$ 与 $\mc Z(\mc C)$ 等价。事实上，如果我们考虑环面上的弦网，可以通过将上一节的 MPO 对称性缠绕在其不可收缩环路周围来获得不同的拓扑区。在它们的交叉点处，放置一个张量，其分量由中心幂等元决定。在弦网 PEPS 中插入与对象 $Z\in\mc Z(\mc C)$ 相关联的中心幂等元可以描绘为：
+\begin{equation}
+    \sum_{\substack{a_\alpha,b_\beta,c_\gamma\\i,j}} (\mc P_Z)_{a_\alpha,b_\beta,c_\gamma}^{i,j} \quad \inputtikz{String-net_PEPS} \,\, .
+\end{equation}
+请注意，紫色张量与 \cref{eq:IntertwinerVertical} 的融合张量重合，因此中心幂等元的具体位置是无法检测到的。在此，$a_\alpha$ 代表 $a_\alpha\equiv(a,\alpha)$，其中 $a$ 是 $\mc C$ 中的简单对象，$\alpha$ 标记 $a$ 在 $Z$ 中的重数。
+
+给定基于 $\mc R$ 的 PEPS 表示，可以通过一类实现模范畴变换的新 MPO \emph{交织算符}（intertwiner），在局域上将其转换为基于 $\mc R'$ 的表示。特别地，当 $\mc R'=\mc D$ 时，这些 MPO 交织算符由 $\mc R$ 中的对象标记，并由模结合子构造而成\footnote{\label{fn}在一般情况下，需要模范畴之间的\emph{（$\mc D$-）模函子}概念，它们组成记作 $\Fun_\mc D(\mc R,\mc R')$ 的范畴。值得注意的是，$\Fun_\mc D(\mc R,\mc R')$ 可以被赋予可逆 $(\mc D_\mc R^\star,\mc D_{\mc R'}^\star)$-双模范畴的结构。}。模范畴的改变暗示了这些不同 PEPS 表示的边缘哈密顿量之间的等价性。稍后在 \cref{sec:dualities} 中，我们将看到对应于不同表示 $\mc R,\mc R'$ 的边缘哈密顿量通过\emph{对偶变换}联系起来，或者等价地说，通过对其（部分）MPO 对称性实施 gauging 来联系。上述 MPO 交织算符充当了这些对偶模型之间的交织算符角色，并且在充分考虑边界条件时，可以被提升为等距算符（isometry）。
+
+此外，张量网络图像还可以用于显式构造弦网模型的\emph{有能隙边界}。这超出了本讲义的范围，我们建议读者参阅文献~\cite{Lootens2020}了解细节，但在此提一下，在该情形下模范畴同样作为标记不同边界条件的工具出现。总之，由 Kitaev 和 Kong 在文献~\cite{Kitaev2011}中发展的关于弦网畴壁与边界的完整图像，可以重新用张量网络语言表述，使得这些结构非常适合在计算机上进行模拟。
+
+\subsection{应用 2：经典配分函数作为奇异关联函数（strange correlators）}\label{sec:SC}
+掌握了弦网基态的张量网络表示之后，我们现在可以讨论一般 MPO 形式体系的第二个应用，即所谓的\emph{奇异关联函数}（strange correlator）构造。该构造最初出现在文献~\cite{You2013}中，作为一种通过考察矩阵元 $C(\vec r,\vec r') = \mel{\Omega}{\phi(\vec r)\phi(\vec r')}{\Psi}$ 来探测非平凡 SPT 相的诊断手段，其中 $\ket{\Psi}$ 是待考察的状态，$\phi$ 是局域可观测量，而 $\ket{\Omega}$ 表示精心挑选的短程纠缠平凡态。对于表现出 SPT 序的许多一维和二维态 $\ket{\Psi}$，已经证明量 $C(\vec r,\vec r')$ 要么随距离 $|\vec r -\vec r'|$ 代数衰减，要么收敛到一个常数。因此，该方法提供了根据体基态波函数识别 SPT 序的方法。
+
+这种构造的一个自然推广在于选择表现出本征拓扑序的状态 $\ket{\Psi}$。聚焦于二维非手征拓扑序的情形，我们因而可以通过 \cref{sec:SN} 的弦网基态与适当状态 $\ket{\Omega}$ 的重叠来构造奇异关联函数。这种方法由文献~\cite{Vanhove2018}开创。正如我们在上面所见，弦网基态的 PEPS 表示具有纯粹作用于虚拟能级的精确 MPO 对称性。因此，由这些状态构造的奇异关联函数继承了这些对称性，而与所选状态 $\ket{\Omega}$ 无关。然而，对于许多有趣的范例，$\ket{\Omega}$ 可以简单地选择为直积态。这样，很自然地将这种二维张量网络解释为带有拓扑缺陷线/对称性的\emph{经典统计模型}\footnote{然而请注意，取决于所选的 $\ket{\Omega}$，经典模型可能具有非正的 Boltzmann 权重，要求这些权重为正通常需要对状态 $\ket{\Omega}$ 进行微调。}的\emph{配分函数}。示意形式上，在 $\ket{\Omega}$ 为（均匀）直积态的情形下，配分函数采取如下形式：
+\begin{equation}
+    Z(\{\beta_i\}) := \braket{\Omega[\{\beta_i\}]}{\Psi}= \,\inputtikz{SC_1}= \,\inputtikz{SC_2}\,\, ,
+\end{equation}
+其中 $\{\beta_i\}_i$ 统指定义状态 $\ket{\Omega}$ 的参数，从而间接决定经典模型的 Boltzmann 权重。对于参数 $\{\beta_i\}_i$ 的适当取值，该配分函数实际上可以描述一个临界模型。在这种情况下，MPO 对称性可以解释为 CFT 连续拓扑缺陷在点阵上的遗存。因此，奇异关联函数构造提供了共形场论与拓扑场论之间对应关系的显式点阵表示，这种对应最初由 Witten~\cite{Witten1988}、Moore 和 Seiberg~\cite{Moore1988}构想，随后由 Fr\"ohlich、Fuchs、Runkel 和 Schweigert 在文献~\cite{Frohlich2004,Frohlich2006,Fuchs2002,Fuchs2003,Fuchs2004}中进一步发展。
+
+\paragraph{示例：硬六边形模型} 也许最简单的示例是基于六角点阵上的 Fibonacci 融合范畴的弦网模型。该融合范畴包含两个记作 $\{\mbb 1,\tau\}$ 的简单对象，唯一的非平凡融合规则为 $\tau\otimes\tau=\mbb 1\oplus\tau$。我们将考虑的奇异关联函数是一个直积态，它将弦网的所有物理自由度投影到对象 $\tau$ 上——或者更确切地说，在 \cref{eq:TripleLineTensors} 的记号中，投影到 $\phi\cdot(\tau\tau\tau, 1)$，其中 $\phi=\frac{1+\sqrt 5}{2}$ 是黄金比例。此时环圈上的自由度扮演了经典二元变量的角色，并受制于相邻环圈不能同时处于 $\mbb 1$ 态的约束。很自然地将该模型解释为面元上的经典粒子气体，使得标记为 $\mbb 1$ 的环圈表示相应面元上存在粒子，而 $\tau$ 表示其不存在。这一所谓的\emph{硬六边形}（hard hexagon）模型在 1980 年由 Baxter 极其出色地精确求解，并被证明展现出两个相态~\cite{Baxter1980}。对于较大的逸度值，该模型表现出有序相，其特征在于完全占据六角点阵面元的三个子点阵之一；而对于低逸度，气体是稀疏且均匀的。这些相态被逸度的一个临界值 $z_c$ 处的二阶相变所分隔，其标度极限由 $c=4/5$ 的极小 Potts 模型描述~\cite{DiFrancesco1997}。
+
+再次聚焦于奇异关联函数，构造配分函数的张量具有以下非零分量：
+\begin{equation}
+    \inputtikz{SCFib_1} = -1, \qquad \inputtikz{SCFib_2} = \phi^{5/6}.
+\end{equation}
+手头有了上述张量，随后很容易推导出配分函数可以写为
+\begin{equation}
+    Z = \sum_{n=0}^{N/3} z_c^n \ g(n,N),
+\end{equation}
+其中 $N$ 表示面元的总数，$g(n,N)$ 是组合因子，等于在服从上述约束的前提下在 $N$ 个面元中分布 $n$ 个粒子的方式总数~\cite{Fidkowski2009}。简单的代数计算表明 $z_c=\phi^{5}$，这恰好是硬六边形模型的临界逸度。因此，这个简单的奇异关联函数立即给出了临界逸度，而无需诉诸 Baxter 所采用的更为高深的方法。
+
+从转移矩阵中还可以提取有限尺寸 CFT 能谱。上文我们已经强调了管代数在获取量子双重与弦网模型的拓扑超选择区方面的重要作用。如文献~\cite{Petkova2000,Aasen2020,Vanhove2018}所详述，奇异关联函数的转移矩阵可以补充由对称融合范畴的对象所标记的对称扭曲边界条件。这些边界条件在拓扑意义下保持点阵平移对称性（在差一个幺正变换的意义下）。在它们存在的情况下，管代数可用于将转移矩阵的能谱分解为各个拓扑区。对于 Fibonacci 的情形，存在 4 个标记为 $0,\tau,\bar\tau,\tau\bar\tau$ 的区。其对应的能谱展示在文献~\cite{Vanhove2018}中，并在其中解释了与 Potts 极小模型的初级场的对应关系。
+
+\bigskip\noindent 在前一节中，我们论证了弦网基态的不同张量网络表示对应于输入融合范畴上的模范畴。巧合的是，对于本节的案例研究，我们并没有这种自由度。事实证明，模范畴的选择指定了环面上 CFT 的\emph{模不变性}（modular invariant）以及其在更高亏格曲面上的配分函数~\cite{Moore1988,DiFrancesco1997,Fuchs2002}。所谓的\emph{对角情形}对应于选择 regular 模范畴。改变该模范畴则被称为 \emph{orbifolding} 或 \emph{gauging}，在文献~\cite{Vanhove2021a}中进行了数值研究。
+
+\bigskip\noindent 关于使用奇异关联函数形式体系的临界配分函数的张量网络表示，存在大量文献。我们建议读者参阅文献~\cite{Freedman2011,Vanhove2018,Lootens2019,Brehm2021,Vanhove2021a,Vanhove2021b,Zeng2022,Ji2024,Shen2025,Hung2025}以获取更多案例研究、部分解析结果以及开边界条件和不可定向流形上的能谱。此外，在最近的工作中，提出了完全从纯拓扑数据构造临界（可积）奇异关联函数的系统方法~\cite{Fendley2020,Hung2025}。其吸引力是显而易见的：奇异关联函数形式体系提供了直接构造具有精确范畴缺陷的临界点阵系统的方法。拓扑部分（编码在弦网中）与几何部分（编码在重叠态 $\ket{\Omega}$ 中）完全分离，从而使理论中的异常变得非常清晰。核心挑战之一是构造对应于新 CFT 的临界点阵模型——Haagerup 临界点阵模型~\cite{Huang2021,Vanhove2021b,Hung2025}是这种理论的第一个可能范例。
+
+\subsection{应用 3：对偶性（dualities）}\label{sec:dualities}
+在上一节中，我们构造了具有 \cref{sec:MPORepresentationTheory} 中分类和构造的 MPO 对称性的二维经典配分函数。在最后一个应用中，我们将构造与这些对称性对易的 (1+1) 维哈密顿量，并研究其对偶性。在某种意义上，这些模型可以被视为 \cref{sec:SN} 中弦网的\emph{边缘哈密顿量}。
+
+\bigskip\noindent 对于群的局域单点表示情形，\emph{Clebsch-Gordan 系数}是对称张量的构建基石。事实上，\emph{Wigner-Eckart 定理}指出，对称张量可以分解为 Clebsch-Gordan 系数与\emph{约化矩阵元}的乘积。值得注意的是，后者仅依赖于不可约表示标签，而基态的耦合则完全由 Clebsch-Gordan 系数刻画~\cite{Eckart1930,Wigner1960}。这一结果不仅在微扰论和光谱学（通常在这些背景下引入它们）中处于核心地位，而且构成了对称张量网络算法的基石~\cite{Sanz2009,Singh2009,Weichselbaum2012,Singh2013,Lootens2024,Devos2025}。受到这一视角的启发，对于 MPO 对称性 $\mc C$ 的更一般情形，我们可以从 \cref{eq:IntertwinerVertical} 推导出一般的局域算符由融合张量构造如下：
+\begin{equation}\label{eq:LocalOp}
+    h_{\msf i,\msf i+1}^\mc R = h(\alpha,\alpha',\beta,\beta',\gamma,i,i')\inputtikz{MPOLocalOp}.
+\end{equation}
+在此，$h$ 是可以自由选取的复数，且可能依赖于所指出的标签。重要的是，这些系数与张量的内部虚拟指标无关，因此可以解释为约化矩阵元的推广。这些算符与 MPO 对称性的对易性源自
+\begin{equation}
+    \inputtikz{MPOLocalOp_1} =
+    \inputtikz{MPOLocalOp_2} = 
+    \inputtikz{MPOLocalOp_3} \,\, ,
+\end{equation}
+该式对 $\mc D$ 和 $\mc C$ 的所有指出简单对象均成立。由 \cref{eq:LocalOp} 出发，局域对称哈密顿量可构造为 $H=\sum_{\msf i} h_{\msf i,\msf i+1}^\mc R$。注意我们在此限制于两体算符，但通过取~\cref{eq:LocalOp} 的乘积同样可以容易地获得作用在更多格点上的对称算符。因此，局域算符的构造 \cref{eq:LocalOp} 将传统的 Wigner-Eckart 定理推广到了 MPO 对称性~\cite{Bridgeman2022}。
+
+到目前为止，我们隐式假定了无限长链。完全按照 \cref{sec:SC} 的思路，我们也可以在闭合周期边界条件和对称扭曲边界条件下定义这些哈密顿量~\cite{Petkova2000,Aasen2020,Lootens2022}。对于后者，在两个格点之间的键上引入了一个额外的自由度，并且穿过该键的局域哈密顿量项相应地被修改，详情参阅文献~\cite{Lootens2022}。包含对称扭曲边界条件的重要性将在下文变得明朗。
+
+\bigskip\noindent 为了说明表达式 \cref{eq:LocalOp}，考虑上文 \cref{eq:Heisenberg} 中遇到的自旋 1/2 反铁磁 Heisenberg 模型。通过调用（传统的）Wigner-Eckart 定理，局域哈密顿量项 $\vec{S}_\msf i \cdot \vec{S}_{\msf i+1}$ 可以从 ${\rm SU}(2)$ Clebsch-Gordan 系数构建。为了在当前框架中重新表述这一点，我们需要选择 $\mc D=\Rep({\rm SU}(2))$（${\rm SU}(2)$ 的表示范畴），并取 $\mc R=\Vect$。\footnote{严格来说，$\Rep({\rm SU}(2))$ 是张量范畴，而不是要求具有有限个简单对象的融合范畴。偏好更多数学严谨性的读者可以考虑将此形式体系应用于 ${\rm SU}(2)$ 的有限子群。}显式展开：
+\begin{equation}
+    \vec{S}_\msf i \cdot \vec{S}_{\msf i+1} = -\inputtikz{MPOLocalHamSU2} = \sum_{\substack{i,j\\i'\!,j'}} \CC{{\bf 2}}{{\bf 2}}{{\bf 0}}{i'}{j'}{1} \CC{{\bf 2}}{{\bf 2}}{{\bf 0}}{i}{j}{1} \,\, |i',j'\rangle\langle i,j|,
+\end{equation}
+相差一个加性常数。这里，${\bf 2}$ 和 ${\bf 0}$ 分别表示 ${\rm SU}(2)$ 的二重态和单态，而 $\CC{{\bf 2}}{{\bf 2}}{{\bf 0}}{\bullet}{\bullet}{1}$ 代表关联于
+\begin{equation}
+    \CC{{\bf 2}}{{\bf 2}}{{\bf 0}}{\bullet}{\bullet}{1} : {\bf 2} \otimes {\bf 2} \rightarrow {\bf 0}: \ket{i}\otimes\ket{j} = \CC{{\bf 2}}{{\bf 2}}{{\bf 0}}{i}{j}{1} \ket{1},
+\end{equation}
+的（实数）Clebsch-Gordan 系数，其中 $i,j,1$ 表示相应基础表示空间的基向量。因此，该哈密顿量项本质上将两个相邻的自旋 1/2 投影到单态表示上，而在张量积 $\frac{1}{2}\otimes\frac{1}{2}$ 中出现的自旋 1 表示被选定的参数 $h$ 赋予了零权重。
+
+\bigskip\noindent 让我们考虑所有局域对称算符 \eqref{eq:LocalOp} 的集合，以及它们的有限乘积和线性组合。这构成了一个代数——有时被称为\emph{键代数}（bond algebra）~\cite{Cobanera2009,Cobanera2011,Moradi2022,Moradi2023,Jones2024}——由算符基 $\{h_A^\mc R\}$ 的结构常数决定：
+\begin{equation}
+    h_A^\mc R h_B^\mc R  = \sum_C f_{AB}^C(\dF) h_C^\mc R .
+\end{equation}
+至关重要的是，\emph{结构常数} $f_{AB}^C(\dF)$ 仅依赖于融合范畴 $\mathcal{D}$ 的结合子 $\dF$，也就是说，它们完全独立于模范畴 $\mathcal{R}$ 的选择。特别地，该观察意味着哈密顿量的能谱（在不计简并度的情况下）也与 $\mc R$ 无关。对于固定的 $\mc D$ 和 \cref{eq:LocalOp} 中系数 $h$ 的选择，改变模范畴 $\mc R\rightarrow\mc R'$ 归结为一次\emph{对偶变换}（duality transformation）。因此，$\mc D$ 上的不同模范畴（或等价地对称性范畴 $\mc C$）组织了一个庞大的对偶性网络。尽管这一框架看似抽象，但大多数具有物理意义的对偶性（包括 Kramers-Wannier 对偶、Kennedy-Tasaki 对偶和 Jordan-Wigner 变换）都自然地融入其中，正如后文进一步阐明的。在整篇讨论中，我们经常将感兴趣的（虚构）模型称为\emph{原始}模型，并将其与它的\emph{对偶}模型进行比较。对偶模型在以下几个方面可能看起来与原始模型大不相同。
+
+如上所述，如果 $\mc R$ 拥有多于一个简单对象，局域对称算符 \cref{eq:LocalOp} 及其 MPO 对称性通常作用在受约束的希尔伯特空间上。因此，一个模型的希尔伯特空间通常与其任意对偶模型的希尔伯特空间完全不同，它们的维数甚至不必匹配。这与此处考虑的这类对偶性可以通过对原始 MPO 对称性的（部分）实施 gauging 来实现密切相关，从而受约束的希尔伯特空间作为（部分）所施加的 Gauss 约束被化解的\emph{有效}希尔伯特空间出现~\cite{Haegeman2014a,Bhardwaj2017,Seifnashri2025,Vancraeynest2025b}。因此，不同对偶模型的全局对称性通常也不同，因为它们分别编码在 $\mc D^\star_\mc R$ 和 $\mc D^\star_{\mc R'}$ 中。换句话说，给定初始对称性和对偶变换，对偶对称性完全被确定。模型之间存在对偶性还意味着一个理论中的每个可观测量都等价于对偶理论中的一个\emph{对偶}可观测量。然而，只有该理论中的\emph{对称}局域可观测量才被映射到对偶理论中的对偶局域对称算符，而带荷算符（例如局域序参量）则被映射到非局域的\emph{弦序参量}（string order parameter）。
+
+张量网络处理对偶性的一大亮点在于，我们可以用（非可逆）矩阵乘积算符构建对偶模型之间显式的\emph{交织算符}（intertwiner）~\cite{Lootens2021b}。在哈密顿量项的层面上，它们的作用遵循：
+\begin{equation}\label{eq:DualInter}
+    h_{\msf i,\msf i+1}^{\mc R'} \circ D = D\circ h^{\mc R}_{\msf i,\msf i+1},
+\end{equation}
+由此可知，用 $D$ 作用在 $H^\mc R$ 的本征态上，将导致具有完全相同能量的 $H^{\mc R'}$ 的本征态。
+
+正如文献~\cite{Lootens2021b}中所证明的，这样的交织算符仅依赖于范畴 $\mc D,\mc R$ 和 $\mc R'$，而不依赖于所研究的具体模型。事实上，这些 MPO 交织算符正是 \cref{sec:SN} 中提到的将与模范畴 $\mc R,\mc R'$ 相关联的 $\mc D$ 弦网模型的不同 PEPS 表示相互转换的 MPO 交织算符。
+
+\cref{eq:DualInter} 的另一个推论是，给定一个交织算符 $D$，我们可以将 $D$ 从\emph{右侧}乘以初始对称性 $\mc C=\mc D^\star_\mc R$ 的对称算符，并从\emph{左侧}乘以 $\mc D^\star_\mc R$ 中的对偶对称算符。这样，不同的交织算符自身组织在原始对称性范畴与对偶对称性范畴之间的可逆双模范畴（我们将记作 $\mc M$）中。由于 $\mc D^\star_{\mc R'} =\mc C^\star_\mc M$，该构造是自洽的。\footnote{这源于 \cref{fn} 中的观察，即对偶算符由组织在 $\Fun_\mc D(\mc R,\mc R')$ 中的 $\mc D$-模函子标记。}
+
+对于一对对偶模型，我们可以将这些结构汇集在如下三角形图中：
+\begin{equation}
+    \inputtikz{TriangleDiagram_1}.
+\end{equation}
+在此图中，每个顶点代表一个融合范畴。顶部的顶点——$\mc D$——编码由局域对称算符生成的键代数，而另外两个顶点——$\mc D_\mc R^\star$ 和 $\mc D_{\mc R'}^\star$——编码全局对称性。连接的边代表可逆双模范畴。对角线上的两条边对应于 $\mc R$ 和 $\mc R'$，编码任一模型的自由度。底部的边——$\mc M$——编码 MPO 交织算符。
+
+$\mc R$ 与 $\mc R'$ 的可逆性特别保证了原始对称性 $\mc D_\mc R^\star$ 与对偶对称性 $\mc D_{\mc R'}^\star$ 的 Drinfeld 中心是等价的。在此背景下，Drinfeld 中心中的对象标记理论的\emph{拓扑区}。这些区对应于一个边界条件（破缺了部分对称性）连同幸存对称性的对称荷。通过仔细研究对偶算符与这些区之间的相互作用，非可逆对偶算符可以被提升为幺正算符~\cite{Lootens2022}。在对偶变换下，拓扑区通常发生置换，正如 Kramers-Wannier 对偶所示。
+
+\paragraph{示例：Kramers-Wannier 对偶} 让我们展示该形式体系如何重现横场 Ising 模型~\cref{eq:TFIM} 著名的 Kramers-Wannier（KW）对偶~\cite{Kramers1941}。为此，考虑哈密顿量
+\begin{equation}\label{eq:TFIM_per}
+    H_{\rm TFIM}^{\Vect_{\mbb Z_2}} = -\sum_{\msf i=1}^{L} \sigma^Z_{\msf i}\sigma^Z_{\msf i+1} - \lambda\sum_{\msf i=1}^L \sigma^X_{\msf i},
+\end{equation}
+采用周期性边界条件，即 $L+1\equiv 1$。该哈密顿量显然与由 $\prod_\msf i \sigma^X_\msf i$ 生成的 $\mbb Z_2$ 对称性对易。键代数对应于融合范畴 $\mc D=\Vect_{\mbb Z_2}$，模范畴为 $\mc R=\Vect_{\mbb Z_2}$。Kramers-Wannier 对偶可以被看作是对 $\mbb Z_2$ 对称性实施 gauging，或者更抽象地说是改变模范畴 $\mc R=\Vect_{\mbb Z_2}\rightarrow\mc R'=\Vect$，对应于 $\mc M=\Vect$。（唯一的）对偶 MPO 可以描绘为：
+\begin{equation}\label{eq:KW_MPO_per}
+    D_{\rm KW} = \inputtikz{KW_MPO_per}\,\,,
+\end{equation}
+其中我们用虚线显式指明了周期性边界条件，在此处和下文中用{\color{BlueViolet}紫色}描绘对偶 MPO。注意两侧的物理腿平移了半个格点。我们再次强调，该对偶 MPO 对每个具有 $\mbb Z_2$ 对称性的模型都是相同的，因而并非特定于 Ising 模型。
+
+MPO 张量是在 $\sigma^Z$ 和 $\sigma^X$ 本征基下的 GHZ 张量，显式读作：
+\begin{equation}
+    \raisebox{5pt}{\inputtikz{KW_tensor_1_a}} = \ket{000} + \ket{111},\qquad \raisebox{5pt}{\inputtikz{KW_tensor_2}} = \ket{+\!+\!+} + \ket{-\!-\!-}\,\,.
+\end{equation}
+交织算符的所有（全局）性质均可从这些局域张量的对称性质中推导出来。特别地，注意到第一个张量在任意两条腿上用 $\sigma^Z$ 作用，以及在所有腿上同时用 $\sigma^X$ 作用下是不变的：
+\begin{equation}
+\begin{gathered}
+    \raisebox{5pt}{\inputtikz{KW_tensor_1_a}} = \raisebox{7pt}{\inputtikz{KW_tensor_1_c}} =\\  \inputtikz{KW_tensor_1_e} = \inputtikz{KW_tensor_1_d} = \inputtikz{KW_tensor_1_b}
+\end{gathered}\,\,.
+\end{equation}
+第二个张量具有相同的对称性，只需互换 $\sigma^Z$ 和 $\sigma^X$。因此，该 MPO 按照如下规则映射局域哈密顿量项：
+\begin{equation}\label{eq:KW_mapping}
+    \sigma^Z_{\msf i}\sigma^Z_{\msf i+1} \rightarrow \sigma^Z_{\msf i+\frac{1}{2}}, \quad
+    \sigma_\msf i^X \rightarrow \sigma^X_{\msf i-\frac{1}{2}}\sigma^X_{\msf i+\frac{1}{2}},
+\end{equation}
+从而对偶哈密顿量为
+\begin{equation}\label{eq:TFIM_dual}
+    H_{\rm TFIM}^{\Vect} = -\sum_{\msf i=1}^{L} \sigma^Z_{\msf i+\frac{1}{2}} - \lambda\sum_{\msf i=1}^L \sigma^X_{\msf i-\frac{1}{2}}\sigma^X_{\msf i+\frac{1}{2}}.
+\end{equation}
+该哈密顿量具有由 $\prod_\msf i \sigma^Z_{\msf i+1/2}$ 生成的对称性，对应于对称性范畴 $\Rep(\mbb Z_2)=(\Vect_{\mbb Z_2})_\Vect^\star$，符合该框架的预测。映射 \cref{eq:KW_mapping} 还表明原始模型中的序参量被映射到对偶模型中的无序参量，反之亦然：
+\begin{equation}
+    \sigma^Z_\msf i \sigma^Z_\msf j \rightarrow \prod_{\msf k=\msf i}^{\msf j-1}\sigma^Z_{\msf k+\frac{1}{2}},\quad  \prod_{\msf k=\msf i}^{\msf j} \sigma^X_\msf k \rightarrow \sigma^X_{\msf i-\frac{1}{2}} \sigma^X_{\msf j+\frac{1}{2}}.
+\end{equation}
+
+MPO \cref{eq:KW_MPO_per} 具有一个零空间，包含所有 $\mbb Z_2$ 奇宇称态：$\prod_\msf i\sigma_\msf i^X\ket{\Psi}=-\ket{\Psi}$。类似地，其像空间仅由在对偶对称性下为偶宇称的状态组成。为了在任一模型中访问非平凡的荷区，我们需要调整 MPO 以适应所有对称扭曲边界条件。对于当前情况，这归结为周期性或反周期性边界条件。在哈密顿量层面上，改变边界条件归结为翻转其中一个最近邻相互作用项的正负号，习惯上选取格点 $L$ 和 $1$ 之间的项。
+
+在指定了原始模型的边界条件和荷区之后，对偶模型的拓扑区由 \cref{tab:KW} 中的映射给出~\cite{BenTov2014,Radicevic2018,Li2023,Lootens2022}。等价地，在指定了两个模型中的边界条件之后，可访问的荷区被完全确定。特别请注意拓扑区的置换：在 KW 对偶下，边界条件和荷区本质上发生了互换。对于这些区中的每一个，都存在如下形式的相应 MPO 交织算符：
+\begin{equation}
+    \inputtikz{KW_MPO_bc}\,\,,
+\end{equation}
+其中 $\alpha$ 是矩阵 $\{\mbb 1,\sigma^X,\sigma^Y,\sigma^Z\}$ 之一的占位符，亦如 \cref{tab:KW} 所示。
+\begin{table}[htb]
+    \centering
+    \begin{tabular}{cc||cc||c}
+        \shortstack{边界\\条件} & \shortstack{荷\\区} & \shortstack{对偶边界\\条件} & \shortstack{对偶荷\\区} & \shortstack{边界\\矩阵} \\
+        \hline
+        P & $+1$ & P & $+1$ & $\mbb 1$\\
+        P & $-1$& AP & $+1$ & $\sigma^Z$\\
+        AP & $+1$ & P & $-1$ & $\sigma^X$\\
+        AP & $-1$ & AP & $-1$ & $\sigma^Y$
+    \end{tabular}.
+    \caption{Kramers-Wannier 对偶下拓扑区的映射。此处，\emph{(A)P} 代表\emph{（反）周期性}。}
+    \label{tab:KW}
+\end{table}
+
+\bigskip\noindent 注意当 $0\leq \lambda <1$ 时，原始模型 \cref{eq:TFIM_per} 处于对称破缺相，而当 $\lambda>1$ 时处于对称相；在 Kramers-Wannier 对偶下，这些相在对偶模型中发生了互换。反转这一逻辑，对于磁场强度 $\lambda$ 的任意取值，总存在一个模型（\cref{eq:TFIM_per} 或 \cref{eq:TFIM_dual}）是（完全）对称破缺的。我们可以推测这一观察普遍成立：通过适当的对偶映射，每个相都可以被映射到相对于对偶对称性完全对称破缺的相。Kennedy-Tasaki 对偶的例子为这一推测提供了进一步的证据。
+
+\paragraph{示例：Kennedy-Tasaki 对偶} \emph{Kennedy-Tasaki}（KT）对偶最初被设计用来阐明自旋 1 反铁磁 Heisenberg 模型的基态物理，该模型现在被理解为展现出非平凡的 $\ZtZt$ SPT 序。该对偶作为开链上 Heisenberg 模型与自发破缺 $\ZtZt$ 对称性模型之间的非幺正映射被引入~\cite{Kennedy1992,Oshikawa1992}。最近，它已根据 $\ZtZt$ 对称性的扭曲 gauging 得到了重新解释~\cite{Lootens2021b,Li2023,ParayilMana2024,Seifnashri2024,Vancraeynest2025a}。等价地，这被描述为输入 $\Vect_{\ZtZt}$ 上的模范畴改变 $\mc R=\Vect\rightarrow\mc R'=\Vect^\psi$，其中 $\psi$ 是 $\ZtZt$ 的非平凡 2-上循环。因此，更准确的理解是将该对称性视为由 $\Rep(\ZtZt)$ 中的特征标标记，该范畴作为融合范畴等价于 $\Vect_{\ZtZt}$。可以证明 $\mc M=\Rep^\psi(\ZtZt)$，因此给定 $\ZtZt$ 的 $\psi$-射影表示 $\pi$，MPO 由具有如下分量的张量构造：
+\begin{equation}\label{eq:KT_MPO}
+    \inputtikz{KT_MPO} = \delta_{g,h} \pi(g)_{\alpha\beta}.
+\end{equation}
+长期以来，如何将 KT 从开链推广到闭链一直不甚明确。MPO 框架提供了一个清晰的答案：只需取 MPO 的迹即可将其定义在周期性边界条件上。此外，通过为 MPO \cref{eq:KT_MPO} 选择合适的边界条件，可得到开链上的原始 KT 变换。注意 MPO 张量在其物理腿上是对角的，因此 KT 不改变荷区，而只是置换边界条件。
+
+在此我们不将其应用于 Heisenberg 模型，而是聚焦于 AKLT 态 \cref{eq:AKLTState}，它也是一个非平凡的 $\ZtZt$ SPT。回顾 AKLT 态可以表示为矩阵为 $A^i = \sigma^i/\sqrt 3$ 的 MPS。为明确起见，如果我们取通过 $\pi((a,b))=(\sigma^X)^a(\sigma^Z)^b$ 定义的射影表示，我们发现用该对偶作用在 AKLT 态上将给出一个矩阵为 $A^i=\sigma^i\otimes\sigma^i$ 的 MPS。该 MPS 显然是可约的，因为所有 MPS 矩阵都对易。事实上，利用 gauge 变换
+\begin{equation}
+    U = \frac{1}{\sqrt 2}
+    \begin{pmatrix}
+    1 & 0 & 0 & 1\\
+    0 & 1 & 1 & 0 \\
+    0 & 1 & -1 & 0 \\    
+    1 & 0 & 0 & -1
+    \end{pmatrix},
+\end{equation}
+该 MPS 可以约化为四个直积态之和：
+\begin{equation}
+\begin{split}
+    U(\sigma^X\otimes\sigma^X)U^\dagger &= {\rm diag}(1,1,-1,-1), \\
+    U(\sigma^Y\otimes\sigma^Y)U^\dagger &= {\rm diag}(-1,1,-1,1), \\
+    U(\sigma^Z\otimes\sigma^Z)U^\dagger &= {\rm diag}(1,-1,-1,1).
+\end{split}
+\end{equation}
+这说明对偶算符完全负责 AKLT 态二重简并的纠缠谱。反过来，通过用对偶算符作用在 AKLT 态上（或任何其他 $\ZtZt$ SPT 上），我们可以消除纠缠谱的简并。如下所述，这种观察可以转化为我们的优势。
+
+类比于 KW 的例子，现在可以定义四个对称扭曲边界条件，对应于 $\ZtZt$ 的每个元素。我们请读者参阅文献~\cite{Li2023,Vancraeynest2025a}了解详细讨论。如其中所示，正如预期的那样，荷区被恒等映射，但是根据荷区，边界条件相互置换。
+
+\bigskip\noindent 似乎总是存在唯一的对偶变换将一个模型映射到完全对称破缺的对偶模型，这一观察启示了模范畴与范畴对称有能隙物态之间的一一对应。事实上，这恰好是\emph{广义 Landau 范式}的核心内容。给定对称性 $\mc C$，有能隙物态与 $\mc C$-模范畴 $\mc P$ 一一对应~\cite{Thorngren2019,GarreRubio2022,Lootens2024}。该模范畴 $\mc P$ 既编码了基态 MPS 的不同基态或单射块（对应于其简单对象），又编码了 $\mc C$ 在基态子空间上的作用（通过模作用）。通过利用 parent Hamiltonian 构造，广义 Landau 范式在文献~\cite{GarreRubio2022}中于 MPS 框架下被显式建立。在此背景下，regular 模范畴 $\mc P=\mc C$ 代表完全对称破缺相，其中基态与对称算符一一双射。正如在第~\ref{sec:PhasesOfMatter}讲中已预示的那样，这推广了群对称性的情形，其中模范畴与物态均由配对 ($H\subseteq G,\psi$)，$[\psi]\in H^2(H,\rU(1))$ 所表征。
+
+将广义 Landau 范式与对偶性框架相结合具有深远的影响。首先，注意到对称破缺相是唯一保证存在的有能隙相。\footnote{对于某些对称范畴，例如 $\mc C=\Fib$，它甚至是唯一的有能隙相。}事实上，完全对称相的存在等价于对称性是无反常的，因而完全可被 gauge。将两者相互转换的相应对偶算符的作用实际上是对对称破缺基态取平均~\cite{Lootens2024,Vancraeynest2025b}。令人着迷的是，从这个角度看，任何连续相变都可以被解释为一侧完全对称破缺相与另一侧（部分）对称相之间的转变。
+
+值得注意的是，对称破缺对偶模型使基态纠缠熵最小化。这可以在 DMRG 算法中加以利用，因此对称破缺模型可以被称为\emph{最优}（对偶）模型。事实上，如 \cref{sec:SPT1d} 所示，纠缠谱可以表现出简并性，这是因为纠缠自由度在（射影）虚拟对称性的多重态中变换。在此情况下，基态的 MPS 描述中存在冗余：计算资源被消耗在微调某些变分参数以重现这些谱上。因此，模拟最大程度破缺（对偶）对称性以使得不再存在简并的最优对偶模型是有利的。反过来，原始模型的基态随后通过用对偶算符作用来获得，该算符恢复纠缠谱中的简并。文献~\cite{Lootens2024}中开展了一个案例研究，并证明了该方法的优越性。
+
+确定了最优对偶模型还为任意有能隙相 $\mc P$ 中的初级激发提供了统一的视角。我们现在保留记号 $\mc Q$ 来表示对应于最优模型的关于 $\mc D$ 的右模范畴。正如在 \cref{sec:Excitations} 中所论证的，在这个最优且因此对称破缺相 $\mc D^\star_\mc Q$ 中的初级激发是拓扑畴壁激发。回顾在无限长链极限下，此类激发是通过用 $\mc D^\star_\mc Q$ 中的对称 MPO 作用在半条链上产生的，而其变分自由度编码在其端点处的张量中。在此情况下，准粒子激发组织在一个融合范畴 $\mc E$ 中，该范畴与对称性范畴重合，即 $\mc E=\mc D_\mc Q^\star$。给定此最优模型，其畴壁激发可以反过来映射回原始模型的激发，而后者的激发通常具有完全不同的性质，例如 Heisenberg 模型中的磁振子（magnon）激发（见 \cref{sec:magnon}）。这一情况描述如下：
+\begin{equation}\label{eq:duality_excit}
+    \inputtikz{Duality_excit} \,\, .
+\end{equation}
+在此，蓝色 MPO 代表对偶算符——巧合地由 $\mc P$ 中的一个对象标记——位于对应于 $\mc Q$ 的最优模型与感兴趣的模型 $\mc R$ 之间，如标签框所指示。畴壁激发随后描绘在底部，并由张量 $B$ 参数化，类似于 \cref{sec:Excitations}。注意该张量带有一个终止于对偶算符上的荷 $e\in\mc E$。此图像还揭示了 $\mc Q$ 的标签捕获了感兴趣基态的\emph{纠缠自由度}。
+
+通过这种方式，最优对偶模型的畴壁激发为所有其对偶模型的激发提供了不变的刻画。任意模型中的基本激发都可以全部根据 \cref{eq:duality_excit} 进行参数化。
+
+综合起来，这些与准粒子激发和模型相态相关的结构被封装在如下三角形图中，该图重现自文献~\cite{Lootens2024}：
+\begin{equation}
+    \inputtikz{TriangleDiagram_2}.
+\end{equation}
+
+\subsection{第 5 讲概要（Synopsis of lecture V）}
+第 5 讲可以被看作是前面各讲的集大成：我们遇到了基本定理、MPO 代数、范畴论、对称破缺以及弦网模型。从张量网络的角度来看，拓扑序系统在其纠缠自由度中表现出对称破缺。这些对称性由构成\emph{融合范畴}表示的 MPO 代数描述。
+
+一方面，这些对称性描述了弦网中的长程纠缠结构，而弦网本身很容易用张量网络表示。作为应用，我们引入了\emph{奇异关联函数}的概念。该方案通过一个由弦网与无特征短程纠缠态的重叠所构成的显式全息构造，将拓扑场论的点阵表示与共形场论联系起来。弦网的 MPO 对称性随后成为 CFT 中的拓扑缺陷，从而为 Fr\"ohlich-Fuchs-Runkel-Schweigert 关于 CFT 中拓扑缺陷的刻画提供了显式的点阵实现。
+
+相同的 MPO 代数还描述了支配这些 (2+1) 维系统边缘模物理的有效哈密顿量的对称性。在一个令人着迷的转折中，这些对称性可以被表示的不同方式——在技术上用双模范畴描述——导出了一个完整的宏伟图像，即通过一组交织 MPO 来定义所有可能的边缘哈密顿量之间的对偶性。该构造最引人入胜的物理推论之一在于，每一个一维物态都对偶于一个（相对于对偶对称性）完全对称破缺的相。值得注意的是，无论该一维系统是定义在具有局域单点对称性的张量积结构上，还是定义在具有范畴非可逆对称性的受约束希尔伯特空间上，这一结论均成立。除其他意义之外，这意味着此类一维系统的每一个可能的二阶相变都等价于向完全对称破缺相的转变。
+
+在这些讲义中，我们尚未涉及 MPO 对称性与 MPO 交织算符的高维版本。有趣的是，在更高维度中，对称性可以作用在点阵不同维度的自由可形变子流形上~\cite{Batista2004,Nussinov2006,Nussinov2009,Gaiotto2014,Freed2022,Lin2022,Roumpedakis2022,McGreevy2022}。这些\emph{高阶形式对称性}（higher-form symmetry）同样自然地用张量网络表示。在 (2+1) 维情形下，面算符用投影纠缠对算符（PEPO）实现，而位于 PEPO 之间界面上的 1-形式对称性则自然地由 MPO 描述。总体而言，该对称性结构及其重新耦合理论被封装在\emph{融合 2-范畴}（fusion 2-category）中~\cite{Douglas2018,Decoppet2024}。类似于一维情形，在点阵上表示融合 2-范畴对称性的不同方式由\emph{模 2-范畴}（module 2-category）分类~\cite{Decoppet2021,Delcamp2021}。
+
+正如文献~\cite{Haegeman2014a}中所开创的，(2+1) 维点阵系统中的对偶性同样可以在点阵上由 PEPO 实现。基于这一张量网络方法，人们在理解高阶范畴对称性及其对偶性方面取得了重大进展~\cite{Delcamp2021,Delcamp2023,Inamura2023,Inamura2025,Eck2025,Vancraeynest2024,Vancraeynest2025a}。尽管取得了这些最新进展，仍有大量有趣的开放研究方向有待探索。
+
+进一步的研究方向包括在该范畴框架中纳入连续对称性。正如文献~\cite{Lootens2024}中所述，\emph{Schur-Weyl 对偶}与用于描述对偶性的 MPO 框架完全兼容。它将具有连续 ${\rm SU}(N)$ 对称性的理论映射为具有离散 $\Rep({\rm SU}(N))$ 对称性的理论。由于 Mermin-Wagner 定理不再适用于后者，对偶映射可用于规避该定理。因此，Schur-Weyl 对偶映射交换了对称相和对称破缺相，从而使该对偶理论的 DMRG 模拟效率大幅提升。

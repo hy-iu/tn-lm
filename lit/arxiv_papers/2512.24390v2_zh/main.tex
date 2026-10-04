@@ -1,0 +1,94 @@
+\documentclass{SciPost}
+
+\binoppenalty=10000
+\relpenalty=10000
+
+\hypersetup{
+    colorlinks,
+    linkcolor={red!50!black},
+    citecolor={blue!50!black},
+    urlcolor={blue!80!black}
+}
+
+\usepackage[bitstream-charter]{mathdesign}
+\urlstyle{same}
+
+\DeclareSymbolFont{usualmathcal}{OMS}{cmsy}{m}{n}
+\DeclareSymbolFontAlphabet{\mathcal}{usualmathcal}
+
+\fancypagestyle{SPstyle}{
+\fancyhf{}
+\lhead{\colorbox{scipostblue}{\bf \color{white} ~SciPost Physics Lecture Notes }}
+\rhead{{\bf \color{scipostdeepblue} ~Submission }}
+\renewcommand{\headrulewidth}{1pt}
+\fancyfoot[C]{\textbf{\thepage}}
+}
+
+\input{_preamb}
+\input{_tikz_setup}
+
+% \usetikzlibrary{external}
+% \tikzexternalize[prefix=cache/]
+% \tikzexternalize
+
+\title{张量网络讲义（Les Houches Lecture Notes on Tensor Networks）}
+
+\begin{document}
+
+\pagestyle{SPstyle}
+
+\begin{center}{\Large \textbf{\color{scipostdeepblue}{
+张量网络讲义（Les Houches Lecture Notes on Tensor Networks）
+}}}\end{center}
+
+\begin{center}\textbf{
+Bram Vancraeynest-De Cuiper\textsuperscript{1$\star$},
+Weronika Wiesiolek\textsuperscript{2} and
+Frank Verstraete\textsuperscript{1,2$\dagger$}
+}\end{center}
+
+\begin{center}
+{\bf 1} Department of Physics and Astronomy, Ghent University, Krijgslaan 299, 9000 Gent, Belgium
+\\
+{\bf 2} Department of Applied Mathematics and Theoretical Physics, University of Cambridge,
+Wilberforce Road, Cambridge, CB3 0WA, United Kingdom
+\\[\baselineskip]
+$\star$ \href{mailto:Bram.VancraeynestDeCuiper@UGent.be}{\small Bram.VancraeynestDeCuiper@UGent.be}\,,\quad
+$\dagger$ \href{mailto:fv285@cam.ac.uk}{\small fv285@cam.ac.uk}
+\end{center}
+
+\section*{\color{scipostdeepblue}{摘要}}
+\textbf{\boldmath{张量网络为分类与模拟量子物质的关联相及拓扑相（topological phases）提供了一个强大的全新框架。其核心前提是：通过研究强关联物质底层的纠缠（entanglement）结构及其伴随的（广义）对称性（generalised symmetries），能够对强关联物质获得最佳理解。从本质上讲，张量网络为强关联系统中复杂的真空涨落提供了一种压缩的全息（holographic）描述，由此打破了臭名昭著的多体指数墙（exponential wall）。本讲义简要概述了该理论最重要的概念、计算与数学方面。
+}}
+
+\vspace{\baselineskip}
+
+\vspace{10pt}
+\noindent\rule{\textwidth}{1pt}
+\tableofcontents
+\noindent\rule{\textwidth}{1pt}
+\vspace{10pt}
+
+\input{_Intro}
+\input{_Lecture_1}
+\newpage\input{_Lecture_2}
+\newpage\input{_Lecture_3}
+\newpage\input{_Lecture_4}
+\newpage\input{_Lecture_5}
+
+\section*{致谢（Acknowledgements）}
+我们衷心感谢组织者 Stephane Ouvry、Tomaž Prosen、Didina Serban 与 Masahito Yamazaki 成功举办了 2025 年 Les Houches 暑期学校 \emph{Exact Solvability and Quantum Information} 这一精彩盛会。此外，我们感谢 Dante Bosgoed、Lander Burgelman、Boris De Vos、Jutho Haegeman、Laurens Lootens、Anton Martin、Zohar Nussinov、Alex Turzillo 以及 Vic Vander Linden 对手稿提出的富有建设性的宝贵意见。
+
+\paragraph{资助信息（Funding information）}
+我们鸣谢英国研究与创新署（UKRI）资助项目 EP/Z003342/1、BOF-GOA（项目号 BOF23/GOA/021）、EOS（项目号 40007526）、IBOF（项目号 IBOF23/064），以及法兰德斯研究基金会（FWO）授予 BVDC 的博士奖学金（项目号 11O2423N）。
+
+\begin{appendix}
+\numberwithin{equation}{section}
+
+\newpage\input{_App_Cohomology}
+\newpage\input{_App_Cat}
+
+\end{appendix}
+\bibliography{refs.bib}
+
+\end{document}

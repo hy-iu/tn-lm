@@ -1,0 +1,14 @@
+\begin{tikzpicture}[baseline=(current bounding box.center)]
+	\def\l{.8};
+    \def\h{.65};
+
+    \draw[obj3] (-\l,0) -- (\l,0);
+    \draw[obj1] (0,0) -- (0,-\h);
+    
+    \draw[obj1] (0,0) -- (0,-\h);
+    \node[mpotensor, inner sep=3.6pt] at (0,0) {};
+
+    % \node[anchor=east] at (-\l,0) {$\sss\sigma^Z$};
+    \node[anchor=west] at (\l,0) {$\sss\sigma^Z$};
+    \node[anchor=north] at (0,-\h) {$\sss\sigma^Z$};
+\end{tikzpicture}

@@ -1,0 +1,143 @@
+ 在上图中可以看到，尺寸同为 $R$ 的两条腿相互连接。这与矩阵乘法相一致：矩阵乘法就是对维度相同的指标求和。最后，由于所得的图有两条自由腿，它表示一个矩阵。这里的最终对象是一个矩阵，而矩阵可以用单个节点表示，这说明在张量网络中节点可以被合并：
+$$
+\Ab\Bb =\Mb \Leftrightarrow 
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (A) at (\x,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!50!white] (B) at (\x+1,\y){\scalebox{0.85}{$\Bb$}};
+    \draw[edge] (A) -- (B) node [above,midway] {\scalebox{0.7}{\dimcolor{$R$}}};
+    \draw[edge] (\x-0.25,\y) -- (\x-0.75,\y)  node [midway, above] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (\x+1.25,\y) -- (\x+1.75,\y)  node [midway,above] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \node[draw=none] () at (\x+2,\y) {\scalebox{1}{\textcolor{black}{$=$}}};
+    \node[tensor,fill=blue!30!red!20!white] (M) at (\x+3,\y){\scalebox{0.85}{$\Mb$}};
+    \draw[edge] (M) -- (\x+3.75,\y)  node [midway,above] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (M) -- (\x+2.25,\y)  node [midway,above] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \end{tikzpicture}.
+$$
+矩阵之间的收缩可以直接推广到矩阵与向量、张量与矩阵、张量与矩阵及向量的收缩等情形。下面给出若干张量网络例子及其对应的数学表达式：
+\begin{align}\label{eq:matvec}
+\Ab\in\RR^{d_1\times R},\vb\in\RR^{R} \ : \ \
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (A) at (\x,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!10!white] (v) at (\x+1,\y){\scalebox{0.85}{$\vb$}};
+    \draw[edge] (A) -- (v) node [above,midway] {\scalebox{0.7}{\dimcolor{$R$}}};
+    \draw[edge] (\x-0.25,\y) -- (\x-0.75,\y)  node [pos=1.3]{\scalebox{0.7}{\indcolor{$i$}}};
+    \end{tikzpicture}
+=\sum_{r=1}^R\Ab_{ir}\vb_r,
+\end{align}
+\begin{align}\label{eq:tenmat}
+\At\in\RR^{d_1\times R\times d_2},\Ab\in\RR^{R\times d_3}\ :\ \
+\begin{tikzpicture}[baseline = \baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=green!50!red!50!white] (At) at (\x,\y){\scalebox{0.85}{$\At$}};
+    \node[tensor,fill=red!50!white] (A) at (\x+1,\y){\scalebox{0.85}{$\Ab$}};
+    \draw[edge] (At) -- (A) node [above,midway] {\scalebox{0.7}{\dimcolor{$R$}}};
+    \draw[edge] (\x-0.25,\y) -- (\x-0.75,\y)  node [pos=1.3] {\scalebox{0.7}{\indcolor{$i$}}};
+    \draw[edge] (\x,\y-0.25) -- (\x,\y-0.75)  node [pos=1.3] {\scalebox{0.7}{\indcolor{$j$}}};
+    \draw[edge] (\x+1.25,\y) -- (\x+1.75,\y)  node [pos=1.3] {\scalebox{0.7}{\indcolor{$k$}}};
+\end{tikzpicture} 
+= \sum_{r=1}^R\At_{ijr}\Ab_{rk},
+\end{align}
+\begin{align}\label{eq:tenmatvec}
+\At\in\RR^{d_1\times R\times d_2},\Ab\in\RR^{R\times d_3}, \vb\in\RR^{d_3}&:
+   \begin{tikzpicture}[baseline = \baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=green!50!red!50!white] (At) at (\x,\y){\scalebox{0.85}{$\At$}};
+    \node[tensor,fill=red!50!white] (A) at (\x+1,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!40!red!60!white] (a) at (\x+2,\y){\scalebox{0.85}{$\vb$}};
+    \draw[edge] (At) -- (A) node [above,midway] {\scalebox{0.7}{\dimcolor{$R$}}};
+    \draw[edge] (A) -- (a) node [above,midway] {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \draw[edge] (\x-0.25,\y) -- (\x-0.75,\y)  node [pos=1.3] {\scalebox{0.7}{\indcolor{$i$}}};
+    \draw[edge] (\x,\y-0.25) -- (\x,\y-0.75)  node [pos=1.3] {\scalebox{0.7}{\indcolor{$j$}}};
+    \end{tikzpicture} 
+= \sum_{r=1}^R\sum_{k=1}^{d_3}\At_{ijr}\Ab_{rk}\ab_{k}.
+\end{align}
+由上述各图可见，两个节点之间的边表示求和，同时也表明两个张量在相应的模上共享尺寸相同的维度。
+如前所述，张量网络中自由腿的数目对应其所表示张量的阶。对前面的例子，我们有
+
+$$
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (A) at (\x,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!10!white] (v) at (\x+1,\y){\scalebox{0.85}{$\vb$}};
+    \draw[edge] (A) -- (v) node [above,midway] {\scalebox{0.7}{\dimcolor{$R$}}};
+    \draw[edge] (\x-0.25,\y) -- (\x-0.75,\y)  node [midway, above] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \end{tikzpicture} 
+   \in \mathbb R^{d_1},\ \ 
+\begin{tikzpicture}[baseline = \baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=green!50!red!50!white] (At) at (\x,\y){\scalebox{0.85}{$\At$}};
+    \node[tensor,fill=red!50!white] (A) at (\x+1,\y){\scalebox{0.85}{$\Ab$}};
+    \draw[edge] (At) -- (A) node [above,midway] {\scalebox{0.7}{\dimcolor{$R$}}};
+    \draw[edge] (\x-0.25,\y) -- (\x-0.75,\y)  node [midway,above] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (\x,\y-0.25) -- (\x,\y-0.75)  node [midway,left] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x+1.25,\y) -- (\x+1.75,\y)  node [midway,above] {\scalebox{0.7}{\dimcolor{$d_3$}}};
+\end{tikzpicture} 
+\in \mathbb R^{d_1\times d_2 \times d_3},\ \ \text{and}\ \ 
+    \begin{tikzpicture}[baseline = \baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=green!50!red!50!white] (At) at (\x,\y){\scalebox{0.85}{$\At$}};
+    \node[tensor,fill=red!50!white] (A) at (\x+1,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!40!red!60!white] (a) at (\x+2,\y){\scalebox{0.85}{$\vb$}};
+    \draw[edge] (At) -- (A) node [above,midway] {\scalebox{0.7}{\dimcolor{$R$}}};
+    \draw[edge] (A) -- (a) node [above,midway] {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \draw[edge] (\x-0.25,\y) -- (\x-0.75,\y)  node [midway,above] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (\x,\y-0.25) -- (\x,\y-0.75)  node [midway,left] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \end{tikzpicture} 
+\in \mathbb R^{d_1\times d_2}.
+$$
+ 
+\paragraph{从数学表达式到张量网络，再回到数学表达式} 张量网络用起来很简单，因为表示腿和节点并没有严格的规则。
+在张量网络图中，节点与边可以在平面内任意摆放，重要的只是图的结构。
+例如，把矩阵乘法翻译成张量网络图时，关键是保证相连腿的维度一致。例如对 $\Ab\in\RR^{d_1\times R}, \Bb\in\RR^{R\times d_2}$，下面各图表示的都是\emph{同一个}矩阵乘法：
+\begin{align*} 
+\Ab\Bb
+=
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (A) at (\x,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!50!white] (B) at (\x+1,\y){\scalebox{0.85}{$\Bb$}};
+    \draw[edge] (A) -- (B) node [midway,above] {\scalebox{0.7}{\dimcolor{$R$}}};;
+    \draw[edge] (\x-0.25,\y) -- (\x-0.75,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$d_1$}}};;
+    \draw[edge] (\x+1.25,\y) -- (\x+1.75,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$d_2$}}};;
+    \node[draw=none] () at (\x+1.95,\y) {$=$};
+    \node[tensor,fill=red!50!white] (A1) at (\x+2.85,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!50!white] (B1) at (\x+3.85,\y){\scalebox{0.85}{$\Bb$}};
+    \draw[edge] (A1) -- (B1) node [midway,above] {\scalebox{0.7}{\dimcolor{$R$}}};;
+    \draw[edge] (A1) to [out=60,in=60, distance=0.5cm] (\x+2.2,\y);
+    \draw[edge] (B1) to [out=60,in=60, distance=0.5cm] (\x+4.4,\y-0.5);
+    \node[draw=none] () at (\x+2.4,\y+0.65) {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \node[draw=none] () at (\x+4,\y+0.65) {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \node[draw=none] () at (\x+4.7,\y) {$=$};
+    \node[tensor,fill=blue!50!white] (A2) at (\x+5.3,\y){\scalebox{0.85}{$\Bb$}};
+    \node[tensor,fill=red!50!white] (B2) at (\x+6.3,\y){\scalebox{0.85}{$\Ab$}};
+    \draw[edge] (A2) -- (B2) node [midway,above] {\scalebox{0.7}{\dimcolor{$R$}}};;
+    \draw[edge] (A2) -- (\x+5.3,\y+0.75) node [midway,left] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+     \draw[edge] (B2) -- (\x+6.3,\y-0.75) node [midway,right] {\scalebox{0.7}{\dimcolor{$d_1$}}};   
+     \node[draw=none] () at (\x+7.1,\y) {$=$};
+    \node[tensor,fill=red!50!white] (A3) at (\x+7.6,\y+0.5){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!50!white] (B3) at (\x+7.6,\y-0.5){\scalebox{0.85}{$\Bb$}};
+    \draw[edge] (A3) -- (B3) node [midway,right] {\scalebox{0.7}{\dimcolor{$R$}}};
+    \draw[edge] (A3) -- (\x+7.6,\y+1.25) node [midway,left] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (B3) -- (\x+7.6,\y-1.25) node [midway,left] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \end{tikzpicture}.
+\end{align*}
+注意，由于 $\Ab\in\RR^{d_1\times R}$ 与 $\Bb\in\RR^{R\times d_2}$ 的尺寸限制，二者之间只有一种收缩方式；因此，即使省去边上标注的维数，上面的图也不会有歧义。 
+

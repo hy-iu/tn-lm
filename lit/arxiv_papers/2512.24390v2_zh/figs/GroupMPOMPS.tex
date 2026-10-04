@@ -1,0 +1,14 @@
+\begin{tikzpicture}[baseline={([yshift=10pt]current bounding box.south)}]
+	\def\l{.8};
+    \def\h{.7};
+
+	\draw[obj2] (-\l,0) -- (5*\l,0);
+    \draw[obj1] (-\l,-\h) -- (5*\l,-\h);
+	
+	\foreach \x in {0,1,2}{
+		\draw[obj1] (2*\x*\l,\h) -- (2*\x*\l,-\h);
+		\node[draw=black, line width=.7pt, fill=gray!20, rectangle, inner sep=3.8pt, rounded corners=2pt] at (2*\x*\l,0) {};
+        \node[mpstensor] at (2*\x*\l,-\h) {};
+	}
+	\node[above] at (3*\l,0) {${\sss g}$};
+\end{tikzpicture}

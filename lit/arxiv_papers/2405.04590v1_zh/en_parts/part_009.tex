@@ -1,0 +1,49 @@
+\subsection{Rank and Effectiveness Analysis}
+\label{sec: rank}
+
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[scale=0.36]{figure/comparision_with_rnn.png}
+    \caption{Test set PPL  on the PTB dataset w.r.t. ranks/hidden units. RNNs here denotes Vanilla-RNNs, which has the same embedding size as TTLM-Large and TTLM-Tiny. RNNs-100, RNNs-200, and RNNs-300 are the Vanilla-RNNs with fixed embedding sizes of 100, 200, and 300, respectively.}
+    \label{fig:rank}
+\end{figure}
+
+
+The rank of the TT format has been used to explain the expressive power or long-term memory capacity of RNNs \citep{khrulkov2018expressive, levine2018benefits}. The \textit{rank} of TT decomposition has been proved to be the dimension of the hidden states of RNNs \citep{khrulkov2018expressive}, which reflect on the capacity of the RNNs. The higher rank can have more capacity and vice versa.  However, the relationship between rank and effectiveness in language modeling has yet to be shown practically. We will evaluate the effectiveness of TTLM-Large and TTLM-Tiny w.r.t ranks.
+
+\subsubsection{Effectiveness}  
+Table \ref{tab:evaluation} presents the results of the test set PPL for our models and the baselines on the WikiText-2 and PTB datasets. As shown, compared to Vanilla-RNNs, TTLM-Large reduces PPL by 14.3 and 16.0, respectively, and TTLM-Tiny reduces PPL by 1.7 and 8.5, respectively. Thus, when the number of hidden units or ranks is set to 20 and the embedding size is 400, both TTLM-Large and TTLM-Tiny perform better than all the baselines.
+\begin{figure}[t]
+    \centering
+    \includegraphics[scale=0.24]{figure/ICML/rank_val_ppl_Large_Tiny_ICML.png}
+    \caption{Validation set PPL of TTLM-Large and TTLM-Tiny with increasing ranks on the PTB dataset. Top: TTLM-Large, Bottom: TTLM-Tiny.}
+    \label{fig:rank_analysis}
+\end{figure}
+
+To further evaluate the effectiveness of our models, we conduct a comparison between TTLM-Large, TTLM-Tiny, and Vanilla-RNNs using increasing ranks, as depicted in Fig. \ref{fig:rank}. It's worth noting that we also include RNNs-100, RNNs-200, and RNNs-300 to control for the potential impact of large embedding size.  As shown, even when the number of hidden units reaches 40, the test set PPL of RNNs decreases steadily, while TTLM-Large and TTLM-Tiny do not.  Thus, we expect our models to outperform Vanilla-RNNs with a \textit{low-scale} of hidden units (i.e., the number ranges from 5 to 40), but not larger scales. 
+
+\subsubsection{Overfitting}  
+\begin{figure*}[t]
+    \centering
+    % \vspace{-15pt}
+    \includegraphics[width= 1 \textwidth]{figure/four_comparison.png}
+    \caption{The influence of nonlinearity on TTLM variants on the PTB dataset. The suffix \texttt{-tanh} refers to a model using the $tanh$ activation function, indicated by dashed lines. Second-linear refers to Second-order RNNs without activation functions. Setting: all models have 17 hidden units/ranks.}
+    \label{fig:activation_comparision}
+\end{figure*}
+Fig.\ \ref{fig:rank_analysis}  illustrates the performance of TTLM-Large and TTLM-Tiny on the validation set as the number of ranks
+ increases. As shown,  the validation set PPL of TTLM-Large starts to rise in earlier training epochs when we gradually enlarge its ranks. In contrast, the validation PPL of TTLM-Tiny stably decreases as the number of ranks increases. The  comparison indicates that TTLM-Large is more prone to overfitting than TTLM-Tiny. This finding is further supported by the results in Fig. \ref{fig:rank}. The test set PPL of TTLM-Tiny consistently improves as the rank increases, while TTLM-Large's performance declines when the number of ranks reaches 25.
+
+When we focus on the difference between the two models, TTLM-Large has an additional parameter tensor $\tW^{eh}$. Thus, we believe that the simpler parameterization of the TT cores, the more easily the model avoids overfitting. This finding is consistent with the comparison between MI-RNNs and Second-order RNNs by  \cite{wu_multiplicative_2016}. When it comes to practical  situations, we need to be aware that TTLM-Tiny has a lower capacity to fit the training data and, as a result, poses a lower risk of overfitting when compared to TTLM-Large.
+
+
+\subsection{Nonlinearity  Analysis}
+\label{sec: activation}
+Previous studies have attempted to use TT decomposition as a theoretical platform to investigate RNNs \citep{khrulkov2018expressive, levine2018benefits}. However, one key difference between TT decomposition and the existing neural networks (like Vanilla-RNNs) is the nonlinearity activation functions inside the network models. The lack of nonlinearity in the tensor decomposition calls into question whether its theoretical analysis is transferable to models based on RNNs. To understand whether the effect of the $tanh$ activation function on the TT variants varies with the TT cores,  we provide an empirical result as displayed in Fig.\ \ref{fig:activation_comparision}.
+
+
+Regarding convergence speed, $\tanh$ speeds up TTLM-Large-tanh, TTLM-Tiny-tanh, and MI-RNNs while barely influencing second-order RNNs. Regarding the magnitude of the lowest validation perplexity,  $\tanh$ impairs the performance  TTLM-Large and TTLM-Tiny but has little influence on multiplicative integration and the third-order tensor $\tT$ in Second-order RNNs.  
+
+Thus, the influence of nonlinear activation functions on TTLM variants depends on TT cores settings, both for the convergence of validation PPL and the magnitude of the lowest validation PPL.  From an experimental point of view, we believe that the effect of nonlinearity functions on one TT variant cannot simply be transferred or analogized to another TT variant. This also suggests that one should be wary of the analogy between tensor decomposition and existing neural network models at the implementation level declared by previous research \citep{khrulkov2018expressive, levine2018benefits}. The nonlinear activation functions could be a factor influencing such an analogy.
+
+

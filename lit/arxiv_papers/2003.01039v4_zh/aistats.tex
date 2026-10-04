@@ -1,0 +1,823 @@
+\documentclass[twoside]{article}
+\usepackage{xeCJK}
+\setCJKmainfont{SimSun}[ItalicFont=KaiTi, BoldFont=SimHei]
+\setCJKsansfont{SimHei}
+\setCJKmonofont{SimSun}
+\renewcommand{\figurename}{图}
+\renewcommand{\tablename}{表}
+\renewcommand{\refname}{参考文献}
+
+% \usepackage{aistats2021}
+% If your paper is accepted, change the options for the package
+% aistats2021 as follows:
+%
+\usepackage[accepted]{aistats2021}
+%
+% This option will print headings for the title of your paper and
+% headings for the authors names, plus a copyright note at the end of
+% the first column of the first page.
+
+% If you set papersize explicitly, activate the following three lines:
+\special{papersize = 8.5in, 11in}
+\setlength{\pdfpageheight}{11in}
+\setlength{\pdfpagewidth}{8.5in}
+
+% If you use natbib package, activate the following three lines:
+\usepackage[round]{natbib}
+% \renewcommand{\bibname}{References}
+% \renewcommand{\bibsection}{\subsubsection*{\bibname}}
+
+% If you use BibTeX in apalike style, activate the following line:
+\bibliographystyle{apalike}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+% \usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{graphicx}
+\usepackage{multirow}       % multirow cells for tables
+\usepackage{bm}             % bold math
+\usepackage{bbm}            % blackboard bold math
+\usepackage{algorithm}
+% \usepackage{algorithmicx}
+\usepackage[noend]{algpseudocode}
+\usepackage{amsthm}
+\renewcommand{\proofname}{证明}
+\usepackage{amsmath}
+
+\graphicspath{ {./figures/} }
+
+\newtheorem{lemma}{引理}
+\newtheorem{theorem}{定理}
+\newtheorem*{theorem*}{定理}
+
+% Better comment layout
+\newcommand{\MYCOMMENT}[1]{\State \textit{\# #1}}
+% \newcommand{\MYCOMMENT}[1]{\hspace{1em} \textit{// #1}}
+\newcommand{\eqnref}[1]{式~\ref{#1}}
+
+% Mathematical shorthands
+\newcommand{\Sample}{\textsc{\small REGSAMP}}
+\DeclareMathOperator{\Tr}{Tr}
+\DeclareMathOperator{\argmax}{argmax}
+\DeclareMathOperator{\Lang}{Lang}
+\newcommand{\uMPS}{\mbox{u-MPS}}
+\newcommand{\bigO}{\mc{O}}
+\newcommand{\Z}{\mc{Z}}
+\newcommand{\E}{\mc{E}}
+\newcommand{\EL}{\mc{E}^{\scriptstyle \ell}}
+\newcommand{\ER}{\mc{E}^{\scriptstyle r}}
+\newcommand{\QL}{Q_{\ell}}
+\newcommand{\QR}{Q_{r}}
+\newcommand{\sR}{|s|_R}
+\newcommand{\sRone}{|s_1|_{R_1}}
+\newcommand{\sRtwo}{|s_2|_{R_2}}
+\newcommand{\Pt}{\tilde{P}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\starchar}{0}
+\newcommand{\alphamat}{\alpha\alpha^T}
+\newcommand{\omegamat}{\omega\omega^T}
+\newcommand{\ntrain}{N_{\mathrm{train}}}
+\newcommand{\field}[1]{\R^{#1}}
+\newcommand{\mc}[1]{\mathcal{#1}}
+\newcommand{\seq}[2]{{#1}_{1}, {#1}_{2}, \ldots, {#1}_{#2}}
+
+\begin{document}
+\runningtitle{Tensor Networks for Probabilistic Sequence Modeling}
+
+\twocolumn[
+
+\aistatstitle{概率序列建模的张量网络\\（Tensor Networks for Probabilistic Sequence Modeling）}
+
+\aistatsauthor{Jacob Miller \And Guillaume Rabusseau \And John Terilla}
+\aistatsaddress{Mila and DIRO \\
+Université de Montréal \\
+\href{mailto:jmjacobmiller@gmail.com}{\texttt{jmjacobmiller@gmail.com}} \And
+CCAI chair - Mila and DIRO \\
+Université de Montréal \\
+\href{mailto:grabus@iro.umontreal.ca}{\texttt{grabus@iro.umontreal.ca}} \And
+CUNY and Tunnel \\
+City University of New York \\
+\href{mailto:jterilla@gc.cuny.edu}{\texttt{jterilla@gc.cuny.edu}} } ]
+
+\begin{abstract}
+
+张量网络（tensor network）是为计算多体物理发展起来的一种强大建模框架，近年来才开始被应用于机器学习。本文利用均匀矩阵乘积态（uniform matrix product state, u-MPS）模型对序列数据进行概率建模。我们首先证明 u-MPS 支持序列级并行，长度为 $n$ 的序列可以以 $O(\log n)$ 的深度完成求值。随后我们提出一种新颖的生成式算法，使训练好的 u-MPS 能够从多种多样的条件分布中高效采样，其中每个分布都由一个正则表达式（regular expression）定义。该算法的特例对应自回归采样与填空采样，而更复杂的正则表达式则能以神经生成模型中没有直接对应物的方式生成结构丰富的数据。在合成与真实文本数据上的序列建模实验表明，u-MPS 优于多种基线模型，并在数据有限的情况下有效泛化其预测。
+
+\end{abstract}
+
+\section{引言}
+\label{sec:intro}
+
+张量网络（tensor network）模型长期以来一直是建模复杂量子系统的最先进方法~\citep{white1992, fannes1992, orus2019}，但直到最近才被用作机器学习模型~\citep{novikov2015, cohen2016, stoudenmire2016, novikov2017, han2018, stoudenmire2018, cheng2019}。与神经网络不同，张量网络不使用非线性激活函数，而是依靠乘性相互作用来捕捉数据中的复杂关联。这赋予张量网络一种便于证明一般性理论结果的数学结构，例如几乎所有深层张量网络与其浅层对应物在表达能力上的分离~\citep{cohen2016}。然而，这些独特的数学性质尚未被用于发展新的\emph{操作性}（operational）能力，而这类能力将为张量网络模型在现实机器学习任务中获得更广泛的采用提供更多实际理由。
+
+在这项工作中，我们将一种循环张量网络——\emph{均匀矩阵乘积态}（uniform matrix product state, u-MPS）——应用于概率序列建模（probabilistic sequence modeling）任务，并指出了 u-MPS 在评估与生成能力方面的若干新颖特性。尽管 u-MPS 具有循环性质，我们证明其序列输入可以高度并行地处理，长度为 $n$ 的序列可以在 $\bigO(\log n)$ 的并行时间内完成评估。虽然深层循环神经网络（RNN）难以并行化，这一困难此前曾推动人们为序列处理任务开发非循环架构（如 \citep{gehring2017, vaswani2017}），但我们的发现表明，循环张量网络是获得更高并行性的另一条途径。
+
+我们进一步证明，u-MPS 模型具有与正则表达式（regex）结构紧密相关的惊人生成能力。标准的自回归（autoregressive）模型只能以流式方式在给定提示条件下生成序列，而我们发现 u-MPS 能够从由条件正则表达式 $R$ 定义的各种各样的分布中采样。我们的采样算法可以高效地从 u-MPS 学到的概率分布中产生无偏样本，条件是输出序列匹配给定的正则表达式 $R$。标准自回归采样对应于取 $R = p\Sigma^*$（其中 $p$ 是前缀字符串，$\Sigma^*$ 是匹配所有序列的正则表达式），其他特殊情形还包括填空采样（$R = p\Sigma^*s$，其中 $s$ 为后缀），以及生成被约束为包含某个目标短语 $t$ 的样本（$R=\Sigma^*t\Sigma^*$）。
+
+除了允许生成具有丰富内部结构的序列之外，这些技术还实现了新颖的 regularization 形式：在训练过程中可以对 u-MPS 模型进行惩罚或激励，使其生成匹配某个目标模式的字符串。这种 regularization 可以应用于多种具有挑战性的任务，包括自动代码生成以及缓解语言模型中的性别偏见。在合成数据集与真实结构化文本数据集上的实验证实了这些新颖的并行性、采样与 regularization 优势，并表明 u-MPS 能够成功地将短字符串中存在的非局域关联泛化到长度显著更大的序列上。
+
+\paragraph{贡献总结}
+我们首次实现了用于概率序列建模的 u-MPS，并揭示了该模型的若干卓越能力\footnote{产生本文结果的代码可在 \url{https://github.com/jemisjoky/umps_code} 获取。}。u-MPS 中非线性激活函数的缺失使我们能够在训练与推理阶段利用一种并行评估方法。我们发展了将 u-MPS「转移算符」（transfer operators）的结构与正则表达式结构联系起来的新技术，这进而催生了灵活的递归采样算法以及针对 u-MPS 的新颖 regularization 形式。我们期望这些技术能为序列生成模型的设计开辟重要的新研究方向，其中语言建模是一个尤其有前景的领域。
+
+\paragraph{相关工作}
+张量网络在机器学习中的若干重要先前应用包括压缩大型神经网络权重~\citep{novikov2015}、证明深层网络与浅层网络表达能力的分离~\citep{cohen2016}，以及用于有监督~\citep{stoudenmire2016, novikov2017, glasser2018} 与无监督（unsupervised）~\citep{han2018, stoudenmire2018, cheng2019} 学习任务。与之尤为相关的是~\citep{stokes2019}，其中（非均匀的）MPS 借助密度矩阵重正化群（DMRG）算法被训练为定长二进制序列的生成模型。人们还提出了多种多样的张量网络架构，作为建模与理解自然语言的理论工具，例如~\citep{pestun2017, coecke2010, gallego2017, degiuli2019}。我们采样算法中所使用的完全正映射与隐量子马尔可夫模型（HQMM）~\citep{monras2010,srinivasan2018} 中使用的映射类似，同样可以借助量子信息理论的概念加以诠释。
+
+这项工作可视为~\citep{pestun2017a} 的延续，该文从理论视角将 u-MPS 作为语言模型引入，但没有给出本文所提供的并行化、采样或实验结果。我们的采样算法是~\citep{han2018} 中引入的定长 Born 机器（Born machine）算法的重大推广（后者又沿承了~\citep{ferris2012} 的方法），并且凭借 u-MPS 的循环性质，能够生成长度任意的离散序列。u-MPS 模型等价于二次加权有限自动机~\citep{bailly2011}，并在较小程度上与范数可观测算子模型（NOOM）~\citep{zhao2010} 相关，它也是线性（二阶）RNN 的一个实例~\citep{rabusseau2019}。线性（一阶）RNN 在并行化与可解释性方面的优势曾在~\citep{martin2018, foerster2017input} 中被描述。
+
+与先前工作的一个关键区别在于，我们为评估 regex 结构的概率分布以及从其采样发展了一般性技术，据我们所知这些技术是全新的。这些技术不仅适用于 u-MPS，也适用于具有类似内部结构的一大类模型，例如加权有限自动机（WFA）~\citep{droste2009}、隐马尔可夫模型（HMM）~\citep{rabiner1986} 与预测状态表示~\citep{littman2002}。因此，我们期望本文针对 regex 采样、regularization 与并行评估所发展的算法能够立即推广到这些参数化有效概率分布的模型中的任何一个。
+\section{背景}
+
+我们考虑有限字母表 $\Sigma$ 上的序列，其中 $\Sigma^n$ 表示所有长度为 $n$ 的字符串的集合，$\Sigma^*$ 表示所有字符串的集合，$\varepsilon$ 表示空字符串。我们用 $\lVert v\rVert$ 表示向量、矩阵或更高阶张量 $v$ 的 2-范数，用 $\Tr(M)=\sum_{i=1}^D M_{ii}$ 表示方阵 $M\in\field{D\times D}$ 的迹。
+
+一个实值\footnote{限于实值张量对机器学习而言是自然的，但这与量子物理中使用复参数的标准做法不同。这里给出的结果可以推广到复数情形，只需将某些张量替换为其复共轭即可。}张量 $\mc{T} \in \R^{d_1\times d_2\times\cdots\times d_n}$ 称为具有形状 $(\seq{d}{n})$，它可以由带指标 的元素集合 $\mc{T}_{\seq{i}{n}} \in \R$ 来指定，其中每个指标 $i_k \in [d_k] := \{1, 2, \ldots, d_k\}$。具有 $n$ 个指标的张量称为 $n$ 阶（order）张量，$n$ 阶张量的集合构成一个维数为 $\Pi_{k=1}^n d_k$ 的向量空间。
+%
+\begin{figure}[tb]
+\vskip 0.1in
+\begin{center}
+\centerline{\includegraphics[width=\columnwidth]{contraction.pdf}}
+\caption{(a-b) 张量收缩的两个著名例子：向量内积与矩阵乘法。(c) 一个简单的张量网络（tensor network），其中 2 阶、3 阶与 4 阶张量被收缩为一个 3 阶张量。在数值库中，小的张量收缩可以用 \texttt{einsum} 函数计算，且输出 $\mc{X}$ 与收缩顺序无关。(d) u-MPS 模型，它使用形状为 $(D, d, D)$ 的核心张量 $\mc{A}$ 以及 $D$ 维向量 $\alpha$ 和 $\omega$ 来定义任意阶的张量。(e) 由 \eqnref{eq:partition_n} 定义的长度为 $n$ 的归一化因子 $\Z_n$，表示为张量收缩构成的网络。(f) 由 u-MPS 核心张量 $\mc{A}$ 的两个副本定义的 4 阶张量 $\E$。$\E$ 与左侧或右侧矩阵的收缩给出 u-MPS 的左、右\emph{转移算符}（transfer operator），它们是线性映射，可借助 \eqnref{eq:normalization} 高效计算 $\Z_n$。}
+\label{fig:contraction}
+\end{center}
+% \vskip -0.2in
+\end{figure}
+%
+矩阵、向量和标量（scalar）分别是最简单的 2 阶、1 阶和 0 阶张量的例子。张量收缩（contraction）是矩阵乘法和向量内积的共同推广，它沿一对维度相等的指标将两个张量相乘。若张量 $\mc{T}$ 与 $\mc{T'}$ 的形状分别为 $(d_1,\ldots,d_k,\ldots,d_n)$ 与 $(d'_1,\ldots,d'_{k'},\ldots,d'_{n'})$，且 $d_k = d'_{k'}$，则对第 $k$ 与 $k'$ 个指标作收缩得到乘积张量 $\mc{T''}$，其元素为
+%
+\begin{align}
+\label{eq:contraction}
+& T''_{i_1,\ldots,i_{k-1},i_{k+1},\ldots,i_{n},i'_1,\ldots,i'_{k'-1},i'_{k'+1},\ldots,i'_{n'}} = \nonumber\\
+&\hspace{2.5cm} \sum_{i_k=1}^{d_k}\mc{T}_{i_1,\ldots,i_k,\ldots,i_{n}} \mc{T}'_{i'_1,\ldots,i_{k},\ldots,i'_{n'}}.
+\end{align}
+%
+借助一种方便的图形记号~（见 Figure~\ref{fig:contraction}），收缩操作 \eqnref{eq:contraction} 更容易理解：每个张量对应无向图中的一个节点，边描述要执行的收缩。沿某个指标的收缩对应于合并两个相连的节点，产生一个新节点，其出边是被收缩的张量中各边的并集。张量收缩的一个重要性质是其广义结合律，因此一个张量网络可以按任意顺序收缩，最终的乘积张量在每种情形下都相同。
+
+$n$ 阶张量的一个自然例子是长度为 $n$ 的序列 $\Sigma^n$ 上的概率分布，其中与所有可能序列相关联的概率构成 $|\Sigma|^n$ 个独立的张量元素。这种元素数目的指数增长使得高阶张量的稠密表示不可行，但便利的张量分解常常允许高效地操作高阶张量，甚至可以处理阶数达数千的张量。
+
+定长矩阵乘积态~\citep{perez2007}~（MPS，也称为张量列（tensor train）~\citep{oseledets2011}）~模型将形状为 $(\seq{d}{n})$ 的 $n$ 阶张量 $\mc{T}$ 参数化为 $n$ 个独立的张量 ``core'' $\{\mc{A}^{(j)}\}_{j=1}^n$ 的顺序收缩，这些 core 构成模型的参数。每个 $\mc{A}^{(j)}$ 的形状为 $(D_{j-1}, d_j, D_j)$，其中 $D_0 = D_n = 1$。维度 $D_j$ 称为 MPS 的键维（bond dimension）（或秩），通过选取足够大的 $D_j$，可以精确表示任意 $n$ 阶张量。
+
+\section{Uniform MPS}
+\label{sec:umps}
+
+在本工作中，我们采用\emph{均匀矩阵乘积态}（uniform matrix product state，u-MPS）模型，它是一种循环张量网络，通过将 MPS 的所有 core 取为同一个张量 $\mc{A}^{(j)} = \mc{A}$（形状为 $(D, d, D)$）而得到。为了得到标量的张量元素，使用 $D$ 维向量 $\alpha$ 和 $\omega$ 作为``边界条件''来终结网络初始与末端的键维（bond dimension）。与定长 MPS 不同，u-MPS 的循环特性使其能够生成任意 $n\in\mathbb{N}$ 的 $n$ 阶张量 $\mc{T}_n\in\R^{d^n}$，从而使 u-MPS 可以应用于涉及序列数据的问题。
+
+对于字母表 $\Sigma$（大小为 $d$）上的离散序列，一个 \mbox{u-MPS}（配合双射 $\varphi: \Sigma \to [d]$）可用于将任意长度为 $n$ 的序列映射到 $n$ 阶张量 $\mc{T}_n$ 的指标，从而定义序列上的标量值函数 $f_{\mc{A}}$。用 $\mc{A}(c) = \mc{A}_{:, \varphi(c), :} \in \R^{D\times D}$ 表示与字符 $c\in\Sigma$ 相关联的矩阵，则一个 u-MPS 作用于序列 $s = s_1s_2\cdots s_n \in \Sigma^n$ 的方式为
+%
+\begin{equation}
+\label{eq:mps_amp}
+f_{\mc{A}}(s) = \alpha^{T}\mc{A}(s_1)\mc{A}(s_2)\cdots \mc{A}(s_n)\omega = \alpha^{T}\mc{A}(s)\omega,
+\end{equation}
+%
+其中我们用 $\mc{A}(s) := \mc{A}(s_1)\mc{A}(s_2)\cdots \mc{A}(s_n)$ 表示 \eqnref{eq:mps_amp} 中出现的矩阵乘积。函数 $\mc{A}(s)$ 可以看作任意序列 $s\in\Sigma^*$ 的矩阵值表示，并且是\textit{组合的}（compositional），即 $st$ 由表示 $\mc{A}(s)$ 与 $\mc{A}(t)$ 的乘积来表示。
+
+\begin{figure*}[t]
+\centering
+\centerline{\includegraphics[width=0.85\textwidth]{parallel.pdf}}
+\caption{\small 当 $|s| = 4$ 时 $f_{\mc{A}}(s)$ 的并行与串行求值示意图，其中 $f_{\mc{A}}(s) = (\mathcal{T}_4)_{i_1, i_2, i_3, i_4}$，是由一个 u-MPS 定义的 4 阶张量的一个元素。在从 $s$ 得到矩阵表示 $\mc{A}(s_1),\ldots,\mc{A}(s_n)$ 之后，并行求值需要对相邻矩阵对反复进行批量乘法，边界向量 $\alpha$ 和 $\omega$ 仅在得到矩阵乘积 $\mc{A}(s)$ 之后才被引入。串行求值则从边界向量出发，通过迭代矩阵-向量乘法来收缩该乘积。并行与串行求值的代价分别为 $\bigO(n D^3)$ 和 $\bigO(n D^2)$，但前者可以在 $\bigO(\log n)$ 的并行时间内完成。这两种求值策略在数学上的等价性是张量收缩（contraction）结合律的一个基本例子，从而可以依据模型规模、所处理的问题以及硬件加速的可用性来选择合适的方法。}
+\label{fig:parallel}
+% \vskip -0.2in
+\end{figure*}
+
+虽然 u-MPS 显然是一种串行模型，但当 $|s| = n$ 时，$f_{\mc{A}}(s)$ 的求值可以并行化：如图~\ref{fig:parallel} 所示，对所有相邻矩阵对使用 $\lceil \log_2(n) \rceil$ 次批量矩阵-矩阵乘法来计算 \eqnref{eq:mps_amp}。这种并行化方式要求求值过程中不存在非线性激活函数，并且也可以在线性 RNN 中实现~\citep{martin2018}。
+
+\subsection{Born 机器}
+
+\eqnref{eq:mps_amp} 与 WFA 的求值规则完全相同，也非常适合回归任务，但我们感兴趣的是将 u-MPS 用作生成模型（generative model）。这要求把 $f_{\mc{A}}(s)$ 解释为一个非负概率 $P(s)$，而判定一个一般的 WFA 是否会输出负值是不可判定的（undecidable）~\citep{denis2008}。这一问题可以通过要求 $\mc{A}$、$\alpha$ 和 $\omega$ 的所有元素均为非负实数来规避，但此类模型在很大程度上等价于隐马尔可夫模型（hidden Markov model）~\citep{denis2008}。
+
+我们转而遵循~\citep{pestun2017a}（另见~\citep{han2018}）中引入的方法，该方法受量子力学中 MPS 典型用法的启发。对于 u-MPS 的情形，这种 \emph{Born 机器}（Born machine）方法将标量值 $f_{\mc{A}}(s)$ 转换为一个未作 normalization 的概率 $\Pt(s) := \left|f_{\mc{A}}(s)\right|^2$。通过选取 $P_n(s) = \Pt(s) / \Z_n$，可以将其转换为固定长度 $n$ 序列上恰当 normalization 的分布，其中 normalization 函数 $\Z_n$ 由下式给出
+%
+\begin{align}
+\label{eq:partition_n}
+\Z_n &= \sum_{s \in \Sigma_n} \Pt(s) = \sum_{i_1\in[d]} \sum_{i_2\in[d]} \cdots \sum_{i_n\in[d]} \left| (T_n)_{i_1,i_2,\ldots,i_d} \right|^2 \nonumber\\
+&= \left\lVert\mc{T}_n\right\rVert^2,
+\end{align}
+%
+其中 $\mc{T}_n$ 是由该 u-MPS 定义的 $n$ 阶张量。这种二次型求值规则等价于量子力学的 Born 规则~\citep{born1926}，它为这类模型给出了作为 $n$ 个量子自旋上的波函数（wave function）的形式解释。不过在 u-MPS 的情形下，这种概率对应关系更为丰富，因为可以很容易地定义不同长度序列上的分布。特别地，分布 $P(s) = \Pt(s) / \Z_*$ 给出了任意长度字符串上的概率分布，其中 normalization 因子 $\Z_*$ 与 \eqnref{eq:partition_n} 中给出的相同，只是把对 $\Sigma^n$ 的求和替换为对 $\Sigma^*$ 的求和。我们将在 Section~\ref{sec:regex} 中展示如何将这种形式的 normalization 函数进一步推广，以纳入对所有匹配任意正则表达式 $R$ 的字符串的求和。
+
+类似 $\Z_n$ 的 normalization 函数在多体物理中频繁出现，并且可以通过对张量收缩进行简单的重新排序而高效计算。由 \eqnref{eq:partition_n}，$\Z_n$ 等于 $\mc{T}_n$ 的 2-范数，其图形表示为 Figure~\ref{fig:contraction}e。计算 $\Z_n$ 的朴素方法是先沿 u-MPS 的水平 $D$ 维指标收缩生成 $\mc{T}_n$ 的所有元素，但张量收缩的广义结合律使我们能够更高效地求值该表达式。
+
+通过先把两份 $\mc{A}$ 沿一个竖直的 $d$ 维指标收缩（见~\eqnref{fig:contraction}f），我们得到一个 4 阶张量 $\E$，它可以按两种主要方式解释为矩阵空间上的线性映射，即将其左指标或右指标与输入收缩。这些线性映射被称为\emph{转移算符}（transfer operator），是完全正（CP）映射的例子，后者是随机矩阵的推广，在量子信息理论中有频繁应用（更多细节见 Appendix~\ref{sec:appendix_a}）。这些映射容许 Kraus 表示 $\ER(\QR) = \sum_{c\in\Sigma} \mc{A}(c) \QR \mc{A}(c)^T$ 和 $\EL(\QL) = \sum_{c\in\Sigma} \mc{A}(c)^T \QL \mc{A}(c)$，二者由伴随恒等式 $\Tr(\QL \ER(\QR)) = \Tr(\EL(\QL) \QR)$ 相联系。\footnote{一般地，CP 映射是按规则 $\mc{F}(Q) = \sum_{i=1}^K A_i Q A_i^T$ 作用于方阵的线性算符 $\mc{F}$。CP 映射保证把正半定（PSD）矩阵映为其他 PSD 矩阵，从而我们可以在下文假设所有 $\QL$ 和 $\QR$ 都是 PSD 的。}
+
+normalization 项 $\Z_n$ 可以等价地用左或右转移算符计算，采用后者得到
+%
+\begin{align}
+\label{eq:normalization}
+\Z_n &= \alpha^T \ER(\ER(\cdots\ER(\omegamat))\cdots) \alpha \nonumber\\
+         &= \Tr\left( \QL^\alpha\ (\ER)^{\circ n}(\QR^\omega) \right),
+\end{align}
+%
+其中 $\QL^\alpha = \alphamat$ 和 $\QR^\omega = \omegamat$ 是构成 normalization 项边界条件的秩-1 矩阵。我们用 $(\ER)^{\circ n}$ 表示 $\ER$ 与自身复合 $n$ 次，并定义 $(\ER)^{\circ 0}$ 为作用于方阵的恒等映射。对于字母表大小为 $d$、键维为 $D$ 的 MPS，一次转移算符的施加需要时间 $\bigO(dD^3)$，因此计算 $\Z_n$ 的顺序运行时间为 $\bigO(ndD^3)$。通过把转移算符表示为 $D^2 \times D^2$ 矩阵，这一计算可以按 Section~\ref{sec:umps} 中描述的类似方式并行化，但代价是将总计算代价提高到 $\bigO(nD^6)$。
+
+分布 $P(s) = \Pt(s) / \Z_*$ 覆盖所有字符串 $s\in\Sigma^*$，它在下文中扮演重要角色，但要使用它，我们必须确保无穷求和 $\Z_* = \sum_{s\in\Sigma^*} \Pt(s)$ 确实收敛。这一收敛性可以通过把核心张量重新缩放为新的 $\mc{A}' = \gamma \mc{A}$ 来保证，其中标量 $\gamma$ 满足 $0 < |\gamma| < \sqrt{\rho(\ER)}$，而 $\rho(\ER)$ 是 $\ER$ 的谱半径。这样的重标度使所有固定长度分布 $P_n(s)$ 保持不变，同时在 $P(s)$ 中引入偏向更短（$|\gamma| < 1$）或更长（$|\gamma| > 1$）字符串的偏置。
+
+\section{正则表达式与 u-MPS}
+\label{sec:regex}
+%
+\begin{table}[t]
+\setlength\aboverulesep{0.1pt}
+\setlength\belowrulesep{0.1pt}
+\renewcommand{\arraystretch}{1.7}
+\caption{给出正则表达式（regex）与和 u-MPS 相关联的广义转移算符（generalized transfer operator）之间对应关系的对照表（注意 $\EL_{R_1 R_2}$ 中顺序的颠倒）。给出 $\ER_{S^*}(\QR)$ 的无穷和可以用部分和高效地近似，或者作为线性方程 $(I - \ER_S)\QR^* = \QR$ 的解 $\QR^*$ 来计算（对 $\EL_{S^*}(\QL)$ 同理）。}
+\label{tab:regex_cp}
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{c|c|c}
+    \textbf{正则表达式} $\mathbf{R}$ & $\bm{\ER_R(\QR)}$ & $\bm{\EL_R(\QL)}$ \\
+    \midrule
+    $\mathbf{s}$ &         $\mc{A}_s \QR \mc{A}_s^T$                             & $\mc{A}_s^T \QL \mc{A}_s$ \\
+    $\mathbf{R_1 R_2}$ &   $\ER_{R_1}(\ER_{R_2}(\QR))$                           & $\EL_{R_2}(\EL_{R_1}(\QL))$ \\
+    $\mathbf{R_1 | R_2}$ & $\ER_{R_1}(\QR) + \ER_{R_2}(\QR)$                     & $\EL_{R_1}(\QL) + \EL_{R_2}(\QL)$ \\
+    $\mathbf{S^*}$ &       $\sum_{n=0}^\infty (\ER_S)^{\circ n}(\QR)$ & $\sum_{n=0}^\infty (\EL_S)^{\circ n}(\QL)$
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+%
+虽然如上定义的转移算符在量子多体物理中是标准工具，我们现在展示这一转移算符演算如何在序列数据的情形下得到丰富的推广。我们在大小为 $d$ 的字母表 $\Sigma$ 上的正则表达式（regex）$R$ 上工作，正则表达式可以递归地定义为：(a) 字符串字面量 $s\in\Sigma^*$，(b) 正则表达式的拼接（concatenation）$R = R_1 R_2$，(c) 正则表达式的并 $R = R_1 | R_2$，以及 (d) 正则表达式的 Kleene 闭包（Kleene closure）$R = S^*$。我们用 $\Sigma$ 表示由所有单个字符 $c \in \Sigma$ 构成的并正则表达式，用 $\Sigma^n$ 表示 $\Sigma$ 与其自身拼接 $n$ 次。
+
+任何正则表达式 $R$ 都定义了一个集合 $\Lang(R) \subset \Sigma^*$，即与 $R$ 所规定的模式相匹配的字符串构成的语言。虽然 $\Lang(R)$ 由 $R$ 唯一确定，但通常可以选取多个定义同一语言的正则表达式。以下我们假定已经选取了一个无歧义的正则表达式 $R$，使得每个字符串 $s \in \Lang(R)$ 恰好匹配 $R$ 一次。这并不失一般性，因为任何有歧义的正则表达式都可以替换为定义同一语言的无歧义正则表达式~\citep{book1971}。在这种情形下，我们也用 $R$ 来表示子集 $\Lang(R)$。
+
+对每个正则表达式 $R$，我们关联一对广义转移算符 $\ER_{R}$ 和 $\EL_{R}$，它们通过对语言 $R$ 中所有字符串求和而构成，并按如下方式作用在矩阵上
+%
+\begin{align}
+\label{eq:transfer_op}
+\ER_R(\QR) &= \sum_{s\in R} \mc{A}(s) \QR \mc{A}(s)^T, \nonumber\\
+\EL_R(\QL) &= \sum_{s\in R} \mc{A}(s)^T \QL \mc{A}(s).
+\end{align}
+%
+尽管~\eqnref{eq:transfer_op} 中出现的朴素求和可能包含无穷多项，此类 CP map 的作用仍然可以借助正则表达式本身的递归定义被高效且精确地计算。表~\ref{tab:regex_cp} 给出了上面引入的四种基本正则表达式运算与 CP map 上相应运算之间的对应关系。关于这些递归运算与 \eqnref{eq:transfer_op} 在无歧义正则表达式情形下的一致性的证明，以及一个对任意正则表达式都成立的广义对应关系，见附录~\ref{sec:appendix_a}。
+
+表~\ref{tab:regex_cp} 中的大多数正则表达式运算都很直接，但 Kleene 闭包 $\ER_S$ 涉及一个无穷求和，只要 $\ER_S$ 的谱范数满足 $\rho(\ER_S) < 1$，该求和便保证收敛。我们把这个收敛和的值记为 $\QR^*$，它可以用有限多个求和项来近似，或者作为线性方程 $(I - \ER_S)\QR^* = \QR$ 的解来计算（参见~\citep{balle2019}）。
+
+解释转移算符 $\ER_R$ 和 $\EL_R$ 的一种富有成效的方式，是将它们视为 u-MPS 采样分布的 normalization 函数。我们定义量 $\Z_R(\QL, \QR) = \Tr(\QL \ER_R(\QR))$ 为在边界矩阵 $\QL, \QR$ 存在时与正则表达式 $R$ 相关联的（未归一化）概率，并定义量 $\Z_R = \Z_R(\alphamat, \omegamat)$ 为使用 u-MPS 的边界矩阵时的相应量。由 \eqnref{eq:transfer_op} 可知，$\Z_R = \sum_{s \in R}\Pt(s)$ 确实给出与所有匹配 $R$ 的字符串 $s$ 相关联的未归一化概率。前面定义的量 $\Z_n = \Z_{\Sigma^n}$ 和 $\Z_* = \Z_{\Sigma^*}$ 是它的特殊情形。
+
+\section{正则表达式采样与 regularization}
+\label{sec:sampling}
+%
+\begin{algorithm}[tb]
+\caption{u-MPS 的正则表达式采样算法}
+\label{alg:sampling}
+\begin{algorithmic}
+\Function{\Sample}{$R, Q_\ell, Q_r$}
+  \If{$R = s$} \hspace{4.0em}
+    \MYCOMMENT{采样字符串字面量 $s \in \Sigma^*$}
+    \State\Return{$s$}
+  \ElsIf{$R = R_1 R_2$} \hspace{0.0em}
+    \MYCOMMENT{采样表达式序列}
+    \State $s_1 = \Sample(R_1, \QL, \ER_{R_2}(\QR))$
+    \State $s_2 = \Sample(R_2, \EL_{s_1}(\QL), \QR)$
+    \State\Return{$s_1 s_2$}
+  \ElsIf{$R = R_1 | R_2$} \hspace{-0.2em}
+    \MYCOMMENT{采样表达式的并集}
+    \State 以如下概率随机采样 $i \in \{1, 2\}$：
+    \State \hspace{0.7cm} $p(i) = \Z_{R_i}(\QL, \QR) \ / \ \Z_{R_1 | R_2}(\QL, \QR)$
+    \State $s_i = \Sample(e_i, \QL, \QR)$
+    \State\Return{$s_i$}
+  \ElsIf{$R = S^*$} \hspace{1.0em}
+    \MYCOMMENT{对正则表达式 $S$ 采样零次或多次}
+    \State 以如下概率随机采样 $i \in \{\textrm{HALT}, \textrm{GO}\}$：
+    \State \hspace{0.7cm} $p(\textrm{HALT}) = \Tr(\QL \QR) / \Z_{S^*}(\QL, \QR)$,
+    \State \hspace{0.7cm} $p(\textrm{GO}) = 1 - p(\textrm{HALT})$
+    \If{$i = \textrm{HALT}$} \hspace{0.0em} \MYCOMMENT{返回空字符串}
+      \State\Return{$\varepsilon$}
+    \Else \hspace{6.0em} \MYCOMMENT{采样一个或多个字符}
+      \State\Return{$\Sample(SS^*, \QL, \QR)$}
+    \EndIf
+  \EndIf
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+%
+上文建立的正则表达式（regular expression）句法操作与转移算符（transfer operator）线性代数操作之间的对应关系，赋予了 u-MPS 模型一些基于神经网络的概率模型所不具备的惊人能力。我们将讨论如何将这些技术应用于从匹配目标正则表达式的字符串的条件分布（conditional distribution）中进行采样（sampling），以及在训练过程中利用一种新颖的任务特定 regularization 形式。
+
+\subsection{采样}
+
+我们在算法~\ref{alg:sampling} 中引入了一个以正则表达式为参数的采样函数 $\Sample$。$\Sample$ 提供了一种将任意正则表达式 $R$ 转换为高效采样过程的递归方法，其随机输出（对于无歧义的 $R$）是与子集 $R \subset \Sigma^*$ 相关联的条件 u-MPS 分布的无偏样本。这可形式化为如下定理。
+%
+\begin{theorem}
+\label{thm:sample}
+考虑一个具有 core 张量 $\mc{A}$ 与边界向量 $\alpha$ 和 $\omega$ 的 u-MPS 模型，以及一个右转移算符 $\ER_R$ 收敛的无歧义正则表达式 $R$。设 $P$ 表示由该 u-MPS 定义的、任意字符串上的概率分布，使得 $\Sigma_{s\in\Sigma^*} P(s) = 1$。那么调用 $\Sample(R, \alphamat, \omegamat)$ 将从条件 u-MPS 分布 $P(s | s \in R) = P(s) / P(R)$ 中采样出一个字符串 $s \in \Sigma^*$，其中 $s \in R$，且 $P(R) := \sum_{s' \in R} P(s')$。
+\end{theorem}
+%
+我们在附录~\ref{sec:appendix_b} 中证明定理~\ref{thm:sample}，该附录还讨论了有歧义正则表达式 $R$ 的情形。对于后一种情况，算法~\ref{alg:sampling} 的工作方式完全相同，只是按照字符串 $s$ 匹配 $R$ 的次数对 $s$ 加权。
+
+尽管算法~\ref{alg:sampling} 是以递归方式写出的，但考虑一个简单的例子 $R = \Sigma^n$，即单字符正则表达式 $\Sigma$ 与其自身拼接 $n$ 次所得的正则表达式，有助于理解整体控制流。在这种情况下，算法~\ref{alg:sampling} 首先尝试通过递归调用 $\Sample(\Sigma, \alphamat, \ER_{\Sigma^{n-1}}(\omegamat))$ 来采样字符串中的初始字符。这需要对初始右边界矩阵施加 $n-1$ 次转移算符 $\ER$，并在继续向右、重复这一过程之前产生一个新字符。
+
+与常见的递归算法一样，缓存中间信息可以将 $(n-1) + (n-2) + \cdots + 1 = \bigO(n^2)$ 次转移算符施加的朴素代价降低到 $\bigO(n)$。这一缓存版本等价于一个简单的迭代算法：先在从右到左的扫描中生成并保存一列右边界矩阵，然后在从左到右的扫描中采样文本，并利用左边界矩阵传播条件信息。利用这一想法，我们在附录~\ref{sec:appendix_c} 中证明，对于典型的正则表达式 $R$，算法~\ref{alg:sampling} 可以以平均情形运行时间 $\bigO(L d D^3)$ 和最坏情形内存占用 $\bigO(L D^2)$ 运行，其中 $L$ 是 $R$ 中的字符数，$d$ 是 $\Sigma$ 的大小，$D$ 是 u-MPS 的键维。
+
+\subsection{Regularization}
+
+由正则表达式 $R$ 定义的 normalization 函数 $\Z_{R}$ 给出分配给所有匹配 $R$ 的字符串的未归一化概率。我们首先证明，对于无歧义的 $R$，这一概率可以被恰当地归一化。
+%
+\begin{theorem}
+\label{thm:regularization}
+考虑一个 u-MPS 模型和满足与定理 \ref{thm:sample} 中相同条件的无歧义正则表达式 $R$。那么 u-MPS 分配给匹配 $R$ 的字符串集合的概率 $P(R) = \sum_{s \in R} P(s)$ 可以被精确计算为 $P(R) = \Z_R / \Z_*$。
+\end{theorem}
+%
+定理~\ref{thm:regularization} 的实际重要性在于，可以在自动微分库内部计算任意 $\Z_R = \Tr(\alphamat \ER_R(\omegamat))$，必要时还可借助 \citep{liao2019} 中描述的技术。通过使 $P(R)$ 成为 u-MPS 参数 $\mc{A}$、$\alpha$ 和 $\omega$ 的可直接计算的函数，这一概率便可在训练过程中作为一个 regularization 项（即一个可微的损失项）被纳入。
+
+尽管如何理解这种``regex regularizers''并非一目了然，我们仍给出三个可在 u-MPS 模型基于梯度的训练中使用的例子。首先，可以将 $P(R)$ 直接加到损失中，促使模型的梯度更新最小化属于 $R$ 的字符串的概率。在语言模型的背景下，这可以用来避免学到训练数据中出现的冒犯性短语，例如选取 $R = \Sigma^* S \Sigma^*$，其中 $S$ 是从辱骂性语言数据集中提取的字符串的并集。
+
+一个相关的损失是 $\mc{L} = |P(R_1) - P(R_2)|$，它惩罚分配给正则表达式 $R_1$ 和 $R_2$ 的概率之间的差异。这样的 regularization 在正则表达式 $R_1$ 与 $R_2$ 构造相似时最为有效，此时损失强制模型对这两个选项保持无差异。这可以应用于缓解语言模型中的性别偏见，例如选取每个 $R_i$ 为 $R_i = \Sigma^* s_i \Sigma^*$，其中 $s_1$ 和 $s_2$ 是一对相同但性别指向相反的短语（例如``his career''与``her career''，或``he cooks''与``she cooks''）。
+
+最后，使用损失 $\mc{L} = -\log(P(R))$ 促使最大化属于 $R$ 的字符串的概率。当模型产生的所有字符串都应属于某个正则语言时，这种类型的 regularization 是自然的，例如在代码补全任务中选取一个语法上合法的变量名。将定理~\ref{thm:sample} 和 \ref{thm:regularization} 推广到 \emph{上下文无关}（context-free）语言将极大拓宽这些方法在语言建模中的应用范围，因为上下文无关文法在自然语言的结构化中扮演着根本性的角色。
+
+\section{实验}
+\label{sec:experiments}
+%
+\begin{table}[t]
+\caption{在 Tomita 文法 3--7 上的实验（这些文法的定义见附录~\ref{sec:appendix_d}），其中训练数据是从属于该文法、长度介于 1 与 15 之间的字符串中随机选取的。训练得到的模型用于采样长度为 16 和 30 的字符串，表中报告的是语法正确的样本所占的百分比。u-MPS 在不同长度上一致地给出更好的泛化能力（在 Tomita 5 上相当显著），唯一的例外是 Tomita 6，两个模型都无法学会它。大多数 Tomita 文法规模太小，无法用超过 1,000 个字符串进行训练，但 Tomita 5 和 6 允许使用更大的数据集做实验。}
+\label{tab:tomita}
+\setlength\aboverulesep{0.1pt}
+\setlength\belowrulesep{0.1pt}
+\renewcommand{\arraystretch}{1.1}
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{lc|cccc}
+    Tomita & 采样 & \multirow{2}{*}{u-MPS} & \multirow{2}{*}{HMM} & \multirow{2}{*}{LSTM} & \multirow{2}{*}{TR} \\
+    ($N_{\mathrm{train}}$) & 长度 &  &  &  \\
+    \midrule
+    3 (1K)  & 16 & \textbf{100.0} & 91.6          & 90.2          & 28.8 \\
+    3 (1K)  & 30 & \textbf{100.0} & 82.0          & 85.6          & 9.4  \\
+    4 (1K)  & 16 & \textbf{99.9}  & 99.4          & 85.4          & 50.7 \\
+    4 (1K)  & 30 & 99.5           & \textbf{99.6} & 64.7          & 32.5 \\
+    % 5 (1K)  & 16 & \textbf{50.5}  &  & 49.0          &  \\
+    % 5 (1K)  & 30 & 49.1           &  & \textbf{50.2} &  \\
+    5 (10K) & 16 & \textbf{100.0} & 52.0          & 49.9          & 51.1 \\
+    5 (10K) & 30 & \textbf{99.9}  & 49.8          & 52.8          & 50.5 \\
+    % 6 (1K)  & 16 & 32.1           &  & \textbf{33.1} &  \\
+    % 6 (1K)  & 30 & 33.9           &  & \textbf{34.2} &  \\
+    6 (10K) & 16 & \textbf{35.9}  & 34.4          & 33.1          & 32.9 \\
+    6 (10K) & 30 & 33.1           & 33.1          & \textbf{34.4} & 32.7 \\
+    7 (1K)  & 16 & \textbf{99.3}  & 98.1          & 89.2          & 51.3 \\
+    7 (1K)  & 30 & \textbf{89.4}  & 79.3          & 29.1          & 10.0 \\
+
+    % Tomita \# & \multicolumn{4}{c|}{Samp. Len. 16} & \multicolumn{4}{c}{Samp. Len. 30} \\
+    % 3 (1K) & \textbf{100.0} &  & 90.2 &  & \textbf{100.0} &  & 85.6 &  \\
+    % 4 (1K) & \textbf{99.9} &  & 85.4 &  & \textbf{99.5} &  & 64.7 &  \\
+    % 5 (1K) & \textbf{50.5} &  & 49.0 &  & 49.1 &  & \textbf{50.2} &  \\
+    % 5 (10K) & \textbf{100.0} &  & 49.9 &  & \textbf{99.9} &  & 52.8 &  \\
+    % 6 (1K) & 32.1 &  & \textbf{33.1} &  & 33.9 &  & \textbf{34.2} &  \\
+    % 6 (10K) & \textbf{35.9} &  & 33.1 &  & 33.1 &  & \textbf{34.4} &  \\
+    % 7 (1K) & \textbf{99.3} &  & 89.2 &  & \textbf{89.4} &  & 29.1 &  \\
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+%
+\begin{table}[t]
+\caption{在上下文无关的 Motzkin 文法上的实验，其中训练集固定为仅包含长度为 15 的字符串。我们同时探索了定长采样（Samp）与字符补全（Comp）两类任务：模型或者从零开始采样一个字符串，或者在给定前缀和后缀的条件下预测参考字符串中缺失的一个字符。在每种情形下，同一个训练好的 u-MPS、HMM 与 Transformer 被同时用于生成采样数据和字符补全数据。双向 LSTM 在字符补全任务中于较短的字符串上表现最好，但随着参考字符串长度的增加，其准确率迅速下降。}
+\label{tab:motzkin}
+\setlength\aboverulesep{0.1pt}
+\setlength\belowrulesep{0.1pt}
+\renewcommand{\arraystretch}{1.1}
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{lc|cccc}
+    任务 & 字符串 & \multirow{2}{*}{u-MPS} & \multirow{2}{*}{HMM} & \multirow{2}{*}{LSTM} & \multirow{2}{*}{TR} \\
+    ($N_{\mathrm{train}}$) & 长度 &      &  &  &  \\
+    \midrule
+    Samp (1K)  & 1  & \textbf{89.4} & 37.4 & 41.7           & 39.1 \\
+    Samp (1K)  & 16 & \textbf{74.4} & 30.3 & 41.2           & 2.3  \\
+    Samp (1K)  & 50 & \textbf{32.5} & 12.6 & 0.0            & 0.6  \\
+    Samp (10K) & 1  & \textbf{99.3} & 36.0 & 35.7           & 36.2 \\
+    Samp (10K) & 16 & \textbf{99.8} & 34.3 & 60.4           & 0.5  \\
+    Samp (10K) & 50 & \textbf{91.6} & 12.4 & 5.4            & 0.2  \\
+    Comp (1K)  & 1  & 89.4          & 39.2 & \textbf{99.9}  & 32.1 \\
+    Comp (1K)  & 16 & 69.6          & 29.1 & \textbf{99.5}  & 30.7 \\
+    Comp (1K)  & 50 & 58.8          & 13.1 & \textbf{61.3}  & 30.2 \\
+    Comp (10K) & 1  & 99.3          & 36.3 & \textbf{100.0} & 33.5 \\
+    Comp (10K) & 16 & 99.8          & 31.7 & \textbf{100.0} & 34.5 \\
+    Comp (10K) & 50 & \textbf{92.4} & 14.8 & 69.1           & 33.7 \\
+
+    % Samp (1K)  & \textbf{89.4} & 41.7 &  & \textbf{74.4} & 41.2 &  & \textbf{32.5} & 0.0 &  \\
+    % Samp (10K) & \textbf{99.3} & 35.7 &  & \textbf{99.8} & 60.4 &  & \textbf{91.6} & 5.4 &  \\
+    % Comp (1K)  & 89.4 & \textbf{99.9} &  & 69.6 & \textbf{99.5} &  & 58.8 & \textbf{61.3} &  \\
+    % Comp (10K) & 99.3 & \textbf{100.0} &  & 99.8 & \textbf{100.0} &  & \textbf{92.4} & 69.1 &  \\
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+%
+\begin{table}[t]
+\caption{使用键维为 50 的 u-MPS、对一批 100 个长度为 500 的字符串在 CPU 或 GPU 上计算损失及关于模型参数的梯度所需的运行时间。CPU 上的计算偏好串行求值，因为其总体代价更低；而并行求值所固有的较低并行深度，使得在具备 GPU 硬件加速时运行时间得以缩短。}
+\label{tab:runtime}
+\renewcommand{\arraystretch}{1.1}
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{c|cc}
+          & 串行求值 & 并行求值   \\
+          & 运行时间 (ms)     & 运行时间 (ms) \\
+\hline
+CPU 计算 & \textbf{73.0}    & 232.7 \\
+GPU 计算 & 49.9             & \textbf{45.2}  \\
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+
+我们通过在合成（synthetic）数据集与真实结构化文本数据集上的实验，来评估 u-MPS 在概率序列建模与文法推断（grammatical inference）方面的性能，并验证 u-MPS 在并行化、正则表达式（regex）采样以及 regularization 方面的优势。
+
+\subsection{合成实验}
+
+我们首先在若干合成文本数据集上开展实验，这些数据集由五个作用于二进制串的 Tomita 文法，以及一个定义在三值字母表 $\Sigma_{M} = \{\mathtt{\ (\ ,\ \starchar\ ,\ )\ }\}$ 上的上下文无关的 ``Motzkin'' 文法组成~\citep{tomita1982, alexander2018}。后者由所有括号正确配对的串组成，且对 $\mathtt{\starchar}$ 字符不加任何约束。
+
+在每种情形下，我们都在来自该文法、长度受限的串上训练 u-MPS，然后从训练好的 u-MPS 中采样未见长度的新串，并以采样串中匹配该文法的比例来评估模型。采样有两种形式：其一是固定长度 $n$ 的采样（对应 $R = \Sigma^n$）；其二是字符补全采样（character completion sampling），即将参考串中的一个字符遮蔽，用前缀和后缀 $p$ 和 $s$ 来猜测它（对应 $R = p \Sigma s$）。虽然很容易设想更一般的采样实验，但我们之所以选择这些任务，是因为它们能够与多种基线进行直接比较，包括（单向和双向的）LSTM、HMM 以及 Transformer。
+
+虽然 u-MPS 可以通过算法~\ref{alg:sampling} 轻松实现无偏的固定长度采样，但我们发现单向 LSTM 基线需要在其输入中加入额外的位置编码（positional encoding），以避免在采样超出训练中所见最长长度时输出文本迅速退化。在采样时，我们根据期望的采样长度调整与该编码相关的长度尺度，使得采样的最后一步总是对应同一个位置编码向量。
+
+我们使用负对数似然（NLL）损失和 Adam~\citep{kingma2015} 优化器，通过梯度下降训练 u-MPS、LSTM、HMM 以及小型 Transformer 模型。在每个实验中，我们使用隐单元数为 $D=20$ 和 $D=50$ 的模型，其中 LSTM 取单层，Transformer 取两层、4 个注意力头。每个 $D$ 值都进行五次独立试验，并用最终验证损失选出用于生成样本的最佳模型。我们在 $10^{-2}$ 与 $10^{-4}$ 之间使用分段常数学习率，并使用早停（early stopping）来确定训练结束的时机。
+
+在 Tomita 实验（表~\ref{tab:tomita}）中，u-MPS 表现出色，在许多情形下对语言内未见长度的串采样达到了完美的精度。这不仅对较简单的 Tomita 3 和 Tomita 4 文法成立，对更难的 Tomita 5 也成立，其中合法串满足包含偶数个 \texttt{0} 和偶数个 \texttt{1} 的非局域约束。HMM 与 LSTM 也取得了相当高的采样精度，但二者随序列长度增加而退化的速度快于 u-MPS，而 Transformer 的表现最差。
+
+在上下文无关的 Motzkin 语言（表~\ref{tab:motzkin}）上也看到了类似结果：与 Tomita 实验类似的固定长度采样任务与一个字符补全任务相配对。后一任务必须使用单独的双向 LSTM，因为单向 LSTM 无法利用未来上下文信息。相比之下，训练好的 u-MPS 模型可以在这两种设定中直接使用而无需任何任务特定的 adaptation，也可用于更一般的、涉及相连或不相连缺失文本区域的句子补全任务（标准 RNN 模型难以处理这些任务）。u-MPS 在泛化和再现 Motzkin 串的结构方面显著优于单向 LSTM、HMM 与 Transformer，能够以超过 90\% 的精度采样出长度达到训练所见 3 倍以上的串。只有双向 LSTM 在较小训练集的字符补全实验中胜过了 u-MPS。
+
+鉴于 HMM 能够精确再现与 Tomita 语言以及（有界长度的）Motzkin 语言相关联的分布，u-MPS 在实践中仍能更轻易地学到这类分布，这一点颇为令人惊讶。同样有些令人惊讶的是 Transformer 模型的糟糕表现，其原因很可能在于所用字符串数据集的规模较小。
+
+我们还对在 CPU 或 GPU 上运行的 u-MPS 的顺序求值与并行求值的相对运行时间进行了基准测试（表~\ref{tab:runtime}）。对于具有 $D$ 个隐状态的 u-MPS 和长度为 $n$ 的串，RNN 式的顺序求值具有 $\mathcal{O}(n)$ 的并行深度和 $\mathcal{O}(nD^2)$ 的代价，而并行求值则以 $\mathcal{O}(\log n)$ 的并行深度和 $\mathcal{O}(nD^3)$ 的代价取代之。这暗示在存在硬件加速时并行求值对总运行时间有好处，表~\ref{tab:runtime} 中的运行时间证实了这一点。
+
+\subsection{电子邮件实验}
+%
+\begin{table}[t]
+\caption{在电子邮件上训练，并评估使用键维 50 的 u-MPS 进行无条件采样的每字符 perplexity（PPL）与精度。使用与正则表达式（regex）$R_e$ 相关联的正则化项（regularizer）——该 regex 近似了有效电子邮件地址的格式——在无条件采样串的句法正确性与整体 perplexity 两方面均带来小幅提升。注意，相对于 $R_e$ 使用\emph{条件}采样将保证生成句法有效的串（定理~\ref{thm:sample}），我们在实验中验证了这一事实。}
+\label{tab:regularization}
+\renewcommand{\arraystretch}{1.1}
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{c|cc}
+           & u-MPS          & u-MPS   \\
+           & 使用 regex 正则化  & 不使用 regex 正则化 \\
+\hline
+正确率 \% & \textbf{37.2}  & 35.4    \\
+测试 PPL   & \textbf{7.3}   & 7.8     \\
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+
+为验证 regex 采样与正则化的正确性及其相对收益，我们在一个包含约 4,000 个电子邮件地址的数据集上训练，该数据集取自 CLAIR 欺诈电子邮件数据集~\citep{radev2008}。虽然电子邮件地址的正确性通常取决于非句法方面的考虑（如域名解析），但我们可以使用 regex $ R_{e} = \verb![\w-.]+@([\w-]+.)+[\w-][\w-]+! $（模式 \texttt{name@site.tld} 的推广）来近似有效电子邮件地址的格式。
+
+我们首先在这个电子邮件地址数据集上用梯度下降训练 u-MPS，并考察留出验证集的 perplexity 以及（无条件）采样串的正确性，分别在使用与不使用与 $R_e$ 相关联的正则化的情况下进行。我们发现，regex 正则化对采样文本的 perplexity 与正确性带来了小幅改进，如表~\ref{tab:regularization} 所示。
+
+虽然条件 regex 采样的正确性已由定理~\ref{thm:sample} 保证，我们仍在训练过程中周期性地使用 regex $R_e$ 产生条件样本，以在实验上证实这一点。我们发现，相对于 $R_e$ 的条件采样确实总是产生匹配目标 regex 的随机串，但生成文本的质量在训练过程中逐渐提升。对随机初始化的 u-MPS 进行条件采样时，产生的是句法有效但除此之外随机的串，例如 {\verb k90@4riuh2600xz1.wz }；而在电子邮件地址数据集上训练该模型后，则开始产生看起来更真实的电子邮件地址，例如 {\verb sail203@yahoo.com }。
+
+\section{结论}
+
+我们开发了一个用于序列数据概率建模的 u-MPS 模型，并证明它在并行性、采样与 regularization 方面具有独特的能力，其方式呼应了正则语言（regular languages）的结构。虽然我们的结果是在 u-MPS 这一特定语境下推导的，但用于展示这些能力的基本技术同样适用于具有类似数学结构的其他模型，例如 WFA、HMM 与 PSR。因此，我们的定理~\ref{thm:sample} 与~\ref{thm:regularization} 应当可以推广到其他此类模型。我们预期本文开发的算法在应用于其他模型时会伴随不同的运行时间，从而使并行化、采样与 regularization 方法呈现与本文所报告的不同的性能权衡。例如，这里使用的并行求值方法对 u-MPS 需要 $\bigO(n D^3)$ 的资源，而对 HQMM 则需要 $\bigO(n D^6)$。
+
+除了这些直接的推广之外，我们结果的一个更有趣的扩展是将定理~\ref{thm:sample} 与~\ref{thm:regularization} 推广到上下文无关语言（context-free languages）的情形。虽然所有正则语言都是上下文无关的，但后者具有显著更强的表达能力，并且与自然语言处理和自动代码生成中的应用更为相关。令人惊讶的是，我们发现这样的语言确实可以在 u-MPS 模型中被采样并用作 regularizer，尽管代价更高，为 $\bigO(D^6)$。
+
+鉴于我们展示了利用文法（grammar）来约束 u-MPS 模型概率分布的能力，一个自然的问题是逆过程是否可行：即给定一个训练好的 u-MPS 模型，是否存在自动的手段来识别能够解释所学概率分布中部分相关性的文法规则？这样的技术将代表一类定性上全新的文法推断（grammatical inference），其中文法规则与语言模型以双向方式相互作用。
+
+最后，一个自然的下一步是将 u-MPS 扩展到真实世界的序列建模任务，尤其是语言建模。当前这一过程的障碍有：(a) 某些 u-MPS 操作 $\bigO(D^3)$ 的代价，以及 (b) 缺乏用梯度下降训练大型张量网络的成熟最佳实践。我们预期这些障碍将被专门的工程投入以及数量迅速增长的处理张量网络的软件库所克服，同时多体物理社区开发的强大计算方法也将被机器学习所采纳。鉴于这里展示出的意外收益，我们期望循环张量网络架构拥有光明的未来。
+
+\section*{致谢}
+本研究得到加拿大高等研究院（CIFAR AI chair program）的支持。
+
+\appendix
+\onecolumn
+
+\section{完全正映射与广义转移算符}
+\label{sec:appendix_a}
+
+在本节中，我们给出关于完全正（completely positive，CP）映射与正则表达式（regular expressions，下文简称 regex）的定义和已知结果，以及关于为 regex 指派广义转移算符的更多细节\footnote{本节中所有定义和结果均以实值矩阵的形式陈述，但复值矩阵与 CP 映射的相应陈述可通过将矩阵转置 $Q^T$ 替换为 Hermitian 伴随 $Q^\dagger$（即 $Q$ 的转置并取复共轭的对应物）而得到。}。我们最后证明，表~\ref{tab:regex_cp}
+（为方便起见在此重复）中给出的广义转移算符的递归定义具有一个按 regex 中所有字符串的加权和来表达的等价表示，对于无歧义 regex，它恰好给出式~\ref{eq:transfer_op} 的简单形式。
+
+我们称矩阵 $Q\in\field{D\times D}$ 为半正定（positive semidefinite，PSD）的，如果它~(a) 对称（$Q^T = Q$），且~(b) 对每个 $v\in\field{D}$ 满足 $v^T Q v \geq 0$。如果 $Q$ 进一步满足仅在 $v = 0$ 时才有 $v^T Q v = 0$ 的性质，则称其为正定（positive definite）的。给定一个 PSD 矩阵 $Q$，$Q$ 的对角元必然非负。对任意向量 $v$，秩-1 矩阵 $vv^T$ 必为 PSD 矩阵，且所有 PSD 矩阵 $Q\in\field{D\times D}$ 都可以表示为~（至多）$D$ 个这样的秩-1 矩阵的加权和。由此可以证明：对任意 PSD 矩阵 $Q$ 与 $Q'$，有 $\Tr(QQ') \geq0$。
+
+在量子力学中，人们常把 PSD 矩阵视为概率态的一种广义形式~\citep{nielsen2002}，这一视角使我们能够把矩阵 $\QL, \QR$ 视为 u-MPS 的概率隐状态（probabilistic latent states）。为此，完全正（CP）映射族正是作用于这些 PSD 矩阵的随机映射的自然推广。一个把 PSD 的 $Q\in\field{D\times D}$ 映到 $Q'=\E(Q)\in\field{D'\times D'}$ 的映射 $\E$ 称为 CP 的，如果它允许一个 Kraus 表示（Kraus representation），即由 $r \geq 1$ 个矩阵 $A_i\in\field{D'\times D}$ 组成，使得 $\E$ 可表示为：
+%
+\begin{equation}
+\label{eq:kraus}
+\E(Q) = \sum_{i=1}^r A_i Q A_i^T
+\end{equation}
+%
+条件~\eqref{eq:kraus} 特别蕴含：若 $Q$ 是 PSD 的，则 $\E(Q)$ 也是。\eqref{eq:kraus} 中的矩阵称为该映射的 Kraus 算符（Kraus operators），而同一个 CP 映射 $\E$ 可以有多个 Kraus 表示，其 $r$ 值互不相同。使 $\E$ 能够表示为~\eqref{eq:kraus} 的最小 $r$ 值称为 $\E$ 的秩，且总有界于 $r \leq D^2$。尽管如此，含有更多 Kraus 算符的 Kraus 表示对于理解映射的作用可能是有用的，正如我们将在下文看到的。
+
+对~\eqref{eq:kraus} 中出现的所有 Kraus 算符取转置，我们便得到一个新的 CP 映射 $\E^T$，即 $\E$ 的伴随。在数学上，这意味着对任意 CP 映射 $\E$ 与正矩阵 $\QL, \QR$，等式 $\Tr(\QL \E(\QR)) = \Tr(\E^T(\QL) \QR)$ 成立。为更加清晰起见，在 u-MPS 序列建模的语境下，我们常把一个 CP 映射及其伴随称为``右''映射与``左''映射 $\ER$ 和 $\EL$，而不是 $\E$ 和 $\E^T$。
+
+``转移算符（transfer operator）''一词在多体物理中很常见，在我们的语境中指由 Kraus 表示得到的 CP 映射 $\E$，其中 $A_i = \mc{A}(\varphi^{-1}(i))$，$\mc{A}$ 是 u-MPS 的核心张量（core tensor），$\varphi: \Sigma \to [d]$ 是把大小为 $d$ 的字母表 $\Sigma$ 中的字符 $c$ 映到数 $\{1, 2, \ldots, d\}$ 的双射（见图~\ref{fig:contraction}f）。
+在第~\ref{sec:regex} 节中
+我们介绍了对这一标准转移算符概念的推广，即纳入与任意正则表达式 $R$ 相关联的若干其他 CP 映射 $\E_R$，其递归定义见表~\ref{tab:regex_cp}。
+若用 $\Sigma$ 同时表示匹配字母表中任意单个字符的 regex，则标准转移算符即为 $R = \Sigma$ 的特殊情形。
+
+我们有时假设 regex $R$ 是无歧义的（unambiguous），即任何匹配 $R$ 的字符串 $s$ 都以恰好一种方式匹配。这一假设不失一般性，因为任何有歧义的 regex $R$ 都可以转换为接受同一字符串集合的无歧义 regex $R'$~\citep{book1971}。例如，有歧义的 regex $R = a^*a^*$ 以两种方式匹配字符串 $s = a$，但可以替换为等价的无歧义 regex $R' = a^*$。
+%
+\begin{table}[t]
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{c|cccc}
+    \textbf{正则表达式} $\mathbf{R =\ }$ & $c$ & $R_1 R_2$ & $R_1 | R_2$ & $S^*$ \\
+    \midrule
+    $\bm{\ER_R(\QR)}\ = $ & $\mc{A}(c) \QR \mc{A}(c)^T$ & $\ER_{R_1}(\ER_{R_2}(\QR))$ & $\ER_{R_1}(\QR) + \ER_{R_2}(\QR)$ & $\sum_{n=0}^\infty (\ER_S)^{\circ n}(\QR)$ \\
+    $\bm{\EL_R(\QL)}\ = $ & $\mc{A}(c)^T \QL \mc{A}(c)$ & $\EL_{R_2}(\EL_{R_1}(\QL))$ & $\EL_{R_1}(\QL) + \EL_{R_2}(\QL)$ & $\sum_{n=0}^\infty (\EL_S)^{\circ n}(\QL)$
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+
+任何 regex $R$ 都可以由 (a) 单个字符 $c\in\Sigma$、(b) regex 的拼接 $R = R_1 R_2$、(c) regex 的并 $R = R_1 | R_2$，以及 (d) regex 的 Kleene 闭包 $R = S^*$ 归纳地构造而成。我们对 $R$ 的结构作归纳证明：由表~\ref{tab:regex_cp} 中的递归程序定义的任意广义右转移算符 $\ER_R$
+按照式~\ref{eq:transfer_op} 的一个推广而作用，
+正如下列定理所述。
+
+\begin{theorem}
+\label{thm:transfer_op}
+考虑与任意 regex $R$ 及核心张量为 $\mc{A}$ 的 u-MPS 相关联的广义转移算符 $\ER_R$ 与 $\EL_R$，它们由表~\ref{tab:regex_cp} 中的递归规则定义。
+则 $\ER_R$ 收敛当且仅当 $\ER_L$ 收敛，且此时转移算符由如下 Kraus 表示描述：
+\begin{equation}
+\label{eq:gen_transfer_op}
+\ER_R(\QR) = \sum_{s\in \Sigma^*} \sR \mc{A}(s) \QR \mc{A}(s)^T, \qquad \EL_R(\QL) = \sum_{s\in \Sigma^*} \sR \mc{A}(s)^T \QL \mc{A}(s),
+\end{equation}
+其中 $\sR$ 表示字符串 $s$ 匹配 regex $R$ 的次数。对无歧义 regex，此 Kraus 表示与式~\eqref{eq:transfer_op} 的相同。
+\end{theorem}
+
+\begin{proof}
+
+对四种类型的 regex $R$，我们作归纳假设：$R$ 的子表达式（若存在）满足~\eqref{eq:gen_transfer_op}，并用它证明转移算符 $\ER_R$ 满足~\eqref{eq:gen_transfer_op}。这使我们能够立即证明关于左转移算符 $\EL_R$ 的相应陈述。
+
+\paragraph{$\mathbf{R = c:}$} 这一点由表~\ref{tab:regex_cp}
+以及匹配 $R$ 的唯一字符串 $s = c$ 立即可见。
+
+\paragraph{$\mathbf{R = R_1 R_2:}$} 假设 $R_1$ 与 $R_2$ 都满足~\eqref{eq:gen_transfer_op}。表~\ref{tab:regex_cp}
+给出：
+%
+\begin{align*}
+    \ER_{R_1 R_2}(\QR) &= \ER_{R_1}(\ER_{R_2}(\QR)) = \sum_{s_1 \in \Sigma^*} \sum_{s_2 \in \Sigma^*} \sRone \sRtwo \mc{A}(s_1) \mc{A}(s_2) \QR \mc{A}(s_2)^T \mc{A}(s_1)^T \\
+    &= \sum_{s_1 \in \Sigma^*} \sum_{s_2 \in \Sigma^*} \sRone \sRtwo \mc{A}(s_1 s_2) \QR \mc{A}(s_1 s_2)^T = \sum_{s \in \Sigma^*} |s|_{R_1\! R_2} \mc{A}(s) \QR \mc{A}(s)^T.
+\end{align*}
+%
+在倒数第二个等号中我们用到了复合性质 $\mc{A}(s_1)\mc{A}(s_2) = \mc{A}(s)$，而在最后一个等号中我们用到了恒等式 $|s|_{R_1 R_2} = \sum_{s_1 s_2 = s} |s_1|_{R_1} |s_2|_{R_2}$，其中对 $s_1, s_2$ 的求和遍历把 $s$ 分成前缀与后缀的所有可能分法。
+
+\paragraph{$\mathbf{R = R_1 | R_2:}$} 假设 $R_1$ 与 $R_2$ 都满足~\eqref{eq:gen_transfer_op}。表~\ref{tab:regex_cp}
+给出：
+%
+\begin{align*}
+    \ER_{R_1 | R_2}(\QR) &= \ER_{R_1}(\QR) + \ER_{R_2}(\QR) = \left(\sum_{s \in \Sigma^*} |s|_{R_1} \mc{A}(s) \QR \mc{A}(s)^T\right) + \left(\sum_{s \in \Sigma^*} |s|_{R_2} \mc{A}(s) \QR \mc{A}(s)^T\right) \\
+    &= \sum_{s \in \Sigma^*} |s|_{R_1 | R_2} \mc{A}(s) \QR \mc{A}(s)^T.
+\end{align*}
+%
+在最后一个等号中我们用到了恒等式 $|s|_{R_1 | R_2} = |s|_{R_1} + |s|_{R_2}$。
+
+\paragraph{$\mathbf{R = S^*:}$} 假设 $S$ 满足~\eqref{eq:gen_transfer_op}。算符 $\ER_{S^*}$ 只有当 $\ER_S$ 的谱范数（spectral norm）满足 $\rho(\ER_S) < 1$ 时才会收敛，此时表~\ref{tab:regex_cp}
+给出：
+%
+\begin{align*}
+    \ER_{S^*}(\QR) &= \sum_{n=0}^\infty (\ER_{S})^{\circ n}(\QR) = \sum_{n=0}^\infty \sum_{s_1\cdots s_n \in \Sigma^*} |s_1|_{S} \cdots |s_n|_S\, \mc{A}(s_1 \cdots s_n) \QR \mc{A}(s_1 \cdots s_n)^T \\
+    &= \sum_{s \in \Sigma^*} |s|_{S^*}\, \mc{A}(s) \QR \mc{A}(s)^T.
+\end{align*}
+%
+在最后一个等号中我们用到了恒等式 $|s|_{S^*} = \sum_{n=0}^\infty \sum_{s_1 \cdots s_n = s} |s_1|_{S} \cdots |s_n|_{S}$，其中对 $s_1, \ldots, s_n$ 的求和遍历把 $s$ 分成 $n$ 个连续片段的所有可能分法。
+
+虽然我们只刻画了右转移算符 $\ER_R$ 的作用，但把所有矩阵 $\mc{A}(s)$ 替换为其转置对应物 $\mc{A}(s)^T$ 便立即得到对 $\EL_R$ 作用的相应刻画。在后一情形中，方向反转的恒等式 $\mc{A}(s_1 s_2)^T = \mc{A}(s_2)^T \mc{A}(s_1)^T$ 由转移算符对应关系 $\EL_{R_1 R_2} = \EL_{R_2}\EL_{R_1}$ 所顾及。
+
+由于 $\ER_R$ 与 $\EL_R$ 互为伴随，二者的特征值谱相同，因此 $\ER_R$ 收敛当且仅当 $\EL_R$ 收敛。最后，对无歧义的 regex $R$，量 $\sR \in \{0, 1\}$，由此得到等式 $\sum_{s\in \Sigma^*} \sR \mc{A}(s) \QR \mc{A}(s)^T = \sum_{s\in R} \mc{A}(s) \QR \mc{A}(s)^T$，从而证明了式~\ref{eq:transfer_op}。
+
+\end{proof}
+
+尽管对于给定的 regex $R$ 与核心张量 $\mc{A}$，转移算符 $\ER_R$ 何时收敛并不显然，但可以清楚地看到，Kleene 闭包是唯一允许发散的运算。因此，regex $R$ 只有当其所有形如 $S_i^*$ 的子表达式都具有谱范数 $\rho(\ER_{S_i}) < 1$ 时才会收敛。注意，凡 $S$ 接受空字符串的 $S^*$ 必定产生发散的转移算符 $\ER_{S^*}$，因而特别地，任何形如 $\ER_{(S^*)^*}$ 的转移算符都是发散的。
+
+\section{定理~\ref{thm:sample} 的证明}
+\label{sec:appendix_b}
+
+为了证明 定理~\ref{thm:sample}，
+我们首先证明一个更一般的 引理~\ref{lem:sample}，它刻画了 $\Sample(R, \QL, \QR)$ 对任意 $R$ 输出字符串的概率分布 $P_R(s, \QL, \QR)$。
+%
+\begin{lemma}
+\label{lem:sample}
+考虑一个核心张量为 $\mc{A}$ 的 u-MPS 模型，以及一个正则表达式（regex）$R$，使得由 Table~\ref{tab:regex_cp} 递归定义的广义右转移算子 $\ER_R$
+收敛。则对任意 PSD 矩阵 $\QL, \QR$，$\Sample(R, \QL, \QR)$ 输出字符串的概率分布为 $P_R(s, \QL, \QR) = \sR \Pt(s, \QL, \QR) / \mc{Z}_R(\QL, \QR)$，其中 $\Pt(s, \QL, \QR) = \Tr(\QL \ER_s(\QR))$，$\mc{Z}_R(\QL, \QR) = \Tr(\QL \ER_R(\QR))$，且 $\sR$ 计数字符串 $s$ 匹配正则表达式 $R$ 的次数。
+\end{lemma}
+
+\begin{proof}
+
+我们对 $R$ 的结构用归纳法证明 引理~\ref{lem:sample}，其中我们假设从 $R$ 的正则表达式子表达式 $R'$ 采样，使用任意边界矩阵 $\QL'$ 与 $\QR'$，产生的字符串服从分布 $P_{R'}(s, \QL', \QR')$。对于正则表达式构造的四种情形中的每一种，我们利用这一归纳假设证明从 $R$ 采样产生的字符串服从分布 $P_R(s, \QL, \QR)$。
+
+\paragraph{$\mathbf{R = c:}$} 由 算法~\ref{alg:sampling}，
+$\Sample(c, \QL, \QR)$ 将总是输出字符串 $s = c$。由于量 $|s|_c$ 在 $s = c$ 时为 1，否则为 0，采样分布可以写为
+%
+\begin{align*}
+    P_c(s, \QL, \QR) &= |s|_c = |s|_c \frac{\Tr(\QL \ER_s(\QR))}{\Tr(\QL \ER_c(\QR))} = |s|_c \frac{\Pt(s, \QL, \QR)}{\mc{Z}_c(\QL, \QR)}.
+\end{align*}
+
+\paragraph{$\mathbf{R = R_1 R_2:}$} 由 算法~\ref{alg:sampling}，
+$\Sample(R_1 R_2, \QL, \QR)$ 将首先从 $\Sample(R_1, \QL, \ER_{R_2}(\QR))$ 输出一个字符串 $s_1$，然后用 $s_1$ 从 $\Sample(R_2, \EL_{s_1}(\QL), \QR)$ 输出一个字符串 $s_2$。对 $R_1$ 与 $R_2$ 使用我们的归纳假设，对所有可能的前缀（prefix）与后缀（suffix）划分 $s_1 s_2 = s$，输出字符串 $s$ 被赋予的概率为
+%
+\begin{align*}
+    P_{R_1 R_2}(s, \QL, \QR) &= \sum_{s_1 s_2 = s} P_{R_1}(s_1, \QL, \ER_{R_2}(\QR)) \cdot P_{R_2}(s_2, \EL_{s_1}(\QL), \QR) \\
+    &= \sum_{s_1 s_2 = s} \left( \sRone \frac{\Tr(\QL \ER_{s_1}(\ER_{R_2}(\QR)))}{\Tr(\QL \ER_{R_1}(\ER_{R_2}(\QR)))} \right) \left( \sRtwo \frac{\Tr(\EL_{s_1}(\QL) \ER_{s_2}(\QR))}{\Tr(\EL_{s_1}(\QL) \ER_{R_2}(\QR))} \right) \\
+    &= \sum_{s_1 s_2 = s} \sRone \sRtwo \left(\frac{\Tr(\QL \ER_{s_1 R_2}(\QR))}{\Tr(\QL \ER_{R_1 R_2}(\QR))}\right) \left(\frac{\Tr(\QL \ER_{s_1 s_2}(\QR))}{\Tr(\QL \ER_{s_1 R_2}(\QR))}\right) \\
+    &= |s|_{R_1 R_2} \frac{\Tr(\QL \ER_{s}(\QR))}{\Tr(\QL \ER_{R_1 R_2}(\QR))} = |s|_{R_1 R_2} \frac{\Pt(s, \QL, \QR)}{\mc{Z}_{R_1 R_2}(\QL, \QR)}.
+\end{align*}
+%
+在上面的第三个等号中，我们使用了复合规则 $\ER_{s'}\ER_{R'} = \ER_{s' R'}$ 与伴随规则 $\Tr(\EL_{s'}(\QL') \QR') = \Tr(\QL' \ER_{s'}(\QR'))$，而在第四个等号中，我们使用了恒等式 $|s|_{R_1 R_2} = \sum_{s_1 s_2 = s} |s_1|_{R_1} |s_2|_{R_2}$。
+
+\paragraph{$\mathbf{R = R_1 | R_2:}$} 由 算法~\ref{alg:sampling}，
+$\Sample(R_1 | R_2, \QL, \QR)$ 将首先以概率 $p(i) = \mc{Z}_{R_i}(\QL, \QR) \ / \ \mc{Z}_{R_1 | R_2}(\QL, \QR)$ 随机选取一个指标 $i \in {1, 2}$，然后用它从 $\Sample(R_i, \QL, \QR)$ 输出一个字符串 $s$。使用我们的归纳假设，输出字符串 $s$ 被赋予的概率为
+%
+\begin{align*}
+    P_{R_1 | R_2}(s, \QL, \QR) &= \sum_{i \in \{1, 2\}} p(i) \cdot P_{R_i}(s_i, \QL, \QR) \\
+    &= \sum_{i \in \{1, 2\}} \left( \frac{\mc{Z}_{R_i}(\QL, \QR)}{\mc{Z}_{R_1 | R_2}(\QL, \QR)} \right) \left( |s|_{R_i} \frac{\Pt(s, \QL, \QR)}{\mc{Z}_{R_i}(\QL, \QR)} \right) \\
+    &= |s|_{R_1 | R_2} \frac{\Pt(s, \QL, \QR)}{\mc{Z}_{R_1 | R_2}(\QL, \QR)}.
+\end{align*}
+%
+在最后一个等号中，我们使用了恒等式 $|s|_{R_1 | R_2} = |s|_{R_1} + |s|_{R_2}$。
+
+\paragraph{$\mathbf{R = S^*:}$} 要从正则表达式 $R$ 采样，我们必须要求 Table~\ref{tab:regex_cp} 中定义 $\ER_R$ 的无穷级数
+收敛，这由 引理~\ref{lem:sample} 的假设所保证。在这一收敛性下，调用 $\Sample(S^*, \QL, \QR)$ 要么输出空字符串 $s = \varepsilon$，要么调用 $\Sample(SS^*, \QL, \QR)$。在后一种情形中，拼接规则会先采样某个 $s' \in S$，然后调用 $\Sample(S^*, \EL_{s'}(\QL), \QR)$ 采样随机数 $n \geq 0$ 次 $S$ 的出现。
+
+我们把与恰好出现 $n$ 次 $S$ 所产生的字符串相联系的未归一化概率集合记为 $P_{S^*}^{(n)}$，并用归纳证明来表明 $P_{S^*}^{(n)} = p(n) P_{S^n}$，其中 $p(n, \QL, \QR) = \mc{Z}_{S^n}(\QL, \QR) / \mc{Z}_{S^*}(\QL, \QR)$。换言之，我们针对 $S^*$ 的递归采样过程等价于先用 $p(n)$ 采样一个随机长度，然后调用相应的 $\Sample(S^n, \QL, \QR)$。
+
+\paragraph{\textbf{基础情形} $n = 0$: } 正则表达式 $S^0$ 只匹配空字符串 $s = \varepsilon$，且由 算法~\ref{alg:sampling}，
+其发生概率为
+%
+\begin{equation*}
+    P_{S^*}^{(0)}(s, \QL, \QR) = \frac{\Tr(\QL \QR)}{\mc{Z}_{S^*}(\QL, \QR)} = \frac{\mc{Z}_{S^0}(\QL, \QR)}{\mc{Z}_{S^*}(\QL, \QR)} = p(0) P_{S^0}(s, \QL, \QR),
+\end{equation*}
+%
+其中我们使用了恒等式 $\ER_{S^0} = \ER_\varepsilon = I$，以及事实 $P_{S^0}(s)$ 在 $s = \varepsilon$ 时为 1、否则为 0。
+
+\paragraph{\textbf{递推情形} $n + 1$: } 由 算法~\ref{alg:sampling}，
+采样得到字符串 $s = s_1 s_2$（其中 $s_1$ 匹配 $S$，$s_2$ 匹配 $S^{n}$）的概率为
+%
+\begin{align*}
+    P_{S^*}^{(n + 1)}\!(s, \QL, \QR) &= \sum_{s_1 s_2 = s} \left(1 - \frac{\Tr(\QL \QR)}{\mc{Z}_{S^*}(\QL, \QR)} \right) P_{S}(s_1, \QL, \ER_{S^*}(\QR)) P_{S^*}^{(n)}(s_2, \EL_{s_1}(\QL), \QR) \\
+    %
+    &= \sum_{s_1 s_2 = s} \left(\frac{\mc{Z}_{SS^*}(\QL, \QR)}{\mc{Z}_{S^*}(\QL, \QR)} \right) \left(|s_1|_{S} \frac{\Pt(s_1, \QL, \ER_{S^*}(\QR))}{\mc{Z}_S(\QL, \ER_{S^*}(\QR))}\right) P_{S^*}^{(n)}(s_2, \EL_{s_1}(\QL), \QR) \\
+    %
+    &= \sum_{s_1 s_2 = s} |s_1|_{S} \frac{\Pt(s_1, \QL, \ER_{S^*}(\QR))}{\mc{Z}_{S^*}(\QL, \QR)} \frac{\mc{Z}_{S^n}(\EL_{s_1}(\QL), \QR)}{\mc{Z}_{S^*}(\EL_{s_1}(\QL), \QR)} |s_2|_{S^n} \frac{\Pt(s_2, \EL_{s_1}(\QL), \QR)}{\mc{Z}_{S^n}(\EL_{s_1}(\QL), \QR)} \\
+    %
+    &= \sum_{s_1 s_2 = s} |s_1|_{S} |s_2|_{S^n} \frac{\Pt(s_2, \EL_{s_1}(\QL), \QR)}{\mc{Z}_{S^*}(\QL, \QR)} = \sum_{s_1 s_2 = s} |s_1|_{S} |s_2|_{S^n} \frac{\Pt(s, \QL, \QR)}{\mc{Z}_{S^*}(\QL, \QR)} \\
+    %
+    &= \frac{\mc{Z}_{S^{n+1}}(\QL, \QR)}{\mc{Z}_{S^*}(\QL, \QR)} |s|_{S^{n+1}} \frac{\Pt(s_1 s_2, \QL, \QR)}{\mc{Z}_{S^{n+1}}(\QL, \QR)} = p(n+1, \QL, \QR) P_{S^{n+1}}(s, \QL, \QR). \\
+\end{align*}
+%
+在上面我们使用了如下恒等式：$\mc{Z}_{S^*}(\QL, \QR) = \Tr(\QL \QR) + \mc{Z}_{SS^*}(\QL, \QR)$（第二个等号），$\mc{Z}_S(\QL, \ER_{S^*}(\QR)) = \mc{Z}_{SS^*}(\QL, \QR)$（第三个等号），$\Pt(s_1, \QL, \ER_{S^*}(\QR)) = \mc{Z}_{S^*}(\EL_{s_1}(\QL), \QR)$（第四个等号），$\Pt(s_2, \EL_{s_1}(\QL), \QR) = \Pt(s_1 s_2, \QL, \QR)$（第五个等号），以及 $|s|_{S^{n+1}} = \sum_{s_1 s_2 = s} |s_1|_{S} |s_2|_{S^n}$（第六个等号）。
+
+有了对未归一化分布 $P_{S^*}^{(n)}$ 的这一归纳刻画，我们最终可以证明
+%
+\begin{align*}
+    P_{S^*}(s, \QL, \QR) &= \sum_{n = 0}^\infty P_{S^*}^{(n)}(s, \QL, \QR) = \sum_{n = 0}^\infty \frac{\mc{Z}_{S^{n}}(\QL, \QR)}{\mc{Z}_{S^*}(\QL, \QR)} |s|_{S^{n}} \frac{\Pt(s, \QL, \QR)}{\mc{Z}_{S^{n}}(\QL, \QR)} \\
+    %
+    &= |s|_{S^*} \frac{\Pt(s, \QL, \QR)}{\mc{Z}_{S^*}(\QL, \QR)},
+\end{align*}
+
+其中我们在最后一个等号中使用了恒等式 $\sum_{n = 0}^\infty |s|_{S^{n}} = |s|_{S^*}$。
+
+\end{proof}
+
+在证明了 引理~\ref{lem:sample} 之后，我们现在可以将其作为一个简单推论来证明 定理~\ref{thm:sample}，
+为便于查阅，此处将其重述如下。
+
+\begin{theorem*}
+考虑一个核心张量为 $\mc{A}$、边界向量为 $\alpha$ 与 $\omega$ 的 u-MPS 模型，以及一个无歧义（unambiguous）正则表达式 $R$，其右转移算子 $\ER_R$ 收敛。设 $P_*$ 表示由该 u-MPS 定义的在任意字符串上的概率分布，使得 $\Sigma_{s\in\Sigma^*} P_*(s) = 1$。则调用 $\Sample(R, \alphamat, \omegamat)$ 会从条件 u-MPS 分布 $P_*(s | s \in R) = P_*(s) / P_*(R)$ 生成一个随机字符串 $s \in \Sigma^*$，其中 $P_*(R) := \sum_{s' \in R} P_*(s')$。
+\end{theorem*}
+
+\begin{proof}
+
+由 引理~\ref{lem:sample}，我们知道了 $\Sample(R, \alphamat, \omegamat)$ 输出字符串的概率分布，以及 $P_*(s) = \Sample(\Sigma^*, \alphamat, \omegamat)$。这一刻画让我们能够证明
+%
+\begin{align*}
+    P_R(s, \alphamat, \omegamat) &= \sR \frac{\Pt(s, \alphamat, \omegamat)}{\mc{Z}_R(\alphamat, \omegamat)} = \sR \frac{\Pt(s, \alphamat, \omegamat)}{\Tr(\alphamat \ER_R(\omegamat))} \\
+    &= \sR \left( \frac{\Pt(s, \alphamat, \omegamat)}{\mc{Z}_{\Sigma^*}(\alphamat, \omegamat)} \right) \left( \frac{\mc{Z}_{\Sigma^*}(\alphamat, \omegamat)}{\sum_{s' \in R} \Pt(s', \alphamat, \omegamat)} \right) \\
+    &= \sR \frac{P_{\Sigma^*}(s, \alphamat, \omegamat)}{\sum_{s' \in R} P_{\Sigma^*}(s', \alphamat, \omegamat)} =
+    \begin{cases}
+    P_*(s) / P_*(R), &\text{if } s \in R\\
+    0, &\text{otherwise}
+    \end{cases} \\
+    &= P_*(s | s \in R).
+\end{align*}
+
+在第三个等号中，我们使用了 定理~\ref{thm:transfer_op} 中的 \eqref{eq:gen_transfer_op}（对于无歧义的 $R$，它退化为 式~\eqref{eq:transfer_op}）
+把 $\ER_R$ 表示为 $\ER_R = \sum_{s \in R} \ER_s$，同时在分子与分母中引入一个与 $\Sigma^*$ 相联系的归一化因子。在最后一个等号中，我们使用了与 $s$ 匹配正则表达式 $R$ 相联系的条件概率分布的定义，并利用了如下事实：对无歧义正则表达式，$\sR$ 要么为 1 要么为 0。
+
+\end{proof}
+
+\section{运行时分析}
+\label{sec:appendix_c}
+
+算法~\ref{alg:sampling} 
+\ 以递归过程的形式写出，这使得其运行时分析并不平凡。我们在此证明，这一采样过程在大多数情况下可以以随定义它的正则表达式（regex）$R$ 的长度 $L_R$ 线性增长的计算与存储代价完成。作为一个技术性假设，我们要求 $R$ 的星高（star height）有界，其中星高 $h_*(R)$ 递归地定义为 $h_*(c) = 0$，$h_*(R_1 R_2) = h_*(R_1 | R_2) = \max(h_*(R_1), h_*(R_2))$，以及 $h_*(S^*) = 1 + h_*(S)$。在实践中这一假设是非常宽松的。
+
+\begin{theorem}
+\label{thm:runtime}
+
+考虑核心张量（core tensor）$\mc{A}$ 与长度为 $L_R$ 且星高有界的正则表达式 $R$，其相应的右转移算符（transfer operator）$\ER_R$ 收敛。则调用 $\Sample(R, \QL, \QR)$ 将返回平均长度为 $\langle n \rangle = \bigO(L_R)$ 的随机字符串，其平均情况计算代价为 $C_R = \bigO(L_R d D^3)$，最坏情况内存开销为 $M_R = \bigO(L_R D^2)$。
+
+\end{theorem}
+
+\begin{proof}
+
+我们再次采用归纳证明，并附加假设 $C_R$ 同时也是应用转移算符 $\ER_R$ 的期望代价的上界。对于正则表达式长度 $L_R$，我们把字符 $|$、$($、$)$、$^*$ 以及 $c$（其中 $c \in \Sigma$）视为长度为 1，单字符正则表达式 $\Sigma$ 亦然。这一定义更接近现实世界中的正则表达式，其中元字符（metacharacter）``\texttt{.}'' 对应于我们的 $\Sigma$。
+
+为了在 算法~\ref{alg:sampling} 中利用缓存（caching），
+我们把二元正则表达式拼接 $R = R_1 R_2$ 的简单递归情形替换为较小正则表达式的极大拼接 $R = R_1 R_2 \cdots R_K$，其中每个 $R_i$ 要么是单个字符、正则表达式的并，要么是 Kleene 闭包。这样的拼接是唯一使用缓存的地方，这使我们能够以正则表达式长度 $L_R$ 而非随机字符串长度 $n_R$ 来界定内存用量。我们不计入保存 u-MPS 参数与中间变量所需的非缓存内存用量，它在所有情况下均为 $\bigO(d D^2)$。
+
+鉴于输出样本的长度 $n_R$ 通常是一个随机变量，我们首先证明其平均长度被界定为 $\langle n_R \rangle = \bigO(L_R)$。显然，对于任何不使用 Kleene 闭包构造的正则表达式 $R$，我们有更强的界 $n_R \leq L_R$。因此我们的归纳证明从这一最后剩下的 Kleene 闭包情形入手，证明对所有星高有界的正则表达式 $R$ 均有 $\langle n_R \rangle = \bigO(L_R)$。然后我们利用这一结果刻画 算法~\ref{alg:sampling} 的计算与内存需求。
+
+\paragraph{$\mathbf{R = S^*:}$} 要使 $\ER_{S^*}$ 收敛，必须有 $\ER_S$ 的谱半径（spectral radius）满足 $\lambda_S := \rho(\ER_S) < 1$。注意到这意味着对任意边界矩阵 $\QL, \QR$ 都有 $\Tr(\QL \ER_S(\QR)) \leq \lambda_S \Tr(\QL \QR)$，我们得到取得 $m$ 次 $S$ 出现的概率被上界为
+%
+\begin{equation*}
+p(m) = \Tr(\QL (\ER_S)^{\circ m}(\QR)) / \mc{Z}_R(\QL, \QR) \leq \lambda_S^m \Tr(\QL \QR) / \mc{Z}_R(\QL, \QR) = \lambda_S^m\, p(0).
+\end{equation*}
+%
+鉴于这一指数衰减的上界，$\Sample(S^*)$ 的输出平均而言将由 $\langle m \rangle = \bigO(\chi_S)$ 次对 $\Sample(S)$ 的调用构成，其中 $\chi_S := \lambda_S^{-1}$。假设我们能得到 $\Sample(S)$ 期望长度的一个不依赖于边界的上界，则这就证明了 $\langle n_{S^*} \rangle = \bigO(\chi_S \langle n_S \rangle)$。
+
+如果 $S$ 本身含有深度嵌套的 Kleene 闭包表达式，那么这一任务将变得困难，上述界会转化为 $\langle n_R \rangle = \bigO(\chi^{h_*(R)} L_R)$，其中 $h_*(R)$ 是 $R$ 的星高，$\chi$ 是 $R$ 内所有嵌套子表达式 $(S_i)^*$ 中最大的 $\chi_{S_i}$。然而，如果我们假设 $R$ 的星高有界，那么这就化为 $\langle n_R \rangle = \bigO(\chi^{h_*(R)} L_R) = \bigO(L_R)$，即我们所期望的界。
+
+接下来考虑 $\Sample(S^*)$ 的资源开销，我们作归纳假设：单次调用 $\Sample(S)$ 的平均情况运行时为 $\bigO(L_S d D^3)$，最坏情况内存用量为 $\bigO(L_S D^2)$。此时 算法~\ref{alg:sampling} 
+将从 $S$ 中抽取 $m$ 个样本，每次使用相同的右边界条件 $\QR^*$。由此得到的正则表达式长度、运行时与内存用量为
+%
+\begin{align*}
+    L_R &= L_S + 1 = \bigO(L_S), \qquad C_R = \bigO(\langle m \rangle C_S) = \bigO(\chi_S L_S d D^3) = \bigO(L_R d D^3), \\
+    M_R &= M_S = \bigO(L_S D^2) = \bigO(L_R D^2),
+\end{align*}
+%
+其中 $C_R$ 的最后一个等号利用了 $R$ 的星高有界。最后我们指出，上述关于 $C_R$ 的界同样适用于转移算符 $\ER_{S^*}$，其对 $\QR$ 的作用可以通过 $m$ 次应用 $\ER_S$ 以任意精度 $\epsilon = \exp(\bigO(-m / \chi_S))$ 逼近。
+
+\paragraph{$\mathbf{R = \sigma}$\textbf{，其中 }$\mathbf{\sigma=c}$\textbf{ 或 }$\mathbf{\Sigma:}$} 对于 $R = c$ 的情形，采样不需要任何资源。对于 $R = \Sigma$，采样过程的代价为 $C_\Sigma = \bigO(d D^3)$，这也给出了应用转移算符 $\ER_\sigma$ 代价的上界。此处正则表达式与输出字符串长度均为 1，且不涉及缓存，因此
+%
+\begin{equation*}
+    L_\sigma = 1, \qquad C_\sigma = \bigO(d D^3) = \bigO(L_\sigma d D^3), \qquad M_\sigma = 0 = \bigO(L_\sigma D^2).
+\end{equation*}
+%
+\paragraph{$\mathbf{R = R_1 R_2 \cdots R_K:}$} 在求值 $\Sample(R_1 \cdots R_K, \QL, \QR)$ 时，我们先通过从右到左的扫描，按规则 $\QR^{(K)} = \QR$ 与 $\QR^{(i-1)} = \ER_{R_i}(\QR^{(i)})$ 计算并缓存 $K$ 个右边界矩阵 $\QR^{(1)}, \QR^{(2)}, \ldots, \QR^{(K)}$。这具有内存开销 $M_R = \bigO(K D^2)$。有了这些右边界矩阵之后，我们再通过从左到右的扫描，借助对 $\Sample(R_i, \QL^{(i)}, \QR^{(i)})$ 的反复调用得到字符串 $s_1, s_2, \ldots, s_K$，其中左边界矩阵定义为 $\QL^{(1)} = \QL$ 与 $\QL^{(i+1)} = \EL_{s_i}(\QL^{(i)})$。无需对 $\QL^{(i)}$ 作任何缓存，且对 $\Sample(R_i, \QL^{(i)}, \QR^{(i)})$ 的每次调用通常涉及一些额外的内存用量，它们会在调用结束后立即释放。 
+
+应用我们关于各子表达式 $R_1, \ldots, R_K$ 的转移算符与 $\Sample$ 调用的运行时和内存用量的归纳假设，我们得到
+%
+\begin{align*}
+    L_R &= \sum_{i=1}^K L_{R_i}, \qquad C_R = \bigO\!\left(\sum_{i=1}^K C_{R_i}\right) = \bigO\!\left(\sum_{i=1}^K L_{R_i} d D^3\right) = \bigO(L_R d D^3), \\
+    M_R &= \bigO(K D^2) + \max_{i}(M_{R_i}) = \bigO(K D^2) + \bigO(\max_i(L_{R_i})D^2) = \bigO(L_R D^2).
+\end{align*}
+%
+\paragraph{$\mathbf{R = R_1 | R_2 | \cdots | R_K:}$} 为求值 $\Sample(R_1 | \cdots | R_K, \QL, \QR)$，我们必须先从分布 $p(i) = \mc{Z}_{R_i}(\QL, \QR) / \mc{Z}_R(\QL, \QR)$ 中抽取一个随机的 $i$，然后调用 $\Sample(R_i, \QL, \QR)$。这给出了整体运行时与内存用量的如下刻画
+%
+\begin{align*}
+    L_R &= \bigO\left(\sum_{i=1}^K L_{R_i}\right), \qquad C_R = \bigO\!\left(\sum_{i=1}^K C_{R_i}\right) = \bigO\!\left(\sum_{i=1}^K L_{R_i} d D^3\right) = \bigO(L_R d D^3), \\
+    M_R &= \max_i(M_{R_i}) = \bigO(\max_i(L_{R_i}) D^2) = \bigO(L_R D^2).
+\end{align*}
+
+\end{proof}
+
+\section{实验细节}
+\label{sec:appendix_d}
+
+\begin{table}[h]
+\caption{\citep{bengio1994} 中给出的 Tomita 文法 3--7 的定义，其中陈述了字符串属于每个文法的充要条件。Tomita 文法 1 和 2 分别对应字符串族 $1^n$ 和 $(01)^*$，由于其规模小、结构简单而未被使用。}
+\label{tab:tomita_def}
+\begin{center}
+\begin{small}
+\begin{tabular}{c|lllll}
+    \textbf{Tomita \#} & 3 & 4 & 5 & 6 & 7 \\
+    \midrule
+    \multirow{3}{*}{\textbf{描述}} & 不包含                 & 不包含               & 包含偶数个      & 0 的个数           & 具有形式 \\
+                                  & $1^{2n+1}0^{2m+1}$ 作为 & $000$ 作为子串       & 0 和 1        & 减去 1 的个数        & $0^*1^*0^*1^*$ \\
+                                  & 子串                   &                      &               & 是 3 的倍数          &
+\end{tabular}
+\end{small}
+\end{center}
+\end{table}
+
+我们使用的 u-MPS 模型是用 JAX~\citep{jax2018} 从零构建的，而基线模型则使用了 PyTorch~\citep{paszke2017} 中的 LSTM 和 Transformer 模块。实验代码可在 \url{https://github.com/jemisjoky/umps_code} 获取。
+这些 LSTM 是单层模型，具有 20 或 50 个隐藏单元（对双向 LSTM 而言每个方向为 20 或 50 个），并使用线性解码器和 softmax 输出层来获得字符概率。u-MPS 的键维（bond dimension）类似地选为 20 或 50，对于这两类模型，每个隐藏状态数目均进行五次独立试验，并使用验证误差最低的模型来产生第~\ref{sec:experiments} 节中报告的采样统计量。
+
+对于每个文法，模型分别在 1,000 或 10,000 个随机选取的字符串上进行训练，并使用 1,000 个字符串作为留出验证集。表~\ref{tab:tomita} 的采样百分比
+以及表~\ref{tab:motzkin} 的采样任务
+是通过从相应模型采样 1,000 个随机字符串得到的，而表~\ref{tab:motzkin} 的补全任务
+则使用了来自留出参考集的 1,000 个随机字符串，其中模型在将其余所有字符用作双向上下文的情况下推断每个字符串中的每个字符。
+
+在所有实验中，模型均相对于负对数似然（NLL）损失，使用梯度下降和 Adam 优化器~\citep{kingma2015} 进行训练。初始学习率为 $10^{-2}$，每当验证损失连续 5 个 epoch 未获改善时，学习率就降低为原来的十分之一。以这种方式，使用了 $10^{-2}$、$10^{-3}$ 和 $10^{-4}$ 的分段常数学习率，学习率的下一次下降标志着训练结束。
+
+u-MPS、HMM 和 Transformer 在所有实验中均以相同方式训练，单向 LSTM 也以同样方式训练。双向 LSTM 则专门针对字符串补全任务进行训练，其损失取为训练字符串每个位置上正确字符的 NLL 之和，条件是已知所有其他位置上的字符。对于表~\ref{tab:motzkin} 中的每一对采样与补全任务，
+均使用同一个训练好的 u-MPS 模型来产生这两种统计量。
+
+对于真实文本实验中使用的电子邮件地址数据集，我们提取了 CLAIR 欺诈邮件数据集~\citep{radev2008} 中包含的所有发件人和收件人地址，共得到约 4,000 个不同的地址。训练以与合成数据实验类似的方式进行，其中使用正则表达式 $R_{e} = \verb![\w-.]+@([\w-]+.)+[\w-][\w-]+!$ 来判断无条件采样字符串的正确性。
+
+我们的 regex 采样器和 regex regularizer 分别是算法~\ref{alg:sampling} 与表~\ref{tab:regex_cp} 中对应关系的直接递归实现。尽管这些朴素的实现相比针对 $R_e$ 专门化的实现通常会导致显著的额外开销，但 JAX 中即时（just-in-time, JIT）编译的使用显著降低了这一开销。在这种情形下采用 JIT 实际上具有充分的历史依据，因为 JIT 编译最早的应用之一正是识别匹配正则表达式的文本~\citep{thompson1968}。
+
+% \bibliographystyle{plain}
+% \bibliographystyle{apastyle}
+\bibliography{bib_file}
+
+\end{document}

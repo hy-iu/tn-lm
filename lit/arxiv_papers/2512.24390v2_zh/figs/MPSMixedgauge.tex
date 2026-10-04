@@ -1,0 +1,12 @@
+\begin{tikzpicture}[baseline=(current bounding box.center)]
+	\def\l{1.2};
+    \def\h{.65};
+
+    \draw[obj1] (-\l/2,0) -- (9*\l/2,0);
+    \foreach \i/\j in {0/L,1/L,3/R,4/R}{
+        \draw[obj1] (\l*\i,0) --+ (0,\h);
+        \node[mpstensor, inner sep=4.4pt] at (\l*\i,0) {};
+        \node at (\l*\i,0) {$\sss A_\j$};
+    }
+    \node[matrix] at (2*\l,0) {$\sss C$};
+\end{tikzpicture}

@@ -1,0 +1,115 @@
+
+Note that if the matrix $\Ub$ is left orthogonal then $\Ub\Ub^\ts$ is not necessarily the identity, i.e., 
+$$
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0};
+
+    \node[tensor, path picture={
+    \fill[fill=red!30!white](path picture bounding box.south east)
+    -- 
+    (path picture bounding box.north west) --
+    (path picture bounding box.north east) -- cycle;
+    }, shift={(\x,\y)}] (U) {$\Ub$};
+    
+    \node[tensor, path picture={
+    \fill[fill=red!30!white](path picture bounding box.south west)
+        -- 
+    (path picture bounding box.north east) --
+    (path picture bounding box.north west) -- cycle;
+    }, shift={(\x+1,\y)}] (Ut) {$\Ub$};
+
+    \draw[edge] (U) -- (Ut) node [midway,above] {\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge](Ut) -- (\x+2,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge](U) -- (\x-1,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$m$}}};
+    \node[draw=none] () at (\x+4.3,\y) {\scalebox{0.8}{\dimcolor{$=$}}};
+    \node[draw=none] () at (\x+2.3,\y) {\scalebox{0.8}{\dimcolor{$\neq$}}};
+    \draw[edge](\x+2.5,\y) -- (\x+4,\y)node [midway,above] {\scalebox{0.7}{\dimcolor{$m$}}};
+\end{tikzpicture}\Ib_m,$$ this will only be the case if $m=n$. 
+
+
+
+Using these visual cues, QR decomposition and SVD will have the following tensor networks:
+\begin{itemize}
+    \item\textbf{QR Decomposition} The~(rank revealing) QR decomposition of $\Ab\in\RR^{d_1\times d_2}$ is given by 
+    
+$$
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{-0.2}
+    \def\x{0}
+    \node[tensor,fill=red!30!white] (A) at (\x,\y+0.2){$\Ab$};
+    \draw[edge] (A) -- (\x-0.8,\y+0.2)  node [midway,above] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (A) -- (\x+0.8,\y+0.2)  node [midway,above] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \node[draw = none] at (\x+1.2,\y+0.2){$=$};
+    \node[tensor, path picture={
+    \fill[fill=red!30!white](path picture bounding box.south east)
+    -- 
+    (path picture bounding box.north west) --
+    (path picture bounding box.north east) -- cycle;
+    }, shift={(\x+2.5,\y+0.2)}] (Q) {$\Qb$};
+    \node[tensor,fill=blue!30!white] (R) at (\x+3.5,\y+0.2){$\Rb$};
+    \draw[edge] (Q) -- (R)  node [midway,above] {\scalebox{0.7}{\dimcolor{$R$}}};
+    \draw[edge] (Q) -- (\x+1.7,\y+0.2)  node [midway,above] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (R) -- (\x+4.3,\y+0.2)  node [midway,above] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+\end{tikzpicture},$$
+where 
+$\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor, path picture={
+    \fill[fill=red!30!white](path picture bounding box.south east)
+    -- 
+    (path picture bounding box.north west) --
+    (path picture bounding box.north east) -- cycle;
+    }, shift={(\x,\y)}] (Q) {$\Qb$};
+    \draw[edge] (Q) -- (\x+0.7,\y)  node [midway,above] {\scalebox{0.7}{\dimcolor{$R$}}};
+    \draw[edge] (Q) -- (\x-0.7,\y)  node [midway,above] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+\end{tikzpicture}
+\in\RR^{d_1\times R}$
+is the left-orthogonal matrix, i.e., $\Qb^\ts\Qb = \Ib_R$, $\Rb\in\RR^{R\times d_2}$ is upper triangular~(which is not apparent in the tensor network representation) and $R$ is the rank of $\Ab$. 
+\item \textbf{Singular Value Decomposition~(SVD)} The~(compact) SVD of $\Ab\in\RR^{d_1\times d_2}$ is given by 
+\begin{align*}
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!30!white] (A) at (\x,\y){$\Ab$};
+    \draw[edge] (A) -- (\x-0.8,\y)  node [midway,above] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (A) -- (\x+0.8,\y)  node [midway,above] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \node[draw = none] at (\x+1.35,\y){$=$};
+    \node[tensor, path picture={
+    \fill[fill=red!30!white](path picture bounding box.south east)
+    -- 
+    (path picture bounding box.north west) --
+    (path picture bounding box.north east) -- cycle;
+    }, shift={(\x+3,\y)}] (U) {$\Ub$};
+    \node[tensor,fill=blue!20!red!40!white] (sigma) at (\x+4.2,\y){\scalebox{0.85}{}};
+    \node[tensor, path picture={
+    \fill[fill=red!30!white](path picture bounding box.south west)
+        -- 
+    (path picture bounding box.north west) --
+    (path picture bounding box.north east) -- cycle;
+    }, shift={(\x+5.2,\y)}] (V) {$\Vb$};
+    \draw[edge=0.5] (sigma.south west) -- (sigma.north        east);
+    \draw[edge] (U) -- (sigma) node [midway,above] {\scalebox{0.7}{\dimcolor{$R$}}};
+    \draw[edge] (sigma) -- (V)node [midway,above] {\scalebox{0.7}{\dimcolor{$R$}}};
+    \draw[edge](U) -- (\x+2,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge](V) -- (\x+6.2,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+\end{tikzpicture}~,
+\end{align*}
+where $\Ub\in\RR^{d_1\times R}$ is left-orthogonal~($\Ub^\ts\Ub= \Ib_R$), $\Vb\in\RR^{R\times d_2}$ is  right-orthogonal~($\Vb\Vb^\ts = \Ib_{R}$), $\Sigmab\in\RR^{R\times R}
+=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=blue!20!red!40!white] (sigma) at (\x,\y){\scalebox{0.85}{}};
+    \draw[edge=0.5] (sigma.south west) -- (sigma.north        east);
+    \draw[edge](sigma) -- (\x-0.7,\y);
+    \draw[edge](sigma) --(\x+0.7,\y);
+\end{tikzpicture}$ is diagonal and $R$ is the rank of $\Ab$. 
+\end{itemize}
+

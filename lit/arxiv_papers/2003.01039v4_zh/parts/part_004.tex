@@ -1,0 +1,30 @@
+\subsection{Born 机器}
+
+\eqnref{eq:mps_amp} 与 WFA 的求值规则完全相同，也非常适合回归任务，但我们感兴趣的是将 u-MPS 用作生成模型（generative model）。这要求把 $f_{\mc{A}}(s)$ 解释为一个非负概率 $P(s)$，而判定一个一般的 WFA 是否会输出负值是不可判定的（undecidable）~\citep{denis2008}。这一问题可以通过要求 $\mc{A}$、$\alpha$ 和 $\omega$ 的所有元素均为非负实数来规避，但此类模型在很大程度上等价于隐马尔可夫模型（hidden Markov model）~\citep{denis2008}。
+
+我们转而遵循~\citep{pestun2017a}（另见~\citep{han2018}）中引入的方法，该方法受量子力学中 MPS 典型用法的启发。对于 u-MPS 的情形，这种 \emph{Born 机器}（Born machine）方法将标量值 $f_{\mc{A}}(s)$ 转换为一个未作 normalization 的概率 $\Pt(s) := \left|f_{\mc{A}}(s)\right|^2$。通过选取 $P_n(s) = \Pt(s) / \Z_n$，可以将其转换为固定长度 $n$ 序列上恰当 normalization 的分布，其中 normalization 函数 $\Z_n$ 由下式给出
+%
+\begin{align}
+\label{eq:partition_n}
+\Z_n &= \sum_{s \in \Sigma_n} \Pt(s) = \sum_{i_1\in[d]} \sum_{i_2\in[d]} \cdots \sum_{i_n\in[d]} \left| (T_n)_{i_1,i_2,\ldots,i_d} \right|^2 \nonumber\\
+&= \left\lVert\mc{T}_n\right\rVert^2,
+\end{align}
+%
+其中 $\mc{T}_n$ 是由该 u-MPS 定义的 $n$ 阶张量。这种二次型求值规则等价于量子力学的 Born 规则~\citep{born1926}，它为这类模型给出了作为 $n$ 个量子自旋上的波函数（wave function）的形式解释。不过在 u-MPS 的情形下，这种概率对应关系更为丰富，因为可以很容易地定义不同长度序列上的分布。特别地，分布 $P(s) = \Pt(s) / \Z_*$ 给出了任意长度字符串上的概率分布，其中 normalization 因子 $\Z_*$ 与 \eqnref{eq:partition_n} 中给出的相同，只是把对 $\Sigma^n$ 的求和替换为对 $\Sigma^*$ 的求和。我们将在 Section~\ref{sec:regex} 中展示如何将这种形式的 normalization 函数进一步推广，以纳入对所有匹配任意正则表达式 $R$ 的字符串的求和。
+
+类似 $\Z_n$ 的 normalization 函数在多体物理中频繁出现，并且可以通过对张量收缩进行简单的重新排序而高效计算。由 \eqnref{eq:partition_n}，$\Z_n$ 等于 $\mc{T}_n$ 的 2-范数，其图形表示为 Figure~\ref{fig:contraction}e。计算 $\Z_n$ 的朴素方法是先沿 u-MPS 的水平 $D$ 维指标收缩生成 $\mc{T}_n$ 的所有元素，但张量收缩的广义结合律使我们能够更高效地求值该表达式。
+
+通过先把两份 $\mc{A}$ 沿一个竖直的 $d$ 维指标收缩（见~\eqnref{fig:contraction}f），我们得到一个 4 阶张量 $\E$，它可以按两种主要方式解释为矩阵空间上的线性映射，即将其左指标或右指标与输入收缩。这些线性映射被称为\emph{转移算符}（transfer operator），是完全正（CP）映射的例子，后者是随机矩阵的推广，在量子信息理论中有频繁应用（更多细节见 Appendix~\ref{sec:appendix_a}）。这些映射容许 Kraus 表示 $\ER(\QR) = \sum_{c\in\Sigma} \mc{A}(c) \QR \mc{A}(c)^T$ 和 $\EL(\QL) = \sum_{c\in\Sigma} \mc{A}(c)^T \QL \mc{A}(c)$，二者由伴随恒等式 $\Tr(\QL \ER(\QR)) = \Tr(\EL(\QL) \QR)$ 相联系。\footnote{一般地，CP 映射是按规则 $\mc{F}(Q) = \sum_{i=1}^K A_i Q A_i^T$ 作用于方阵的线性算符 $\mc{F}$。CP 映射保证把正半定（PSD）矩阵映为其他 PSD 矩阵，从而我们可以在下文假设所有 $\QL$ 和 $\QR$ 都是 PSD 的。}
+
+normalization 项 $\Z_n$ 可以等价地用左或右转移算符计算，采用后者得到
+%
+\begin{align}
+\label{eq:normalization}
+\Z_n &= \alpha^T \ER(\ER(\cdots\ER(\omegamat))\cdots) \alpha \nonumber\\
+         &= \Tr\left( \QL^\alpha\ (\ER)^{\circ n}(\QR^\omega) \right),
+\end{align}
+%
+其中 $\QL^\alpha = \alphamat$ 和 $\QR^\omega = \omegamat$ 是构成 normalization 项边界条件的秩-1 矩阵。我们用 $(\ER)^{\circ n}$ 表示 $\ER$ 与自身复合 $n$ 次，并定义 $(\ER)^{\circ 0}$ 为作用于方阵的恒等映射。对于字母表大小为 $d$、键维为 $D$ 的 MPS，一次转移算符的施加需要时间 $\bigO(dD^3)$，因此计算 $\Z_n$ 的顺序运行时间为 $\bigO(ndD^3)$。通过把转移算符表示为 $D^2 \times D^2$ 矩阵，这一计算可以按 Section~\ref{sec:umps} 中描述的类似方式并行化，但代价是将总计算代价提高到 $\bigO(nD^6)$。
+
+分布 $P(s) = \Pt(s) / \Z_*$ 覆盖所有字符串 $s\in\Sigma^*$，它在下文中扮演重要角色，但要使用它，我们必须确保无穷求和 $\Z_* = \sum_{s\in\Sigma^*} \Pt(s)$ 确实收敛。这一收敛性可以通过把核心张量重新缩放为新的 $\mc{A}' = \gamma \mc{A}$ 来保证，其中标量 $\gamma$ 满足 $0 < |\gamma| < \sqrt{\rho(\ER)}$，而 $\rho(\ER)$ 是 $\ER$ 的谱半径。这样的重标度使所有固定长度分布 $P_n(s)$ 保持不变，同时在 $P(s)$ 中引入偏向更短（$|\gamma| < 1$）或更长（$|\gamma| > 1$）字符串的偏置。
+

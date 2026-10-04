@@ -1,0 +1,13 @@
+\begin{tikzpicture}[baseline={([yshift=10pt]current bounding box.south)}]
+    \def\l{.8};
+    \def\h{.7};
+    
+    \draw[obj1] (-\l,-\h/2) -- (-\l,\h/2);
+    \draw[obj2, rounded corners=3pt] (0,-\h/2) -- (0,\h/2) -- (\l,\h/2);
+    \draw[obj1] (-2*\l,-\h/2) -- (\l,-\h/2);
+    
+    \node[draw=black, line width=.7pt, fill=gray!20, circle, inner sep=2.9pt] at (0,-\h/2) {};
+    \node[mpstensor, inner sep=2.9pt] at (-\l,-\h/2) {};
+    
+    \node[anchor=south] at (\l/2,\h/2) {$\sss g$};
+\end{tikzpicture}

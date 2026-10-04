@@ -1,0 +1,226 @@
+\section{第三讲：物态}
+\label{sec:PhasesOfMatter}
+\subsection{有能隙物态、纠缠与对称性}
+量子多体物理中的一个基本挑战是确定给定模型的\emph{相图}（phase diagram）。如果两个模型之间存在一条由有能隙、有界强度、局域 Hamiltonian 构成的光滑插值路径，则称它们属于同一个相。从务实的角度来看，这等价于存在一个将它们的基态相互映射的\emph{次线性深度量子线路}（sublinear-depth quantum circuit）~\cite{Bravyi2006,Hastings2010}。不同的相之间由相变所分隔；在二阶相变的情形下——正如上文在\cref{sec:scaling}中所遇到的——通常由共形场论（conformal field theory, CFT）来描述~\cite{DiFrancesco1997}。对于具有两个参数 $h_{1,2}$ 的模型，虚构的相图示意如下。
+
+相变的 \emph{Landau 范式}（Landau paradigm）指出，每一种物态都与一种对称性破缺模式一一对应~\cite{Landau1937}。最著名（经典）的例子自然是水结成冰的相变，在此过程中连续欧几里得对称性破缺为其 230 个子群之一，这些子群也被称为\emph{空间群}（space groups）。此外，该范式指出，这种对称性的破缺可以通过在对称群下带荷的局域序参量（order parameter）来诊断。反之，正如 Kadanoff 和 Ceva 所论证的，\emph{对称}相可以通过\emph{乱序算符}（disorder operators）来识别~\cite{Kadanoff1970}。自诞生以来，Landau 范式已在诸多方面得到了推广。
+
+首先，人们逐渐认识到，量子系统在将其对称性破缺至某一子群后，其剩余对称性可以在其纠缠自由度上以不同的方式实现。如果我们要求 Hamiltonian 之间的绝热路径与对称性对易，那么这些可区分的纠缠模式就对应于不同的相。出于这个原因，此类\emph{对称保护拓扑}（symmetry-protected topological, SPT）相可以自然地借助张量网络来描述和分类~\cite{Chen2010,Chen2011,Schuch2011,GarreRubio2022}。
+
+本讲的目标是利用 MPS 框架，概述在存在群对称性的一维量子物态的分类。正如在\cref{sec:NormalObs}中所指出的，MPS 中的对称性破缺表现为基态 MPS 中存在不同的单射块（injective blocks）。这些块由子群 $H\subseteq G$ 的陪集 $G/H$ 标记，并在群作用下相互置换。因此，挑战在于对实现在每个此类单射块上的\emph{对称相}进行分类。为此，我们将首先推导 MPS 的\emph{基本定理}（fundamental theorem），该定理指出：一个 MPS 在某一对称性下不变，当且仅当其局域张量在该对称性下平庸变换。这一定理生动地体现了张量网络将态的\emph{全局}性质编码在\emph{局域}张量之中的核心思想。这将引导我们进入\emph{射影表示}（projective representations）的领域，其对应的上同调分类提供了一个\emph{拓扑指数}（topological index），用于对不同的对称相进行分类，即两个单射 MPS 属于同一个相，当且仅当它们的拓扑指数相同。值得注意的是，如果不对系统施加任何对称性，则所有一维玻色系统均属于同一个相。对于费米子而言，情况更为复杂，由于始终存在的费米子宇称对称性，可能存在非平庸的相；这将是\cref{sec:Fermions}的主题。
+
+我们在此也预示后续各讲的目标。随着分数量子霍尔效应及其他二维\emph{拓扑物态}（topological phases of matter）的发现，人们清楚地认识到，即使系统不表现出任何对称性，它仍然可以属于非平庸的量子物态。这些物态的特征在于：依赖于底空间拓扑的基态简并度、有能隙的\emph{任意子激发}（anyonic excitations），以及在某些情况下的手征边缘模（chiral edge modes）。它们同样不能被任何局域序参量所探测。正如我们将在下一讲中所讨论的，这些相的稳定性源于系统中的纠缠是\emph{长程}（long range）的。特别地，在\emph{非手征拓扑序}（non-chiral topological order）的情形下，纠缠模式也是基态简并度的根源所在，因为人们已经认识到，纠缠自由度表现出由\emph{融合范畴}（fusion category）所描述的弦状“对称性”。我们将在下文的\cref{sec:QuantumDoubles}中遇到一类特别简单的拓扑序，并在\cref{sec:SN}中给出一般非手征情形的微观构造。纠缠自由度上这些\emph{广义对称性}（generalised symmetries）的存在尤其意味着，描述边缘模动力学的拓扑序边界 Hamiltonian 也会继承这些对称性。因此，我们自然倾向于为这些广义对称性也考虑一个 Landau 范式，这也将是最后一讲的主题之一。
+\begin{equation}
+    \inputtikz{PhaseDiagram}
+\end{equation}
+\subsection{MPS 基本定理}\label{sec:FundamentalTheorem}
+正如前文所预期的，MPS 的\emph{基本定理}（fundamental theorem）\cite{Perez2008}在分类一维对称有能隙物态以及 MPS 的诸多其他应用中起着至关重要的作用。我们将应用该定理的如下具体形式：两个均匀\emph{单射}（injective）矩阵乘积态在任意具有周期性边界条件的系统上（与系统长度无关）表示相同的态，当且仅当这两个 MPS 的张量在虚指标层面上通过一个非奇异 gauge 变换相关联：
+\begin{equation}\label{eq:FundTh}
+\boxed{
+    \ket{\Psi[A]} \sim \ket{\Psi[B]} \iff A^i = e^{i\chi} XB^iX^{-1}, \quad\forall i
+    }.
+\end{equation}
+注意，我们在不失一般性的前提下假设两个 MPS 具有相同的键维。当两个 MPS 都处于 canonical form 时，$X$ 是幺正的。
+
+作为前面几讲中所引入的若干关键概念的应用，我们在此给出一个证明。
+
+首先注意到，$\impliedby$ 方向是平凡的，因为 $X$ 与 $X^{-1}$ 的所有出现均在虚指标层面上相互抵消。为了证明 $\implies$ 方向，我们在不失一般性的前提下假设 $\ket{\Psi[A]}$ 处于右 canonical form，而 $\ket{\Psi[B]}$ 处于左 canonical form。现在考虑如下混合转移矩阵（mixed transfer matrix）：
+\begin{equation}
+    \mbb T_{A,B} = \inputtikz{MPSMixedTransfer} \,\, .
+\end{equation}
+由于 $\vert\braket{\Psi[A]}{\Psi[B]}\vert=1$，混合转移矩阵的主本征值具有单位模长~\cite{Cirac2016}。我们将其对应的右本征矢量记为 $X$，从而满足 $\mbb T_{A,B}X = e^{i\phi} X$。现在考虑如下收缩：
+\begin{equation}
+    e^{-i\phi}\,\inputtikz{FundTh_1}\,.
+\end{equation}
+首先注意，一方面，借助 $\mbb T_{A,B}X = e^{i\phi} X$，该表达式等于 $\Tr(X^\dagger X)$。另一方面，将该表达式解释为关于对角切口的两个矢量的内积，并应用 Cauchy-Schwarz 不等式，我们得到
+\begin{equation}
+    \Tr(X^\dagger X) = e^{-i\phi} \inputtikz{FundTh_1} \leq \left\lvert\, \inputtikz{FundTh_2} \,\right\rvert^{1/2} \times \hspace{10pt} \left\lvert\,\inputtikz{FundTh_3} \,\right\rvert^{1/2} = \Tr(X^\dagger X),
+\end{equation}
+其中我们利用了 $A$ 与 $B$ 分别处于右和左 canonical form 的事实。因此等号显然成立，这蕴含着 $A^iX = e^{i\chi}XB^i$；又因 $X$ 是满秩的，由此即得\cref{eq:FundTh}。
+\subsection{一维玻色物质的 SPT 分类}\label{sec:SPT1d}
+让我们考虑一个具有唯一基态的有能隙 Hamiltonian $H$，并假设它与一个对称性 $G$ 对易：对于表示 $\{U(g),g\in G\}$，满足 $[U(g)^{\otimes L},H]=0$。由于 $H$ 是有能隙的且具有唯一基态，基态必须继承该对称性。这保证了该基态可由一个单射 MPS 忠实表示。因此，该 MPS $\ket{\Psi[A]}$ 在 $G$ 作用下必须平庸变换，即：
+\begin{equation}
+    U(g)^{\otimes N} \ket{\Psi[A]} \simeq \ket{\Psi[A]}, \quad \forall g \in G.
+\end{equation}
+直接应用基本定理\cref{eq:FundTh}表明，MPS 张量本身在对称群下必须平庸变换，即：
+\begin{equation}\label{eq:gMPS}
+    \forall g \in G,\, \exists X_g,\chi_g: \, \sum_j U(g)_{ij} A^j = e^{i\chi_g} X_gA^iX_g^\dagger
+\end{equation}
+在此应当注意，gauge 矩阵和相位本身均依赖于群元素 $g$。现在让我们考虑由 $g$ 和 $h$ 标记的对称性算符相继作用在该态上的情形。我们可以通过两种不同方式来实现这一点：要么直接作用 $U(gh)$ 并应用一次基本定理，要么依次作用 $U(g)$ 和 $U(h)$ 并应用两次基本定理。令这两个结果相等可得：
+\begin{equation}
+    e^{i\chi_{gh}}X_{gh} A^i X_{gh}^\dagger = e^{i(\chi_g+\chi_h)}X_gX_h A^i X_h^\dagger X_g^\dagger,\quad\forall i,g,h.
+\end{equation}
+由于 $A^i$ 是单射的，从而张满整个矩阵代数，这仅在 $\chi_{gh}=\chi_g +\allowbreak \chi_h$ 且 $ X_gX_h = \psi(g,h) X_{gh}$（其中 $\psi(g,h)$ 为 $\rU(1)$ 相位）时才可能成立。前者意味着 $\{e^{i\chi_g},g\in G\}$ 构成了 $G$ 的一维表示。注意，在将有限数目的 $M$ 个格点合并成块（blocking）之后，我们获得了一个放大的原胞，对于该原胞，相位 $e^{iM\chi_g}=1$ 消失。因此我们可以说这一相位\emph{在分块下是不稳定的}，在后续相分类中我们将不再对其做进一步考虑。另一方面，满足如下关系式的矩阵集合 $\{X_g,g\in G\}$：
+\begin{equation}\label{eq:ProjRep}
+    X_gX_h = \psi(g,h) X_{gh}, \quad \forall g,h\in G,
+\end{equation}
+（对于某些相位 $\psi(g,h)\in\rU(1)$）构成了 $G$ 的一个所谓\emph{$\psi$-射影表示}（$\psi$-projective representation）。射影表示通过在矩阵乘法中允许射影相位 $\psi(g,h)$，推广了普通的\emph{线性表示}（linear representations）。由于矩阵乘法的结合律，相位 $\psi(g,h)$ 必须满足
+\begin{equation}\label{eq:2cocycle}
+    \psi(g,h)\psi(gh,k) = \psi(g,hk)\psi(h,k), \quad \forall g,h,k\in G,
+\end{equation}
+这一自洽性方程通常称为\emph{二重上循环方程}（second cocycle equation）。对于任意函数 $\phi:G\rightarrow\rU(1)$，该条件具有形如 $\psi(g,h)=\frac{\phi_{gh}}{\phi_g \phi_h}$ 的平庸解。在群上同调的语境下，这种平庸的上循环称为\emph{上边缘}（coboundary）。为了对相进行分类，我们将希望考虑上循环方程\emph{模去}上边缘的解。事实上，从基本定理可以清楚看出，对于任意函数 $\phi$，我们都可以自由地重新定义 $X_g\mapsto \phi_gX_g$。为此，注意到上循环与上边缘分别构成阿贝尔群，分别记为 $Z^2(G,\rU(1))$ 与 $B^2(G,\rU(1))$。由于 $B^2(G,\rU(1))$ 显然是 $Z^2(G,\rU(1))$ 的正规子群，我们可以考虑商群 $H^2(G,\rU(1)):=Z^2(G,\rU(1))/B^2(G,\rU(1))$，即 $G$ 在 $\rU(1)$ 上的\emph{第二上同调群}（second cohomology group）。
+
+注意，在上循环方程\cref{eq:2cocycle}两边取对数并将未知相位 $\psi(g,h)$ 收集到矢量 $\bm{\psi}$ 中后，它可以写为一个模 $2\pi$ 满足的线性方程组：
+\begin{equation}
+    \Omega \bm{\psi} = \vec{0}, \mod 2\pi.
+\end{equation}
+计算第二上同调群及相应的代表元上循环，可以通过将 $\Omega$ 化为 \emph{Smith normal form} 来完成，这是具有整数系数的矩阵的一种矩阵分解，形式为 $\Omega=P\Lambda R$，其中 $P$ 和 $R$ 均为幺模整数矩阵，而 $\Lambda$ 为对角矩阵。详细解释参见\cref{sec:GroupCohomology}。主要观察是，第二上同调群总是有限群，且具有如下形式：
+\begin{equation}\label{eq:H2}
+    H^2(G,\rU(1)) \simeq \mbb Z_{d_1}\times\mbb Z_{d_2}\times\dots\times\mbb Z_{d_r},
+\end{equation}
+其中 $d_i$ 是 $\Lambda$ 的对角元。$H^2(G,\rU(1))$ 的群结构在物理上是通过\emph{堆叠}（stacking）两条 $G$-对称自旋链并将 $G\times G$ 的对角子群作为整体的 $G$ 对称性来实现的。
+
+人们可以证明，如果两个 MPS 在某一 $G$ 对称性下以对应于 $H^2(G,\rU(1))$ 中不同上同调类的射影表示变换，则这两个 MPS 必定表示处于不同相中的基态~\cite{Schuch2011}。换言之，不存在一条可以连接二者而不穿过相变的对称绝热路径。在那类情形中，不同的上同调类有时被称为构成了实现这一转变的\emph{拓扑阻碍}（topological obstruction），而代表元上循环有时被称为表征该相的\emph{拓扑指数}（topological index）。如果我们允许破缺对称性的路径，那么所有 MPS 都将再次属于同一个平庸相。特别地，由于\cref{eq:H2}，对称相的数目总是有限的。该证明超出了本讲义的范围，但让我们指出，该论证严重依赖于 MPS 的 parent Hamiltonian 构造（见\cref{sec:NormalObs}）。
+
+\bigskip\noindent 任何射影表示的一个重要性质是，当它对应于非平庸上同调类时，其矩阵维度必然严格大于 1。例如，考虑具有非平庸第二上同调群的最小群，即 $\mbb Z_2\times \mbb Z_2$，$H^2(\mbb Z_2\times \mbb Z_2,\rU(1))\simeq \mbb Z_2$。如果我们将其群元素用二元组 $(a,b)$（$a,b=0,1$）表示，则一个非平庸射影表示由 Pauli 矩阵给出如下：$X_{(a,b)}=(\sigma^X)^a(\sigma^Z)^b$，且该表示不能被进一步约化。这一事实对于处于非平庸 SPT 相中的 MPS 的纠缠具有重要推论，并且还保证了无能隙对称保护边缘模的存在~\cite{Pollmann2009}。
+
+事实上，纠缠谱（参见\cref{sec:NormalObs}）的特征在于其简并度至少为该类中最小不可约射影表示的维度。这一点在自旋 1 反铁磁 Heisenberg 模型中得到了极为优美的体现。在\cref{fig:HeisenbergEntanglement}中绘制了前 48 个 Schmidt 值，能谱明显组织成至少具有二重简并的多重态。在这一情形下，保护对称性是 ${\rm SO}(3)$，其第二上同调群确实具有非平庸元素：$H^2({\rm SO}(3),\rU(1))\simeq \mbb Z_2$。${\rm SO}(3)$ 的所有不可约表示均具有奇数维，因此这些简并显然源自 ${\rm SU}(2)$ 的半整数不可约表示，后者确实构成了 ${\rm SO}(3)$ 的射影表示。事实上，该相也受到 ${\rm SO}(3)$ 的 $\mbb Z_2\times \mbb Z_2$ 子群的保护，因此我们甚至可以用破缺部分 ${\rm SO}(3)$ 对称性的项来微扰 Hamiltonian，只要这些项仍与 $\mbb Z_2\times \mbb Z_2$ 对易，系统就不会离开该 SPT 相。
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=0.7\linewidth]{plots/HeisenbergEntanglementSpectrum.pdf}
+    \caption{热力学极限下键维为 48 的自旋 1 Heisenberg 模型基态的纠缠谱。使用 MPSKit.jl 绘制~\cite{VanDamme}。}
+    \label{fig:HeisenbergEntanglement}
+\end{figure}
+
+正如在\cref{sec:Examples}中所预期的，SPT 相的另一个标志是，当在开链上考虑时，存在受对称性保护的无能隙\emph{边缘模}（edge modes）。矩阵乘积态（及其高维推广，见\cref{sec:PEPS}）的一个特征是，这些边缘模的张量积基底由边界上的纠缠自由度提供。事实上，假设我们有一个键维为 $\chi$ 的均匀 MPS $\ket{\Psi[A]}$。我们可以在具有 $N$ 个格点的开链上考虑如下 $\chi^2$ 个态：
+\begin{equation}
+    \ket{\Psi[A]} = \sum_{\{i_j\}} (A^{i_1}A^{i_2}\cdots A^{i_N})_{\alpha\beta} \ \ket{i_1,i_2,\dots,i_N}.
+\end{equation}
+所有态 $\ket{\Psi[A],\alpha,\beta}$（$\forall \alpha,\beta=1,\dots,\chi$）对于 parent Hamiltonian 都具有相同的能量，因此表面上看我们拥有 $\chi^2$ 个简并的边缘模。然而，通过微扰 Hamiltonian，其中某些边缘模可以被打开能隙。尽管如此，只要我们限制在保持对称性的微扰上，边缘模就会在虚指标层面上按照射影表示进行变换：
+\begin{equation}
+    U(g)^{\otimes N}\ket{\Psi[A],\alpha,\beta} = \sum_{\alpha',\beta'} (X_g)_{\alpha\alpha'} (\bar X_g)_{\beta\beta'}\,\,\ket{\Psi[A],\alpha',\beta'},
+\end{equation}
+因此，边缘模至少保持二重简并。
+
+\bigskip\noindent 至此，我们总结了\emph{玻色} $G$-对称有能隙一维相的分类。对于给定的对称群 $G$，有能隙相与在基态子空间中表示\emph{未破缺}对称性的子群 $H\subseteq G$，以及表示残存 $H$ 对称性的 SPT 相的上同调类 $[\psi]\in H^2(H,\rU(1))$ 之间存在一一对应。
+
+顺便指出，此类数对 $(H,[\psi])$ 也表征了 $\Vect_G$ 上的（不可分解）\emph{模范畴}（module categories），其中 $\Vect_G$ 是 $G$-分阶向量空间的\emph{融合范畴}（fusion category）（参见\cref{sec:cat}）。因此，在 $\Vect_G$-模范畴与有能隙 $G$-对称相之间存在一一对应。当然，对于群对称性的简单情形，这一观察完全是多余的，但在最后一讲中我们将论证，对于一般的融合范畴对称性，这种对应关系依然成立。
+\subsection{时空对称性}
+上述讨论集中在 Hamiltonian 的内部对称性上，但在稍作修改后同样适用于时空对称性。在处理这些对称性时，必须解决两个在内部对称性情形下不存在的问题。首先，注意诸如平移对称性和空间反演等某些时空对称性是以非局域方式起作用的。另一方面，诸如时间反演或反演对称性等\emph{改变定向}（orientation-reversing）的对称性是以反幺正方式起作用的，因此依赖于所选取的基底。正如我们下文所见，后者对 SPT 相的上同调分类有着深刻的影响。尽管如此，MPS 仍然提供了一个合适的框架，在此框架下由空间对称性保护的对称相分类可以被明确导出~\cite{Pollmann2009,Vancraeynest2022}。
+
+让我们说明类似于上述的推理如何导出由时间反演对称性保护的相的分类。通常，时间反演对称性表现为 $UK$，其中 $U$ 是幺正操作，在自旋 1/2 的情形下正如 Wigner 所证明的那样为 $(\sigma^Y)^{\otimes N}$~\cite{Wigner1960}，而 $K$ 是复共轭。为简便起见，我们在此假设 $U=\mbb 1$。用复共轭作用在单射 MPS $\ket{\Psi[A]}$ 上并应用基本定理，可得
+\begin{equation}
+    \bar A^i = e^{i\chi}QA^iQ^{-1}.
+\end{equation}
+随后再次施加时间反演对称性，并利用 MPS 的单射性，可知：
+\begin{equation}\label{eq:TRProjective}
+    Q\bar Q = \pm \mathbb 1.
+\end{equation}
+我们由此获得了一个对应于该符号的非平庸拓扑指数，从而给出时间反演 SPT 相的 $\mbb Z_2$ 分类。作为例证，考虑 AKLT 态\cref{eq:AKLTState}。容易验证在该情形下 $Q=\sigma^Y$，$Q\bar{Q}=-\mathbb 1$，因此 AKLT 态关于时间反演对称性属于一个非平庸 SPT 相。
+
+注意，由于 $Q$ 上的复共轭，\cref{eq:TRProjective} 中的 $Q$ 不能被解释为 $\mbb Z_2$ 的非平庸射影表示。因此，\cref{eq:TRProjective} 中的相位 $\pm 1$ 也不能被解释为 $H^2(\mbb Z_2,\rU(1))$ 的非平庸上循环（后者实际上是平凡的）。因此，我们需要射影表示和上循环的推广概念，以适应某些群元素以反幺正方式起作用的对称群。容易验证，当一个一般对称群 $G$ 具有反幺正元素时，gauge 矩阵 $X_g$ 按照如下规则相乘：
+\begin{equation}
+    X_g\beta_g(X_h) = \psi(g,h) X_{gh},
+\end{equation}
+其中当 $g$ 为反幺正元素时 $\beta_g(\bullet)$ 表现为复共轭，否则表现为恒等映射。显然，当所有群元素均以幺正方式起作用时，该式等价于\cref{eq:ProjRep}；当对称群为 $\mbb Z_2$ 时间反演时，该式等价于\cref{eq:TRProjective}。同样容易验证，此时关于 $\psi(g,h)$ 的自洽性条件写作
+\begin{equation}
+    \psi(g,h)\psi(gh,k) = \psi(g,hk)\beta_g(\psi(h,k)), \quad \forall g,h,k\in G.
+\end{equation}
+相应地，上边缘的概念也必须稍作调整。综合起来，这意味着在存在反幺正对称性的情况下，SPT 相的上同调分类必须做出调整，以考虑非平庸的群作用 $\beta_g(\bullet)$。相应的上同调群记为 $H^2(G,\rU(1)^\beta)$，且通常不同于 $H^2(G,\rU(1))$。重要的是，该群可以通过前述并在\cref{sec:GroupCohomology}中详述的相同方法进行计算。与 AKLT 态的例子相对应，我们确实有 $H^2(\mbb Z_2,\rU(1)^\beta)=\mbb Z_2$。
+\subsection{费米子 MPS 与对称相}\label{sec:Fermions}
+到目前为止，我们仅关注了\emph{玻色}矩阵乘积态。本节的目标是概述将 MPS 框架推广至\emph{费米子系统}的方法，并强调由此产生的一些技术复杂性，在此紧密遵循文献~\cite{Bultinck2016}，亦参见文献~\cite{Kapustin2016,Mortier2024}。
+
+\bigskip\noindent 至关重要的是\emph{超向量空间}（super vector space）的概念，即允许如下形式直和分解的向量空间：
+\begin{equation}
+    V = V^0 \oplus V^1,
+\end{equation}
+其中称 $V^0$（分别对应 $V^1$）中的矢量具有\emph{费米子偶}（fermion even）（分别对应\emph{奇}（odd））宇称。在不失一般性的前提下，我们假设基底矢量 $\ket{i}$ 具有确定的宇称，记为 $\lvert i \rvert = 0,1$。超向量空间此外还赋予了一个\emph{次数化张量积}（graded tensor product），在张量积重新排序下具有如下行为：
+\begin{equation}
+    \ket{i_1} \otimes_\mathfrak{g} \ket{i_2} \mapsto (-1)^{\lvert i_1 \rvert \lvert i_2 \rvert} \ket{i_2} \otimes_\mathfrak{g} \ket{i_1}.
+\end{equation}
+这一性质是费米子粒子交换统计的数学体现。\emph{超迹}（supertrace）则定义为
+\begin{equation}
+    \mc C (\ket{i}\otimes_\mathfrak g \bra{j}) = (-1)^{\lvert i \rvert \lvert j \rvert} \delta_{i,j}.
+\end{equation}
+
+一个均匀费米子 MPS（fMPS）由一个\emph{偶宇称张量}构造而成：
+\begin{equation}
+    A = \sum_{i,\alpha,\beta}A_{\alpha\beta}^i \ket{\alpha} \otimes_\mathfrak{g} \ket{i} \otimes_\mathfrak{g} \bra{\beta},
+\end{equation}
+即对于所有指标均满足 $\lvert i \rvert + \lvert \alpha \rvert + \lvert \beta \rvert = 0 \pmod 2$。根据所生成的态具有偶费米子宇称还是奇费米子宇称，构造略有不同。
+\paragraph{偶宇称态}
+偶宇称态由张量 $A$ 构造如下：
+\begin{equation}\label{eq:EvenfMPS}
+    \ket{\Psi}_e = \mc C_v\big(A\otimes_\mathfrak g A \otimes_\mathfrak g\dots \otimes_\mathfrak g A\big).
+\end{equation}
+在此表达式中，$\mc C_v$ 表示对虚指标求超迹。现在我们可以将该 fMPS 重写为更显式的形式。注意，一般偶宇称张量的矩阵元具有如下形式：
+\begin{equation}
+    A^i =
+    \begin{pmatrix}
+        B^i & 0 \\
+        0 & C^i
+    \end{pmatrix}, \,\, \lvert i \rvert = 0, \quad
+    A^i =
+    \begin{pmatrix}
+        0 & D^i \\
+        F^i & 0
+    \end{pmatrix}, \,\, \lvert i \rvert = 1.
+\end{equation}
+定义\emph{宇称矩阵}（parity matrix）
+\begin{equation}
+    \mc P = \begin{pmatrix}\mbb 1 & 0\\ 0 & -\mbb 1\end{pmatrix},
+\end{equation}
+并仔细计算表达式\cref{eq:EvenfMPS}，便得到：
+\begin{equation}
+    \ket{\Psi[A]}_e = \sum_{\{i_j\}} {\rm Tr}\big(\mc PA^{i_1}A^{i_2}\dots A^{i_N}\big) \ket{i_1,i_2,\dots,i_N}.
+\end{equation}
+\paragraph{奇宇称态}
+奇宇称态的构造与偶宇称态的构造类似，但需要在超迹中插入一个额外的矩阵：
+\begin{equation}
+    \ket{\Psi}_o = \mc C_v\big(Y\otimes_\mathfrak gA\otimes_\mathfrak g A \otimes_\mathfrak g\dots \otimes_\mathfrak g A\big).
+\end{equation}
+引入矩阵 $Y$ 的要求归根结底源于如下事实：要获得奇宇称态，必须引入扭扭边界条件（twisted boundary conditions）。我们将在第四讲的第~\ref{sec:GenSym}~节中遇到类似的讨论。
+
+与前一种情形类似的推导使我们能够将奇宇称 fMPS 重写为
+\begin{equation}
+    \ket{\Psi[A]}_o = \sum_{\{i_j\}} {\rm Tr}\big(YA^{i_1}A^{i_2}\dots A^{i_N}\big) \ket{i_1,i_2,\dots,i_N}.
+\end{equation}
+随后施加平移不变性表明，$Y$ 可以选取为如下形式：
+\begin{equation}\label{eq:fMPSY}
+    Y =
+    \begin{pmatrix}
+        0 & -\mbb 1 \\ \mbb 1 & 0
+    \end{pmatrix},
+\end{equation}
+并且在此基底中，MPS 矩阵写作：
+\begin{equation}
+    A^i =
+    \begin{pmatrix}
+        B^i & 0 \\
+        0 & B^i
+    \end{pmatrix}, \,\, \lvert i \rvert = 0, \quad
+    A^i =
+    \begin{pmatrix}
+        0 & B^i \\
+        -B^i & 0
+    \end{pmatrix}, \,\, \lvert i \rvert = 1.
+\end{equation}
+与偶宇称情形相反，该 fMPS 仅由单个块 $B^i$ 确定。
+
+注意，由于奇宇称 fMPS 矩阵与 $Y$ 对易，MPS 张量具有一个共同的不变子空间。然而，与玻色情形相反，当 $B^i$ 张满整个 $\mbb C^{\chi/2\times \chi/2}$ 矩阵代数时，奇宇称态 $\ket{\Psi[A]}_o$ 定义了一个不可约矩阵乘积态。关于费米子分阶 MPS 的 canonical form 的详细技术讨论与证明，请参阅文献~\cite{Piroli2020}的附录 D。在物理上，其深层原因可以追溯到费米子宇称的超选择定则（superselection rule）：奇宇称态与偶宇称态之间不存在叠加。
+
+奇宇称 fMPS 态的一个显著范例是无自旋费米子 Kitaev 链的基态，其 Hamiltonian 是配对项的简单求和~\cite{Kitaev2000}：
+\begin{equation}
+    H = -i\sum_{\msf i=1}^{N-1} \gamma_{2\msf i}\gamma_{2\msf i+1},
+\end{equation}
+其中 Majorana 模满足 $\gamma_\msf i=\gamma^\dagger_\msf i$ 及 $\{\gamma_\msf i, \gamma_\msf j\}=2\delta_{\msf i,\msf j}$。平移不变的 fMPS 基态被发现具有奇宇称，其 MPS 矩阵为
+\begin{equation}\label{eq:KitaevTensor}
+    A^0 =
+    \begin{pmatrix}
+        1 & 0 \\
+        0 & 1
+    \end{pmatrix}, \quad
+    A^1 =
+    \begin{pmatrix}
+        0 & 1 \\
+        -1 & 0
+    \end{pmatrix}.
+\end{equation}
+该模型以展现 Majorana 边缘模（Majorana edge modes）而著称。事实上，在开边界条件下，该态的形式为
+\begin{equation}
+    \sum_{\{i_j\}} \big(A^{i_1}A^{i_2}\dots A^{i_N}\big)_{\alpha\beta} \ket{i_1,i_2,\dots,i_N}.
+\end{equation}
+由此容易检验，由于张量的结构，选择边界条件 $\alpha=\beta=0$ 或 $\alpha=\beta=1$ 会给出同一个基态。类似地，边界条件 $\alpha=0,\beta=1$ 与 $\alpha=1,\beta=0$ 给出第二个基态，最终导致二重基态简并，这种简并无法通过在 Hamiltonian 中添加额外的局域相互作用来消除。
+
+\bigskip\noindent 与玻色情形类似，当施加全局内部对称性或时空对称性时，人们可以从费米子矩阵乘积态中提取出某些离散拓扑不变量。一个著名的例子是相互作用时间反演对称费米子 SPT 相。在这种情况下，存在三个取值于 $\{0,1\}$ 的不同拓扑指数，其中一个与 fMPS 是否具有 Majorana 边缘模有关，另外两个与 fMPS 张量在时间反演下的局域变换性质有关。正如文献~\cite{Bultinck2016}中所严谨论证的，可以证明在相应 fMPS 的堆叠下，恢复了 Fidkowski 和 Kitaev 的 $\mbb Z_8$ 分类~\cite{Fidkowski2010}。
+\subsection{第三讲小结} 第三讲探讨了对张量施加额外对称性时 MPS 的流形。对称张量网络的核心工具是 \emph{MPS 基本定理}，它指出任何\emph{全局}对称性都必须反映在\emph{局域} MPS 张量的对称性中。有趣的是，这些\emph{虚}对称性可以\emph{射影地}表示。按不同射影表示变换的对称 MPS 之间，任何保持对称性的绝热路径都必然经过无能隙点。因此，具有 $G$-对称 Hamiltonian 的一维量子自旋链的所有玻色有能隙物态，都与所有可能的子群 $H\subseteq G$ 及其由第二群上同调 $H^2(H,\rU(1))$ 标记的可能射影表示一一对应。后者对所谓的 \emph{SPT 相}进行了分类。如果不考虑对称性，那么所有 MPS 都可以绝热地相互转化，因此这些相仅在施加对称性时才受到保护。我们证明了这一分类可以推广到时空对称群的情形。有趣的是，当考虑超选择定则（例如费米子的宇称超选择定则）时，会出现真正的拓扑物态（即不需要对称性保护的相）。

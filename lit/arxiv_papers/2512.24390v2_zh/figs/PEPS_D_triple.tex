@@ -1,0 +1,39 @@
+\begin{tikzpicture}[scale=1,baseline={([yshift=-.5ex]current bounding box.center)}]
+    \def\r{4pt};
+    \def\l{3.5};
+    \def\sp{0.08};
+    
+    \coordinate (a1) at (0,0);
+    \coordinate (a2) at (\l,0);
+    \coordinate (a3) at (\l/2,{sqrt(3)*\l/2});
+                    
+    \clip ({(0.5-\sp)*\l*cos(60)-0.05},-0.05) rectangle ({\l-(0.5-\sp)*\l*cos(60)+0.05},{(\l-(0.5+\sp)*\l*sin(60))+0.05});
+    
+    \middleCoo{a1}{a2}{m12}{m12-1}{m12-2}{\sp};
+    \middleCoo{a2}{a3}{m23}{m23-2}{m23-3}{\sp};
+    \middleCoo{a1}{a3}{m13}{m13-1}{m13-3}{\sp};
+    \barycentre{a1}{a2}{a3}{b123}{b123-1}{b123-2}{b123-3}{\sp};
+    
+    \draw[obj1, shorten <= 1pt] (m12) --node[pos=0.55, fill=white] {${\sss \gamma}$} (b123);
+    \draw[obj1, shorten >= 1pt] (b123) --node[pos=0.45, fill=white, sloped] {${\sss \alpha}$} (m13);
+    \draw[obj1, shorten >= 1pt] (b123) --node[pos=0.45, fill=white, sloped] {${\sss \beta}$} (m23);
+
+    \draw[mor] 
+        (m12-1) to[out=90, in=90, looseness=1.5] (m12-2)
+        (m13-1) to[out=-30, in=-30, looseness=1.5] (m13-3)
+        (m23-2) to[out=-150, in=-150, looseness=1.5] (m23-3);
+    \node[mor, circle, inner sep=3pt] at (b123) {};
+    
+    \draw[obj3, rounded corners=\r] 
+        (m12-1) -- (b123-1) -- (m13-1)
+        (m12-2) -- (b123-2) -- (m23-2)
+        (m23-3) -- (b123-3) -- (m13-3);
+
+    \node at (b123) {$\sss k$};
+	\node[yshift=2.8pt] at (m12) {${\sss l}$};
+	\node[xshift=2.4pt, yshift=-2.4pt] at (m13) {${\sss i}$};
+	\node[xshift=-2.4pt, yshift=-2.4pt] at (m23) {${\sss j}$};
+	\node[xshift=-3.5pt, yshift=-3.5pt, anchor=east, color=BlueViolet] at (b123-1) {${\sss A}$};
+	\node[xshift=3.5pt, yshift=-3.5pt, anchor=west, color=BlueViolet] at (b123-2) {${\sss B}$};
+	\node[yshift=3.5pt, anchor=south, color=BlueViolet] at (b123-3) {${\sss C}$};
+\end{tikzpicture}

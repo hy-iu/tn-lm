@@ -1,0 +1,15 @@
+\begin{tikzpicture}[baseline={([yshift=10pt]current bounding box.south)}]
+
+    \def\l{.8};
+    \def\h{.7};
+
+    \draw[obj1] (0,-\h/2) -- (0,4/3*\h);
+    \draw[obj2, rounded corners=3pt] (-\l,-\h/2) -- (-\l,\h/2) -- (\l,\h/2);
+    \draw[obj1] (-2*\l,-\h/2) -- (\l,-\h/2);
+    
+    \node[draw=black, line width=.7pt, fill=gray!20, circle, inner sep=2.9pt] at (-\l,-\h/2) {};
+    \node[mpstensor, inner sep=2.9pt] at (0,-\h/2) {};
+    \node[draw=black, line width=.7pt, fill=gray!20, rectangle, inner sep=3.8pt, rounded corners=2pt] at (0,\h/2) {};
+    
+    \node[anchor=south] at (\l/2,\h/2) {$\sss g$};
+\end{tikzpicture}

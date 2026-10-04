@@ -1,0 +1,103 @@
+\subsection{推理}
+\label{subsec:inference}
+
+\paragraph{问题定义。} 给定多头注意力（MHA）针对输入 $x$ 所产生的 KV 缓存张量：$\ten{C}(x) = \bigl(\ten{K}(x), \ten{V}(x)\bigr) \in\R^{2\times L\times B\times H_{\rm KV}\times T\times d_h}$，推理（inference）阶段的目标大致可以表述为：
+\begin{equation}
+  \begin{aligned}
+      & \min_{\Pi} \mathbb{E}_{x \sim \mathcal{D}} \Bigl[ \mu \bigl(\ten{C}(x), \Pi(x)\bigr) \Bigr] \\
+      & \rm s.t. \quad \text{memory/latency budget},
+  \end{aligned}
+\end{equation}
+其中 $\Pi(\cdot)$ 满足：对于从输入分布 $\mathcal{D}$ 中抽取的每一个 $x$，$\Pi(x) \in \mathfrak{TN}(\set{R})$ 都是 KV 缓存的一个张量网络近似，$\mathfrak{TN}(\set{R})$ 表示在给定秩集合 $\set{R}$ 之下的张量网络族；$\mu(\cdot, \cdot)$ 是某种误差度量，例如缓存张量上的重构误差或激活感知损失，与 \cref{subsec:compression} 中的做法类似。我们在此并不试图给出完全严格的形式化，因为尚无任何工作显式地提出或求解这一联合约束问题；这些方法共同的隐含目标是，为 KV 缓存找到一种高效的张量参数化或分解，在保持生成质量并维持或提升推理吞吐量的同时，大幅降低内存占用。
+
+% \paragraph{Compression-realization gap}
+
+% Tensorized models can have fewer parameters but slower inference and training due to a suboptimal contraction path or low GPU utilization. This phenomenon can be formalized and measured as
+% \begin{equation}
+% \rho_{\rm gap}=\frac{\text{parameter compression ratio}}{\text{wall-clock or memory-throughput speedup}}.
+% \label{eq:rho-gap}
+% \end{equation}
+% A large $\rho_{\rm gap}$ indicates that mathematical compression is not translating into system-level benefit -- we refer to this as the \emph{compression-realization gap}. This metric is potentially useful when comparing tensor methods with quantization \cite{frantar2023gptq} and FlashAttention-style IO-aware methods \cite{dao2022flashattention,dao2023flashattention2, shah2024flashattention3}.
+
+
+
+\paragraph{文献概览。} 已有若干工作探索了不同的基于张量的 KV 缓存压缩途径。TPA \cite{zhang2026tpa} 把逐词元切片 $\mat{Q}_t, \mat{K}_t, \mat{V}_t \in \R^{H \times d_h}$ 参数化为一系列上下文感知的张量积之和
+\begin{equation}
+\mat{K}_t = \frac{1}{R_{\rm K}} \sum_{r=1}^{R_{\rm K}} \vecb{a}_r^{\rm K}(x_t) \circ \vecb{b}_r^{\rm K}(x_t),
+\end{equation}
+其中 $\vecb{a}_r^{\rm K}(x_t) \in \R^H, \vecb{b}_r^{\rm K}(x_t) \in \R^{d_h}$ 是依赖上下文的变换。它等价于 $\frac{1}{R_K} \mat{A}^{\rm K}_t(x_t)^\top \mat{B}^{\rm K}_t(x_t)$，其中 $\mat{A}_t(x_t) = [\vecb{a}^{\rm K}_1(x_t), \ldots, \vecb{a}^{\rm K}_{R_{\rm K}}(x_t)] \in \R^{R_{\rm K} \times H}$，$\mat{B}_t(x_t) = [\vecb{b}_1^{\rm K}(x_t), \ldots, \vecb{b}_{R_{\rm K}}^{\rm K}(x_t)] \in \R^{R_{\rm K} \times d_h}$，也就是键矩阵的一个低秩分解，正如 \cref{subsec:illustrative-examples} 中就推理阶段所讨论的那样。查询与值也作同样处理。由此每个词元的内存开销为 $(R_K + R_V)(H + d_h)$，而 MHA 为 $2 H d_h$。Tucker Attention \cite{klein2026tuckerattention} 的出发点是这样一个观察：非张量化的 KV 缓存方法（MQA、GQA、MLA）未能利用跨头冗余。受此启发，该方法首先把注意力计算改写为张量形式，随后通过 Tucker 分解对权重张量加以参数化，从而得以利用这种跨头冗余。每个词元的内存占用降至 2R，其中 R 是一个秩超参数。
+DecoQuant \cite{liu2024decoquant} 观察到，把一个权重矩阵作 MPO 分解、拆成一个大核与一个小核时，大核中的权重分布较窄，而小核中的权重分布较宽。这促使作者提出一种混合精度量化方案：对大核采用低精度量化，对小核采用高精度量化。
+EinSort \cite{koikeakino2026einsort} 探索了置换的思想，其动机来自这样一项发现：对矩阵的元素进行排序，能够得到明显更好的低秩近似。在此基础上，该框架提出在压缩之前使用一个可逆置换 $\pi[\cdot]$，而在压缩之后通过 $\pi^{-1}$ 恢复原有次序。这一压缩框架被应用于 KV 缓存（需要注意的是，此类方法同样可用于权重压缩场景）。这也带来了新的挑战，因为必须为每个词元存储置换次序，其代价可能相当可观。
+
+\paragraph{比较。} 
+
+\Cref{tab:inference} 从结构维度比较了上述张量化 KV 缓存压缩方法。表中未纳入困惑度（PPL）、基准测试得分与延迟，原因是各方法所报告数值之间的可比性有限；例如 TPA 的实验设定是与基线的参数量相匹配，而 Tucker Attention 则确实减少了参数量。表格转而在两个维度上给出结构比较：所依据的分解族，以及该方法属于事后应用、无需额外训练（免训练），还是需要从头训练整个模型。
+
+\begin{table}[!htbp]
+\centering
+\caption{\footnotesize 张量化推理方法的结构比较。}
+\label{tab:inference}
+\footnotesize
+\begin{tblr}{
+  width = \textwidth,
+  colspec = {Q[5.0cm,m,c]Q[5.0cm,m,c]X[m,c]},
+  row{1} = {font=\bfseries},
+  rowsep = 3pt,
+  hline{1,6} = {1pt},
+  hline{2} = {0.6pt},
+  hline{3,4,5} = {0.6pt, gray7},
+}
+方法 & 分解 & 训练 \\
+TPA \cite{zhang2026tpa} & CP & 从头训练\\
+Tucker Attention \cite{klein2026tuckerattention} & Tucker & 从头训练\\
+DecoQuant \cite{liu2024decoquant} & MPO + 量化 & 免训练 \\
+EinSort \cite{koikeakino2026einsort} & 任意 & 免训练 \\
+\end{tblr}
+\end{table}
+
+\subsection{可解释性}
+\label{subsec:interpretability}
+
+\paragraph{问题定义。} 
+
+可解释性的目标在结构上与本综述其余部分有所不同。前面各阶段遵循一种隐含范式：在最小化内存、训练与推理代价的同时，让模型的能力尽可能强。可解释性则旨在理解并解释已有模型。由于这一目标本身较为模糊，我们在此不给出形式化的目标。
+
+\paragraph{文献概览。}
+
+除词元化之外，可解释性是本综述中发展最不成熟的阶段，其中几乎所有工作都是近期出现的。张量理论在此处的贡献不在于效率，而在于描述：它提供了一种把模型所计算的内容写下来的方式，从而使模型的结构变得可见。就其最弱的形式而言，这种贡献纯粹是记号层面的；Taylor \cite{taylor2024interpretabilitysurvey4} 用图形化的张量记号重写了 \cite{elhage2021mathematical} 中的数学框架，一直涵盖到归纳头的构造，使电路变成了图示。
+
+关于可解释性的三项实质性工作，在如何处理多重线性上各不相同。Bilinear MLPs \cite{pearce2025bilinearmlp} 对其加以\emph{施加}。去掉逐元素非线性之后的门控线性单元，可以精确地由一个三阶权重张量描述，因此仅凭权重就能对其进行分析。我们在 \cref{sec:component-ffn} 中讨论过这种双线性构造，并在 \cref{subsec:illustrative-examples} 中把它作为示例给出。
+PolySAE \cite{koromilas2026polysae} 则相反，它在原本缺失多重线性之处\emph{引入}多重线性，因为标准稀疏自编码器 \cite{cunningham2023sae} 把激活重构为字典原子的线性组合，从而无法把一个复合概念与其各组成部分的共现区分开来。PolySAE 保留线性编码器，但在解码器中加入二次项与三次项，并借助共享投影子空间上的低秩张量分解使其在计算上可行，在 GPT-2 small 上仅额外增加约 $3\%$ 的参数。
+TensorLens \cite{atad2026tensorlens} 则对整个模型加以\emph{重新表述}：包括注意力、FFN、归一化与残差连接在内的整个 Transformer 堆栈，被化为一个依赖输入的单一算子，其表示形式为四阶张量 $\ten{T} \in \R^{T \times d \times T \times d}$。
+该张量充当一种广义的注意力矩阵，既取代各个单独的注意力图，也取代跨头、跨层的启发式聚合方式，从而给出对模型的全局描述。
+
+\paragraph{比较。} 
+上述可解释性工作所分析的对象各不相同，因此我们不为它们提供比较表格。
+
+
+% \subsection{Component vs Life-cycle stage overview}
+% \label{sec:component-vs-lifecycle}
+
+% \begin{table}[!htbp]
+% \centering
+% \caption{Cross-reference of lifecycle stages and Transformer components, with representative works at each intersection.}
+% \label{tab:component-lifecycle}
+% \small
+% \rowcolors{2}{gray!10}{white}
+% \renewcommand{\arraystretch}{1.5}
+% \begin{tabularx}{\textwidth}{p{3.5cm}p{3.5cm}p{3.5cm}X}
+% \toprule
+% \rowcolor{white}
+% Lifecycle stage & Embedding Table & Attention & FFN \\
+% \midrule
+% Tokenization    & & & \\
+% Embeddings      & & & \\
+% pre-training     & & & \\
+% PEFT            & & & \\
+% Compression     & & & \\
+% Inference       & & & \\
+% Interpretability & & & \\
+% \bottomrule
+% \end{tabularx}
+% \end{table}
+

@@ -1,0 +1,37 @@
+\section{结论}\label{chapter:conclusion}
+
+本手稿提出了一套自成体系的张量网络图形语言，从基础记法与基本概念出发，逐步展开到张量分解、梯度计算与概率分布。其主要目标，是为在高维对象上执行从简单到复杂的各类运算提供可用的框架。
+贯穿全文的一个核心观点是：张量网络的图形语言并不只是记法上的便利。
+恰恰相反，它提供了一套清晰而精确的数学框架，把许多经典结果收拢进同一个统一的结构之中。
+若干例子可以说明这一点。在张量图中，把行腿与列腿分开的任一割的权重决定了矩阵化秩的界（定理~\ref{thm: matricization-rank}）。第~\ref{chapter:gradients} 章的梯度法则（定理~\ref{thm:gradients} 与定理~\ref{thm:multiple-tensors-gradients}）把
+复杂张量网络表达式的雅可比矩阵计算归结为一个单一的图示操作，
+即删去节点；经典恒等式
+$\partial(\Ab\xb)/\partial \Ab = \xb \outprod \Ib$ 与 $\partial \tr(\Ab)/\partial \Ab = \Ib$
+便成为立即可得的推论。第~\ref{chapter:prob} 章的概率计算同样表明，
+一系列非平凡结果都能用张量网络记法给出简洁的推导，其中包括 Wishart 分布的均值（命题~\ref{prop:wishart-mean}）、高斯张量的 Isserlis 定理（定理~\ref{thm:isserlis}），以及高斯随机矩阵乘积范数的期望（命题~\ref{prop:expected-norm}）。
+
+综合来看，这些例子凸显出一条普遍的原则：在处理高维张量时，
+把计算组织成张量网络的收缩、以图示的方式进行推理，
+所得到的表示便既简洁，
+又在概念上一目了然。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section*{致谢}
+作者感谢 Jacob Miller 富有启发的讨论，他也是促使我们撰写本手稿的最初动力之一。
+我们衷心感谢加拿大高等研究院（CIFAR AI chair program）、加拿大自然科学工程
+研究理事会（Discovery program, RGPIN-2019-05949）以及 IVADO 为本研究提供的资助。

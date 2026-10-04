@@ -1,0 +1,41 @@
+\section{Experimental Details}
+\label{sec:appendix_d}
+
+\begin{table}[h]
+\caption{Definition of Tomita grammars 3-7 given in \citep{bengio1994}, which states a necessary and sufficient condition for a string to belong to each grammar. Tomita grammars 1 and 2 correspond to the respective family of strings $1^n$ and $(01)^*$, and are unused because of their small size and simple structure.}
+\label{tab:tomita_def}
+\begin{center}
+\begin{small}
+\begin{tabular}{c|lllll}
+    \textbf{Tomita \#} & 3 & 4 & 5 & 6 & 7 \\
+    \midrule
+    \multirow{3}{*}{\textbf{Description}} & Doesn't contain         & Doesn't contain      & Contains an    & Number of 0's       & Has the form \\
+                                          & $1^{2n+1}0^{2m+1}$ as a & $000$ as a substring & even number    & minus number of 1's & $0^*1^*0^*1^*$ \\
+                                          & substring               &                      & of 0's and 1's & is a multiple of 3  & 
+\end{tabular}
+\end{small}
+\end{center}
+\end{table}
+
+The u-MPS model we utilized was built from scratch in JAX~\citep{jax2018}, while the LSTM and Transformer modules from PyTorch~\citep{paszke2017} were used for baselines. The code for the experiments can be found at \url{https://github.com/jemisjoky/umps_code}. 
+The LSTMs are single-layer models with 20 or 50 hidden units (20 or 50 in each direction for the bidirectional LSTM), and a linear decoder and softmax output layer used to obtain character probabilities. The bond dimension of the u-MPS was similar chosen to be 20 or 50, and for both types of models, five independent trials were used for each number of hidden states and the model with the lowest validation error was used to produce the sampling statistics reported in Section~\ref{sec:experiments}. 
+
+For each grammar, the models were trained on either 1,000 or 10,000 randomly chosen strings, with 1,000 strings used as a held-out validation set. The sampling percentages for Table~\ref{tab:tomita} 
+and the sampling tasks of Table~\ref{tab:motzkin} 
+were obtained from sampling 1,000 random strings from the respective models, while the completion tasks of Table~\ref{tab:motzkin} 
+used 1,000 random strings from a held-out reference set, where the models were used to infer each character in each string when all other characters were used as bidirectional context.
+
+In all experiments, models were trained with gradient descent relative to a negative log likelihood (NLL) loss and Adam optimizer~\citep{kingma2015}. An initial learning rate of $10^{-2}$ was used, which was decreased by a factor of 10 each time the validation loss failed to improve for 5 consecutive epochs. In this manner, piecewise constant learning rates of $10^{-2}$, $10^{-3}$, and $10^{-4}$ were used, with the next drop in learning rate signalling the end of training.
+
+The u-MPS, HMMs, and Transformers were trained identically for all experiments, with the unidirectional LSTM trained in the same way. The bidirectional LSTM was trained specifically for the string completion task, with the loss taken as a sum of the NLL of the correct character at each site of the training strings, given knowledge of all characters on the other sites. For each pair of sampling and completion tasks in Table~\ref{tab:motzkin}, 
+the same trained u-MPS model was used to produce both statistics.
+
+For the dataset of email addresses used in the real-text experiments, we extracted all sender and receiver addresses contained in the CLAIR fraudulent emails dataset~\citep{radev2008}, giving approximately 4,000 distinct addresses. Training was conducted in a similar manner to the synthetic data experiments, where the regular expression $R_{e} = \verb![\w-.]+@([\w-]+.)+[\w-][\w-]+!$ was used to judge the correctness of unconditionally sampled strings.
+
+Our regex sampler and regex regularizer are straightforward recursive implementations of Algorithm~\ref{alg:sampling} and the correspondence in Table~\ref{tab:regex_cp}, respectively. Although these naive implementations would typically lead to a significant overhead compared to implementations specialized for $R_e$, the use of just-in-time (JIT) compilation within JAX gives a significant reduction in this overhead. Employing JIT in this setting is in fact historically well-motivated, considering that one of the earliest applications of JIT compilation was for identifying text matching regular expressions~\citep{thompson1968}. 
+
+% \bibliographystyle{plain}
+% \bibliographystyle{apastyle}
+\bibliography{bib_file}
+
+\end{document}

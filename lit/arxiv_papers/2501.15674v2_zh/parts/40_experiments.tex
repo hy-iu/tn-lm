@@ -1,0 +1,113 @@
+
+\section{实验}
+我们进行了全面的实验，以验证所提框架在四个基准推理数据集与三个 LLM（涵盖仅编码器与仅解码器两类架构）上的性能。实验中，与文献 \cite{sharma2023truth} 类似，我们的框架以层选择的方式应用，以实现公平比较。例如，我们每次仅对单个 Transformer 层应用第 \ref{methodology} 节所提出的方法。结果表明，我们的模型能够在实现参数压缩的同时，显著提升原始 LLM 的推理能力。此外，实验结果显示，我们的方法可与现有的仅压缩 FFN 的方法（如通过去噪 FFN 权重来提升 LLM 推理能力的 LASER \cite{sharma2023truth}）联合使用。最后，我们通过一项消融研究验证了所提框架：将本文方法与对 Transformer 层中查询、键、值、输出权重矩阵分别构成的独立张量进行去噪的方案进行对比。实验在 NVIDIA A100 GPU 上进行。
+
+\begin{table}[htbp]
+\centering
+\caption{RoBERTa、GPT-J 与 LLaMA2 在应用与未应用本文方法时，于四个基准数据集上的性能比较。每个模型与数据集组合下的最高准确率 $\uparrow$ 与最低损失 $\downarrow$ 以粗体标出。CR $\uparrow$ 表示单个 Transformer 层中 MHA 参数的压缩率。``-" 表示未压缩。}
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{|c c|p{0.95cm}<{\centering}|p{0.8cm}<{\centering}!{\vrule width 1pt}p{0.95cm}<{\centering}|p{0.8cm}<{\centering}!{\vrule width 1pt}p{0.95cm}<{\centering}|p{0.8cm}<{\centering}|}
+\hline
+& & \multicolumn{6}{c|}{模型名称} \\
+\quad 数据集  & & \multicolumn{2}{c!{\vrule width 1pt}}{RoBERTa} & \multicolumn{2}{c!{\vrule width 1pt}}{GPT-J} & \multicolumn{2}{c|}{LLaMA2} \\ 
+& &  原始 & 本文 & 原始 & 本文 & 原始 & 本文 \\ \hline
+\multirow{3}{*}{\textit{HotPotQA}} & Acc & 6.1  & \textbf{7.33} & 19.6 & \textbf{20.15}  & 16.5  & \textbf{18.44}  \\ 
+ & Loss & 10.99 & \textbf{10.00} & \textbf{3.40}  & 4.49 & \textbf{3.15} & 9.80 \\
+ & CR & - & 1.12 & - & 247.30 & - & 3.54 \\ \hline
+\multirow{3}{*}{\textit{FEVER}} & Acc & 50.0 & \textbf{50.45}  & 50.2  & \textbf{58.94} & 59.3 &  \textbf{66.75} \\ 
+ & Loss & 2.5 & \textbf{1.47} & 1.24  & \textbf{1.02} & 1.02 & \textbf{1.01} \\ 
+  & CR & - & 3.74 & - & 14.69 & - & 3.54 \\ \hline
+ \multirow{3}{*}{\makecell{\textit{Bios} \\ \textit{Profession}}} & Acc & 64.5 & \textbf{72.57} & 75.6 & \textbf{81.18} & 85.0  & \textbf{86.61} \\ 
+& Loss & \textbf{4.91} & 6.64 & 4.64  & \textbf{4.57} & \textbf{4.19}  & 4.54 \\ 
+& CR & - & 8.78 & - & 74.68 & - & 3.54 \\ \hline
+ \multirow{3}{*}{\makecell{\textit{BigBench-} \\ \textit{WikidataQA}}} & Acc & 28.0 & \textbf{32.72}  & 51.8 & \textbf{68.81} &  59.5 & \textbf{60.37}  \\ 
+ & Loss & 9.07 & \textbf{8.72} & 3.52 & \textbf{2.63} & 4.19  & \textbf{2.38} \\ 
+ & CR & - & 2.52  & - & 46.77 & - & 5.81 \\ \hline
+\end{tabular}
+\label{tab:performance}
+\end{table}
+
+
+\subsection{LLM 模型}
+我们在三个 LLM 模型上测试了所提方法：RoBERTa 125M \cite{liu2019RoBERTa}、GPT-J 6B \cite{gpt-j} 与 LLaMA 2 7B \cite{llama2}。
+\begin{itemize}
+    \item RoBERTa 采用仅编码器架构，用于预测给定上下文中缺失的词元。因此，我们在每个问题后追加五个 $<$\texttt{mask}$>$ 词元，再输入 RoBERTa 模型。
+    \item GPT-J 与 LLaMA 2 均为仅解码器模型，可以基于前面的词元预测下一个词元，从而自回归地直接生成词元。
+\end{itemize}
+
+
+
+\begin{table*}
+\centering
+\caption{LLM 压缩与推理的单独方法与混合方法的性能。情形 1：LASER 应用于 FFN 块中的一个权重矩阵；情形 2：LASER 同时应用于 MHA 与 FFN 块；情形 3：本文方法应用于 MHA 块，LASER 应用于 FFN 块。每个模型与数据集组合下的最高准确率 $\uparrow$ 与最低损失 $\downarrow$ 以粗体标出。}
+\begin{tabular}{|c c|c|c|c!{\vrule width 1pt}c|c|c!{\vrule width 1pt}c|c|c|}
+\hline
+& & \multicolumn{9}{c|}{模型名称} \\ 
+\centering 数据集 & & \multicolumn{3}{c!{\vrule width 1pt}}{RoBERTa} & \multicolumn{3}{c!{\vrule width 1pt}}{GPT-J} & \multicolumn{3}{c|}{LLaMA2} \\ 
+& & 情形 1 & 情形 2  & 情形 3 & 情形 1 & 情形 2 & 情形 3 & 情形 1 & 情形 2 & 情形 3 \\
+& & & & (本文) & & & (本文) & & & (本文) \\ \hline
+\multirow{ 2}{*}{\textit{HotPotQA}} & Acc  & 6.7 & 5.24 & \textbf{7.05} & 19.5 & 19.62 & \textbf{19.91} & 17.2 & 18.88 & \textbf{19.22} \\ 
+ & Loss & 10.53 & \textbf{8.60} & 9.87 & \textbf{3.39} & 5.08 & 5.07 & \textbf{2.97} & 9.33 & 9.99 \\ \hline
+\multirow{ 2}{*}{\textit{FEVER}} & Acc  & 52.3 & 53.6 & \textbf{55.23} & 56.2 & 55.59 & \textbf{58.98} & 64.5 & 65.13  & \textbf{66.39} \\ 
+ & Loss & 1.76 & \textbf{1.18} & 2.61 & \textbf{1.27} & 1.28 & 1.39 & \textbf{0.91} & 1.11 & 1.33 \\ \hline
+\multirow{ 2}{*}{\textit{Bios Profession}} & Acc  & 72.5 & 71.14 & \textbf{72.51} & 82.1 & 81.28 & \textbf{82.52} & 86.7 & 86.07 & \textbf{87.07} \\ 
+ & Loss & \textbf{6.44} & 6.62 & 7.42 & 4.91 & 4.61 & \textbf{4.52} & \textbf{4.05} & 4.20 & \textbf{4.05} \\ \hline
+\multirow{ 2}{*}{\textit{BigBench-WikidataQA}} & Acc  & 30.7 & 34.49 & \textbf{37.40} & 65.9 & 65.68 & \textbf{68.20} & \textbf{62.0} & 61.21 & 61.78 \\ 
+& Loss & \textbf{7.69} & 8.25 & 7.86 & 2.86 & 2.89  & \textbf{2.59} & \textbf{2.31} & 2.35 & 2.34 \\ \hline
+\end{tabular}
+\label{tab:exp2}
+\end{table*}
+
+\subsection{数据集} \label{datasets}
+对于四个基准推理数据集——\textit{HotPotQA} \cite{yang2018HotPotQA}、\textit{FEVER} \cite{thorne2018FEVER}、\textit{Bios Profession} \cite{de2019bias} 与 \textit{BigBench-WikidataQA} \cite{bowman2015large}——我们采用与 LASER \cite{sharma2023truth} 相同的数据预处理流程。
+\paragraph{\textit{HotPotQA}} 
+\textit{HotPotQA} 是一个大规模问答数据集。我们从其训练集与验证集中抽取问答对。输入文本使用 LLaMA 2 \cite{llama2} 的分词器进行词元化，超过 15 个词元的样本被丢弃。提示词的格式为 ``$<$\texttt{question}$>$ The answer is”，其中 $<$\texttt{question}$>$ 被替换为实际问题。模型最多可生成 $\texttt{max\_len}$ 个词元，若答案出现在生成的文本中，则视为回答正确。
+\paragraph{\textit{FEVER}}
+事实抽取与验证（Fact Extraction and VERification, \textit{FEVER}）数据集用于评估事实核查系统。它包含二元标签：0（假）与 1（真）。标签相互矛盾的陈述被过滤，以确保一致性。我们从其验证集与测试集中抽取问答对。提示词的结构为：“Consider the following claim: $<$\texttt{claim}$>$. Is this claim true or false? The claim is”，其中 $<$\texttt{claim}$>$ 被替换为实际陈述。若某陈述为真的概率超过其为假的概率，则将该陈述判为真，否则判为假。
+\paragraph{\textit{Bios Profession}}
+\textit{Bios Profession} 数据集是分析职业与专业语境中性别偏见的基准。任务是根据人物传记预测其职业。问答对取自验证集，聚焦于 LASER 论文中使用的同 10 种职业。提示词的结构为：``Consider the following text: $<$\texttt{bio}$>$. What is the profession of the person in this text? The profession of this person is"，其中 $<$\texttt{bio}$>$ 被替换为实际传记。模型需要在 10 种可能的职业中输出概率最高的职业。
+\paragraph{\textit{BigBench-WikidataQA}}
+在 Beyond the Imitation Game Benchmark（BIG-Bench）数据集中，WikidataQA 子集专注于利用来自 Wikidata 的结构化知识进行问答（Question Answering, QA）。问答对取自训练集与验证集。模型最多可生成 $\texttt{max\_len}$ 个词元，若答案出现在生成的文本中，则视为回答正确。
+
+\subsection{实验结果}
+为评估所提框架对 LLM 推理能力的增强，我们将该方法应用于三个 LLM，并在第 \ref{datasets} 节提到的四个推理数据集上评估其性能。表 \ref{tab:performance} 展示了在 MHA 块上应用与未应用本文方法时，各 LLM 的准确率、损失与压缩率。准确率是衡量模型推理性能的关键评估指标，以测试集中预测正确的样本百分比来度量。测试准确率在每个数据集的最后 20\% 数据上评估。损失是一种间接的性能度量，反映模型的不确定性，即与真实目标分布的偏离程度。列出损失是为了完整起见，其以真实词元的负对数似然来度量。压缩率（Compression Ratio, CR）量化模型规模的缩减程度，计算方式为 $\text{CR}= \frac{N_{original}}{N_{compressed}}$，其中 $N_{original}$ 与 $N_{compressed}$ 分别表示原始单个 Transformer 层与压缩后单个 Transformer 层中 MHA 权重的参数总数。表 \ref{tab:performance} 显示，我们提出的方法在全部四个推理数据集上、就测试准确率而言，一致地提升了三个原始模型的性能，并使 MHA 权重获得了至多 $247.3$ 倍的压缩率。\par 
+
+\begin{rem}
+我们的方法应用于 MHA 块，因此可与现有方法联合使用，以进一步提升 LLM 的推理能力。例如，可与在应用于 FFN 块时性能最佳的 LASER \cite{sharma2023truth} 相结合。
+\label{rem:hypbrid}
+\end{rem}
+
+为评估注记 \ref{rem:hypbrid} 中提到的此类``混合''情形，我们考察了以下三种情形：
+\begin{itemize}
+    \item 情形 1：LASER \cite{sharma2023truth} 应用于 FFN 块中的一个矩阵；
+    \item 情形 2：LASER \cite{sharma2023truth} 应用于 FFN 与 MHA 块中的所有矩阵；
+    \item 情形 3：本文方法应用于 MHA 块；LASER \cite{sharma2023truth} 应用于 FFN 块中的矩阵。
+\end{itemize}
+情形 1 的结果直接引自文献 \cite{sharma2023truth} 所报告的最佳性能。此外，正如文献 \cite{sharma2023truth} 的作者所指出的，对其方法在多个权重矩阵上多次应用可以带来进一步的提升。为此，在情形 2 中，我们将 LASER 方法同时应用于 FFN 块与 MHA 块，以获得 LASER 的最佳性能，从而与情形 3 进行公平比较——在情形 3 中，本文方法应用于 MHA 块，而 LASER 应用于 FFN 块。表 \ref{tab:exp2} 给出了上述三种情形的结果。除 LLaMA2 在 \textit{BigBench-WikidataQA} 数据集上之外，情形 3 在三个模型、四个数据集上均取得了最高的测试准确率。这进一步凸显了我们聚焦 MHA 权重的方法背后的直觉。通过对张量化过程的精心设计以及对当前 MHA 领域知识的利用，我们的方法能够按照「单个 Transformer 层内各注意力头共享一个高维子空间」这一直觉，对 MHA 权重进行结构性去噪。这不仅增强了我们方法的可解释性，还表明我们的框架可以作为一个通用模块，与仅针对 FFN 权重设计的方法联合使用，从而在 LLM 中实现更强的推理能力与压缩效果。
+
+\subsection{消融研究}
+为评估将查询、键、值与输出权重矩阵堆叠为张量的影响，我们将本文框架与如下方案进行了比较：将相同方法分别应用于 MHA 中四类权重矩阵（查询、键、值与输出）之一。表 \ref{tab:ablation} 显示，我们提出的方法在全部四个推理数据集上均能一致地取得最佳性能。这验证了我们「将单个 Transformer 层中全部 MHA 权重共同张量化」这一基础推测。
+
+
+\begin{table}[t]
+\centering
+\caption{分别压缩与共同压缩 $\mathbf{W}^Q$、$\mathbf{W}^K$、$\mathbf{W}^V$ 与 $\mathbf{W}^O$ 的影响。我们提出的方法同时压缩单个 Transformer 层中的全部 MHA 权重。每个数据集下的最高准确率 $\uparrow$ 与最低损失 $\downarrow$ 以粗体标出。}
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{|c c|p{0.95cm}<{\centering}|p{0.8cm}<{\centering}|p{0.8cm}<{\centering}|p{0.8cm}<{\centering}|p{0.8cm}<{\centering}|p{0.8cm}<{\centering}|}
+\hline
+& & \multicolumn{6}{c|}{GPT-J} \\
+\centering 数据集  & & 原始 & $\mathbf{W}^Q$ & $\mathbf{W}^K$  & $\mathbf{W}^V$ & $\mathbf{W}^O$ & 本文 \\ \hline
+\multirow{2}{*}{\textit{HotPotQA}} & Acc  & 19.6 &  19.19 & 19.25 & 19.70 & 19.62 & \textbf{20.15} \\ 
+ & Loss & \textbf{3.4} & 4.45 & 4.45 & 4.43 & 4.44 & 4.49 \\ \hline
+\multirow{2}{*}{\textit{FEVER}} & Acc & 50.2 & 54.41 & 53.40 & 55.86 & 56.07 & \textbf{58.94} \\ 
+ & Loss & 1.24 & 1.22 & 1.22 & 1.23 & 1.15 & \textbf{1.02} \\ \hline
+\multirow{2}{*}{\makecell{\textit{Bios} \\ \textit{Profession}}} & Acc & 75.6 & 76.06 & 74.97 & 79.39 & 79.71 & \textbf{81.18} \\ 
+ & Loss & 4.64 & 4.54 & 4.59 & 4.46 & \textbf{4.41} & 4.57 \\ \hline
+\multirow{2}{*}{\makecell{\textit{BigBench-} \\ \textit{WikidataQA}}} & Acc & 51.8 & 49.72 & 51.01 & 48.82 & 48.87 & \textbf{68.81} \\ 
+ & Loss & 3.52 & 3.66 & 3.58 & 3.69 & 3.69 & \textbf{2.63} \\ \hline
+\end{tabular}
+\label{tab:ablation}
+\end{table}
+

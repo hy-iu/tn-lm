@@ -1,0 +1,14 @@
+\begin{tikzpicture}[baseline=(current bounding box.center)]
+	\def\l{1.8};
+    \def\h{1.3};
+
+    \draw[obj1] (-\l/2,0) -- (\l/2,0);
+    \draw[obj1] (-\l/2,\h) -- (\l/2,\h);
+    
+    \draw[obj1] (0,0) -- (0,\h);
+    
+    \node[mpstensor, inner sep=4pt] at (0,0) {};
+    \node[mpstensor, inner sep=4pt] at (0,\h) {};
+    \node at (0,0) {$\sss A$};
+    \node at (0,\h) {$\sss \bar B$};
+\end{tikzpicture}

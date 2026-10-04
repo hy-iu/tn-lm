@@ -1,0 +1,46 @@
+\section{Comparison with related work on experiment datasets}
+\label{sec:datasets}
+\begin{table}[t]
+    \centering
+    \begin{tabular}{l|c|c|c|c}
+    \toprule
+        Dataset & Data type & Vocab  & $N$ & Real-world language  \\
+         \midrule
+        Tomita grammars  \cite{tomita1982dynamic}  & Disc. & 2  & 10k & $\times$ \\ 
+        Motzkin grammar \citep{alexander2021exact} & Disc. & 3 & 10k   &$\times$ \\
+         Email addresses \citep{radev2008clair} & Disc. & $\leq 256$ & 4k & $\times$  \\
+        \midrule
+        POWER  \cite{Dua:2019} & Cont. & - & 1659k & $\times$ \\
+        GAS \cite{fonollosa2015reservoir} & Cont. & - & 852k &  $\times$ \\
+        HEPMASS \cite{baldi2016parameterized} & Cont. & - & 315k & $\times$  \\
+        MINIBOONE \cite{roe2005boosted} & Cont. & -  & 29k & $\times$  \\
+        BSDS300 \citep{martin2001database}  & Cont. & - & 1000k &  $\times$ \\
+         
+        \midrule
+        PTB \citep{marcinkiewicz1994building} & Disc. & 10k  & 31k & $\surd$ \\
+        WikiText-2  \citep{merity2016pointer} & Disc. & 30k & 73k &  $\surd$ \\  
+        
+ \bottomrule
+    \end{tabular}
+    \caption{The column "datasets" means the training datasets. The first three are used in  \citep{miller2021tensor}, the following five are used in  \cite{novikov2021tensor}, and the last two are used in our paper.  The column "$N$" denotes the number of training examples. The column "Vocab" denotes the number of types. The value "Cont." denotes continuous variable, while the "Disc." denotes  discrete variables. }
+    \label{tab:datasets}
+\end{table}
+
+
+
+\end{document}
+
+
+% This document was modified from the file originally made available by
+% Pat Langley and Andrea Danyluk for ICML-2K. This version was created
+% by Iain Murray in 2018, and modified by Alexandre Bouchard in
+% 2019 and 2021 and by Csaba Szepesvari, Gang Niu and Sivan Sabato in 2022.
+% Modified again in 2023 by Sivan Sabato and Jonathan Scarlett.
+% Previous contributors include Dan Roy, Lise Getoor and Tobias
+% Scheffer, which was slightly modified from the 2010 version by
+% Thorsten Joachims & Johannes Fuernkranz, slightly modified from the
+% 2009 version by Kiri Wagstaff and Sam Roweis's 2008 version, which is
+% slightly modified from Prasad Tadepalli's 2007 version which is a
+% lightly changed version of the previous year's version by Andrew
+% Moore, which was in turn edited from those of Kristian Kersting and
+% Codrina Lauth. Alex Smola contributed to the algorithmic style files.

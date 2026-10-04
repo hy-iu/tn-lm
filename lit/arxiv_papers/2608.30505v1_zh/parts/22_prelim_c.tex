@@ -1,0 +1,174 @@
+\subsection{注意力机制}
+
+注意力机制是一种参数化的神经网络组件，它使模型在处理输出序列的每个元素时，能够选择性地聚焦于输入序列的显著特征。通过允许在每个解码步骤直接访问所有先前的隐藏状态，它克服了 RNN 中固定维数上下文向量的瓶颈 \cite{bahdanau2016attention}。注意力将上下文向量计算为值的凸组合，其组合系数由查询与键之间的兼容性函数导出。
+
+
+% The attention mechanism is a parametric neural component that enables a model to selectively concentrate on salient features of an input sequence while processing each element of an output sequence. It overcomes the bottleneck of fixed-dimensional context vectors in recurrent neural networks (RNNs) by allowing direct access to all previous hidden states at each decoding step. Formally, attention computes a context vector as a convex combination of values, where the coefficients are derived from a compatibility function between queries and keys.
+
+\subsubsection{单头注意力}
+
+最广泛采用的形式由 Transformer 架构引入 \cite{vaswani2017attention}，即\textit{缩放点积注意力}。给定查询矩阵 $\mat{Q} \in \R^{N \times d_k}$、键矩阵 $\mat{K} \in \R^{M \times d_k}$ 与值矩阵 $\mat{V} \in \R^{M \times d_v}$，注意力输出按下式计算
+\begin{equation}
+\text{Attention}(\mat{Q}, \mat{K}, \mat{V}) = \text{Softmax}\left( \frac{\mat{Q} \mat{K}^\top}{\sqrt{d_k}} \right) \mat{V},
+\label{eq:scaled_dot_product}
+\end{equation}
+其中 $N$ 与 $M$ 分别表示查询与键/值的序列长度，$d_k$、$d_v$ 为键与值的维数。缩放因子 $\frac{1}{\sqrt{d_k}}$ 对 softmax 输入的方差进行归一化，使训练过程更加稳定。
+
+式 \ref{eq:scaled_dot_product} 是一般形式，其中查询与键可以来自不同的序列且长度可以不同。由于本综述聚焦于仅解码器（decoder-only）LLM，全文将施加两条限制。其一，三个矩阵均由同一个包含 $T$ 个词元的序列导出，故 $N = M = T$；这类注意力称为\emph{自注意力}。其二，一个词元不得关注其后续词元，这通过加入掩码矩阵 $\mat{M} \in \R^{T \times T}$ 来实现，该矩阵在对角线及其下方为零、对角线上方为 $-\infty$：
+\begin{equation}
+\label{eq:masked_attention}
+  \text{MaskedAttention}(\mat{Q}, \mat{K}, \mat{V}) = \text{Softmax}\left( \frac{\mat{Q} \mat{K}^\top}{\sqrt{d_k}} + \mat{M} \right) \mat{V},
+\end{equation}
+此时 $\mat{Q}, \mat{K} \in \R^{T \times d_k}$、$\mat{V} \in \R^{T \times d_v}$。$-\infty$ 元素在 softmax 作用下消失，因此第 $i$ 个输出仅依赖于词元 $1,2, \ldots, i$。正是这种\emph{掩码自注意力}使自回归解码成为可能，也是我们此后所假定的变体。
+
+\subsubsection{注意力权重的解释}
+
+Softmax 运算逐行施加，为每个查询生成键上的概率分布
+\begin{equation}
+\label{eq:att-score}
+\alpha_{ij} = \frac{\exp\left( \vecb{q}_i^\top \vecb{k}_j / \sqrt{d_k} \right)}{\sum_{l=1}^{M} \exp\left( \vecb{q}_i^\top \vecb{k}_l / \sqrt{d_k} \right)},
+\end{equation}
+其中 $\alpha_{ij}$ 表示第 $i$ 个查询赋予第 $j$ 个键的注意力分数。查询 $i$ 的输出为：
+\begin{equation}
+\vecb{o}_i = \sum_{j=1}^{M} \alpha_{ij} \vecb{v}_j.
+\label{eq:context_vector}
+\end{equation}
+在带掩码的情形下，同样的表达式依然成立，只是求和限制在 $j \le i$，因为掩码将其余权重置为零。
+各项可以按如下方式理解：
+\begin{itemize}
+    \item \textbf{查询（$\mat{Q}$）}：表示我们为其寻找相关上下文的当前位置。在自注意力中，查询与键、值由同一输入序列导出。
+    \item \textbf{键（$\mat{K}$）}：充当输入序列中每个元素的标签或标识符。点积 $\mat{Q} \mat{K}^\top$ 度量每个查询与所有键之间成对的兼容性或相似度。
+    \item \textbf{值（$\mat{V}$）}：包含将被聚合的实际信息。最终输出是值的加权和，其权重由注意力分数决定。
+\end{itemize}
+这一形式使模型能够动态地权衡每个输入元素的重要性，从而有效地为输出序列中的每个位置构建上下文感知的表示。
+
+
+\subsubsection{多头注意力}
+
+为了同时捕获不同类型的关系与依赖，Transformer 并行运行若干注意力运算，每个运算拥有各自学习到的投影矩阵。此时的输入不再是 $\mat{Q}$、$\mat{K}$、$\mat{V}$ 本身，而是由它们投影而来的隐藏状态：给定 $\mat{X}_Q \in \R^{N \times d}$ 与 $\mat{X}_K, \mat{X}_V \in \R^{M \times d}$，其中 $d$ 为模型维数
+\begin{equation}
+\text{MultiHeadAttention}(\mat{X}_Q, \mat{X}_K, \mat{X}_V) = \text{Concat}(\text{head}_1, \dots, \text{head}_H) \mat{W}^O,
+\label{eq:multi_head}
+\end{equation}
+其中每个头按下式计算
+\begin{equation}
+\text{head}_i = \text{Attention}(\mat{X}_Q \mat{W}_i^Q, \mat{X}_K \mat{W}_i^K, \mat{X}_V \mat{W}_i^V).
+\label{eq:head}
+\end{equation}
+这里 $\mat{W}_i^Q \in \R^{d \times d_k}$、$\mat{W}_i^K \in \R^{d \times d_k}$、$\mat{W}_i^V \in \R^{d \times d_v}$ 是第 $i$ 个头的投影矩阵，$\mat{W}^O \in \R^{H d_v \times d}$ 将拼接后的输出投影回模型维数。通常 $d_k = d_v = \frac{d}{H}$，其中 $H$ 为头数。我们将 $d_h = \frac{d}{H}$ 记为头维数，故在标准实现中 $d_h = d_k = d_v$。
+
+在仅解码器设定下，上文引入的两条限制延续到每一个头。单个隐藏状态矩阵 $\mat{X} \in \R^{T \times d}$ 供给全部三个投影，且每个头施加掩码自注意力，
+\begin{equation}
+\label{eq:mha-decoder}
+\begin{gathered}
+\text{MultiHeadAttention}(\mat{X}) = \text{Concat}(\text{head}_1, \dots, \text{head}_H) \mat{W}^O, \\
+\text{head}_i = \text{MaskedAttention}(\mat{X}\mat{W}_i^Q, \mat{X} \mat{W}_i^K, \mat{X} \mat{W}_i^V).
+\end{gathered}
+\end{equation}
+这一组合称为\emph{多头掩码自注意力}，是仅解码器 LLM 的标准注意力机制，我们将其简称为 MHA。在标准实现中 $d_k = d_v = d/H$，我们将这一公共头维数记为 $d_h = d/H$。
+一些架构让多个查询头共享同一个键值投影。此后，$H_{\rm Q}$ 表示查询头的数目，$H_{\rm KV}$ 表示互异键值头的数目；对 MHA 而言两者重合，即 $H_{\rm Q} = H_{\rm KV} = H$。
+
+\subsubsection{KV 缓存}
+
+考虑自回归解码，可以观察到：在一个头内部，时间步 $t$ 处的注意力输出就是式 \eqref{eq:context_vector} 限制到 $j \le t$ 的结果：
+\begin{equation}
+\label{eq:kv-output}
+\vecb{o}_t = \sum_{j=1}^{t} \alpha_{tj} \vecb{v}_j .
+\end{equation}
+在诸查询中，只有 $\vecb{q}_t$ 通过式 \eqref{eq:att-score} 中的 $\alpha_{tj}$ 进入该表达式，而所有词元 $1, \ldots, t$ 的键与值都是必需的。
+前 $t-1$ 个词元的键与值在先前的步骤中已经算得，因此可以存储并复用而无需重新计算。在追加当前词元的 KV 对之前，实现中恰好持有这 $t-1$ 条缓存记录。这项技术即\textit{KV 缓存}，在 LLM 中被广泛用于通过避免冗余计算来加速推理（inference），代价是内存占用增加。
+缩减这一内存占用正是多查询注意力（MQA）\cite{shazeer2019mqa}（取 $H_{\rm KV} = 1$）与分组查询注意力（GQA）\cite{ainslie2023gqa}（取 $1 < H_{\rm KV} < H_{\rm Q}$）的目标。多头潜在注意力（MLA）\cite{deepseekai2024deepseekv2} 则改为每个词元缓存一个低秩潜在向量，再由它重构出各头的键与值。
+
+
+\subsubsection{计算与内存复杂度}
+
+需要区分三种局面。\emph{训练}时整个序列被一次性处理。推理时，模型先对输入提示词执行一次前向传播，称为\textit{预填充}，随后逐个生成词元，每生成一个词元需要一次\textit{解码}步骤。
+一个注意力层的代价分为在上述局面中呈现不同标度行为的两部分贡献。投影代价涵盖 $\mat{Q}$、$\mat{K}$、$\mat{V}$ 以及输出投影 $\mat{W}^O$ 的计算，注意力代价则涵盖 $\mat{Q}\mat{K}^\top$ 的形成与 $\mat{V}$ 的聚合。两者谁占主导，取决于序列长度是否超过模型维数。
+就内存而言，训练与预填充都要处理注意力矩阵；若将其完全实体化，则占用 $\mathcal{O}(T^2)$ 内存。而在解码步骤中，得益于 KV 缓存，只需要该矩阵的最后一行，即 $\mathcal{O}(T)$ 内存。
+不过缓存本身占用 $M_{\rm KV} = 2 L B T H_{\rm KV} d_h b$ 字节，
+其中 $L$ 为层数，$B$ 为批大小，$b$ 为每个标量所占的字节数。
+对完整 MHA 有 $H_{\rm KV} d_h = d$，而 MQA 与 GQA 取 $H_{\rm KV} < H_{\rm Q}$。该表达式未涵盖 MLA：MLA 不以 $H_{\rm KV}$ 个键值头缓存，而是每个词元、每层缓存一个维数为 $d_c$ 的潜在向量。
+\Cref{tab:attention-complexity} 汇总了一个注意力层在三种局面下的计算代价及相应内存。
+\begin{table}[h]
+\centering
+\caption{一个 MHA 块的每序列、每层复杂度。$T$ 表示序列长度，在解码一列中表示已缓存的词元数；$d$ 为模型维数，$H_{KV}$ 为键值头数，$d_h$ 为头维数。}
+\label{tab:attention-complexity}
+\begin{tabular}{lccc}
+\toprule
+ & \multirow{2}{*}{训练} & \multicolumn{2}{c}{推理} \\
+\cmidrule(lr){3-4}
+ & & 预填充 & 解码（每步） \\
+\midrule
+投影代价 & $\mathcal{O}(T d^2)$ & $\mathcal{O}(T d^2)$ & $\mathcal{O}(d^2)$ \\
+注意力代价 & $\mathcal{O}(T^2 d)$ & $\mathcal{O}(T^2 d)$ & $\mathcal{O}(T d)$ \\
+\midrule
+注意力矩阵内存 & $\mathcal{O}(T^2)$ & $\mathcal{O}(T^2)$ & $\mathcal{O}(T)$ \\
+KV 缓存内存 & -- & $\mathcal{O}(T H_{\rm KV} d_h)$ & $\mathcal{O}(T H_{\rm KV} d_h)$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+训练与预填充共享相同的渐近行为，因为两者都一次性处理整个序列；注意力的本质使其能够在 GPU 上高效并行训练 \cite{vaswani2017attention}，所有成对交互与所有头均可同时计算。相比之下，一个解码步骤只针对缓存处理单个词元，这使两行代价都消去了一个 $T$ 因子。
+因此，训练与预填充通常是计算受限的，而解码通常是内存受限的 \cite{yuan2024efficientinferencesurvey2}：一个解码步骤仅执行 $\mathcal{O}(Td + d^2)$ 次运算，却必须从高带宽内存（HBM）读取整个缓存。这只是典型局面，实际行为取决于批大小、上下文长度、核函数实现、数值精度与硬件。
+
+
+% \subsubsection{Computational Complexity and Advantages}
+
+% The attention mechanism offers several key advantages over recurrent architectures:
+
+% \begin{itemize}
+%     \item \textbf{Parallelization}: Unlike RNNs, which process sequences sequentially, attention computes all pairwise interactions in parallel, making efficient use of GPU hardware.
+    
+%     \item \textbf{Long-Range Dependencies}: The direct connectivity between any two positions in the sequence eliminates the vanishing gradient problem and allows the model to capture dependencies regardless of their distance.
+    
+%     \item \textbf{Interpretability}: The attention weight matrix $\boldsymbol{\alpha}$ provides a differentiable, probabilistic alignment between input and output positions, offering insights into the model's decision-making process.
+% \end{itemize}
+
+%However, the standard attention mechanism has a computational complexity of $\mathcal{O}(n^2)$ with respect to sequence length, which becomes prohibitive for very long sequences.
+
+% However, the standard attention mechanism has a computational complexity of $\mathcal{O}(T^2 d)$ with respect to sequence length $T$ and embedding dimension $d$, which becomes prohibitive for very long sequences. The memory complexity is $\mathcal{O}(T^2)$ for storing the attention matrix, which is the primary bottleneck for long-context inference.
+% Recent advances such as sparse attention, linear attention, and flash attention address this limitation by reducing the quadratic complexity to near-linear or constant time.
+
+\subsection{前馈网络}
+
+前馈网络（FFN）是 Transformer 架构的关键组件，通常约占模型参数量的三分之二 \cite{geva2021ffnmemory}。在现代仅解码器 LLM 中，FFN 采用门控架构 \cite{shazeer2020glu}：
+
+\begin{equation}
+\operatorname{FFN}(\vecb{x}) = \left[ \sigma(\vecb{x}^\top \mat{W}^{\text{gate}}) \odot \vecb{x}^\top \mat{W}^{\text{up}} \right] \mat{W}^{\text{down}},
+\label{eq:ffn_gated}
+\end{equation}
+其中 $\mat{W}^{\text{gate}}, \mat{W}^{\text{up}} \in \R^{d \times d_{\text{ff}}}$ 为门控投影与上投影，$\mat{W}^{\text{down}} \in \R^{d_{\text{ff}} \times d}$ 为下投影，$\sigma(\cdot)$ 表示非线性激活函数（通常为 SiLU/$\text{Swish}_1$ \cite{ramachandran2017swish} 或 GELU \cite{hendrycks2023gelu}），$\odot$ 表示逐元素乘法。扩展因子 $\frac{d_{\text{ff}}}{d}$ 在实践中通常介于 $2$ 到 $4$ 之间。FFN 在每个序列位置上独立且相同地施加；也就是说，同一组权重被每个词元复用，因此与注意力不同，它不在位置之间混合信息。
+
+有两点性质使该组件与众不同。其一，它持有很大一部分权重，却完全由稠密矩阵乘法构成。由于通用矩阵乘法（GEMM）\cite{goto2008anatomy} 已针对 GPU 等现代加速器架构进行了充分优化，FFN 尽管体量庞大，其求值仍然非常快，任何结构化替代方案都必须与这一基线竞争。其二，已有研究认为 FFN 充当键值记忆 \cite{geva2021ffnmemory} 并中介某些事实性关联 \cite{meng2023ffnfactuallocation}，这使得对它的分解不仅关乎效率，也关乎可解释性。
+
+
+\subsection{面向 LLM 的张量分解概览}
+
+\Cref{tab:decompositions} 沿上文讨论的各项性质对五种格式作了比较。CP 是其中最紧凑的一种，也是唯一带有唯一性保证的一种，这使它在因子本身需要承载语义时成为自然的选择。Tucker 为每个模赋予独立的秩，因此适合各模具有不同语义的张量（例如层与头），代价是核心张量随阶数增长。TT 与 TTM 使参数量保持对阶数线性，是大型矩阵（包括嵌入层、投影矩阵与适配器）的常规选择；TTM 还额外保留其所替代矩阵的算子结构。BT 居于两者之间：比 CP 更丰富，又比单个大 Tucker 核心更具结构性。
+
+
+\begin{table}[!htbp]
+\centering
+\caption{\footnotesize 语言模型中所用张量分解格式概览：参数量、主要优势与劣势，以及代表性应用场景。记号遵循 \cref{subsec:tensor-decompositions}。}
+\label{tab:decompositions}
+\footnotesize
+\begin{tblr}{
+  width = \textwidth,
+  colspec = {Q[2.0cm,m,c]Q[2.75cm,m,c]Q[2.9cm,m,c]Q[2.9cm,m,c]X[m,c]},
+  row{1} = {font=\bfseries},
+  rowsep = 3pt,
+  hline{1,7} = {1pt},
+  hline{2} = {0.6pt},
+  hline{3,4,5,6} = {0.6pt, gray7},
+}
+分解 & 参数量 & 优势 & 劣势 & 在 LLM 中的自然应用场景 \\
+CP \newline \cite{hitchcock1927cp}, \cite{carroll1970analysis}, \cite{harshman1970foundations} & $R \sum_n I_n$ & 最紧凑；在温和条件下唯一，故因子可解释 & CP 秩为 NP 难；最优近似可能不存在；拟合不稳定 & 紧凑嵌入表 \cite{zhou2026tensorizingengram}；因子化 KV 缓存 \cite{zhang2026tpa} \\
+Tucker \cite{tucker1966some} & $\prod_n R_n+\sum_n I_nR_n$ & 逐模取秩；压缩灵活 & 核心张量随阶数 $N$ 指数增长；规范自由度使因子不可直接解释 & 跨头因子共享 \cite{gu2025tensorllm}, \cite{li2026lestd}；KV 缓存中的跨头冗余 \cite{klein2026tuckerattention} \\
+TT \cite{oseledets2011tensor} & $\sum_n R_{n-1}I_nR_n$ & 参数量对阶数 $N$ 线性 & 规范自由度；TT 秩依赖于所选的重排方式 & 张量化嵌入层 \cite{xu2023tensorgpt}、投影矩阵 \cite{yang2024comera}、适配器 \cite{anjum2024ttlora} \\
+TTM \cite{oseledets2010ttm} & $\sum_n R_{n-1}I_nJ_nR_n$ & 保留算子结构 & 与 TT 相同的规范自由度 & 张量化嵌入层 \cite{hrinchuk2020tensorized}、投影矩阵 \cite{chekalina2023ttm}、适配器 \cite{hu2024dota} \\
+BT \cite{lathauwer2008btd} & $\sum_k \Bigl[ \Pi_n R_{kn} + \sum_n I_{n} R_{kn} \Bigr]$ & 介于 CP 的紧凑性与 Tucker 的灵活性之间 & 超参数更多（$K$ 及每项的秩） & 将注意力改写为 BT 表示 \cite{ma2019tensorized} \\
+\end{tblr}
+\end{table}
+
+% The table also highlights that the usefulness of a tensor decomposition depends on the object being tensorized. An embedding table, a layer-head projection stack, a PEFT update tensor, and a KV cache impose different constraints on rank, contraction order, training stability. Every tensorized-LM method should report four details alongside parameter count: (i) the tensorization shape, (ii) the rank pattern, (iii) the contraction strategy, and (iv) the semantic meaning of each mode.
+

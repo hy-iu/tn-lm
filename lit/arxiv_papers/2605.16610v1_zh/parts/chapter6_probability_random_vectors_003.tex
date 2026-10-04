@@ -1,0 +1,274 @@
+
+\end{proof}
+\end{proposition}
+\begin{remark}
+    注意，$\EE(\Ab\outprod\Ab)$ 的指标不同排列顺序对应如下张量网络：  
+    \begin{align*}
+            \EE(\Ab\outprod\Ab)_{i_1i_2i_4i_3}
+            &= 
+            \EE(\Ab_{i_1i_2}\Ab_{i_4i_3}) 
+    = \delta_{i_1i_4}\delta_{i_2i_3}\\
+    &=
+    \begin{cases}
+        1 & \text{ if } i_1=i_4\text{ and } i_2=i_3\\
+        0 & \text{ otherwise, }
+    \end{cases} 
+    =
+    \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x,\y-0.1) to [out=100,in=80] (\x+2,\y-0.1);
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \node[draw=none] () at (\x,\y-0.25) {\scalebox{0.7}{\indcolor{$i_1$}}};
+    \node[draw=none] () at (\x+2.15,\y-0.25) {\scalebox{0.7}{\indcolor{$i_4$}}};
+    \node[draw=none] () at (\x+0.35,\y-0.25) {\scalebox{0.7}{\indcolor{$i_2$}}};
+    \node[draw=none] () at (\x+1.7,\y-0.25) {\scalebox{0.7}{\indcolor{$i_3$}}};
+\end{tikzpicture},
+    \end{align*}
+以及
+\begin{align*}
+\EE(\Ab\outprod\Ab)_{i_1i_4i_2i_3} 
+&= 
+\EE(\Ab_{i_1i_4}\Ab_{i_2i_3})= \delta_{i_1i_2}\delta_{i_4i_3}\\
+&=
+\begin{cases}
+        1 & \text{ if } i_1=i_2\text{ and } i_3=i_4\\
+        0 & \text{ otherwise, }
+\end{cases}
+=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \draw[edge] (\x+2,\y-0.1) to [out=100,in=80] (\x+3.65,\y-0.1);
+    \node[draw=none] () at (\x+0.15,\y-0.25) {\scalebox{0.7}{\indcolor{$i_1$}}};
+    \node[draw=none] () at (\x+1.85,\y-0.25) {\scalebox{0.7}{\indcolor{$i_2$}}};
+    \node[draw=none] () at (\x+2.15,\y-0.25) {\scalebox{0.7}{\indcolor{$i_3$}}};
+    \node[draw=none] () at (\x+3.65,\y-0.25) {\scalebox{0.7}{\indcolor{$i_4$}}};
+\end{tikzpicture}.
+\end{align*}
+\end{remark}
+接下来说明如何借助命题~\ref{prop:inner-expectation} 与~\ref{prop:outer-prod}，为高斯随机矩阵与其自身乘积的期望给出一个极为简洁的张量网络推导。 
+\begin{proposition}\label{prop:wishart-mean}
+若随机矩阵 $\Ab\in\RR^{m\times n}$ 的元素独立同分布（i.i.d.）地取自标准正态分布，则 $\EE(\Ab^\ts\Ab) = m\Ib_n$。 
+\begin{proof}
+        借助命题~\ref{prop:inner-expectation} 与~\ref{prop:outer-prod}，可写为 
+\begin{align*}
+\EE(\Ab^\ts\Ab) 
+&= 
+\EE\left(\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!30!blue!30!white] (A1) at (\x,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=red!30!blue!30!white] (A2) at (\x+1,\y){\scalebox{0.85}{$\Ab$}};
+    \draw[edge](A1) -- (A2) node [midway, above]{\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge](A1) -- (\x-0.85,\y) node [midway, above]{\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge](A2) -- (\x+1.85,\y) node [midway, above]{\scalebox{0.7}{\dimcolor{$n$}}};
+\end{tikzpicture}\right)
+=
+\EE\left(\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!30!blue!30!white] (A2) at (\x,\y-0.5){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=red!30!blue!30!white] (A1) at (\x,\y+0.5){\scalebox{0.85}{$\Ab$}};
+    \draw[edge](\x+0.25,\y+0.4) -- (\x+1.25,\y+0.4) -- (\x+1.25,\y-0.4) -- (\x+0.25,\y-0.4);
+    \draw[edge](\x+0.2,\y+0.65)--(\x+1.25,\y+0.65)node [midway, above]{\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge](\x+0.2,\y-0.65)--(\x+1.25,\y-0.65)node [midway, below]{\scalebox{0.7}{\dimcolor{$n$}}};
+    \node[draw=none] () at (\x+1.45,\y) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[dotted](\x+0.55,\y+1)--(\x+0.55,\y-1);
+\end{tikzpicture}\right)\\
+\ \
+&\textequal{Prop.~\ref{prop:inner-expectation}}
+\ \
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!30!blue!30!white] (A1) at (\x,\y+0.5){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=red!30!blue!30!white] (A2) at (\x,\y-0.5){\scalebox{0.85}{$\Ab$}};
+    \draw[edge,draw=blue](\x+0.25,\y+0.4) -- (\x+1.65,\y+0.4);
+    \draw[edge, draw=red](\x+1.65,\y+0.4)-- (\x+1.95,\y+0.4) -- (\x+1.95,\y-0.4)--(\x+1.65,\y+0-0.4);
+    \draw[edge, draw=blue](\x+1.65,\y-0.4) -- (\x+0.25,\y-0.4);
+    \draw[edge, draw=blue](\x+0.2,\y+0.65)--(\x+1.95,\y+0.65)node [midway, above]{\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge,draw=blue](\x+0.2,\y-0.65)--(\x+1.95,\y-0.65)node [midway, below]{\scalebox{0.7}{\dimcolor{$n$}}};
+    \node[draw=none] () at (\x+2.15,\y) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \node at (\x-0.55,\y) {$\EE\left( \vphantom{\rule{0pt}{1cm}} \right.$};
+    \node at (\x+0.55,\y) {$\left. \vphantom{\rule{0pt}{1cm}} \right)$};
+    \node at (\x+1.15,\y) {$\EE\left( \vphantom{\rule{0pt}{1cm}} \right.$};
+    \node at (\x+2.35,\y) {$\left. \vphantom{\rule{0pt}{1cm}} \right)$};
+\end{tikzpicture}
+~~\textequal{Prop.~\ref{prop:outer-prod}}
+\ \ 
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge,draw=blue](\x+1.35,\y+0.4) -- (\x+1.65,\y+0.4);
+    \draw[edge, draw=red](\x+1.65,\y+0.4)-- (\x+1.95,\y+0.4) -- (\x+1.95,\y-0.4)--(\x+1.65,\y+0-0.4);
+    \draw[edge, draw=blue](\x+1.35,\y-0.4) -- (\x+1.65,\y-0.4);
+    \draw[edge, draw=blue](\x+1.35,\y-0.4) -- (\x+1.35,\y-0.4);
+    \draw[edge, draw=blue](\x+1.35,\y+0.65)--(\x+1.95,\y+0.65);
+    \draw[edge,draw=blue](\x+1.35,\y-0.65)--(\x+1.95,\y-0.65);
+    \node[draw=none] () at (\x+2.15,\y) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \node[draw=none] () at (\x+1.35,\y) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \node[draw=none] () at (\x+0.85,\y) {\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge, draw=blue](\x+1.35,\y+0.65)to[out=170,in=190](\x+1.35,\y-0.65);
+    \draw[edge, draw=blue](\x+1.35,\y+0.4)to[out=190,in=170](\x+1.35,\y-0.4);
+\end{tikzpicture}
+= m\Ib_n.
+\end{align*}
+最后一个图由收缩长度为 $m$ 的腿得到。可以看到，一旦完成收缩，所得表达式就是单位矩阵的迹，对应上面等式中长度为 $m$ 的圆环。
+\end{proof}
+\end{proposition}
+上述命题可解释为关于 Wishart 分布均值的陈述。  
+回顾一下，从 Wishart 分布 $W_p(\mat \Sigma, m)$（其中 $\mat \Sigma \in \RR^{n\times n}$ 为协方差矩阵）采样矩阵 $\mat X$ 的做法是：把矩阵 $\mat A\in\mathbb R^{m\times n}$ 的每一列独立地取自多元正态 $\mathcal N(\vec 0 , \mat \Sigma)$，再令 $\mat X = \mat A^\top\mat A$。因此，命题~\ref{prop:inner-expectation} 中的矩阵 $\Ab ^\top \Ab$ 服从 Wishart 分布  $W_p(\mat I,m)$。
+\begin{remark} 由命题~\ref{prop:inner-expectation} 可知，若 $\Ab \in \RR^{m \times n}$ 的元素取自标准正态分布，则 $\EE(\norm{\Ab}_F^2) = mn$。 
+该结论可推广到元素独立同分布地取自标准正态分布的高阶张量，例如若 $\Tt\in\RR^{d_1\times d_2\times\cdots\times d_N}$，则 $\EE(\norm{\Tt}_F^2) = d_1d_2\cdots d_N$。
+\end{remark}
+利用前述命题给出的高斯随机矩阵性质，可以计算其乘积的期望范数。同样地，用张量网络表述后证明极为简洁，而若用指标与求和显式处理，则要繁琐得多。
+\begin{proposition}\label{prop:expected-norm}
+    设 $\Ab\in\RR^{m\times r}$ 与 $\Bb\in\RR^{r\times n}$ 为随机矩阵，其元素独立同分布（i.i.d.）于均值为零、方差为一的标准正态分布。则其乘积的 Frobenius 范数平方的期望为 $\EE({\norm{\Ab\Bb}^2_F}) = mnr$。
+\begin{proof}
+借助命题~\ref{prop:inner-expectation}，可写为
+\begin{align*}
+ \EE({\norm{\Ab\Bb}^2_F})
+ &= 
+ \EE\left(\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (A) at (\x,\y+0.5){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!50!white] (B) at (\x+1,\y+0.5){\scalebox{0.85}{$\Bb$}};
+    \draw[edge] (A) -- (B) node [midway,above]{\scalebox{0.7}{\dimcolor{$r$}}};
+    \node[tensor,fill=red!50!white] (A1) at (\x,\y-0.5){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!50!white] (B1) at (\x+1,\y-0.5){\scalebox{0.85}{$\Bb$}};
+    \draw[edge] (A1) -- (B1) node [midway,above]{\scalebox{0.7}{\dimcolor{$r$}}};
+    \draw[edge] (A) to [out=-150,in=160, distance=0.5cm] (A1);
+    \draw[edge] (B) to [out=-30,in=20, distance=0.5cm] (B1);
+    \node[draw=none] () at (\x-0.75,\y) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \node[draw=none] () at (\x+1.75,\y) {\scalebox{0.7}{\dimcolor{$n$}}};
+    \end{tikzpicture}\right)\\
+&=
+\EE\left(\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.25}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (A) at (\x,\y){\scalebox{0.85}{$\Ab$}}; 
+    \node[tensor,fill=red!50!white] (A1) at (\x+1,\y){\scalebox{0.85}{$\Ab$}};
+    \draw[edge](A)--(A1)node[midway,above] {\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge](A)--(\x,\y-0.85)node[midway,left] {\scalebox{0.7}{\dimcolor{$r$}}};
+    \draw[edge](A1)--(\x+1,\y-0.85)node[midway,right] {\scalebox{0.7}{\dimcolor{$r$}}};
+    \node[tensor,fill=blue!50!white] (B) at (\x+2,\y){\scalebox{0.85}{$\Bb$}}; 
+    \node[tensor,fill=blue!50!white] (B1) at (\x+3,\y){\scalebox{0.85}{$\Bb$}};
+    \draw[edge](B)--(B1)node[midway,above] {\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge](B)--(\x+2,\y-0.85)node[midway,left] {\scalebox{0.7}{\dimcolor{$r$}}};
+    \draw[edge](B1)--(\x+3,\y-0.85)node[midway,right] {\scalebox{0.7}{\dimcolor{$r$}}};
+    \draw[edge](\x+2,\y-0.85) -- (\x+2,\y-1) -- (\x+1,\y-1) -- (\x+1,\y-0.85);
+    \draw[edge](\x+3,\y-0.85) -- (\x+3,\y-1.25) -- (\x,\y-1.25) -- (\x,\y-0.85);
+    \draw[dotted](\x+1.5,\y+0.5) -- (\x+1.5,\y-1.65);
+\end{tikzpicture}\right)
+=
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (A) at (\x,\y){\scalebox{0.85}{$\Ab$}}; 
+    \node[tensor,fill=red!50!white] (A1) at (\x+1,\y){\scalebox{0.85}{$\Ab$}};
+    \draw[edge, draw=red](A)--(A1)node[midway,above] {\scalebox{0.7}{\dimcolor{$m$}}};
+   \node[tensor,fill=blue!50!white] (B) at (\x+2,\y){\scalebox{0.85}{$\Bb$}}; 
+    \node[tensor,fill=blue!50!white] (B1) at (\x+3,\y){\scalebox{0.85}{$\Bb$}};
+    \draw[edge, draw=blue](B)--(B1)node[midway,above] {\scalebox{0.7}{\dimcolor{$n$}}};
+    \node at (\x-0.55,\y) {$\EE\Biggl ( $};
+    \node (eq) at (\x+1.39,\y) {$\Biggr )\EE$};
+    \node (eq) at (\x+1.73,\y) {$\Biggl($};
+    \draw[edge, draw=blue](B) -- (\x+2,\y-0.85);
+    \draw[edge, draw=blue](B1) -- (\x+3,\y-0.85);
+    \draw[edge, draw=red](A) -- (\x,\y-0.85);
+    \draw[edge, draw=red](A1) -- (\x+1,\y-0.85);
+    \draw[edge](\x+1,\y-0.85) -- (\x+1,\y-1) -- (\x+2,\y-1)--(\x+2,\y-0.85);
+    \draw[edge](\x+3,\y-0.85) -- (\x+3,\y-1.2) -- (\x,\y-1.2) -- (\x,\y-0.85);
+    \node[draw=none] () at (\x+1.65,\y-0.85) {\scalebox{0.7}{\dimcolor{$r$}}};
+    \node[draw=none] () at (\x+0.5,\y-0.95) {\scalebox{0.7}{\dimcolor{$r$}}};
+\end{tikzpicture}\Biggr).
+\end{align*}
+由命题~\ref{prop:wishart-mean} 有 $\EE\left(\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.15}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (A) at (\x,\y){\scalebox{0.85}{$\Ab$}}; 
+    \node[tensor,fill=red!50!white] (A1) at (\x+1,\y){\scalebox{0.85}{$\Ab$}};
+    \draw[edge, draw=red](A)--(A1)node[midway,above] {\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge, draw=red](A) -- (\x,\y-0.85)node[midway,left] {\scalebox{0.7}{\dimcolor{$r$}}};
+    \draw[edge, draw=red](A1) -- (\x+1,\y-0.85)node[midway,right] {\scalebox{0.7}{\dimcolor{$r$}}};
+\end{tikzpicture}\right)
+=
+m\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+     \draw[edge, draw=red] (\x,\y-0.1) to [out=100,in=80] (\x+2,\y-0.1);
+    \node[draw=none] () at (\x+1,\y+0.65) {\scalebox{0.7}{\dimcolor{$r$}}};
+\end{tikzpicture}$
+以及 
+$\EE\left(\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.15}
+    \def\x{0}
+    \node[tensor,fill=blue!50!white] (B) at (\x,\y){\scalebox{0.85}{$\Bb$}}; 
+    \node[tensor,fill=blue!50!white] (B1) at (\x+1,\y){\scalebox{0.85}{$\Bb$}};
+    \draw[edge, draw=blue](B)--(B1)node[midway,above] {\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge, draw=blue](B) -- (\x,\y-0.85)node[midway,left] {\scalebox{0.7}{\dimcolor{$r$}}};
+    \draw[edge, draw=blue](B1) -- (\x+1,\y-0.85)node[midway,right] {\scalebox{0.7}{\dimcolor{$r$}}};
+\end{tikzpicture}\right)
+= 
+n\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+     \draw[edge, draw=blue] (\x,\y-0.1) to [out=100,in=80] (\x+2,\y-0.1);
+    \node[draw=none] () at (\x+1,\y+0.65) {\scalebox{0.7}{\dimcolor{$r$}}};
+\end{tikzpicture}.
+$ 
+由于长度为 $r$ 的腿之间存在收缩，最终得到
+\begin{align*}
+ \EE({\norm{\Ab\Bb}^2_F})
+ = 
+ \EE\left(\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (A) at (\x,\y+0.5){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!50!white] (B) at (\x+1,\y+0.5){\scalebox{0.85}{$\Bb$}};
+    \draw[edge] (A) -- (B) node [midway,above]{\scalebox{0.7}{\dimcolor{$r$}}};
+    \node[tensor,fill=red!50!white] (A1) at (\x,\y-0.5){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!50!white] (B1) at (\x+1,\y-0.5){\scalebox{0.85}{$\Bb$}};
+    \draw[edge] (A1) -- (B1) node [midway,above]{\scalebox{0.7}{\dimcolor{$r$}}};
+    \draw[edge] (A) to [out=-150,in=160, distance=0.5cm] (A1);
+    \draw[edge] (B) to [out=-30,in=20, distance=0.5cm] (B1);
+    \node[draw=none] () at (\x-0.75,\y) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \node[draw=none] () at (\x+1.75,\y) {\scalebox{0.7}{\dimcolor{$n$}}};
+    \end{tikzpicture}\right)
+=
+mn\  \begin{tikzpicture}     [baseline=\baseline]
+ \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line 
+width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{1}
+    \draw[edge](\x+2,\y) -- (\x+2,\y-0.35) -- (\x+3,\y-0.35)--(\x+3,\y);
+    \draw[edge](\x+1,\y) -- (\x+1,\y-0.5) -- (\x+4,\y-0.5) -- (\x+4,\y);
+    \draw[edge, draw=red] (\x+2,\y) to [out=100,in=80](\x+1,\y);
+    \draw[edge, draw=blue] (\x+3,\y) to [out=100,in=80](\x+4,\y);
+    \node[draw=none] () at (\x+2.5,\y-0.65) {\scalebox{0.7}{\dimcolor{$r$}}};
+    \node[draw=none] () at (\x+3.5,\y+0.5) {\scalebox{0.7}{\dimcolor{$r$}}};
+    \node[draw=none] () at (\x+1.5,\y+0.5) {\scalebox{0.7}{\dimcolor{$r$}}};
+\end{tikzpicture}
+= mnr.
+\end{align*}
+\end{proof}
+\end{proposition}
+掌握了高斯随机矩阵乘积期望范数的计算方法后，便可把这一方法推广到更复杂的张量网络的期望。
+

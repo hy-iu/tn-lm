@@ -1,0 +1,41 @@
+
+\section{引言}
+基于 Transformer 架构的大语言模型（LLM），例如 GPT 系列 \cite{ brown2020language, achiam2023gpt} 与 LLaMA 系列 \cite{touvron2023LLaMA, llama2, dubey2024LLaMA}，已在自然语言处理（Natural Language Processing, NLP）的各类应用中取得了巨大成功 \cite{wang-etal-2019-learning-deep, irie19b_interspeech, liu2019text}。这归因于此类模型极其庞大的参数规模与其训练所用的海量数据。事实上，参数更多或训练数据更大的 Transformer 模型往往全面优于其较小规模的前代模型 \cite{brown2020language,touvron2023LLaMA}，因为它们能够捕捉更复杂的模式。\par
+LLM 的成功表明，大规模过参数化在训练阶段是有益的 \cite{overparam}；然而，越来越多的研究表明，基于 Transformer 的模型乃至一般的神经网络（Neural Network, NN），并不需要保留全部学到的参数即可维持其性能 \cite{sajjad2023effect, Fan2020Reducing}。这促使研究者探索训练后压缩技术，旨在使 LLM 在真实应用中（尤其是资源受限的环境中）更加高效、实用。压缩过程应当在不显著损害其推理（inference）性能与生成能力的前提下完成 \cite{sharma2023truth,eff_inference_3, calvi2019compression, xu2023tensorgpt}。\par
+鉴于 LLM 存在严重的过参数化，在对其参数进行结构性压缩的同时保持甚至提升其推理能力，也就不足为奇了。例如，在层选择秩缩减（LAyer-SElective Rank reduction, LASER）模型 \cite{sharma2023truth} 中，作者证明：对单个权重矩阵施加奇异值分解（Singular Value Decomposition, SVD），并移除对应最小奇异值的因子，可以提升 LLM 的推理性能；对前馈网络（FFN）权重矩阵进行压缩时效果尤为显著。作者认为，对单个权重矩阵进行结构性压缩，本质上是在去除训练过程中随机性所引入的权重噪声。然而，LASER 仅对单个权重矩阵施加 SVD，无法利用权重矩阵之间共享的信息。\par
+为克服这一局限，文献 \cite{luo2024trawl} 的作者提出了张量缩减与近似权重（Tensor Reduced and Approximated Weights, TRAWL）模型，该模型采用基于张量的方法：将多头注意力（MHA）块或 FFN 块中的权重矩阵简单堆叠为更高维的张量，再对其施加张量分解。TRAWL 能够利用权重中固有的张量结构来挖掘矩阵间的相关性，在某些实验中甚至优于 LASER，但人们发现它只对 FFN 块的去噪有效，对 MHA 块则无效。\par
+
+现有 FFN 块去噪方法 \cite{sharma2023truth, luo2024trawl} 的成功，也凸显了一个开放问题：如何在 MHA 块中获得类似的去噪收益。事实上，现有方法 \cite{sharma2023truth, luo2024trawl} 通常在去噪 FFN 块的权重矩阵时取得最佳性能增益；然而，当将其应用于 MHA 块权重的去噪时，却未观察到类似的性能提升。这一差异十分显著，也颇为出人意料，因为 MHA 机制被广泛认为是 Transformer 架构乃至整个 LLM 的核心。为此，本文指出：先前方法应用于 MHA 之所以无效，是因为它们没有利用领域知识——每一层中的多个注意力头应当以协同一致的方式工作，而非彼此独立。
+
+\begin{figure*}[ht]
+\centering
+\includegraphics[width=\textwidth]{methodology.pdf} 
+\caption{我们所提出的用于压缩 MHA 块的框架，与适用于 FFN 块的现有方法（如 LASER）的结构对比。\textbf{左}：应用于 MHA 块的三步去噪流程（\textbf{本文方法}）：(1) 将权重矩阵拆分为多个注意力头；(2) 将每个注意力头的矩阵张量化为一个 3D 张量；(3) 对这一组 3D 张量施加 Tucker 分解，并共用同一组因子矩阵以完成去噪。\textbf{中}：标准的（原味）仅解码器或仅编码器 Transformer 架构。\textbf{右}：应用于 FFN 块的现有方法；LASER 的示意图。}
+\label{fig:methodology}
+\end{figure*}
+
+关于 MHA 的设计直觉与现有文献 \cite{clark2019does, vig2019multiscale, vig2019analyzing} 均表明：
+\begin{enumerate}
+    \item 同一层内的注意力头捕捉相同层级的模式；
+    \item 同一层内不同的注意力头学习不同的专门知识。
+\end{enumerate} 更具体地说，文献 \cite{clark2019does} 的作者通过分析对应注意力头输出之间的 Jensen-Shannon 散度，为这些直觉提供了实证依据。他们的分析揭示了 Transformer 各层内注意力头的明显聚类，表明同层的注意力头往往关注相似类型的信息，尽管存在一定程度的差异。此外，文献 \cite{vig2019multiscale, vig2019analyzing} 的作者在多个尺度上对注意力进行了可视化，展示了不同注意力头的专门功能，例如捕捉位置与词汇模式、检测命名实体，以及识别句法和语义关系。\par
+
+借助这些关于 MHA 的直觉与领域知识，我们推测：单个 Transformer 层中 MHA 的权重，在多个注意力头共享的一个子空间内包含与推理相关的信息。我们围绕这一问题展开探索并阐述该推测，以期缓解现有工作的局限：
+\begin{itemize}
+    \item 能否通过在单个 Transformer 层内、对多个注意力头的权重强制施加一个共享的高维子空间，来提升 LLM 的推理能力？
+\end{itemize} 
+为回答这一问题，我们提出一个新颖且直观的框架，其基于多头张量化与 Tucker 分解的一种特殊变体，按照跨多个注意力头共享的高维低秩结构对原始 MHA 权重进行去噪。通过迫使每个注意力头的权重处于由同一组 Tucker 因子矩阵所刻画的公共高维子空间之中，该方法使每个注意力头在同一子空间内包含不同的信息。与仅关注 FFN 权重的现有方法相反，我们证明该方法以更高维的形式对 MHA 权重进行结构化去噪与压缩，从而提升 LLM 的推理能力。\par
+本工作的主要贡献有以下三点：
+\begin{itemize}
+    \item 基于关于 MHA 的先验知识、直觉与实证依据，提出了一种新颖的训练后权重去噪框架，在提升 LLM 推理能力的同时实现参数压缩。这是通过一种独特的多头张量化技术与作用于 MHA 权重矩阵的 Tucker 分解特殊变体来实现的。
+    \item 我们证明，所提框架可与现有的 FFN 层去噪方法联合使用，从而在 LLM 推理能力上获得更大的提升。
+    \item 在四个基准测试数据集上、跨三个成熟的 LLM（参数规模从数百万到数十亿、架构涵盖仅编码器与仅解码器）进行了大量实验。结果表明，我们的方法既能提升未经压缩的 LLM 的推理能力，也能提升现有仅去噪 FFN 层方法的效果，且全程无需任何额外数据、训练或微调。
+\end{itemize}
+    
+\begin{figure*}[ht]
+\centering
+\includegraphics[width=\textwidth]{tensor_network.pdf} 
+\caption{不同分解方法作用于单个 Transformer 层 MHA 权重时的张量网络 \cite{orus2014practical} 拓扑结构。注意，尽管 LASER 与 TRAWL 均只报告了应用于 FFN 块时的性能，它们同样可以应用于 MHA 权重。符号 $d_{model}$ 表示嵌入维度，$h$ 为注意力头数，而 $d_v = \frac{d_{model}}{h}$ 表示每个头的维度。($\mathbf{a}, \mathbf{d}$) LASER \cite{sharma2023truth}：将单个权重矩阵分解为 $\mathbf{U} \in \mathbb{R}^{d_{model} \times R}$、$\mathbf{V} \in \mathbb{R}^{h \cdot d_v \times R}$ 与对角矩阵 $\boldsymbol{\Sigma} \in \mathbb{R}^{R \times R}$。($\mathbf{b},\mathbf{e}$) TRAWL \cite{luo2024trawl}：将 3D 张量分解为因子矩阵 $\mathbf{A} \in \mathbb{R}^{4 \times R_3}, \mathbf{B} \in \mathbb{R}^{h \cdot d_v \times R_2}$ 与 $\mathbf{C} \in \mathbb{R}^{d_{model} \times R_1}$，以及核心张量 $\mathcal{G} \in \mathbb{R}^{R_1 \times R_2 \times R_3}$。($\mathbf{c}, \mathbf{f}$) \textbf{本文方法}——共享因子矩阵的 Tucker 分解：使用 Tucker 分解对一组 3D 张量进行分解，同时共用同一组共享因子矩阵 $\mathbf{U}^{(1)} \in \mathbb{R}^{d_{model} \times R_1}, \mathbf{U}^{(2)} \in \mathbb{R}^{d_{v} \times R_2} , \mathbf{U}^{(3)} \in \mathbb{R}^{4 \times R_3} $，并以 $\mathcal{G}_{all} \in \mathbb{R}^{R_1 \times R_2 \times R_3 \times h}$ 作为核心张量。}
+\label{fig:tensor_network}
+\end{figure*}
+

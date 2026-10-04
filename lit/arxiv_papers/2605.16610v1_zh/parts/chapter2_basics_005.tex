@@ -1,0 +1,280 @@
+
+\paragraph{例} 本节以最后一个例子收尾，说明张量网络的图示记法在表示复杂的张量运算时多么有用：
+\begin{align}\label{eq:einsum}
+\begin{tikzpicture}[baseline = \baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = 
+    {thick,line width=.4mm},every loop/.style={}}
+    \def\y{-0.5}
+    \def\x{0}
+    \node[tensor,fill=green!50!red!50!white] (At) at (\x,\y){\scalebox{0.85}{$\At$}};
+    \node[tensor,fill=red!20!white] (S) at (\x-1,\y){\scalebox{0.85}{$\St$}};
+    \node[tensor,fill=red!50!white] (Tt) at (\x,\y+1){\scalebox{0.85}{$\Tt$}};
+    \node[tensor,fill=blue!40!red!60!white] (A) at (\x+1,\y){\scalebox{0.85}{$\Ab$}};
+    \draw[edge] (Tt) -- (At) node [midway,left] {\scalebox{0.7}{\dimcolor{$R$}}};
+    \draw[edge] (Tt) -- (A) node [above,midway] {\scalebox{0.7}{\dimcolor{$R$}}};
+    \draw[edge] (At) -- (A)  node [midway,above] {\scalebox{0.7}{\dimcolor{$R$}}};
+    \draw[edge] (Tt) -- (\x,\y+1.75) node [pos=1.3] {\scalebox{0.7}{\indcolor{$k$}}};
+    \draw[edge] (At) -- (S)  node [midway,above] {\scalebox{0.7}{\dimcolor{$R$}}};
+    \draw[edge] (S) -- (Tt)  node [midway,above] {\scalebox{0.7}{\dimcolor{$R$}}};
+    \draw[edge] (Tt) -- (\x-0.75,\y+1)  node [pos=1.3] {\scalebox{0.7}{\indcolor{$j$}}};
+    \draw[edge] (Tt) -- (\x+0.75,\y+1)  node [pos=1.3] {\scalebox{0.7}{\indcolor{$l$}}};
+    \draw[edge] (S) -- (\x-1.2,\y+0.75)  node [pos=1.3] {\scalebox{0.7}{\indcolor{$i$}}};
+    \end{tikzpicture}
+&=
+\sum_{r_1=1}^R\sum_{r_2=1}^R\sum_{r_3=1}^R\sum_{r_4=1}^R\sum_{r_5=1}^R\St_{ir_1 r_2}\At_{r_2r_3r_5}\Tt_{iklr_1r_3r_4}\Ab_{r_4r_5}\nonumber\\
+&=
+    \begin{tikzpicture}[baseline = \baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = 
+    {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=blue!50!red!30!yellow!50!white] (Ht) at (\x,\y){\scalebox{0.85}{$\Ht$}};
+    \draw[edge](Ht) -- (\x,\y+0.7) node [pos=1.3] {\scalebox{0.7}{\indcolor{$j$}}};
+    \draw[edge](Ht) -- (\x,\y-0.7) node [pos=1.3] {\scalebox{0.7}{\indcolor{$l$}}};
+    \draw[edge](Ht) -- (\x-0.7,\y) node [pos=1.3] {\scalebox{0.7}{\indcolor{$i$}}};
+    \draw[edge](Ht) -- (\x+0.7,\y) node[pos=1.3] {\scalebox{0.7}{\indcolor{$k$}}};
+    \end{tikzpicture}.
+\end{align}
+\subsection{复制张量~（超边）}\label{sec:copy-tensor}
+
+
+有时需要表示由多于两个张量共享的同时收缩。例如，把三个向量 $\ab\in\RR^d, \bb\in\RR^d,$ 与 $\cbb\in\RR^d$ 收缩成一个标量：$\sum_{i=1}^d\ab_i\bb_i\cbb_i$。
+这一运算在张量网络中可用一种特殊的张量——\emph{复制张量}（copy tensor）——来刻画。复制张量等价于克罗内克 $\delta$，也就是对角元全为 1、其余元素全为 0 的超对角张量，在张量网络图中画作一个黑点。例如，复制张量
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+     \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m) at (\x,\y) {};
+     \draw  node[draw=none] (a) at (\x-0.7,\y) {};
+     \draw  node[draw=none] (b) at (\x+0.7,\y) {};
+     \draw  node[draw=none] (c) at (\x,\y-0.7) {};
+    \draw[edge] (a) -- (m);
+    \draw[edge] (m) -- (b);
+    \draw[edge] (m) -- (c);
+\end{tikzpicture}
+其逐元素定义为
+$$
+ \left(\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+     \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m) at (\x,\y) {};
+     \draw  node[draw=none] (a) at (\x-0.7,\y) {};
+     \draw  node[draw=none] (b) at (\x+0.7,\y) {};
+     \draw  node[draw=none] (c) at (\x,\y-0.7) {};
+    \draw[edge] (a) -- (m);
+    \draw[edge] (m) -- (b);
+    \draw[edge] (m) -- (c);
+\end{tikzpicture}\right)_{ijk} = \delta_{ijk} = \begin{cases}
+      1 & \text{if } i=j=k\\
+      0 & \text{otherwise}
+    \end{cases}.
+$$
+借助复制张量，上述三重收缩可表示为
+\begin{align*}
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=blue!40!red!60!white] (a) at (\x,\y){\scalebox{0.85}{$\ab$}};
+    \node[tensor,fill=blue!10!white] (b) at (\x+1.5,\y){\scalebox{0.85}{$\bb$}};
+    \node[tensor,fill=blue!20!red!40!white] (c) at (\x+0.7,\y-0.75){\scalebox{0.85}{$\cbb$}};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m) at (\x+0.7,\y) {};
+    \draw[edge] (a) -- (m) node [above,midway] {\scalebox{0.7}{\dimcolor{$d$}}};
+    \draw[edge] (m) -- (b) node [above,midway] {\scalebox{0.7}{\dimcolor{$d$}}};
+    \draw[edge] (m) -- (c) node [left,midway] {\scalebox{0.7}{\dimcolor{$d$}}};
+    \end{tikzpicture} = \sum_{i,j,k=1}^d\delta_{ijk}\ab_i\bb_j\cbb_k =
+\sum_{i=1}^d\ab_i\bb_i\cbb_i .
+\end{align*}
+下面给出任意阶 $N$ 的复制张量更严格的定义。
+\begin{definition}
+阶为 N 的复制张量
+   \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m) at (\x,\y) {};
+    \draw[edge] (m) -- (\x-0.6,0) node [midway,above] {\scalebox{0.7}{\dimcolor{$d$}}};
+    \draw[edge] (m) -- (\x+0.6,0) node [midway,above] {\scalebox{0.7}{\dimcolor{$d$}}};;
+    \draw[edge] (m) -- (\x-0.5,-0.3) node [midway, below] {\scalebox{0.7}{\dimcolor{$d$}}};;
+    \draw[dotted] (m) -- (\x,-0.6);
+    \draw[dotted] (m) -- (\x,-0.6);
+    \draw[dotted] (m) -- (\x+0.5,-0.5);
+    \draw[dotted] (m) -- (\x+0.3,-0.6);
+\end{tikzpicture}
+是形状为 $\underbrace{d\times d\dots\times d}_{N\text{ times}}$ 的张量，定义为
+\begin{align*}
+       \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m) at (\x,\y) {};
+    \draw[edge] (m) -- (\x-0.6,0) node [midway,above] {\scalebox{0.7}{\dimcolor{$d$}}};
+    \draw[edge] (m) -- (\x+0.6,0) node [midway,above] {\scalebox{0.7}{\dimcolor{$d$}}};;
+    \draw[edge] (m) -- (\x-0.5,-0.3) node [midway, below] {\scalebox{0.7}{\dimcolor{$d$}}};;
+    \draw[dotted] (m) -- (\x,-0.6);
+    \draw[dotted] (m) -- (\x,-0.6);
+    \draw[dotted] (m) -- (\x+0.5,-0.5);
+    \draw[dotted] (m) -- (\x+0.3,-0.6);
+\end{tikzpicture}
+= \sum_{i=1}^d\underbrace{\eb_i\outprod\eb_i\outprod\dots\outprod\eb_i}_{N\text{ times}},%
+\end{align*}
+其中 $\eb_1,\eb_2,\dots,\eb_d$ 为 $\RR^{d}$ 的标准基向量。
+\end{definition}
+复制张量之名正由此而来：与复制张量收缩，便可``复制''标准基向量。事实上，设 $\eb_i\in\RR^{d}$ 为标准基向量，则容易
+验证
+$       
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=blue!40!red!60!white] (e) at (\x,\y){\scalebox{0.85}{$\eb_i$}};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m) at (\x+0.75,\y) {};
+    \draw[edge] (e) -- (m) node [midway,above] {\scalebox{0.7}{\dimcolor{$d$}}};
+    \draw[edge] (m) -- (\x+1.4,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$d$}}};
+    \draw[edge] (m) -- (\x+0.75,\y-0.7) node [midway,right] {\scalebox{0.7}{\dimcolor{$d$}}};
+    \node[draw=none] () at (\x+2,\y) {\scalebox{1}{$=$}};
+    \node[tensor,fill=blue!40!red!60!white] (e1) at (\x+2.5,\y){\scalebox{0.85}{$\eb_i$}};
+    \node[tensor,fill=blue!40!red!60!white] (e2) at (\x+3.5,\y){\scalebox{0.85}{$\eb_i$}};
+    \draw[edge] (e2) -- (\x+3.5,\y-0.7) node [midway,right] {\scalebox{0.7}{\textcolor{gray}{$d$}}};
+    \draw[edge] (e1) -- (\x+2.5,\y-0.7) node [midway,right] {\scalebox{0.7}{\textcolor{gray}{$d$}}};
+\end{tikzpicture}.
+$
+简短证明如下：
+\begin{align*}
+    \left(
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=blue!40!red!60!white] (e) at (\x,\y){\scalebox{0.85}{$\eb_i$}};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m) at (\x+0.75,\y) {};
+    \draw[edge] (e) -- (m) node [midway,above] {\scalebox{0.7}{\dimcolor{$d$}}};
+    \draw[edge] (m) -- (\x+1.4,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$d$}}};
+    \draw[edge] (m) -- (\x+0.75,\y-0.7)node [midway,right] {\scalebox{0.7}{\dimcolor{$d$}}};
+\end{tikzpicture}\right)_{jk}
+&= 
+\sum_{s}(\eb_i)_{s}\delta_{sjk} = \sum_{s}\delta_{is}\delta_{sjk} = \delta_{ijk}\\ 
+&= 
+\begin{cases}
+     1 & \text{if } i=j=k\\
+      0 & \text{otherwise}.
+    \end{cases} =
+    (\eb_i\eb_i^\ts)_{j,k} =
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=blue!40!red!60!white] (e1) at (\x,\y){\scalebox{0.85}{$\eb_i$}};
+    \node[tensor,fill=blue!40!red!60!white] (e2) at (\x+1,\y){\scalebox{0.85}{$\eb_i$}};
+    \draw[edge] (e2) -- (\x+1,\y-0.7) node [below] {\scalebox{0.7}{\indcolor{$k$}}};
+    \draw[edge] (e1) -- (\x,\y-0.7) node [below] {\scalebox{0.7}{\indcolor{$j$}}};
+\end{tikzpicture}.
+\end{align*}
+务必注意，复制张量的``复制''性质只对标准基向量成立，对任意向量并不成立：一般而言
+$       
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=blue!40!red!60!white] (e) at (\x,\y){\scalebox{0.85}{$\vb$}};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m) at (\x+0.75,\y) {};
+    \draw[edge] (e) -- (m) node [midway,above] {\scalebox{0.7}{\dimcolor{$d$}}};
+    \draw[edge] (m) -- (\x+1.4,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$d$}}};
+    \draw[edge] (m) -- (\x+0.75,\y-0.7) node [midway,right] {\scalebox{0.7}{\dimcolor{$d$}}};
+    \node[draw=none] () at (\x+2,\y) {\scalebox{1}{$\neq$}};
+    \node[tensor,fill=blue!40!red!60!white] (e1) at (\x+2.5,\y){\scalebox{0.85}{$\vb$}};
+    \node[tensor,fill=blue!40!red!60!white] (e2) at (\x+3.5,\y){\scalebox{0.85}{$\vb$}};
+    \draw[edge] (e2) -- (\x+3.5,\y-0.7) node [midway,right] {\scalebox{0.7}{\dimcolor{$d$}}};
+    \draw[edge] (e1) -- (\x+2.5,\y-0.7) node [midway,right] {\scalebox{0.7}{\dimcolor{$d$}}};
+\end{tikzpicture}
+$。复制张量之所以只``复制''基向量，是因为 $\delta_{ijk}$ 只挑出对角元。
+\begin{proposition}\label{prop:copy.tensor} 下面列出复制张量的若干有用性质。
+\begin{enumerate}
+    \item 最简单的复制张量是元素全为 1 的向量，即
+$$
+  \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.5}
+    \def\x{0}
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m) at (\x,\y) {};
+    \draw[edge] (m) -- (\x,\y-1) node [left,midway] {\scalebox{0.7}{\dimcolor{$n$}}};
+ \end{tikzpicture}
+ =\sum_{i=1}^n\eb_i =\overrightarrow{\mathbf{1}}.
+$$\label{itm:one-copy-tensor}
+\item 二阶复制张量就是单位矩阵，此处可直接省去中间的黑点，把它画成一条线，即
+$
+    \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m) at (\x,\y) {};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m) at (\x,\y) {};
+    \draw[edge] (m) -- (\x-0.6,0) node [very near end,left] {\scalebox{0.7}{\indcolor{$i$}}};
+    \draw[edge] (m) -- (\x+0.6,0) node [very near end,right]
+    {\scalebox{0.7}{\indcolor{$i$}}};
+    \node[draw=none] at (\x+1,\y) {\scalebox{1}{\textcolor{black}{$=$}}};;
+    \draw[edge] (\x+1.3,\y) -- (\x+2.5,\y) node [very near start,left=0.05cm] {\scalebox{0.7}{\indcolor{$i$}}} node [very near end,right=0.05cm] {\scalebox{0.7}{\indcolor{$i$}}};
+    \end{tikzpicture} = \delta_{ij} = \begin{cases}
+      1 & \text{if } i=j\\
+      0 & \text{otherwise},
+    \end{cases}
+    =
+    \Ib_{ij}.
+$
+\item 
+有趣的是，把一个复制张量的任意若干条腿与另一个复制张量的腿收缩后，所得的张量网络本身仍是一个复制
+张量（在图中把被收缩的腿与黑点合并即得）。例如：
+\begin{align*}  
+\sum_{l_1}\delta_{i_1j_1k_1l_1}\delta_{i_2j_2k_2l_1} 
+&=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m) at (\x,\y) {};
+    \draw[edge] (m) -- (\x,\y-0.5)node [below] {\scalebox{0.6}{\indcolor{$i_1$}}};
+    \draw[edge](m) -- (\x,\y+0.5)node [above] {\scalebox{0.6}{\indcolor{$
+    k_1$}}};
+    \draw[edge] (m) -- (\x-0.5,\y)node [left] {\scalebox{0.6}{\indcolor{$j_1$}}};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (n) at (\x+1,\y) {};
+    \draw[edge] (n) -- (\x+1.5,\y)node [right] {\scalebox{0.6}{\indcolor{$j_2$}}};
+    \draw[edge] (n) --  (\x+1,\y+0.5)node [above] {\scalebox{0.6}{\indcolor{$k_2$}}};   
+    \draw[edge] (n) -- (\x+1,\y-0.5)node [below] {\scalebox{0.6}{\indcolor{$i_2$}}};
+    \draw[edge](m) -- (n)node [midway, above] {\scalebox{0.6}{\indcolor{$l_1$}}};
+ \end{tikzpicture}
+= 
+\delta_{i_1j_1k_1i_2j_2k_2}\\
+&=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw node[fill = black,circle,inner sep=0pt,minimum size=5pt] (m) at (\x,\y) {};
+    \draw[edge] (m) -- (\x+0.75,\y)node [right] {\scalebox{0.6}{\indcolor{$j_2$}}};
+    \draw[edge] (m) -- (\x-0.75,\y)node [left] {\scalebox{0.6}{\indcolor{$j_1$}}};
+    \draw[edge] (m) -- (\x+0.5,\y-0.5)node [below] {\scalebox{0.6}{\indcolor{$i_2$}}};
+    \draw[edge] (m) -- (\x-0.5,\y+0.5)node [above] {\scalebox{0.6}{\indcolor{$k_1$}}};
+    \draw[edge] (m) -- (\x-0.5,\y-0.5)node [below] {\scalebox{0.6}{\indcolor{$i_1$}}};
+    \draw[edge] (m) -- (\x+0.5,\y+0.5)node [above] {\scalebox{0.6}{\indcolor{$k_2$}}};
+\end{tikzpicture}
+=
+ \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=5pt] (m) at (\x,\y+0.4) {};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=5pt] (n) at (\x,\y-0.4) {};
+    \draw[edge] (n) -- (m)node [midway, right] {\scalebox{0.6}{\indcolor{$i_1$}}};;
+    \draw[edge](m) -- (\x,\y+1)node [above] {\scalebox{0.6}{\indcolor{$k_2$}}};
+    \draw[edge](n) -- (\x,\y-1)node [below] {\scalebox{0.6}{\indcolor{$k_1$}}};
+    \draw[edge](m) -- (\x+0.45,\y+0.65)node [above] {\scalebox{0.6}{\indcolor{$l_2$}}};
+    \draw[edge](m) -- (\x-0.45,\y+0.65)node [above] {\scalebox{0.6}{\indcolor{$j_2$}}};
+    \draw[edge](n) -- (\x+0.45,\y-0.65)node [above] {\scalebox{0.6}{\indcolor{$l_1$}}};;
+    \draw[edge](n) -- (\x-0.45,\y-0.65)node [above] {\scalebox{0.6}{\indcolor{$j_1$}}};;
+    \end{tikzpicture}
+=
+\sum_{i_1}\delta_{i_1j_1k_1l_1}\delta_{i_1j_2k_2l_2}.
+\end{align*}
+\item\label{prop:diagcopy}
+对任意向量 $\vb\in\RR^n$，记 $\diag(\vb)\in\RR^{n\times n}$ 为以 $\vb$ 的各分量作对角元的对角矩阵；对任意矩阵 $\Ab\in\RR^{n\times n}$，记 $\diag(\Ab)\in\RR^{n}$ 为取出 $\Ab\in\RR^{n\times n}$ 全部对角元所得的向量。

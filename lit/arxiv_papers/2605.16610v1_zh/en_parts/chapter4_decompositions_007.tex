@@ -1,0 +1,235 @@
+By contracting $\Qb_1$ with the first-mode matricization $\Sb_{(1)}$ and using the above factorization we obtain
+\begin{align}\label{eq:tt-qr-fac}
+    \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor, path picture={
+    \fill[fill=blue!50!white](path picture bounding box.south west)
+        -- 
+    (path picture bounding box.north east) --
+    (path picture bounding box.north west) -- cycle;
+    }, shift={(\x-5.5,\y)}] (Q_1) {\scalebox{0.8}{$\Qb_1$}};
+    \node[tensor,fill=green!50!red!50!white] (S) at (\x-4.5,\y){\scalebox{0.85}{$\St$}};
+    \draw[edge](Q_1) -- (S)node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge](Q_1) -- (\x-6.5,\y)node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$R_1$}}};
+    \draw[edge](S) -- (\x-3.5,\y)node [right]
+    {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \draw[edge](\x-4.25,\y-0.1) -- (\x-3.5,\y-0.1)node [midway,below]
+    {\scalebox{0.7}{\dimcolor{$d_4$}}};
+    \draw[edge](\x-4.25,\y+0.1) -- (\x-3.5,\y+0.1)node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$d_2$}}};
+\end{tikzpicture}
+=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor, path picture={
+    \fill[fill=blue!50!white](path picture bounding box.south west)
+        -- 
+    (path picture bounding box.north east) --
+    (path picture bounding box.north west) -- cycle;
+    }, shift={(\x-5.5,\y)}] (Q_1) {\scalebox{0.8}{$\Qb_1$}};
+    \node[tensor,fill=green!50!red!50!white] (S) at (\x-4.5,\y){\scalebox{0.85}{$\St$}};
+    \draw[edge](Q_1) -- (S)node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge](Q_1) -- (\x-6.5,\y)node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$R_1$}}};
+    \draw[edge](S) -- (\x-3.5,\y)node [right]
+    {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \draw[edge](\x-4.25,\y-0.1) -- (\x-3.5,\y-0.1)node [midway,below]
+    {\scalebox{0.7}{\dimcolor{$d_4$}}};
+    \draw[edge](\x-4.5,\y-0.25) -- (\x-4.5,\y-0.45) -- (\x-5.8,\y-0.45)node [midway,below]
+    {\scalebox{0.7}{\dimcolor{$d_2$}}} -- (\x-5.8,\y-0.1)-- (\x-6.5,\y-0.1);
+\end{tikzpicture}
+=
+\begin{tikzpicture}
+    [baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}    
+    \node[tensor, path picture={
+    \fill[fill=blue!50!white](path picture bounding box.south west)
+        -- 
+    (path picture bounding box.north east) --
+    (path picture bounding box.north west) -- cycle;
+    }, shift={(\x,\y)}] (Q_1) {\scalebox{0.8}{$\Qb_1$}};
+    \node[tensor,fill=blue!50!red!50!white] (A) at (\x+1,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!50!red!20!white] (B) at (\x+2.5,\y){\scalebox{0.85}{$\Bb$}};
+    \draw[edge] (A) -- (B) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$R_2$}}};
+    \draw[edge] (Q_1) -- (A) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (Q_1) -- (\x-1,\y) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$R_1$}}};
+    \draw[edge] (\x+2.74,\y-0.1) -- (\x+3.5,\y-0.1) node [midway,below]
+    {\scalebox{0.7}{\dimcolor{$d_4$}}};
+    \draw[edge] (B) -- (\x+3.5,\y) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$d_3$}}};
+ \draw[edge](\x+1,\y-0.25) -- (\x+1,\y-0.45) -- (\x-0.3,\y-0.45)node [midway,below]
+    {\scalebox{0.7}{\dimcolor{$d_2$}}} -- (\x-0.3,\y-0.1)-- (\x-1,\y-0.1);
+\end{tikzpicture}.
+\end{align}
+Moreover, since $\Qb_1$ is orthogonal and comes from the QR factorization of $\Sb_{(1)}$, we have that $\Qb_1\Sb_{(1)}$ is equal to $\Rb_1$, hence:
+\begin{align}\label{eq:tt-equal-r1}
+    \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor, path picture={
+    \fill[fill=blue!50!white](path picture bounding box.south west)
+        -- 
+    (path picture bounding box.north east) --
+    (path picture bounding box.north west) -- cycle;
+    }, shift={(\x-5.5,\y)}] (Q_1) {\scalebox{0.8}{$\Qb_1$}};
+    \node[tensor,fill=green!50!red!50!white] (S) at (\x-4.5,\y){\scalebox{0.85}{$\St$}};
+    \draw[edge](Q_1) -- (S)node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge](Q_1) -- (\x-6.5,\y)node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$R_1$}}};
+    \draw[edge](S) -- (\x-3.5,\y)node [right]
+    {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \draw[edge](\x-4.25,\y-0.1) -- (\x-3.5,\y-0.1)node [midway,below]
+    {\scalebox{0.7}{\dimcolor{$d_4$}}};
+    \draw[edge](\x-4.5,\y-0.25) -- (\x-4.5,\y-0.45) -- (\x-5.8,\y-0.45)node [midway,below]
+    {\scalebox{0.7}{\dimcolor{$d_2$}}} -- (\x-5.8,\y-0.1)-- (\x-6.5,\y-0.1);
+   \def\x{-3}
+     \node[draw=none] at (\x+0.2,\y){$=$};
+   \node[tensor, path picture={
+    \fill[fill=blue!50!white](path picture bounding box.south west)
+        -- 
+    (path picture bounding box.north east) --
+    (path picture bounding box.north west) -- cycle;
+    }, shift={(\x+1.5,\y)}] (Q_1) {\scalebox{0.8}{$\Qb_1$}};
+    \node[tensor, path picture={
+    \fill[fill=blue!50!white](path picture bounding box.south east)
+        -- 
+    (path picture bounding box.north west) --
+    (path picture bounding box.north east) -- cycle;
+    }, shift={(\x+2.5,\y)}] (Q_1t) {\scalebox{0.8}{$\Qb_1$}};
+    \node[tensor,fill=red!50!white] (R_1) at (\x+3.5,\y){\scalebox{0.85}{$\Rb_1$}};
+    \draw[edge](Q_1) -- (\x+0.5,\y) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$R_1$}}};
+    \draw[edge](Q_1) -- (Q_1t) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$d_1$}}};
+ \draw[edge](\x+3.5,\y-0.25) -- (\x+3.5,\y-0.45) -- (\x+1.1,\y-0.45)node [midway,below]
+    {\scalebox{0.7}{\dimcolor{$d_2$}}} -- (\x+1.1,\y-0.1)-- (\x+0.5,\y-0.1);
+    \draw[edge] (\x+3.65,\y-0.2) -- (\x+4,\y-0.2) -- (\x+4,\y-0.1) -- (\x+4.5,\y-0.1) node [midway,below]
+    {\scalebox{0.7}{\dimcolor{$d_4$}}};
+    \draw[edge] (R_1) -- (\x+4.5,\y) node [right]
+    {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \draw[edge](Q_1t) -- (R_1) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$R_1$}}};
+    \node[draw=none] at (\x+5.25,\y){$=$};
+    \node[tensor,fill=red!50!white] (R_1) at (\x+6.5,\y){\scalebox{0.85}{$\Rb_1$}};
+    \draw[edge] (\x+6.28,\y-0.1) -- (\x+5.5, \y-0.1) node [midway,below]
+    {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x+6.65,\y-0.2) -- (\x+7,\y-0.2) -- (\x+7,\y-0.1) -- (\x+7.5,\y-0.1) node [midway,below]
+    {\scalebox{0.7}{\dimcolor{$d_4$}}};
+    \draw[edge] (R_1) -- (\x+7.5,\y) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \draw[edge] (R_1) -- (\x+5.5,\y) node [midway, above]
+    {\scalebox{0.7}{\dimcolor{$R_1$}}};
+\end{tikzpicture}.
+\end{align}
+By combining the identities~\eqref{eq:tt-qr-fac} and~\eqref{eq:tt-equal-r1}, we have
+$$
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{-6}
+    \def\y{0}
+    \node[tensor,fill=red!50!white] (R_1) at (\x+6.5,\y){\scalebox{0.85}{$\Rb_1$}};
+    \draw[edge] (\x+6.28,\y-0.1) -- (\x+5.5, \y-0.1) node [midway,below]
+    {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x+6.65,\y-0.2) -- (\x+7,\y-0.2) -- (\x+7,\y-0.1) -- (\x+7.5,\y-0.1) node [midway,below]
+    {\scalebox{0.7}{\dimcolor{$d_4$}}};
+    \draw[edge] (R_1) -- (\x+7.5,\y) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \draw[edge] (R_1) -- (\x+5.5,\y) node [midway, above]
+    {\scalebox{0.7}{\dimcolor{$R_1$}}};
+\end{tikzpicture}
+=
+\begin{tikzpicture}
+    [baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}    
+    \node[tensor, path picture={
+    \fill[fill=blue!50!white](path picture bounding box.south west)
+        -- 
+    (path picture bounding box.north east) --
+    (path picture bounding box.north west) -- cycle;
+    }, shift={(\x,\y)}] (Q_1) {\scalebox{0.8}{$\Qb_1$}};
+    \node[tensor,fill=blue!50!red!50!white] (A) at (\x+1,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!50!red!20!white] (B) at (\x+2.5,\y){\scalebox{0.85}{$\Bb$}};
+    \draw[edge] (A) -- (B) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$R_2$}}};
+    \draw[edge] (Q_1) -- (A) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (Q_1) -- (\x-1,\y) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$R_1$}}};
+    \draw[edge] (\x+2.74,\y-0.1) -- (\x+3.5,\y-0.1) node [midway,below]
+    {\scalebox{0.7}{\dimcolor{$d_4$}}};
+    \draw[edge] (B) -- (\x+3.5,\y) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$d_3$}}};
+ \draw[edge](\x+1,\y-0.25) -- (\x+1,\y-0.45) -- (\x-0.3,\y-0.45)node [midway,below]
+    {\scalebox{0.7}{\dimcolor{$d_2$}}} -- (\x-0.3,\y-0.1)-- (\x-1,\y-0.1);
+    \draw[dotted](\x+1.5,\y+0.75) -- (\x+1.5,\y-0.75);
+\end{tikzpicture}.
+$$
+Using Theorem~\ref{thm: matricization-rank}, the TN above implies that reshaping $\Rb_1$ into a $R_1d_2\times d_3d_4$
+matrix, yields a matrix of rank at most $R_2$.
+By repeating the steps above for $\Rb_2$, we ultimately obtain a TT decomposition with  rank-$(R_1,R_2,R_3)$ where $R_n = \rank{(\St_{([n])})}$ for $n\in [3]$, i.e.,
+\begin{align}\label{eq:tt-format}
+    \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=green!50!red!50!white] (S) at (\x,\y){\scalebox{0.85}{$\St$}};
+    \draw[edge] (S) -- (\x,\y+0.75) node [midway,left]
+    {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (S) -- (\x,\y-0.75) node [midway,left]
+    {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \draw[edge] (\x+0.25,\y+0.05) -- (\x+0.8,\y-0.3) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$d_4$}}};
+    \draw[edge] (\x-0.25,\y+0.05) -- (\x-0.8,\y-0.3) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$d_2$}}};
+\end{tikzpicture}
+=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor, path picture={
+    \fill[fill=blue!50!white](path picture bounding box.south east)
+        -- 
+    (path picture bounding box.north west) --
+    (path picture bounding box.north east) -- cycle;
+    }, shift={(\x,\y)}] (Q_1) {\scalebox{0.8}{$\Qt_1$}};
+    \node[tensor, path picture={
+    \fill[fill=blue!35!white](path picture bounding box.south east)
+        -- 
+    (path picture bounding box.north west) --
+    (path picture bounding box.north east) -- cycle;
+    }, shift={(\x+1,\y)}] (Q_2) {\scalebox{0.8}{$\Qt_2$}};
+    \node[tensor, path picture={
+    \fill[fill=blue!20!white](path picture bounding box.south east)
+        -- 
+    (path picture bounding box.north west) --
+    (path picture bounding box.north east) -- cycle;
+    }, shift={(\x+2,\y)}] (Q_3) {\scalebox{0.8}{$\Qt_3$}};
+    \draw[edge](Q_1) -- (Q_2)node [midway,above]  {\scalebox{0.7}{\dimcolor{$R_1$}}};
+    \draw[edge](Q_1) -- (\x,\y-0.85)node [midway,left]  {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge](Q_2) -- (\x+1,\y-0.85)node [midway,left]  {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge](Q_2) -- (Q_3)node [midway,above]  {\scalebox{0.7}{\dimcolor{$R_2$}}};
+    \draw[edge](Q_3) -- (\x+2,\y-0.85)node [midway,left]  {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \node[tensor,fill=red!50!white] (R_1) at (\x+3,\y){\scalebox{0.85}{$\Rb_3$}};
+    \draw[edge](R_1) -- (\x+3,\y-0.85)node [midway,left]  {\scalebox{0.7}{\dimcolor{$d_4$}}};
+    \draw[edge](Q_3) -- (R_1) node [midway, above]{\scalebox{0.7}{\dimcolor{$R_3$}}};
+    \end{tikzpicture}.
+    \end{align}
+resulting in a TT decomposition where all cores are orthogonal except for the last core.
+

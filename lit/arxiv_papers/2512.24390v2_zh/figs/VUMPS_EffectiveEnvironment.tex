@@ -1,0 +1,12 @@
+\begin{tikzpicture}[baseline=(current bounding box.center)]
+	\def\l{1.4};
+    \def\h{1.3};
+    
+    \draw[obj2] (-\l/2,-\h/2) -- (\l/2,-\h/2);
+    
+    \draw[obj1,rounded corners=3pt] (-\l/4,-\h) -- (-\l/2,-\h)-- (-\l/2,0) -- (-\l/4,0);
+    \draw[obj1,rounded corners=3pt] (\l/4,-\h) -- (\l/2,-\h)-- (\l/2,0) -- (\l/4,0);
+    
+    \node[matrix] at (-\l/2,-\h/2) {$\sss L$};
+    \node[matrix] at (\l/2,-\h/2) {$\sss R$};
+\end{tikzpicture}

@@ -1,0 +1,72 @@
+\begin{tikzpicture}[
+            x={(1,0)},z={(.47,.65)},
+    		baseline={(current bounding box.center)},
+            scale=.65
+		]
+
+\def\l{1.3};
+\def\h{.6};
+\def\Nx{5};
+\def\Ny{2};
+\def\s{sin(30)};
+\def\c{cos(30)};
+
+\clip  ({-.5*\c*\l},{-(\s+1.5)*\l}) rectangle+ ({2*\Nx*\l*\c},{2*(\Ny+.5)*\l*(1+\s});
+
+\foreach \y in {0,...,\Ny}
+\foreach \x in {0,...,\Nx}
+{
+	{
+		\begin{scope}[obj1, shift={({\c*2*\l*\x},{2*\l*\y+2*\l*\y*\s})}]
+			\draw (0,0) -- (30:\l);
+			\draw (0,0) -- (150:\l);
+			\draw (0,0) -- (0,-\l);
+            \node[mpstensor] at (0,0) {};
+
+            \draw[obj1] (0,0,0) --+ (0,0,\h);
+		\end{scope}
+        \begin{scope}[obj1, shift={({-\l*\c+\c*2*\l*\x},{2*\l*\y+2*\l*\y*\s-\l-\l*\s})}]
+			\draw (0,0) -- (30:\l);
+			\draw (0,0) -- (150:\l);
+			\draw (0,0) -- (0,-\l);
+            \node[mpstensor] at (0,0) {};
+            \node[mpstensor] at ({-\l*\c},{\l*\s}) {};
+            \node[mpstensor] at (0,-\l) {};
+            
+            \draw[obj1] (0,0,0) --+ (0,0,\h);
+            \draw[obj1] ({-\l*\c},{\l*\s},0) --+ (0,0,\h);
+            \draw[obj1] (0,-\l,0) --+ (0,0,\h);
+		\end{scope}
+	};
+};
+
+\draw[obj2, rounded corners=6pt] (-\l,{\s*\l+.5*\l}) -- ({4*\c*\l},{\s*\l+.5*\l});
+\draw[obj2, rounded corners=6pt] ({4*\c*\l},{-\s*\l-1.5*\l}) -- ({5*\c*\l},{0*\s*\l-.5*\l}) -- ({4*\c*\l},{\s*\l+.5*\l}) -- ({5*\c*\l},{2*\s*\l+1.5*\l}) -- ({4*\c*\l},{3*\s*\l+2.5*\l}) -- ({5*\c*\l},{5*\s*\l+3*\l});
+\draw[obj2, rounded corners=6pt] ({5*\c*\l},{2*\s*\l+1.5*\l}) -- ({12*\c*\l},{2*\s*\l+1.5*\l});
+
+\node[draw=black, line width=.7pt, fill=gray!20, circle, inner sep=2.9pt] at ({4*\c*\l},{\s*\l+.5*\l}) {};
+\node at ({4*\c*\l},{\s*\l+.5*\l}) {$\sss i$};
+\node[draw=black, line width=.7pt, fill=gray!20, circle, inner sep=2.9pt] at ({5*\c*\l},{2*\s*\l+1.5*\l}) {};
+\node at ({5*\c*\l},{2*\s*\l+1.5*\l}) {$\sss j$};
+
+\node[yshift=5pt] at ({2*\c*\l},{\s*\l+.5*\l}) {$\sss a_\alpha$};
+\node[yshift=5pt] at ({7*\c*\l},{2*\s*\l+1.5*\l}) {$\sss a_\alpha$};
+\node[xshift=4pt] at ({5*\c*\l},{0*\s*\l-.5*\l}) {$\sss b_\beta$};
+\node[xshift=-4pt] at ({4*\c*\l},{3*\s*\l+2.5*\l}) {$\sss b_\beta$};
+\node[yshift=4pt] at ({4.5*\c*\l},{2*\s*\l+\l}) {$\sss c_\gamma$};
+
+\node[mpotensor] at ({\c*\l},{\s*\l+.5*\l}) {};
+\node[mpotensor] at ({3*\c*\l},{\s*\l+.5*\l}) {};
+
+\node[mpotensor] at ({4.5*\c*\l},{-.5*\s*\l-\l}) {};
+\node[mpotensor] at ({4.5*\c*\l},{.5*\s*\l}) {};
+\node[mpotensor] at ({4.5*\c*\l},{1.5*\s*\l+\l}) {};
+\node[mpotensor] at ({4.5*\c*\l},{2.5*\s*\l+2*\l}) {};
+\node[mpotensor] at ({4.5*\c*\l},{3.5*\s*\l+3*\l}) {};
+
+\node[mpotensor] at ({6*\c*\l},{2*\s*\l+1.5*\l}) {};
+\node[mpotensor] at ({8*\c*\l},{2*\s*\l+1.5*\l}) {};
+
+% Random MPO:
+% \draw[obj2, rounded corners=6pt] (-\l,{\s*\l+.5*\l}) -- ({2*\c*\l},{\s*\l+.5*\l}) --({\c*\l},{-.5*\l}) -- ({7*\c*\l},{-.5*\l}) -- ({6*\c*\l},{\s*\l+.5*\l}) -- ({5*\c*\l},{2*\s*\l+1.5*\l}) -- ({7*\c*\l},{2*\s*\l+1.5*\l})  -- ({9*\c*\l},{5*\s*\l+3*\l});
+\end{tikzpicture}

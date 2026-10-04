@@ -1,0 +1,17 @@
+\begin{tikzpicture}[baseline=(current bounding box.center)]
+    \def\l{.8};
+    \def\h{.7};
+    
+    \draw[obj2] (\l,0) -- (-2*\l,0);
+    \draw[obj2] (\l,-\h) -- (-2*\l,-\h);
+    
+    \draw[obj1] (0,-2*\h) -- (0,\h);
+    
+    \node[draw=black, line width=.7pt, fill=gray!20, rectangle, inner sep=4pt, rounded corners=2pt] at (0,0) {};
+    \node[draw=black, line width=.7pt, fill=gray!20, rectangle, inner sep=4pt, rounded corners=2pt] at (0,-\h) {};
+    \node at (0,0) {$\sss\lambda$};
+    \node at (0,-\h) {$\sss\mu$};
+
+    \node[draw=black, line width=.7pt, fill=gray!20, minimum width=20pt, minimum height=30pt, rounded corners=2pt] at (-\l,-\h/2) {};
+    \node at (-\l,-\h/2) {$\ssss R(\lambda,\mu)$};
+\end{tikzpicture}

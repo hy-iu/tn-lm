@@ -1,0 +1,22 @@
+\begin{tikzpicture}[baseline=(current bounding box.center)]
+	\def\l{1.2};
+    \def\h{1.3};
+    
+    \draw[obj1] (-\l/2,0) --+ (3*\l,0);
+    \draw[obj1] (-\l/2,-\h) --+ (3*\l,0);
+    \draw[obj1] (7*\l/2,0) --+ (3*\l,0);
+    \draw[obj1] (7*\l/2,-\h) --+ (3*\l,0);
+
+    \node at (3*\l,-\h/2) {$\dots$};
+    \foreach \i in {0,1,2,4,5,6}{
+        \draw[obj1] (\l*\i,0) --+ (0,-\h);
+        \node[mpstensor, inner sep=4pt] at (\l*\i,0) {};
+        \node[mpstensor, inner sep=4pt] at (\l*\i,-\h) {};
+        \node at (\l*\i,0) {$\sss\bar A$};
+        \node at (\l*\i,-\h) {$\sss A$};
+    }
+    \node[mpotensor, inner sep=6pt] at (\l,-\h/2) {};
+    \node[mpotensor, inner sep=6pt] at (5*\l,-\h/2) {};
+    \node at (\l,-\h/2) {$\sss O_1$};
+    \node at (5*\l,-\h/2) {$\sss O_2$};
+\end{tikzpicture}

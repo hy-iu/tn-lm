@@ -1,0 +1,2589 @@
+\documentclass[11pt]{article}
+
+\usepackage[a4paper,margin=1in]{geometry}
+
+% ---- 中文支持：必须在 hyperref 之前加载 ----
+\usepackage[fontset=macnew]{ctex}
+
+\usepackage{amsmath,amssymb,amsfonts,bm,mathtools}
+\usepackage{booktabs,multirow,array,tabularx,longtable,makecell}
+\usepackage{placeins}
+
+\usepackage[expansion=false]{microtype}
+
+\usepackage{graphicx}
+\PassOptionsToPackage{table}{xcolor}
+\usepackage{xcolor}
+\usepackage[table]{xcolor}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage[capitalize,noabbrev]{cleveref}
+\usepackage[backend=bibtex,sorting=none,maxbibnames=99]{biblatex}
+\DeclareFieldFormat{url}{{\small\url{#1}}}
+\addbibresource{references.bib}
+\usepackage{microtype}
+\usepackage{authblk}
+\usepackage{threeparttable}
+\usepackage{tabularray}
+\UseTblrLibrary{booktabs}
+\usepackage{leftindex}
+
+\usepackage{float}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, calc, backgrounds, positioning}
+\pgfdeclarelayer{foreground}
+\pgfsetlayers{background, main, foreground}
+
+\renewcommand{\topfraction}{0.92}
+\renewcommand{\textfraction}{0.05}
+\renewcommand{\floatpagefraction}{0.85}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!50!black,
+    citecolor=blue!50!black,
+    urlcolor=blue!50!black
+}
+
+% ---- cleveref 中文化（必须在 cleveref 加载之后设置） ----
+\crefname{section}{节}{节}
+\crefname{subsection}{节}{节}
+\crefname{subsubsection}{节}{节}
+\crefname{figure}{图}{图}
+\crefname{table}{表}{表}
+\crefname{equation}{式}{式}
+\crefname{algorithm}{算法}{算法}
+\crefname{theorem}{定理}{定理}
+\crefname{appendix}{附录}{附录}
+\crefname{listing}{清单}{清单}
+\crefname{definition}{定义}{定义}
+\crefname{lemma}{引理}{引理}
+\crefname{proposition}{命题}{命题}
+\crefname{corollary}{推论}{推论}
+\crefname{remark}{注记}{注记}
+\crefname{assumption}{假设}{假设}
+\Crefname{section}{节}{节}
+\Crefname{subsection}{节}{节}
+\Crefname{subsubsection}{节}{节}
+\Crefname{figure}{图}{图}
+\Crefname{table}{表}{表}
+\Crefname{equation}{式}{式}
+\Crefname{algorithm}{算法}{算法}
+\Crefname{theorem}{定理}{定理}
+\Crefname{appendix}{附录}{附录}
+\Crefname{listing}{清单}{清单}
+\Crefname{definition}{定义}{定义}
+\Crefname{lemma}{引理}{引理}
+\Crefname{proposition}{命题}{命题}
+\Crefname{corollary}{推论}{推论}
+\Crefname{remark}{注记}{注记}
+\Crefname{assumption}{假设}{假设}
+
+% ---- biblatex 参考文献标题中文化 ----
+\DefineBibliographyStrings{english}{%
+  bibliography = {参考文献},
+  references   = {参考文献},
+  andothers    = {等},
+  page         = {页},
+  pages        = {页},
+}
+
+% ---- 固定名称中文化（兜底，ctex 已设置大部分） ----
+\renewcommand{\figurename}{图}
+\renewcommand{\tablename}{表}
+\renewcommand{\contentsname}{目录}
+\renewcommand{\abstractname}{摘要}
+\renewcommand{\refname}{参考文献}
+\renewcommand{\appendixname}{附录}
+% 注：article 类无 \bibname，不重定义
+\AtBeginDocument{\renewcommand{\abstractname}{摘要}}
+
+% Custom commands for email in authblk
+\newcommand{\email}[1]{\texttt{#1}}
+\definecolor{revisionmagenta}{RGB}{190,70,145}
+\newcommand{\rev}[1]{\textcolor{revisionmagenta}{#1}}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\X}{\mathcal{X}}
+\newcommand{\Y}{\mathcal{Y}}
+\newcommand{\W}{\mathcal{W}}
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\T}{\mathcal{T}}
+\newcommand{\E}{\mathcal{E}}
+\newcommand{\G}{\mathcal{G}}
+\newcommand{\ten}[1]{\mathcal{#1}}
+\newcommand{\mat}[1]{\mathbf{#1}}
+\newcommand{\vecb}[1]{\mathbf{#1}}
+\newcommand{\rank}{\operatorname{rank}}
+\newcommand{\TTD}{\mathrm{TT}}
+\newcommand{\cp}{\mathrm{CP}}
+\newcommand{\bt}{\mathrm{BT}}
+\newcommand{\mps}{\mathrm{MPS}}
+\newcommand{\mha}{\mathrm{MHA}}
+\newcommand{\ffn}{\mathrm{FFN}}
+\newcommand{\kv}{\mathrm{KV}}
+\newcommand{\lora}{\mathrm{LoRA}}
+\newcommand{\peft}{\mathrm{PEFT}}
+\newcommand{\set}[1]{\mathrm{#1}}
+\newcommand{\llama}{\text{LLaMA-3-8B}}
+
+\title{面向语言模型的张量方法：从词元表示到训练、\\ 适配、压缩、推理与可解释性}
+
+%\author{}
+\date{}
+
+\author[1]{Matvei Tarasov}
+ \affil[1]{Innopolis University, Innopolis 420500, Russia\\ \email{m.tarasov@innopolis.university}}
+
+ \author[1]{Salman Ahmadi-Asl}
+ \affil[1]{Innopolis University, Innopolis 420500, Russia\\ \email{s.ahmadiasl@innopolis.ru}}
+
+ \author[2]{André L. F. de Almeida}
+ \affil[2]{Department of Teleinformatics Engineering, Federal University of Cear\'a, Fortaleza 60455-760, Brazil\\ \email{andre@gtel.ufc.br}}
+
+ \author[3]{Andrzej Cichocki}
+ \affil[3]{Systems Research Institute of Polish Academy of Science and Warsaw University of Technology, Poland\\ \email{cichockiand@gmail.com}}
+
+%\date{\today}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+大语言模型（large language model, LLM）由词元表示、权重、适配更新、缓存与激活等结构化的高维对象构建而成，而以矩阵为中心的传统视角尚未充分挖掘这些对象的多重线性结构。张量分解与张量网络为刻画这一结构提供了原理性的代数语言，然而现有文献往往仅将其视为孤立的压缩机制。本综述通过两个互补的视角来组织面向 LLM 的张量方法：其一是覆盖词元化、嵌入、预训练、适配、压缩、推理与可解释性的七阶段生命周期分类法；其二是覆盖嵌入、注意力与前馈网络（feed-forward network, FFN）的组件视角。我们给出统一的记号体系与理论基础，分析针对各个 Transformer 组件的张量化策略，并在生命周期的每个阶段对各类方法进行比较，同时明确指出评估协议与模型规模上的差异。我们进一步将张量方法与相邻的高效化技术以及概率张量网络联系起来。最后，我们总结了若干开放性挑战，并引入度量 $\rho_{\rm gap}$，用于刻画理论内存缩减量与实测系统级加速比之间的「压缩-实现鸿沟」。通过将张量化视为一条共同的结构原理，本综述为张量化语言模型提供了一个结构化的入门路径，并阐明参数节省在何种条件下能够切实转化为内存效率、计算效率或可解释性。本文专属的 GitHub 页面可通过 \href{https://github.com/ma-tt-a/awesome-tensor-methods-for-llms}{this https URL} 访问。
+
+
+% Language models are built from structured high-dimensional objects: token and subtoken embeddings, attention tensors, feed-forward memories, layer stacks, adaptation updates, activation streams, optimizer states, and key-value caches. Tensor decompositions and tensor networks provide a mathematical language for exploiting this structure, but the literature often treats them as isolated compression mechanisms. This survey draft organizes tensor methods for language models across the full model lifecycle, from token representations through training, adaptation, compression, ,inference, and interpretability. It reviews tensor preliminaries, identifies the main tensor objects inside Transformer-like language models, surveys tensorized components and lifecycle methods, compares tensor approaches with neighboring efficiency techniques, and develops open problems for tensor-native language models.
+\end{abstract}
+
+%\tableofcontents
+\section{引言}
+\label{sec:introduction}
+
+基于 Transformer 架构 \cite{vaswani2017attention} 的大语言模型（LLM）重塑了深度学习与人工智能，历代模型不断展现出广泛的能力与性能提升 \cite{brown2020gpt3, openai2024gpt4, touvron2023llama}。其成功源于三个因素：高度可并行、能随模型规模与算力高效扩展的架构 \cite{vaswani2017attention}；在互联网规模文本语料上的自监督预训练 \cite{radford2019language, raffel2023t5}；以及扩展这一组合所带来的可预测的改进 \cite{kaplan2020scalinglaws, hoffmann2022scalinglaws2}。
+如今的生产级 LLM，如 Qwen \cite{yang2025qwen3}、DeepSeek \cite{deepseekai2026deepseekv4} 与 Kimi \cite{kimiteam2026kimik3}，参数量达数百亿至数千亿，并已大规模部署，训练与推理（inference）都需要消耗大量计算资源。
+
+与此同时，过去几十年间，数值线性代数界对张量分解与张量网络的研究蓬勃发展。
+这些工具分别独立发端于心理测量学 \cite{tucker1966some, carroll1970analysis, harshman1970foundations} 与量子多体物理 \cite{orus2014practical, verstraete2008peps, vidal2008mera}，此后逐渐进入通用计算代数领域。
+在此过程中，研究者用数值分析的语言重新表述了既有格式，并发展出用于计算它们的稳定算法 \cite{lathauwer2000hosvd, oseledets2011tensor, zhao2016tensorring}；同时还有更广泛的理论工作，致力于将由此形成的研究版图加以系统化与统一 \cite{kolda2009tensor, cichocki2015tensor, cichocki2015tensor2}。
+这一日益活跃的研究反过来激发了将张量方法应用于深度学习的兴趣 \cite{wang2025tnmeetnn}，也反映出一种更广泛的共识：数值线性代数居于现代神经架构的核心 \cite{baggag2025linalg}。
+
+
+\paragraph{动机。}
+尽管能力出众，现代 LLM 仍面临三个长期存在的挑战。训练前沿模型需要大量加速器时间 \cite{grattafiori2024llama3}。大规模推理需要高内存带宽，而在长上下文应用中，KV 缓存可能成为最主要的内存瓶颈 \cite{kwon2023paggedattn}。与此同时，包括激活与权重在内的内部表示在很大程度上仍是不透明的，这些模型进行推理（reasoning）与存储知识的机制也远未被理解，这促使可解释性研究不断增多 \cite{elhage2021mathematical, elhage2022superposition}。
+这些挑战通常被分开处理，但张量视角为三者提供了共同的语言。按照惯例，LLM 以矩阵方式来描述和实现：Transformer 的计算在很大程度上归结为批量矩阵乘法，这虽然方便且经过高度优化，但在概念上并不完备。许多 Transformer 对象——包括堆叠的多头注意力（MHA）投影、层的集合、激活流与 KV 缓存——天然是高阶的，而纯粹以矩阵为中心的视角使其多重线性结构未得到充分利用。
+
+
+\begin{table}[!htbp]
+\centering
+\caption{\footnotesize 围绕张量方法与语言模型的文献集群。}
+\label{tab:literature-clusters}
+\footnotesize
+\begin{tblr}{
+width = \textwidth,
+colspec = {Q[4.9cm,m,c]Q[4.9cm,m,c]X[m,c]},
+row{1} = {font=\bfseries},
+rowsep = 3pt,
+hline{1,6} = {1pt},
+hline{2} = {0.6pt},
+hline{3,4,5} = {0.6pt, gray7},
+}
+集群 & 主要对象或方法 & 就本综述而言的具体空缺 \\
+经典张量分解与张量网络 \newline \cite{kolda2009tensor}, \cite{cichocki2015tensor}, \cite{cichocki2015tensor2}, \cite{orus2014practical} & 张量、张量代数运算；分解、秩；计算算法 & 对张量作抽象讨论；未给出张量在 LLM 中的应用 \\
+面向机器学习 \newline 与神经网络的张量方法 \newline \cite{sidiropoulos2017tensorsforspandml, ji2019tensorsformlsurvey1, panagakis2021tensorsfornn1, xinwei2024tensorsfornn2, wang2025tnmeetnn, he2026tensorsfornn3}  & 张量化机器学习；通用神经模块与层的张量化及分解 & 往往早于仅解码器（decoder-only）LLM；遗漏了 KV 缓存等 LLM 特有对象  \\
+LLM 高效化技术 \newline \cite{wan2024efficientllmsurvey1, wang2025peftsurvey1, zhu2024compressionsurvey1, tang2024compressionsurvey2, kim2025peftcompressionsurvey1, wang2024compressioninferencesurvey1, zhou2024efficientinferencesurvey1, yuan2024efficientinferencesurvey2, li2025kvcachesurvey1, miao2025efficientservingsurvey1, Laura2026lowranksurvye}  & PEFT；压缩：量化、剪枝、知识蒸馏；高效注意力；高效推理；KV 缓存压缩 & 通常略去对应的张量方法；未将张量方法作为独立类别加以强调 \\
+LLM 机制可解释性 \newline \cite{somvanshi2026interpretabilitysurvey1, rai2025interpretabilitysurvey2, bereska2024interpretabilitysurvey3} &  特征、激活、logits、神经元、注意力头、回路；激活补丁、消融、SAE & 忽视了多重线性结构——无论是作为描述语言还是作为分析工具 \\
+\end{tblr}
+\end{table}
+
+\paragraph{文献现状。}
+
+关于张量与 LLM 的文献分散于若干部分重叠的集群之中，\cref{tab:literature-clusters} 对其作了总结。我们引用了各集群的代表性综述与评述，以便读者就每个领域查阅更完整的论述。表中每一行都对应一个拥有自身对象、方法与术语的学术共同体；本节余下部分将逐一讨论各集群，并指出就一份连接张量方法与 LLM 的综述而言，各集群留下的具体空缺。
+
+第一个集群是经典张量分解文献 \cite{kolda2009tensor, cichocki2015tensor, cichocki2015tensor2, orus2014practical}。该集群的工作在数学上十分深入，对记号、算法以及张量秩等理论概念而言不可或缺。虽然这些文献为张量计算提供了普遍的代数与数值基础，但它们并未将这些概念映射到 LLM 特有的对象之上。
+
+第二类工作将张量分解与张量网络应用于经典机器学习 \cite{sidiropoulos2017tensorsforspandml, ji2019tensorsformlsurvey1} 与神经网络（NN）\cite{panagakis2021tensorsfornn1, xinwei2024tensorsfornn2, wang2025tnmeetnn, he2026tensorsfornn3}。这些文献确立了神经网络张量化这一通用设计原则。然而，其中大部分工作早于现代仅解码器 LLM，或聚焦于通用层、卷积神经网络（CNN）与循环神经网络（RNN），未涉及 LLM 特有的对象与约束。
+
+第三类工作覆盖了 LLM 高效化技术这一更广阔的版图，过去几年扩张迅速，涉及众多方向 \cite{wan2024efficientllmsurvey1}。其中一些工作面向参数高效微调（PEFT）\cite{wang2025peftsurvey1} 以及量化、剪枝与知识蒸馏（KD）等训练后压缩技术 \cite{zhu2024compressionsurvey1, tang2024compressionsurvey2, wang2024compressioninferencesurvey1}；另一些则将 PEFT 与压缩合并讨论 \cite{kim2025peftcompressionsurvey1}。还有工作面向推理时效率 \cite{zhou2024efficientinferencesurvey1, yuan2024efficientinferencesurvey2, li2025kvcachesurvey1} 与服务部署 \cite{miao2025efficientservingsurvey1}；而 \cite{Laura2026lowranksurvye} 则按结构而非应用横切上述所有方向，综述了权重、适配器与梯度中的低秩矩阵分解。在每个子集群内部，张量分解只是偶尔出现，被当作众多技术中的一种提及。然而，所有这些子集群中的张量方法都建立在同一套底层代数理论之上，这提示应将它们作为一个独立类别来考察。
+
+第四个集群是机制可解释性，它已成为一个活跃且快速增长的研究方向，旨在借助激活补丁、消融与稀疏自编码器（SAE）等工具，从特征、激活、神经元、注意力头与回路的角度，对语言模型的内部计算进行逆向工程 \cite{somvanshi2026interpretabilitysurvey1, rai2025interpretabilitysurvey2, bereska2024interpretabilitysurvey3}。在这一更宽泛的领域内，有一个较小的群体专门透过张量网络的视角、使用图形化张量记号来研究 Transformer 回路 \cite{taylor2024interpretabilitysurvey4}。除记号之外，少数几项非常近期的工作把多重线性结构本身作为分析对象，而现有的可解释性综述均未涵盖它们。本综述将这些记号与方法作为一个独立方向来处理（\cref{subsec:interpretability}）。
+
+\paragraph{范围。} 
+
+同样的多重线性结构在全部四个集群中反复出现，但各集群使用它的方式不同。经典张量文献发展出一套普遍理论，而张量化神经模块、LLM 高效化技术与机制可解释性通常只在特定任务中局部运用这套理论。本综述通过一个以 LLM 特有对象为根基的统一张量理论视角，将这些工作路线连接起来。其特色在于两种互补组织方式的结合：一是组件视角，追问 Transformer 内部\emph{什么}被张量化；二是生命周期视角，追问张量化\emph{何时以及为何}被引入。据我们所知，现有综述均未将这种双视角组织，与统一记号、协议感知的比较，以及关于理论压缩是否在实践中兑现的系统层面分析结合起来。
+
+% \color{brown}
+% \textbf{Contributions} This survey makes four contributions:
+
+% \begin{enumerate}
+%     \item \textbf{We propose a novel lifecycle taxonomy} that organizes the tensorization of language models across seven key stages: tokenization, embeddings, pre-training, parameter-efficient fine-tuning (PEFT), compression, inference, and interpretability. This taxonomy provides a structured framework that clarifies the distinct objectives, challenges, and opportunities for tensor methods at each point, offering a high-level roadmap for the field and bridging the gap between isolated ``component-wise'' tensorization and a holistic, process-oriented view.
+    
+%     \item \textbf{We provide a systematic and comparative analysis} of tensor methods within this lifecycle. Unlike previous surveys that are either abstract or application-specific, our work critically evaluates methods side-by-side, with careful comparison tables that explicitly note differences in evaluation protocols, model scales, and reported metrics. This analysis synthesizes disparate literature to reveal common themes, identify strengths and weaknesses, and surface underexplored areas, such as the tokenization and interpretability stages.
+    
+%     \item \textbf{We develop a unified theoretical and notational framework} tailored for Transformer-like language models. The paper systematically repurposes and reformulates classical tensor decompositions (CP, Tucker, TT, TTM, and BT) and their mathematical properties in the specific context of LLMs. We explicitly map each decomposition to its most structurally compatible Transformer components (e.g., embedding layers, attention mechanisms, and feed-forward networks), effectively establishing a standardized ``algebraic language'' for describing, comparing, and implementing tensorized LLMs. This framework is augmented with extensive use of tensor-network diagrams to improve both understanding and accessibility.
+    
+%     \item \textbf{We identify critical open challenges and propose a concrete, actionable metric---\(\rho_{\mathrm{gap}}\)---to bridge the divide between theoretical compression and practical system-level gains.} This metric formalizes the ``compression-realization gap'' (e.g., the discrepancy between parameter savings and actual wall-clock speedup), providing the community with a quantitative tool to evaluate the true efficiency of tensorized models. Furthermore, we outline key future directions, including hardware-aware kernel design, adaptive rank allocation, and the exploration of new tensor network topologies, setting a concrete research agenda for the next generation of tensor-native language models.
+% \end{enumerate}
+
+
+\paragraph{贡献}
+本综述做出四方面贡献：
+\begin{enumerate}[leftmargin=*]
+  \item 我们将张量化确立为作用于词元表示、权重、适配更新、缓存与激活的共同结构原则，并以一个七阶段的\emph{生命周期分类法}组织相关文献：词元化、嵌入、预训练、适配、压缩、推理与可解释性。
+  \item 我们以针对嵌入、注意力与前馈网络的\emph{组件视角}补充生命周期分类法。两种视角相结合，可以把某种分解与模型对象在结构上的兼容性，与使用该分解所要达成的训练或部署目标区分开来。
+  \item 我们为类 Transformer 语言模型中的张量运算、张量分解与张量网络提供统一的记号与理论基础，并在比较各方法时明确记录模型规模、基线、评测协议与报告指标方面的差异。我们还将张量方法与相邻的高效化技术以及概率张量网络联系起来。
+  \item 我们归纳了开放挑战，并借助 $\rho_{\rm gap}$ 形式化地刻画「压缩-实现鸿沟」；该指标将算法开销与硬件兑现分离开来，并清楚地说明为何仅减少参数量并不意味着端到端加速。
+\end{enumerate}
+
+% \color{blue}
+% \begin{enumerate}[leftmargin=*]
+%   \item We frame tensorization as a common structural principle operating at several orthogonal levels of a language model: representations, weights, adaptation updates, caches, and activations. To organize the resulting body of work, we propose a \emph{lifecycle taxonomy} spanning the seven stages a language model passes through: tokenization, embeddings, pre-training, adaptation, compression, inference, and interpretability.
+%   \item Following this taxonomy, we provide a comparative analysis of tensor methods at each stage of the lifecycle. Cutting across the stages, we additionally give a structural account of tensorized Transformer components.
+%   \item We provide a unified notation and theory for tensor operations, tensor decompositions, and tensor networks in the context of Transformer-like language models, presenting several methods as tensor network diagrams.
+%   \item We discuss open challenges and outline future directions for tensorized language models, and we propose the metric $\rho_{\rm gap}$ to quantify the gap between theoretical compression and realized system-level gains.
+% \end{enumerate}
+% \color{black}
+
+\paragraph{综述结构。}
+
+本文其余部分组织如下。\Cref{sec:preliminaries} 给出数学预备知识，包括记号、张量网络图、张量分解，并对 Transformer 架构作简要回顾。\Cref{sec:lifecycle-overview} 引入生命周期分类法，并以 LLaMA-3-8B 为贯穿案例，展示每个已填充阶段的张量化。\Cref{sec:components} 针对各个 Transformer 模块展开组件视角，而 \cref{sec:lifecycle-analysis} 则通过形式化的问题定义、文献综述以及在覆盖范围允许时的比较表格来展开生命周期视角。\Cref{sec:neighboring-methods} 将张量方法置于 LLM 高效化技术的更广阔版图之中，\cref{sec:prob-tensor-nets} 则厘清其与概率张量网络的联系。\Cref{sec:software-overview} 综述相关软件并给出案例研究。\Cref{sec:future-directions} 定义压缩-实现鸿沟，指出开放挑战，并勾画未来研究方向。最后，\cref{sec:conclusion} 对全文作结。
+
+
+\section{预备知识}
+\label{sec:preliminaries}
+
+\begin{figure}[!htpb]
+\centering
+\begin{minipage}[t]{0.45\textwidth}
+\vspace{0pt}
+\small
+\begin{tblr}{
+  width = \linewidth,
+  colspec = {Q[2.8cm,m,c]X[m,c]},
+  row{1} = {font=\bfseries},
+  rowsep = 2.5pt,
+  hline{1,12} = {1pt},
+  hline{2} = {0.6pt},
+  hline{3,4,5,6,7,8,9,10,11} = {0.6pt, gray7},
+}
+记号 & 含义 \\
+$\alpha$ & 标量 \\
+$\vecb{a}$ & 向量 \\
+$\mat{A}$ & 矩阵 \\
+$\ten{A}$ & 张量 \\
+$\ten{A}_{i_1, \dots, i_N}$ & 第 $(i_1, \dots, i_N)$ 个元素 \\
+$\ten{A}_{i_1, \dots, i_{n-1}, :, i_{n+1}, \dots, i_N}$ & 第 n 模切片 \\
+$\mat{A}\otimes\mat{B}$ & Kronecker 积 \\
+$\vecb{a} \circ \vecb{b}$ & 外积 \\
+$\ten{A}\times_n\mat{B}$ & 模-$n$ 积 \\
+$\ten{A} \leftindex_{i_1, \dots, i_K}\times^{j_1, \dots, j_K} \ten{B}$ & 缩并 \\
+\end{tblr}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.50\textwidth}
+\vspace{0pt}
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[
+  tnode/.style={circle, draw=black!80, line width=1.0pt,
+               minimum size=0.5cm, inner sep=0pt, font=\tiny},
+  knode/.style={circle, draw=black!80, line width=1.0pt,
+               minimum size=0.52cm, inner sep=0pt, font=\tiny},
+  leg/.style={line width=1.0pt, black!80},
+  bond/.style={line width=1.0pt, black!80},
+  lbl/.style={font=\tiny, align=center, text width=1.9cm},
+  idx/.style={font=\tiny, text=black},
+  pnl/.style={font=\tiny\bfseries}
+]
+
+% colours
+\definecolor{ColA}{RGB}{102,194,165}
+\definecolor{ColB}{RGB}{252,141, 98}
+
+% geometry
+\pgfmathsetmacro{\Rad}{0.25} % main node radius
+\pgfmathsetmacro{\Lleg}{0.30}  % straight leg length
+\pgfmathsetmacro{\Dx}{2.10}
+\pgfmathsetmacro{\CapDy}{0.70}
+\pgfmathsetmacro{\CapDyTensor}{0.8} % caption offset
+\pgfmathsetmacro{\CCentre}{2.10} % horizontal centre
+
+\pgfmathsetmacro{\RowOneY}{3.0}
+\pgfmathsetmacro{\RowTwoY}{1.0}
+\pgfmathsetmacro{\RowThreeY}{-1.0}
+\pgfmathsetmacro{\CapRowOneY}{\RowOneY-\CapDyTensor}  % caption level, row 1
+
+% Row 1: vector, matrix, tensor
+
+% a) vector
+\node[tnode, fill=ColA!35] (v) at (0*\Dx, \RowOneY) {$\vecb{a}$};
+\draw[leg] (v.east) -- ++(\Lleg, 0);
+\node[idx] at ($(v.east)+(\Lleg+0.08,0.11)$) {$I$};
+\node[lbl] at (0*\Dx, \CapRowOneY) {(a) 向量};
+
+% b) matrix
+\node[tnode, fill=ColA!35] (m) at (1*\Dx, \RowOneY) {$\mat{A}$};
+\draw[leg] (m.west) -- ++(-\Lleg, 0);
+\draw[leg] (m.east) -- ++( \Lleg, 0);
+\node[idx] at ($(m.west)+(-\Lleg-0.08,0.11)$) {$I$};
+\node[idx] at ($(m.east)+(\Lleg+0.08,0.11)$) {$J$};
+\node[lbl] at (1*\Dx, \CapRowOneY) {(b) 矩阵};
+
+% c) tensor
+\node[tnode, fill=ColA!35] (t) at (2*\Dx, \RowOneY) {$\ten{A}$};
+\draw[leg] (t.225) -- ++(-0.26, -0.26);
+\draw[leg] (t.315) -- ++( 0.26, -0.26);
+\node[idx] at ($(t.225)+(-0.26-0.2,-0.26-0.02)$) {$I_1$};
+\node[idx] at ($(t.315)+( 0.26+0.2,-0.26-0.02)$) {$I_N$};
+\node[font=\tiny] at ($(t.center)+(0,-0.50)$) {$\cdots$};
+\node[lbl] at (2*\Dx, \CapRowOneY) {(c) 张量};
+
+% Row 2: outer product, Kronecker product
+
+% e) Kronecker product
+\pgfmathsetmacro{\KRadCore}{0.25}
+\pgfmathsetmacro{\KDyABH}{0.36}
+\pgfmathsetmacro{\KFanHalf}{\KDyABH+\KRadCore}
+\pgfmathsetmacro{\KFanDepth}{0.26}
+\pgfmathsetmacro{\KBondLen}{0.35}
+\pgfmathsetmacro{\KExtLleg}{0.28}
+
+\pgfmathsetmacro{\OGap}{0.95}
+\pgfmathsetmacro{\KHalfWidth}{\KRadCore+\KBondLen+\KFanDepth+\KExtLleg}
+\pgfmathsetmacro{\OHalfWidth}{0.5*\OGap+\Rad}
+\pgfmathsetmacro{\RowTwoGap}{0.9} % whitespace between the two panels
+\pgfmathsetmacro{\RowTwoHalf}{\KHalfWidth+0.5*\RowTwoGap+\OHalfWidth}
+\pgfmathsetmacro{\KCoreX}{\CCentre+\RowTwoHalf-\KHalfWidth}
+
+\pgfmathsetmacro{\KLFanBX}{\KCoreX-\KRadCore-\KBondLen}
+\pgfmathsetmacro{\KLFanX}{\KLFanBX-\KFanDepth}
+\pgfmathsetmacro{\KRFanBX}{\KCoreX+\KRadCore+\KBondLen}
+\pgfmathsetmacro{\KRFanX}{\KRFanBX+\KFanDepth}
+
+\pgfmathsetmacro{\KTopY}{\RowTwoY+\KDyABH}
+\pgfmathsetmacro{\KBotY}{\RowTwoY-\KDyABH}
+\pgfmathsetmacro{\KFanTopY}{\RowTwoY+\KFanHalf}
+\pgfmathsetmacro{\KFanBotY}{\RowTwoY-\KFanHalf}
+
+\draw[leg] (\KLFanX, \RowTwoY) -- ++(-\KExtLleg, 0);
+\draw[leg] (\KRFanX, \RowTwoY) -- ++( \KExtLleg, 0);
+\node[idx] at ($(\KLFanX-\KExtLleg-0.08, \RowTwoY+0.15)$) {$I_1 I_2$};
+\node[idx] at ($(\KRFanX+\KExtLleg+0.08, \RowTwoY+0.15)$) {$J_1 J_2$};
+
+\fill[black!9, draw=black!80, line width=1.0pt]
+    (\KLFanBX, \KFanTopY)
+    arc[start angle=90, end angle=270, x radius=\KFanDepth, y radius=\KFanHalf]
+    -- cycle;
+\fill[black!9, draw=black!80, line width=1.0pt]
+    (\KRFanBX, \KFanBotY)
+    arc[start angle=-90, end angle=90, x radius=\KFanDepth, y radius=\KFanHalf]
+    -- cycle;
+
+\node[knode, fill=ColA!35] (kA) at (\KCoreX, \KTopY) {$\mat{A}$};
+\node[knode, fill=ColB!35] (kB) at (\KCoreX, \KBotY) {$\mat{B}$};
+\draw[bond] (\KLFanBX, \KTopY) -- (kA.west);
+\draw[bond] (\KLFanBX, \KBotY) -- (kB.west);
+\draw[bond] (kA.east) -- (\KRFanBX, \KTopY);
+\draw[bond] (kB.east) -- (\KRFanBX, \KBotY);
+\node[idx] at ($(\KLFanBX,\KTopY)!0.5!(kA.west)+(0.025, 0.17)$) {$I_1$};
+\node[idx] at ($(\KLFanBX,\KBotY)!0.5!(kB.west)+(0.025,-0.17)$) {$J_1$};
+\node[idx] at ($(kA.east)!0.5!(\KRFanBX,\KTopY)+(-0.025, 0.17)$) {$I_2$};
+\node[idx] at ($(kB.east)!0.5!(\KRFanBX,\KBotY)+(-0.025,-0.17)$) {$J_2$};
+
+\pgfmathsetmacro{\CapRowTwoY}{\RowTwoY-\KFanHalf-0.48}
+\node[lbl] at (\KCoreX, \CapRowTwoY) {(e) Kronecker 积};
+
+% d) outer product
+\pgfmathsetmacro{\OX}{\CCentre-\RowTwoHalf+\Rad}
+\pgfmathsetmacro{\OLleg}{0.24}
+\node[tnode, fill=ColA!35] (o1) at (\OX,       \RowTwoY) {$\vecb{a}$};
+\node[tnode, fill=ColB!35] (o2) at (\OX+\OGap, \RowTwoY) {$\vecb{b}$};
+\draw[leg] (o1.south) -- ++(0, -\OLleg);
+\draw[leg] (o2.south) -- ++(0, -\OLleg);
+\node[idx] at ($(o1.south)+(-0.16,-\OLleg)$) {$I$};
+\node[idx] at ($(o2.south)+( 0.16,-\OLleg)$) {$J$};
+\node[lbl] at ({\OX+0.5*\OGap}, \CapRowTwoY) {(d) 外积};
+
+% Row 3: contraction
+
+% f) contraction
+\pgfmathsetmacro{\CGap}{1.15}
+\pgfmathsetmacro{\CX}{\CCentre-0.5*\CGap}
+\node[tnode, fill=ColA!35] (c1) at (\CX,       \RowThreeY) {$\mat{A}$};
+\node[tnode, fill=ColB!35] (c2) at (\CX+\CGap, \RowThreeY) {$\mat{B}$};
+\draw[leg] (c1.west) -- ++(-\Lleg, 0);
+\draw[bond] (c1.east) -- (c2.west);
+\draw[leg] (c2.east) -- ++(\Lleg, 0);
+\node[idx] at ($(c1.west)+(-\Lleg-0.08,0.15)$) {$I$};
+\node[idx] at ($(c1.east)!0.5!(c2.west)+(0,0.15)$) {$K$};
+\node[idx] at ($(c2.east)+(\Lleg+0.08,0.15)$) {$J$};
+\node[lbl] at (\CCentre, \RowThreeY-\CapDy) {(f) 缩并};
+
+\end{tikzpicture}%
+}
+\end{minipage}
+\caption{\footnotesize 记号参考。
+\textit{左}：本综述通篇使用的标量、向量、矩阵、张量以及主要张量代数运算的符号。\textit{右}：同一批对象的张量网络图表示，并附各运算的示例。}
+\label{fig:notation-overview}
+\end{figure}
+
+\subsection{记号}
+
+\paragraph{对象} 花体大写字母 $\ten{A}\in\R^{I_1\times I_2\times \cdots\times I_N}$ 表示一个 $N$ 阶张量；矩阵与向量分别用粗体大写字母 $\mat{A}$ 与小写字母 $\vecb{a}$ 表示。\cref{fig:notation-overview}（左）中的符号汇总了本综述通篇使用的记号；\cref{fig:notation-overview}（右）中的张量网络图 \cite{penrose1971tensordiagrams} 则为每个对象与运算给出相应的图示。
+
+
+\paragraph{外积} 给定 $N$ 个向量 $\vecb{a}^{(1)}\in\R^{I_1},\ldots,\vecb{a}^{(N)}\in\R^{I_N}$，其外积为 $N$ 阶张量 $\vecb{a}^{(1)}\circ\cdots\circ\vecb{a}^{(N)}\in\R^{I_1\times\cdots\times I_N}$，其元素为：
+\begin{equation}
+\bigl(\vecb{a}^{(1)}\circ\cdots\circ\vecb{a}^{(N)}\bigr)_{i_1\ldots i_N}= \vecb{a}^{(1)}_{i_1}\vecb{a}^{(2)}_{i_2}\cdots \vecb{a}^{(N)}_{i_N}.
+\end{equation}
+该张量称为规范秩一（canonical rank-one）张量。当 $N=2$ 时，它退化为熟知的秩一矩阵 $\vecb{a}\circ\vecb{b}\in\R^{I\times J}$，其元素为 $(\vecb{a}\circ\vecb{b})_{ij}=a_ib_j$。在张量网络图中，外积通过将各张量并列放置来表示，如\cref{fig:notation-overview}(d) 所示。
+
+\paragraph{Kronecker 积与 Kronecker 分解} 两个矩阵 $\mat{A}\in\R^{I_1\times J_1}$ 与 $\mat{B}\in\R^{I_2\times J_2}$ 的 Kronecker 积是一个分块矩阵，其构造方式是把 $\mat{A}$ 的每个元素替换为按该元素缩放后的 $\mat{B}$ 的副本，
+\begin{equation}
+  \mat{A}\otimes\mat{B}=
+  \begin{bmatrix}
+  A_{11}\mat{B} & \cdots & A_{1J_1}\mat{B} \\
+  \vdots & \ddots & \vdots \\
+  A_{I_11}\mat{B} & \cdots & A_{I_1J_1}\mat{B}
+  \end{bmatrix}
+  \in\R^{I_1I_2\times J_1J_2}.
+\end{equation}
+对应的张量网络图见\cref{fig:notation-overview}(e)。该图与外积有密切联系；更多细节参见 \cite{yokota2024tensorbasics}。
+
+对于固定的 $R \in \mathbb{N}$，可以寻求用 Kronecker 积之和对矩阵作最佳逼近
+\begin{equation}
+\label{eq:kd}
+\min_{\mat{U}_r,\mat{V}_r}\ \| \mat{A}-\sum_{r=1}^{R}\mat{U}_r\otimes\mat{V}_r\|_F,
+\end{equation}
+其中 $\mat{A}\in\R^{I_1I_2\times J_1J_2}$、$\mat{U}_r\in\R^{I_1\times J_1}$、$\mat{V}_r\in\R^{I_2\times J_2}$。该问题存在闭式解：将 $\mat{A}$ 的各 $I_2\times J_2$ 分块重排为矩阵 $\mathcal{R}(\mat{A})\in\R^{I_1J_1\times I_2J_2}$ 的行，可使每个 Kronecker 项化为一个秩一矩阵，于是式 \eqref{eq:kd} 归结为对 $\mathcal{R}(\mat{A})$ 的低秩逼近，可由其秩 $R$ 截断奇异值分解（SVD）求解，再将所得奇异向量重排回 $\mat{U}_r$ 与 $\mat{V}_r$；精确构造参见 \cite{golubvanloan}。这就是所谓的 Kronecker 积 SVD，本文称之为 Kronecker 分解。使逼近精确成立的最小 $R$ 称为 $\mat{A}$ 的 Kronecker 秩。该分解并非 $\mat{A}$ 本身所固有，因为因子形状 $I_1I_2=I$ 与 $J_1J_2=J$ 可以有多种选法，而每种选择都定义了一个不同的问题 \eqref{eq:kd}，各有其 Kronecker 秩。尽管该构造可以推广到张量 \cite{batselier2017ktd}，我们只讨论矩阵情形。
+
+
+\paragraph{缩并} 缩并可以理解为对两个张量的一对或多对配对模求和，同时让其余模保持自由。设 $\ten{A}\in\R^{I_1\times I_2\times \cdots\times I_N}$ 为 $N$ 阶张量，$\ten{B}\in\R^{J_1\times J_2 \times \cdots\times J_M}$ 为 $M$ 阶张量，且存在 $K$ 对模 $(i_1,j_1),\ldots,(i_K,j_K)$ 满足
+\begin{equation}
+\left\{
+\begin{array}{ll}
+  1\le i_k\le N, \quad 1\le j_k\le M,  &  k\in\{1,2,\ldots,K\} \\
+  i_k \neq i_\ell, \quad  j_k\neq j_\ell, &  \forall k \neq \ell \\
+  I_{i_k}=J_{j_k}, & k\in \{1,2,\ldots,K\}.
+\end{array}
+\right.
+\end{equation}
+则 $\ten{A}$ 与 $\ten{B}$ 沿这 $K$ 对模的缩并记作
+\begin{equation}
+    \ten{A}\leftindex_{i_1,\ldots,i_K}\times^{j_1,\ldots,j_K}\ten{B},
+\end{equation}
+它是一个 $(N+M-2K)$ 阶张量，通过对 $K$ 个匹配指标求和得到，而 $\ten{A}$ 与 $\ten{B}$ 的其余各模均保持自由。在张量网络图记法中，缩并通过将被缩并模的腿相连来表示，自由模则保持不连接。这一抽象运算对应于现代数组编程库（如 NumPy \cite{harris2020numpy}、PyTorch \cite{paszke2019pytorch} 与 JAX \cite{bradbury2018jax}）中的 \texttt{einsum} 函数。
+
+例如，给定 $\mat{A} \in \R^{I \times K}, \mat{B} \in \R^{K \times J}$，沿模对 $(2,1)$ 的缩并给出标准矩阵乘积：
+\begin{equation}
+  \mat{C} = \mat{A} \mat{B} = \mat{A} \leftindex_{2} \times^{1} \mat{B} \in \R^{I \times J}, \quad \mat{C}_{ij} = \sum_{k=1}^{K} \mat{A}_{ik} \mat{B}_{kj}.
+\end{equation}
+该例子如\cref{fig:notation-overview}(f) 所示，其中尺寸为 $K$ 的模被缩并，而尺寸为 $J$ 与 $I$ 的模保持自由。用伪代码 \texttt{einsum} 记法表达，同一运算为：
+\begin{equation}
+  \mat{C} = \texttt{einsum}({"} ik, \ kj \to ij {"}, \mat{A}, \mat{B}).
+\end{equation}
+
+\paragraph{模-$n$ 积} 模-$n$ 积使 $N$ 阶张量 $\ten{A}\in\R^{I_1\times I_2 \times \cdots\times I_N}$ 与矩阵 $\mat{B}\in\R^{J\times I_n}$ 沿模对 $(n_1,m_1)=(n,2)$ 缩并：
+\begin{equation}
+\begin{gathered}
+    \ten{A}\times_n\mat{B} = \ten{A} \ \leftindex_{n} \times^{2} \ \mat{B} \in\R^{I_1\times\cdots\times I_{n-1}\times J\times I_{n+1}\times\cdots\times I_N}, \\
+    (\ten{A}\times_n\mat{B})_{i_1\dots i_{n-1}\,j\,i_{n+1}\dots i_N}=\sum_{i_n=1}^{I_n}\ten{A}_{i_1\dots i_N} \mat{B}_{j,i_n}.
+\end{gathered}
+\end{equation}
+用 \texttt{einsum} 记法，该运算可表示为：
+\begin{equation}
+    \ten{C} = \texttt{einsum}({"} i_1\dots i_n \dots i_N, \ j i_n \to i_1 \dots j \dots i_N {"}, \ten{A}, \mat{B}).
+\end{equation}
+直观上，该运算把沿张量第 $n$ 维的每条纤维（fiber，即每条一维线）都乘以矩阵 $\mat{B}$。若将张量展开（即把张量重排为矩阵），使第 $n$ 维成为二维矩阵的行，则 $\times_n$ 就化为对该展开矩阵的标准矩阵乘法，之后再将结果折叠回具有新形状的张量。
+
+\subsection{张量分解}
+\label{subsec:tensor-decompositions}
+本节回顾与本文工作相关的主要张量分解格式。我们涵盖 CP 分解（典范秩一项之和）、Tucker 分解（核心张量配以各模专属因子矩阵，及其 Tucker-1/2/3 变体）、TT 分解及其矩阵变体（TTM），以及同时推广 CP 与 Tucker 的块项分解。对每种模型，我们给出数学表述，强调其关键性质，并讨论唯一性与取舍。在本节中，$\ten{X} \in \R^{I_1 \times I_2 \times \cdots \times I_N}$ 表示一个 $N$ 阶张量。
+
+
+\subsubsection{CP 分解}
+% The CP decomposition \cite{hitchcock1927cp} represents a tensor as a sum of rank-one outer tensors as folllows,
+% \begin{equation}\label{cp_eq}
+% \begin{gathered}
+%     \ten{X} = \sum_{r=1}^{R}\lambda_r \vecb{a}^{(1)}_r\circ\vecb{a}^{(2)}_r\circ\cdots\circ\vecb{a}^{(N)}_r, \\
+%     \ten{X}_{i_1, i_2, \dots, i_N} = \sum_{r=1}^{R}\lambda_r \mat{A}^{(1)}_{i_1, r}\mat{A}^{(2)}_{i_2, r}\cdots\mat{A}^{(N)}_{i_N, r},
+% \end{gathered}
+% \end{equation}
+% where $\mat{A}^{(n)} = [\vecb{a}^{(n)}_1, \vecb{a}^{(n)}_2, \dots, \vecb{a}^{(n)}_R] \in \mathbb{R}^{I_n \times R}$ is the factor matrix for mode $n$, and $\lambda_r$ are scaling coefficients. The second expression in \eqref{cp_eq} is the component-wise representation of the tensor. The minimum number of rank-1 tensor respensing a tensor exactly as in \eqref{cp_eq}, is called  tensor rank or CP rank. Unlike matrices, finding the CP rank is an NP-hard problem \cite{haastad1990tensor,hillar2013most}. If we can represent a tensor exactly with a minimum number of rank-1 tensors, such a decomposition is called canonical polyadic decomposition (CPD); otherwise, it is only called polyadic decomposition. In reality, due to the NP-hardness of CPD rank, we only consider an approximation of a tensor, that is the equality in \eqref{cp_eq}, is replaced with approximation.
+% The CP decomposition is compact and often interpretable, but optimization can be ill-conditioned and rank selection is difficult \cite{de2008tensor}, \cite{kolda2009tensor}. % Add after CP equation:
+% The CP decomposition is unique up to trivial scaling and column permutations under the Kruskal condition: $\sum_{n=1}^N k_{\mat{A}^{(n)}} \ge 2R + (N-1)$, where $k_{\mat{A}}$ is the Kruskal rank of the factor matrix \cite{kruskal1977three}, \cite{kolda2009tensor}. In practice, for language model tensors, this condition is often violated, leading to non-unique decompositions that can complicate interpretability. For this reason, additional constraints (non-negativity, orthogonality, or sparsity) are often imposed to improve stability and interpretability \cite{cichocki2015tensor}.
+
+
+%\color{blue}
+%CORRECTED: 
+CP（canonical polyadic）分解 \cite{hitchcock1927cp}, \cite{carroll1970analysis}, \cite{harshman1970foundations} 用一组秩一外积之和来近似张量
+\begin{equation}
+\label{eq:cp-decomposition}
+    \ten{X} \approx \sum_{r=1}^{R}\lambda_r \vecb{a}^{(1)}_r\circ\vecb{a}^{(2)}_r\circ\cdots\circ\vecb{a}^{(N)}_r,
+\end{equation}
+或等价地写成标量形式
+\begin{equation}
+\label{eq:cp-decomposition-scalar}
+    \ten{X}_{i_1, i_2, \dots, i_N} \approx \sum_{r=1}^{R}\lambda_r \mat{A}^{(1)}_{i_1, r}\mat{A}^{(2)}_{i_2, r}\cdots\mat{A}^{(N)}_{i_N, r},
+\end{equation}
+其中 $\mat{A}^{(n)} = [\vecb{a}^{(n)}_1, \vecb{a}^{(n)}_2, \dots, \vecb{a}^{(n)}_R] \in \mathbb{R}^{I_n \times R}$ 是第 $n$ 模的因子矩阵，$\lambda_r$ 是缩放系数。
+当式 \eqref{eq:cp-decomposition} 与式 \eqref{eq:cp-decomposition-scalar} 中的等号成立时，分解是精确的，我们称之为 $\ten{X}$ 的一个 \emph{CP 表示}。这种表示中 $R$ 的最小允许值称为 $\ten{X}$ 的张量秩，即 CP 秩。
+在 Kruskal 条件 $\sum_{n=1}^N k_{\mat{A}^{(n)}} \ge 2R + (N-1)$ 下，精确表示在平凡的缩放与列置换意义下是唯一的；该条件是充分的但非必要，其中 $k_{\mat{A}}$ 是因子矩阵的 k-秩 \cite{kruskal1977three}, \cite{sidiropoulos2000cpuniqueness}, \cite{kolda2009tensor}。
+CP 分解紧凑且往往可解释，但由于计算 CP 秩是 NP 难问题，它作为逼近问题的性态很差 \cite{haastad1990tensor}, \cite{hillar2013most}。因此 $R$ 只能凭启发式选取，且在固定 $R \ge 2$ 时，最优秩 $R$ 近似在一个具有正体积的张量集合上可能不存在 \cite{de2008tensor}。拟合算法继承了这些困难，在高阶情形下还会出现数值不稳定 \cite{kolda2009tensor}, \cite{cichocki2015tensor}。
+因此，人们常施加非负性、正交性或稀疏性等额外约束，以提高稳定性与精度，并放宽唯一性条件 \cite{cichocki2015tensor}。
+
+%\color{black}
+
+% \subsubsection{Tucker Decomposition}
+% The Tucker decomposition \cite{tucker1966some} admits the following model
+% \begin{equation}
+% \ten{X}\approx \ten{G}\times_1\mat{A}^{(1)}\times_2\mat{A}^{(2)}\cdots\times_N\mat{A}^{(N)},
+% \end{equation}
+% where $\ten{G}$ is a core tensor and each mode has its own rank. Tucker is useful when modes have different meanings, such as layer, head, feature, and modality, but the core can grow quickly. $\ten{G} \in \mathbb{R}^{R_1 \times R_2 \times \cdots \times R_N}$ is the core tensor, with $R_i$ denoting the Tucker ranks; the core dictates how the different modes interact with each other. Each $\mat{A}^{(i)} \in \mathbb{R}^{I_i \times R_i}$ is a factor matrix, playing a role analogous to principal components for that specific mode. In scalar form, the decomposition expresses each element of $\ten{X}$ as 
+% \[
+% \ten{X}_{i_1 i_2 \cdots i_N} 
+% \approx \sum_{r_1=1}^{R_1} \sum_{r_2=1}^{R_2} \cdots \sum_{r_N=1}^{R_N}
+% \ten{G}_{r_1 r_2 \cdots r_N} 
+% \cdot \mat{A}^{(1)}_{i_1, r_1}
+% \cdot \mat{A}^{(2)}_{i_2, r_2}
+% \cdots
+% \mat{A}^{(N)}_{i_N, r_N}.
+% \]
+% The Tucker decomposition can be made unique by imposing orthonormality constraints on the factor matrices: $(\mat{A}^{(n)})^\top \mat{A}^{(n)} = \mat{I}_{R_n}$ for $n=1,2,\ldots,N$, making it analogous to higher-order SVD \cite{kolda2009tensor}.
+
+% The Tucker-3 decomposition (also called third-order Tucker) applies Tucker decomposition specifically to a 3rd-order tensor, i.e.,
+% \begin{equation}
+% \mathcal{X} \approx \mathcal{G} \times_1 \mathbf{A}^{(1)} \times_2 \mathbf{A}^{(2)} \times_3 \mathbf{A}^{(3)},
+% \end{equation}
+% where the factor matrices capture interactions along each of the three modes. 
+
+% If a third-order tensor \( \mathcal{X} \in \mathbb{R}^{I \times J \times K} \) has only two modes of large size (say, \( I \) and \( J \)), and a dimensionality reduction is required only along those modes, the corresponding decomposition is called the Tucker-2 model. Mathematically, it is written as:
+% \[
+% \mathcal{X} \approx \mathcal{G} \times_1 \mathbf{A} \times_2 \mathbf{B},
+% \]
+% where \( \mathcal{G} \in \mathbb{R}^{R_1 \times R_2 \times K} \) is the core tensor,
+%      \( \mathbf{A} \in \mathbb{R}^{I \times R_1} \) and \( \mathbf{B} \in \mathbb{R}^{J \times R_2} \) are factor matrices for the two large modes,
+%      \( R_1 < I \) and \( R_2 < J \) are the reduced ranks,
+%      the third mode (\( K \)) remains uncompressed. 
+%     Similarly, if the tensor has only one mode of large size (say, \( I \)), and reduction is needed only in that mode, the model is called the Tucker-1 model. This is equivalent to a truncated singular value decomposition (SVD) along that mode:
+% \[
+% \mathcal{X} \approx \mathcal{G} \times_1 \mathbf{A},
+% \]
+% with \( \mathcal{G} \in \mathbb{R}^{R_1 \times J \times K} \),
+%     \( \mathbf{A} \in \mathbb{R}^{I \times R_1} \),
+%      \( R_1 < I \).
+
+% In both cases, the core tensor retains the remaining uncompressed modes in full, making these models efficient when only a subset of modes exhibit high dimensionality.
+
+\subsubsection{Tucker 分解}
+% The Tucker decomposition \cite{tucker1966some} admits the following model:
+% \begin{equation}
+% \ten{X} = \ten{G}\times_1\mat{A}^{(1)}\times_2\mat{A}^{(2)}\cdots\times_N\mat{A}^{(N)},
+% \end{equation}
+% where $\ten{G} \in \R^{R_1 \times R_2 \times \cdots \times R_N}$ is an $N$th-order core tensor with $R_n$ denoting the Tucker ranks; each $\mat{A}^{(n)} \in \mathbb{R}^{I_n \times R_n}$ is an $n$-th-mode factor matrix. The core dictates how the different modes interact with each other, while factors play a role analogous to principal components for that specific mode. In scalar form, the decomposition expresses each element of $\ten{X}$ as: 
+% \begin{equation}
+% \ten{X}_{i_1 i_2 \cdots i_N} = \sum_{r_1=1, \dots, r_N=1}^{R_1, \dots, R_N}
+% \ten{G}_{r_1, r_2, \dots, r_N} \mat{A}^{(1)}_{i_1, r_1} \mat{A}^{(2)}_{i_2, r_2} \cdots \mat{A}^{(N)}_{i_N, r_N}.
+% \end{equation}
+% The Tucker decomposition is not unique in general, as it suffers from rotational ambiguities within each mode.  
+% Specifically, for any invertible matrix $\mathbf{A}^{(n)}$ applied to the $n$-th mode factor, the core tensor can be transformed via $\mathcal{G} \times_n \mathbf{U}^{(n)-1}$ to yield an equivalent representation.  
+% This non-uniqueness arises because the factor matrices can be arbitrarily rotated without altering the reconstructed tensor, provided the core is adjusted accordingly.  
+% To achieve uniqueness, additional constraints such as orthogonality, sparsity, or non-negativity are typically imposed on the factor matrices or the core tensor. Under such restrictions, the Tucker decomposition can become essentially unique up to trivial permutations and sign flips of the components.
+
+% The Tucker-3 decomposition (also called third-order Tucker) applies the Tucker decomposition specifically to a 3rd-order tensor, i.e.,
+% \begin{equation}
+% \mathcal{X} \approx \mathcal{G} \times_1 \mat{A} \times_2 \mat{B} \times_3 \mat{C},
+% \end{equation}
+% where the factor matrices capture interactions along each of the three modes. 
+
+% If a third-order tensor \( \mathcal{X} \in \mathbb{R}^{I \times J \times K} \) has only two modes of large size (say, \( I \) and \( J \)), and a dimensionality reduction is required only along those modes, the corresponding decomposition is called the Tucker-2 model. Mathematically, it is written as:
+% \[
+% \mathcal{X} \approx \mathcal{G} \times_1 \mat{A} \times_2 \mat{B},
+% \]
+% where \( \mathcal{G} \in \mathbb{R}^{R_1 \times R_2 \times K} \) is the core tensor;
+%      \( \mat{A} \in \mathbb{R}^{I \times R_1} \) and \( \mat{B} \in \mathbb{R}^{J \times R_2} \) are factor matrices for the two large modes;
+%      \( R_1 < I \) and \( R_2 < J \) are the reduced ranks;
+%      and the third mode (\( K \)) remains uncompressed.
+%     Similarly, if the tensor has only one mode of large size (say, \( I \)), and reduction is needed only in that mode, the decomposition is called the Tucker-1 model. This is equivalent to a truncated singular value decomposition (SVD) along that mode:
+% \[
+% \mathcal{X} \approx \mathcal{G} \times_1 \mat{A},
+% \]
+% with \( \mathcal{G} \in \mathbb{R}^{R_1 \times J \times K} \),
+%     \( \mat{A} \in \mathbb{R}^{I \times R_1} \),
+%      \( R_1 < I \). 
+% In both cases, the core tensor retains the remaining uncompressed modes in full, making these models efficient when only a subset of modes exhibit high dimensionality.
+
+% \color{blue}
+
+% CORRECTED: 
+
+Tucker 分解 \cite{tucker1966some} 采用如下模型：
+\begin{equation}
+\label{eq:tucker-decomposition}
+\ten{X} \approx \ten{G}\times_1\mat{A}^{(1)}\times_2\mat{A}^{(2)} \times_3 \cdots \times_N\mat{A}^{(N)},
+\end{equation}
+其中 $\ten{G} \in \R^{R_1 \times R_2 \times \cdots \times R_N}$ 是 $N$ 阶核心张量，每个 $\mat{A}^{(n)} \in \R^{I_n \times R_n}$ 是第 $n$ 模的因子矩阵。写成标量形式，该分解将 $\ten{X}$ 的每个元素表示为：
+\begin{equation}
+\label{eq:tucker-decomposition-scalar}
+\ten{X}_{i_1, i_2, \dots, i_N} \approx \sum_{r_1=1, \dots, r_N=1}^{R_1, \dots, R_N}
+\ten{G}_{r_1, r_2, \dots, r_N} \mat{A}^{(1)}_{i_1, r_1} \mat{A}^{(2)}_{i_2, r_2} \cdots \mat{A}^{(N)}_{i_N, r_N}.
+\end{equation}
+若式 \eqref{eq:tucker-decomposition} 与式 \eqref{eq:tucker-decomposition-scalar} 中严格取等号，我们称之为 $\ten{X}$ 的一个 \emph{Tucker 表示}；使这种表示存在的、按元素意义下最小的 $N$ 元组 $(R_1, R_2, \dots, R_N)$ 称为 $\ten{X}$ 的 Tucker 秩或多重线性秩（这样的元组总是存在，其中每个 $R_n$ 等于 $\ten{X}$ 第 $n$ 模矩阵化的秩 \cite{kolda2009tensor}）。
+Tucker 分解是不唯一的：对任意可逆矩阵 $\mat{S}_n \in \R^{R_n \times R_n}$，将因子矩阵 $\mat{A}^{(n)}$ 替换为 $\mat{A}^{(n)}\mat{S}_n$ 并在核心中以 $\mat{S}_n^{-1}$ 作补偿，重构张量保持不变。正交性可以限制但一般不能消除这种规范自由度。更强的唯一性结论需要额外假设，例如各模奇异子空间非退化，以及指定某种典范约定。
+因此，HOSVD \cite{lathauwer2000hosvd} 等常用算法会固定一种特定选择，产生正交因子矩阵 $(\mat{A}^{(n)})^\top \mat{A}^{(n)} = \mat{I}_{R_n}$ 以及带有额外约束的核心张量（详见 \cite{lathauwer2000hosvd}）。
+由于这种不唯一性，与 CP 分解不同，Tucker 因子给出的向量与核心中的数值不能直接解释。
+
+
+对三阶情形还有额外术语，按被压缩的模的个数来标记。Tucker-3 指对三阶张量施行的标准 Tucker 分解，三个模全部被压缩。
+若 $\ten{X} \in \R^{I \times J \times K}$ 只有两个模尺寸很大（比如 $I$ 与 $J$），且只需沿这两个模降维，则相应的分解称为 Tucker-2 模型，$\ten{X} \approx \ten{G} \times_1 \mat{A} \times_2 \mat{B}$，
+其中 $\ten{G} \in \R^{R_1 \times R_2 \times K}$，$\mat{A} \in \R^{I \times R_1}$，$\mat{B} \in \R^{J \times R_2}$；$R_1 < I$、$R_2 < J$ 是缩减后的秩；第三个模（$K$）保持未压缩。
+类似地，若张量只有一个模尺寸很大（比如 $I$），且只需在该模上降维，则分解称为 Tucker-1 模型，$\ten{X} \approx \ten{G} \times_1 \mat{A}$，
+其中 $\ten{G} \in \R^{R_1 \times J \times K}$，$\mat{A} \in \R^{I \times R_1}$，$R_1 < I$；这退化为沿第一模的截断奇异值分解（SVD）。
+在这两种情形下，核心张量都完整保留其余未压缩的模，因此当只有一部分模呈现高维性时，这些模型十分高效。
+
+
+\color{black}
+
+
+% \subsubsection{Tensor Train (TT) Decomposition}
+% The TT/MPS representation \cite{oseledets2011tensor} expresses a higher-order tensor $\ten{X}\in\mathbb{R}^{I_1\times I_2\times \cdots\times I_N}$, in component-wise form as follows:
+% \begin{equation}
+% \ten{X}(i_1,\ldots,i_N)=\mat{G}_1(i_1)\mat{G}_2(i_2)\cdots\mat{G}_N(i_N),
+% \end{equation}
+% where $\mat{G}_n(i_n)\in\R^{R_{n-1}\times R_n}$ and $R_0=R_N=1$. TT/MPS is attractive for language models because it scales well with order and can represent large embeddings or operators through chains of small cores. Here, each $\mat{G}_n(i_n)$ is a matrix that depends on the index $i_n$ of the $n$-th mode; for each fixed value of $i_n$, we obtain a distinct $R_{n-1} \times R_n$ matrix. The product $\mat{G}_1(i_1)\mat{G}_2(i_2)\cdots\mat{G}_N(i_N)$ is a standard matrix multiplication, but because $R_0 = R_N = 1$, the first matrix $\mat{G}_1(i_1)$ is actually a row vector of size $1 \times R_1$, and the last matrix $\mat{G}_N(i_N)$ is a column vector of size $R_{N-1} \times 1$. Consequently, the product of all $N$ matrices collapses to a scalar, which is exactly the value of $\ten{X}$ at the multi-index $(i_1, \ldots, i_N)$. Each core $\mat{G}_n$ can be viewed as a third-order tensor of size $R_{n-1} \times I_n \times R_n$, where the index $i_n$ selects the "slice" along the middle dimension, yielding the matrix $\mat{G}_n(i_n)$. This chain-like structure ensures that the total number of parameters grows only as $\mathcal{O}(N \cdot I \cdot R^2)$ (assuming uniform dimensions and ranks), which is linear in the order $N$, in stark contrast to the exponential growth of the full tensor. This favorable scaling makes TT/MPS particularly suitable for representing large-scale embeddings, attention matrices, or weight tensors in language models, where the order $N$ can be large.
+
+% The Tensor Train Matrix (TTM) format \cite{oseledets2010approximation} generalizes the TT decomposition to matrices. More precisely, a given matrix is reshaped to a higher-order tensor after which it is compressed in the TT decomposition. For a matrix $\mat{W}\in\R^{d_{\rm in}\times d_{\rm out}}$ with 
+% $d_{\rm in}=\prod_{n=1}^N I_n$ and $d_{\rm out}=\prod_{n=1}^N J_n$, the TTM representation is
+% \begin{equation}
+% \mat{W}(i_1,\ldots,i_N,j_1,\ldots,j_N) = \sum_{\alpha_0,\ldots,\alpha_N} \mathcal{G}_1(i_1,j_1,\alpha_0,\alpha_1)\cdots\mathcal{G}_N(i_N,j_N,\alpha_{N-1},\alpha_N),
+% \end{equation}
+% where each core $\mathcal{G}_n$ is a 4th-order tensor of size $R_{n-1}\times I_n\times J_n\times R_n$ with $R_0=R_N=1$.
+
+\subsubsection{张量列（TT）分解}
+% The TT (also known as MPS) representation \cite{oseledets2011tensor} expresses a higher-order tensor $\ten{X}\in\mathbb{R}^{I_1\times I_2\times \cdots\times I_N}$ in chain-like form as follows:
+% \begin{equation}
+%     \ten{X} = \ten{G}^{(1)} \leftindex_{-1} \times^{1} \ \ten{G}^{(2)} \leftindex_{-1} \times^{1} \ \cdots \leftindex_{-1} \times^{1} \ \ten{G}^{(N)},
+% \end{equation}
+% where the $-1$ in the left contraction index denotes the last mode of the left tensor, following Python-style indexing. In scalar form, this is equivalent to:
+% \begin{equation}
+% \ten{X}_{i_1, i_2,\dots, i_N} = \sum_{\alpha_0, \alpha_1, \dots, \alpha_N=1}^{R_0, R_1, \dots, R_N} \ten{G}^{(1)}_{\alpha_0, i_1, \alpha_1} \ten{G}^{(2)}_{\alpha_1, i_2, \alpha_2} \cdots \ten{G}^{(N)}_{\alpha_{N-1}, i_N, \alpha_N},
+% \end{equation}
+% where each core $\ten{G}^{(n)} \in \R^{R_{n-1} \times I_n \times R_n}$ is 3rd-order, and the values $(R_0, R_1, \ldots, R_N)$ are called the TT-ranks, where $R_0=R_N=1$ always holds. This decomposition can also be expressed in terms of matrix slices of the cores:
+% \begin{equation}
+% \ten{X}_{i_1, i_2,\dots, i_N} = \mat{G}^{(1)}_{i_1}\mat{G}^{(2)}_{i_2}\cdots\mat{G}^{(N)}_{i_N},
+% \end{equation}
+% where $\mat{G}^{(n)}_{i_n} = \ten{G}^{(n)}(:, i_n, :) \in\R^{R_{n-1}\times R_n}$. This can be viewed from the following perspective: each core $\ten{G}^{(n)}$ is a third-order tensor of size $R_{n-1} \times I_n \times R_n$, where the index $i_n$ selects the ``slice'' along the middle dimension, yielding the matrix $\mat{G}^{(n)}_{i_n}$ of size $R_{n-1} \times R_n$. From this representation the second name -- Matrix Product State (MPS) -- arises, as the tensor is expressed as a product of matrices.
+% TT is attractive for high-order tensors because it scales well with order and can represent large tensors through chains of small cores. This chain-like structure ensures that the total number of parameters grows only as $\mathcal{O}(N I R^2)$ (assuming uniform dimensions and ranks), which is linear in the order $N$, in stark contrast to the exponential growth of the full tensor. The TT decomposition is unique only up to gauge transformations, unlike the Tucker decomposition which has rotational ambiguities within each mode. Specifically, for any sequence of invertible matrices inserted between adjacent cores, the cores can be transformed via \(\mathbf{G}^{(n)}_{i_n} \mapsto \mathbf{M}_{n-1} \mathbf{G}^{(n)}_{i_n} \mathbf{M}_n^{-1}\) without changing the reconstructed tensor. This non-uniqueness is a fundamental property of the TT format, but it can be eliminated by enforcing orthogonality conditions on the cores, such as left- or right-orthogonality. Under such canonical constraints, the decomposition becomes unique up to trivial permutations and sign flips of the components.
+
+
+% The Tensor Train Matrix (TTM) format \cite{oseledets2010approximation} generalizes the TT decomposition to matrices. More precisely, a given matrix $\mat{T}$ is reshaped into a higher-order tensor $\ten{T}$, which is then compressed via the TT decomposition. For a matrix $\mat{T}\in\R^{I\times J}$ with $I=\prod_{n=1}^N I_n$ and $J=\prod_{n=1}^N J_n$, the TTM representation is:
+% \begin{equation}
+%     \ten{T} = \ten{G}^{(1)} \leftindex_{-1} \times^{1} \ \ten{G}^{(2)} \leftindex_{-1} \times^{1} \ \cdots \leftindex_{-1} \times^{1} \ \ten{G}^{(N)},
+% \end{equation}
+% where $-1$ again denotes the last mode of the left tensor, and, unlike the TT decomposition, each core $\ten{G}^{(n)} \in \R^{R_{n-1} \times I_n \times J_n \times R_n}$ is 4th-order. In scalar form, this can be expressed as:
+% \begin{equation}
+% \ten{T}_{i_1, j_1,\ldots,i_N ,j_N} = \sum_{\alpha_0, \alpha_1, \dots, \alpha_N=1}^{R_0, R_1, \ldots, R_N} \ten{G}^{(1)}_{\alpha_0, i_1, j_1, \alpha_1} \ten{G}^{(2)}_{\alpha_1, i_2, j_2, \alpha_2} \cdots\ten{G}^{(N)}_{\alpha_{N-1},i_N,j_N, \alpha_N},
+% \end{equation}
+% where $(R_0, R_1, \ldots, R_N)$ are the TTM ranks, with $R_0=R_N=1$. The advantage of TTM is that it natively handles matrices, representing them as a multilinear operator and thereby preserving the operator structure, in contrast to TT. That is why in quantum physics, TTM is often referred to as Matrix Product Operator (MPO) \cite{schollwock2011dmrg}. We will refer to TTM and MPO interchangeably, preferring TTM, while using MPO when it is the terminology adopted by the paper under discussion.
+
+% \color{blue}
+%CORRECTED:
+张量列（tensor train, TT）分解 \cite{oseledets2011tensor} 将高阶张量 $\ten{X}\in\R^{I_1\times I_2\times \cdots\times I_N}$ 表示为如下链式形式：
+\begin{equation}
+    \ten{X} \approx \ten{G}^{(1)} \leftindex_{-1} \times^{1} \ \ten{G}^{(2)} \leftindex_{-1} \times^{1} \ \cdots \leftindex_{-1} \times^{1} \ \ten{G}^{(N)},
+\end{equation}
+其中左侧缩并指标里的 $-1$ 按 Python 风格索引表示左边张量的最后一个模。写成标量形式，它等价于
+\begin{equation}
+\ten{X}_{i_1, i_2,\dots, i_N} \approx \sum_{\alpha_0, \alpha_1, \dots, \alpha_N=1}^{R_0, R_1, \dots, R_N} \ten{G}^{(1)}_{\alpha_0, i_1, \alpha_1} \ten{G}^{(2)}_{\alpha_1, i_2, \alpha_2} \cdots \ten{G}^{(N)}_{\alpha_{N-1}, i_N, \alpha_N},
+\end{equation}
+其中每个核心 $\ten{G}^{(n)} \in \R^{R_{n-1} \times I_n \times R_n}$ 是三阶的，$(N+1)$ 元组 $(R_0, R_1, \ldots, R_N)$ 称为 TT 秩，且恒有 $R_0=R_N=1$。该分解也可以用核心的切片来表示：
+\begin{equation}
+\ten{X}_{i_1, i_2,\dots, i_N} \approx \mat{G}^{(1)}_{i_1}\mat{G}^{(2)}_{i_2}\cdots\mat{G}^{(N)}_{i_N},
+\end{equation}
+其中 $\mat{G}^{(n)}_{i_n} = \ten{G}^{(n)}_{:, i_n, :} \in\R^{R_{n-1}\times R_n}$。
+分解的这种形式是其别名矩阵积态（MPS）的由来。
+若上述各式中的等号成立，我们称之为 $\ten{X}$ 的一个 \emph{TT 表示}。
+TT 分解仅在规范变换意义下唯一。具体而言，对在相邻核心之间插入的任意一列可逆矩阵 $\mat{S}_n$，核心可经变换 $\mat{G}^{(n)}_{i_n} \mapsto \mat{S}_{n-1} \mat{G}^{(n)}_{i_n} \mat{S}_n^{-1}$ 而重构张量不变。这种不唯一性是 TT 分解的基本性质，不过对核心施加正交条件可以限制这种规范自由度并给出典范形式 \cite{cichocki2015tensor}。
+TT 分解对高阶张量颇具吸引力，因为它随阶数的标度行为十分有利。具体而言，链式结构保证参数总数仅以 $\mathcal{O}(N I R^2)$ 增长（假设各维数与各秩相同），即关于阶数 $N$ 是线性的，与完整张量的指数增长形成对比。
+
+张量列矩阵（Tensor Train Matrix, TTM）格式 \cite{oseledets2010ttm} 将 TT 分解应用于矩阵。更确切地说，给定矩阵 $\mat{T}\in\R^{I\times J}$（其中 $I=\prod_{n=1}^N I_n$，$J=\prod_{n=1}^N J_n$），先将其重排为高阶张量 $\ten{T} \in \R^{I_1 \times J_1 \times \dots \times I_N \times J_N}$，再用类 TT 结构加以近似
+\begin{equation}
+\label{eq:ttm-decomposition}
+    \ten{T} \approx \ten{G}^{(1)} \leftindex_{-1} \times^{1} \ \ten{G}^{(2)} \leftindex_{-1} \times^{1} \ \cdots \leftindex_{-1} \times^{1} \ \ten{G}^{(N)},
+\end{equation}
+其中与 TT 分解不同，每个核心 $\ten{G}^{(n)} \in \R^{R_{n-1} \times I_n \times J_n \times R_n}$ 是四阶的。写成标量形式，它可以表示为
+\begin{equation}
+\label{eq:ttm-decomposition-scalar}
+  \ten{T}_{i_1, j_1,\ldots,i_N ,j_N} \approx \sum_{\alpha_0, \alpha_1, \dots, \alpha_N=1}^{R_0, R_1, \ldots, R_N} \ten{G}^{(1)}_{\alpha_0, i_1, j_1, \alpha_1} \ten{G}^{(2)}_{\alpha_1, i_2, j_2, \alpha_2} \cdots\ten{G}^{(N)}_{\alpha_{N-1},i_N,j_N, \alpha_N},
+\end{equation}
+其中 $(R_0, R_1, \ldots, R_N)$ 是 TTM 秩，且 $R_0=R_N=1$。与 TT 的 MPS 形式一样，TTM 也可以用核心的矩阵切片来表示
+\begin{equation}
+\label{eq:ttm-decomposition-slice}
+  \ten{T}_{i_1, j_1,\dots, i_N, j_N} \approx \mat{G}^{(1)}_{i_1, j_1}\mat{G}^{(2)}_{i_2, j_2}\cdots\mat{G}^{(N)}_{i_N, j_N},
+\end{equation}
+其中 $\mat{G}^{(n)}_{i_n, j_n} = \ten{G}^{(n)}_{:, i_n, j_n, :} \in\R^{R_{n-1}\times R_n}$。
+在 TTM 分解中，$\ten{T}$ 的第 $(i_1, j_1, \ldots, i_N, j_N)$ 个元素与 $\mat{T}$ 的第 $(\overline{i_1, \ldots, i_N}, \overline{j_1, \ldots, j_N})$ 个元素一一对应，其中 $\overline{i_1, \ldots, i_N}$ 表示\emph{多重指标}，且等于
+\begin{equation*}
+\overline{i_1, \ldots, i_N} = i_1 + (i_2 - 1)I_1 + \cdots + (i_N - 1)I_1 \ldots I_{N - 1}.
+\end{equation*}
+由于这一映射是双射，若式 \eqref{eq:ttm-decomposition}、式 \eqref{eq:ttm-decomposition-scalar} 与式 \eqref{eq:ttm-decomposition-slice} 中的等号成立，我们就称之为矩阵 $\mat{T}$ 本身的一个 \emph{TTM 表示}。
+TTM 的优点在于它天然处理矩阵，将其表示为多重线性算符，从而保留算符结构，这一点与 TT 不同。正因如此，在量子物理中 TTM 常被称为矩阵积算符（MPO）\cite{schollwock2011dmrg}。我们将不加区分地使用 TTM 与 MPO，优先用 TTM，而在所讨论论文采用 MPO 这一术语时则用 MPO。
+%\color{black}
+
+\subsubsection{块项分解}
+% The block-term decomposition \cite{lathauwer2008btd} writes $\ten{X}$ as a sum of $K$ Tucker terms,
+% \begin{equation}
+% \ten{X} = \sum_{k=1}^{K}\ten{G}_k\times_1\mat{A}_k^{(1)}\times_2\mat{A}_k^{(2)}\cdots\times_N\mat{A}_k^{(N)},
+% \end{equation}
+% where each $\ten{G}_k\in\R^{R_{k1}\times R_{k2}\times \cdots\times R_{kN}}$ is a small core tensor and each $\mat{A}_k^{(n)}\in\R^{I_{kn}\times R_{kn}}$ is a factor matrix associated with term $k$; the ranks $(R_{k1},R_{k2},\ldots,R_{kN})$ need not be shared across terms, so each term can have its own core size, in addition to its own core and factor matrices. In scalar form:
+% \begin{equation}
+% \ten{X}_{i_1\cdots i_N} = \sum_{k=1}^{K} \left[ \sum_{l_1=1, \dots, l_N=1}^{R_{k1}, \ldots, R_{kN}} (\ten{G}_k)_{l_1, \dots, l_N}\,(\mat{A}_k^{(1)})_{i_1,l_1}\cdots(\mat{A}_k^{(N)})_{i_N,l_N} \right].
+% \end{equation}
+% BTT interpolates between CP and Tucker. Setting $K=1$ removes the outer sum and recovers the Tucker decomposition with core $\ten{G}_1$ and ranks $(R_{11},R_{12},\ldots,R_{1N})$. Setting $R_{kn}=1$ for every term $k$ and mode $n$ instead collapses every core $\ten{G}_k$ to a scalar $\lambda_k$, recovering the CP decomposition as a sum of $K$ rank-one terms. The total parameter count is $\sum_{k}\Bigl[\Pi_nR_{kn}+\sum_nI_{kn}R_{kn}\Bigr]$. By choosing $K$ and the per-term ranks $(R_{k1},R_{k2},\ldots,R_{kN})$ jointly, BTT can trade off CP's compactness against Tucker's per-mode flexibility, at the cost of more hyperparameters and a more involved fitting procedure than either decomposition alone \cite{lathauwer2008btd}. Its uniqueness is more nuanced than that of the standard Tucker decomposition: while the overall decomposition can be essentially unique under suitable rank conditions, each individual block still suffers from the same rotational ambiguity as in Tucker, meaning the factor matrices of each block can be arbitrarily transformed by invertible matrices if the core is adjusted inversely. Additionally, the blocks themselves can be permuted arbitrarily without changing the reconstructed tensor, since the sum is commutative. Therefore, the BTD is unique only up to within-block linear transformations and block permutations, but these ambiguities can be resolved by imposing orthogonality on the factor matrices and fixing a canonical ordering of the blocks.
+
+% \color{blue}
+%CORRECTED: 
+
+块项（block term, BT）分解 \cite{lathauwer2008btd} 将 $\ten{X}$ 写成 $K$ 个 Tucker 项之和
+\begin{equation}
+\label{eq:btd}
+\ten{X} \approx \sum_{k=1}^{K} \left[ \ten{G}_k\times_1\mat{A}_k^{(1)}\times_2\mat{A}_k^{(2)}\cdots\times_N\mat{A}_k^{(N)} \right],
+\end{equation}
+其中每个 $\ten{G}_k\in\R^{R_{k1}\times R_{k2}\times \cdots\times R_{kN}}$ 是一个小核心张量，每个 $\mat{A}_k^{(n)}\in\R^{I_{n}\times R_{kn}}$ 是与第 $k$ 项相关联的因子矩阵；各秩 $(R_{k1},R_{k2},\ldots,R_{kN})$ 不必在各项之间共享，因此每一项除了拥有自己的核心与因子矩阵外，还可以有自己的核心尺寸。写成标量形式：
+\begin{equation}
+\label{eq:btd-scalar}
+\ten{X}_{i_1, \dots, i_N} \approx \sum_{k=1}^{K} \left[ \sum_{l_1=1, \dots, l_N=1}^{R_{k1}, \ldots, R_{kN}} (\ten{G}_k)_{l_1, \dots, l_N}\,(\mat{A}_k^{(1)})_{i_1,l_1}\cdots(\mat{A}_k^{(N)})_{i_N,l_N} \right].
+\end{equation}
+当式 \eqref{eq:btd} 与式 \eqref{eq:btd-scalar} 中的等号成立时，我们称之为 $\ten{X}$ 的一个 \emph{BT 表示}。BT 分解介于 CP 与 Tucker 之间：取 $K=1$ 便去掉外层求和，恢复出以 $\ten{G}_1$ 为核心、以 $(R_{11},R_{12},\ldots,R_{1N})$ 为秩的 Tucker 分解；而对每一项 $k$ 和每个模 $n$ 取 $R_{kn}=1$，则每个核心 $\ten{G}_k$ 塌缩为标量 $\lambda_k$，恢复出作为 $K$ 个秩一项之和的 CP 分解。
+它的唯一性比标准 Tucker 分解更微妙：BT 分解在每个块中都带有 Tucker 的块内歧义，此外 $K$ 个块还可以任意置换。要在这些不确定性之外获得唯一性，需要对因子矩阵施加额外条件，这类条件对三阶张量已知 \cite{lathauwer2008btd}。
+它的主要特点是：通过联合选择 $K$ 与各项的秩 $(R_{k1},R_{k2},\ldots,R_{kN})$，BT 分解可以在 CP 的紧凑性与 Tucker 的逐模灵活性之间进行权衡，代价是超参数更多、拟合过程比单独使用任一分解更复杂 \cite{lathauwer2008btd}。
+
+\color{black}
+
+\subsection{注意力机制}
+
+注意力机制是一种参数化的神经网络组件，它使模型在处理输出序列的每个元素时，能够选择性地聚焦于输入序列的显著特征。通过允许在每个解码步骤直接访问所有先前的隐藏状态，它克服了 RNN 中固定维数上下文向量的瓶颈 \cite{bahdanau2016attention}。注意力将上下文向量计算为值的凸组合，其组合系数由查询与键之间的兼容性函数导出。
+
+
+% The attention mechanism is a parametric neural component that enables a model to selectively concentrate on salient features of an input sequence while processing each element of an output sequence. It overcomes the bottleneck of fixed-dimensional context vectors in recurrent neural networks (RNNs) by allowing direct access to all previous hidden states at each decoding step. Formally, attention computes a context vector as a convex combination of values, where the coefficients are derived from a compatibility function between queries and keys.
+
+\subsubsection{单头注意力}
+
+最广泛采用的形式由 Transformer 架构引入 \cite{vaswani2017attention}，即\textit{缩放点积注意力}。给定查询矩阵 $\mat{Q} \in \R^{N \times d_k}$、键矩阵 $\mat{K} \in \R^{M \times d_k}$ 与值矩阵 $\mat{V} \in \R^{M \times d_v}$，注意力输出按下式计算
+\begin{equation}
+\text{Attention}(\mat{Q}, \mat{K}, \mat{V}) = \text{Softmax}\left( \frac{\mat{Q} \mat{K}^\top}{\sqrt{d_k}} \right) \mat{V},
+\label{eq:scaled_dot_product}
+\end{equation}
+其中 $N$ 与 $M$ 分别表示查询与键/值的序列长度，$d_k$、$d_v$ 为键与值的维数。缩放因子 $\frac{1}{\sqrt{d_k}}$ 对 softmax 输入的方差进行归一化，使训练过程更加稳定。
+
+式 \ref{eq:scaled_dot_product} 是一般形式，其中查询与键可以来自不同的序列且长度可以不同。由于本综述聚焦于仅解码器（decoder-only）LLM，全文将施加两条限制。其一，三个矩阵均由同一个包含 $T$ 个词元的序列导出，故 $N = M = T$；这类注意力称为\emph{自注意力}。其二，一个词元不得关注其后续词元，这通过加入掩码矩阵 $\mat{M} \in \R^{T \times T}$ 来实现，该矩阵在对角线及其下方为零、对角线上方为 $-\infty$：
+\begin{equation}
+\label{eq:masked_attention}
+  \text{MaskedAttention}(\mat{Q}, \mat{K}, \mat{V}) = \text{Softmax}\left( \frac{\mat{Q} \mat{K}^\top}{\sqrt{d_k}} + \mat{M} \right) \mat{V},
+\end{equation}
+此时 $\mat{Q}, \mat{K} \in \R^{T \times d_k}$、$\mat{V} \in \R^{T \times d_v}$。$-\infty$ 元素在 softmax 作用下消失，因此第 $i$ 个输出仅依赖于词元 $1,2, \ldots, i$。正是这种\emph{掩码自注意力}使自回归解码成为可能，也是我们此后所假定的变体。
+
+\subsubsection{注意力权重的解释}
+
+Softmax 运算逐行施加，为每个查询生成键上的概率分布
+\begin{equation}
+\label{eq:att-score}
+\alpha_{ij} = \frac{\exp\left( \vecb{q}_i^\top \vecb{k}_j / \sqrt{d_k} \right)}{\sum_{l=1}^{M} \exp\left( \vecb{q}_i^\top \vecb{k}_l / \sqrt{d_k} \right)},
+\end{equation}
+其中 $\alpha_{ij}$ 表示第 $i$ 个查询赋予第 $j$ 个键的注意力分数。查询 $i$ 的输出为：
+\begin{equation}
+\vecb{o}_i = \sum_{j=1}^{M} \alpha_{ij} \vecb{v}_j.
+\label{eq:context_vector}
+\end{equation}
+在带掩码的情形下，同样的表达式依然成立，只是求和限制在 $j \le i$，因为掩码将其余权重置为零。
+各项可以按如下方式理解：
+\begin{itemize}
+    \item \textbf{查询（$\mat{Q}$）}：表示我们为其寻找相关上下文的当前位置。在自注意力中，查询与键、值由同一输入序列导出。
+    \item \textbf{键（$\mat{K}$）}：充当输入序列中每个元素的标签或标识符。点积 $\mat{Q} \mat{K}^\top$ 度量每个查询与所有键之间成对的兼容性或相似度。
+    \item \textbf{值（$\mat{V}$）}：包含将被聚合的实际信息。最终输出是值的加权和，其权重由注意力分数决定。
+\end{itemize}
+这一形式使模型能够动态地权衡每个输入元素的重要性，从而有效地为输出序列中的每个位置构建上下文感知的表示。
+
+
+\subsubsection{多头注意力}
+
+为了同时捕获不同类型的关系与依赖，Transformer 并行运行若干注意力运算，每个运算拥有各自学习到的投影矩阵。此时的输入不再是 $\mat{Q}$、$\mat{K}$、$\mat{V}$ 本身，而是由它们投影而来的隐藏状态：给定 $\mat{X}_Q \in \R^{N \times d}$ 与 $\mat{X}_K, \mat{X}_V \in \R^{M \times d}$，其中 $d$ 为模型维数
+\begin{equation}
+\text{MultiHeadAttention}(\mat{X}_Q, \mat{X}_K, \mat{X}_V) = \text{Concat}(\text{head}_1, \dots, \text{head}_H) \mat{W}^O,
+\label{eq:multi_head}
+\end{equation}
+其中每个头按下式计算
+\begin{equation}
+\text{head}_i = \text{Attention}(\mat{X}_Q \mat{W}_i^Q, \mat{X}_K \mat{W}_i^K, \mat{X}_V \mat{W}_i^V).
+\label{eq:head}
+\end{equation}
+这里 $\mat{W}_i^Q \in \R^{d \times d_k}$、$\mat{W}_i^K \in \R^{d \times d_k}$、$\mat{W}_i^V \in \R^{d \times d_v}$ 是第 $i$ 个头的投影矩阵，$\mat{W}^O \in \R^{H d_v \times d}$ 将拼接后的输出投影回模型维数。通常 $d_k = d_v = \frac{d}{H}$，其中 $H$ 为头数。我们将 $d_h = \frac{d}{H}$ 记为头维数，故在标准实现中 $d_h = d_k = d_v$。
+
+在仅解码器设定下，上文引入的两条限制延续到每一个头。单个隐藏状态矩阵 $\mat{X} \in \R^{T \times d}$ 供给全部三个投影，且每个头施加掩码自注意力，
+\begin{equation}
+\label{eq:mha-decoder}
+\begin{gathered}
+\text{MultiHeadAttention}(\mat{X}) = \text{Concat}(\text{head}_1, \dots, \text{head}_H) \mat{W}^O, \\
+\text{head}_i = \text{MaskedAttention}(\mat{X}\mat{W}_i^Q, \mat{X} \mat{W}_i^K, \mat{X} \mat{W}_i^V).
+\end{gathered}
+\end{equation}
+这一组合称为\emph{多头掩码自注意力}，是仅解码器 LLM 的标准注意力机制，我们将其简称为 MHA。在标准实现中 $d_k = d_v = d/H$，我们将这一公共头维数记为 $d_h = d/H$。
+一些架构让多个查询头共享同一个键值投影。此后，$H_{\rm Q}$ 表示查询头的数目，$H_{\rm KV}$ 表示互异键值头的数目；对 MHA 而言两者重合，即 $H_{\rm Q} = H_{\rm KV} = H$。
+
+\subsubsection{KV 缓存}
+
+考虑自回归解码，可以观察到：在一个头内部，时间步 $t$ 处的注意力输出就是式 \eqref{eq:context_vector} 限制到 $j \le t$ 的结果：
+\begin{equation}
+\label{eq:kv-output}
+\vecb{o}_t = \sum_{j=1}^{t} \alpha_{tj} \vecb{v}_j .
+\end{equation}
+在诸查询中，只有 $\vecb{q}_t$ 通过式 \eqref{eq:att-score} 中的 $\alpha_{tj}$ 进入该表达式，而所有词元 $1, \ldots, t$ 的键与值都是必需的。
+前 $t-1$ 个词元的键与值在先前的步骤中已经算得，因此可以存储并复用而无需重新计算。在追加当前词元的 KV 对之前，实现中恰好持有这 $t-1$ 条缓存记录。这项技术即\textit{KV 缓存}，在 LLM 中被广泛用于通过避免冗余计算来加速推理（inference），代价是内存占用增加。
+缩减这一内存占用正是多查询注意力（MQA）\cite{shazeer2019mqa}（取 $H_{\rm KV} = 1$）与分组查询注意力（GQA）\cite{ainslie2023gqa}（取 $1 < H_{\rm KV} < H_{\rm Q}$）的目标。多头潜在注意力（MLA）\cite{deepseekai2024deepseekv2} 则改为每个词元缓存一个低秩潜在向量，再由它重构出各头的键与值。
+
+
+\subsubsection{计算与内存复杂度}
+
+需要区分三种局面。\emph{训练}时整个序列被一次性处理。推理时，模型先对输入提示词执行一次前向传播，称为\textit{预填充}，随后逐个生成词元，每生成一个词元需要一次\textit{解码}步骤。
+一个注意力层的代价分为在上述局面中呈现不同标度行为的两部分贡献。投影代价涵盖 $\mat{Q}$、$\mat{K}$、$\mat{V}$ 以及输出投影 $\mat{W}^O$ 的计算，注意力代价则涵盖 $\mat{Q}\mat{K}^\top$ 的形成与 $\mat{V}$ 的聚合。两者谁占主导，取决于序列长度是否超过模型维数。
+就内存而言，训练与预填充都要处理注意力矩阵；若将其完全实体化，则占用 $\mathcal{O}(T^2)$ 内存。而在解码步骤中，得益于 KV 缓存，只需要该矩阵的最后一行，即 $\mathcal{O}(T)$ 内存。
+不过缓存本身占用 $M_{\rm KV} = 2 L B T H_{\rm KV} d_h b$ 字节，
+其中 $L$ 为层数，$B$ 为批大小，$b$ 为每个标量所占的字节数。
+对完整 MHA 有 $H_{\rm KV} d_h = d$，而 MQA 与 GQA 取 $H_{\rm KV} < H_{\rm Q}$。该表达式未涵盖 MLA：MLA 不以 $H_{\rm KV}$ 个键值头缓存，而是每个词元、每层缓存一个维数为 $d_c$ 的潜在向量。
+\Cref{tab:attention-complexity} 汇总了一个注意力层在三种局面下的计算代价及相应内存。
+\begin{table}[h]
+\centering
+\caption{一个 MHA 块的每序列、每层复杂度。$T$ 表示序列长度，在解码一列中表示已缓存的词元数；$d$ 为模型维数，$H_{KV}$ 为键值头数，$d_h$ 为头维数。}
+\label{tab:attention-complexity}
+\begin{tabular}{lccc}
+\toprule
+ & \multirow{2}{*}{训练} & \multicolumn{2}{c}{推理} \\
+\cmidrule(lr){3-4}
+ & & 预填充 & 解码（每步） \\
+\midrule
+投影代价 & $\mathcal{O}(T d^2)$ & $\mathcal{O}(T d^2)$ & $\mathcal{O}(d^2)$ \\
+注意力代价 & $\mathcal{O}(T^2 d)$ & $\mathcal{O}(T^2 d)$ & $\mathcal{O}(T d)$ \\
+\midrule
+注意力矩阵内存 & $\mathcal{O}(T^2)$ & $\mathcal{O}(T^2)$ & $\mathcal{O}(T)$ \\
+KV 缓存内存 & -- & $\mathcal{O}(T H_{\rm KV} d_h)$ & $\mathcal{O}(T H_{\rm KV} d_h)$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+训练与预填充共享相同的渐近行为，因为两者都一次性处理整个序列；注意力的本质使其能够在 GPU 上高效并行训练 \cite{vaswani2017attention}，所有成对交互与所有头均可同时计算。相比之下，一个解码步骤只针对缓存处理单个词元，这使两行代价都消去了一个 $T$ 因子。
+因此，训练与预填充通常是计算受限的，而解码通常是内存受限的 \cite{yuan2024efficientinferencesurvey2}：一个解码步骤仅执行 $\mathcal{O}(Td + d^2)$ 次运算，却必须从高带宽内存（HBM）读取整个缓存。这只是典型局面，实际行为取决于批大小、上下文长度、核函数实现、数值精度与硬件。
+
+
+% \subsubsection{Computational Complexity and Advantages}
+
+% The attention mechanism offers several key advantages over recurrent architectures:
+
+% \begin{itemize}
+%     \item \textbf{Parallelization}: Unlike RNNs, which process sequences sequentially, attention computes all pairwise interactions in parallel, making efficient use of GPU hardware.
+    
+%     \item \textbf{Long-Range Dependencies}: The direct connectivity between any two positions in the sequence eliminates the vanishing gradient problem and allows the model to capture dependencies regardless of their distance.
+    
+%     \item \textbf{Interpretability}: The attention weight matrix $\boldsymbol{\alpha}$ provides a differentiable, probabilistic alignment between input and output positions, offering insights into the model's decision-making process.
+% \end{itemize}
+
+%However, the standard attention mechanism has a computational complexity of $\mathcal{O}(n^2)$ with respect to sequence length, which becomes prohibitive for very long sequences.
+
+% However, the standard attention mechanism has a computational complexity of $\mathcal{O}(T^2 d)$ with respect to sequence length $T$ and embedding dimension $d$, which becomes prohibitive for very long sequences. The memory complexity is $\mathcal{O}(T^2)$ for storing the attention matrix, which is the primary bottleneck for long-context inference.
+% Recent advances such as sparse attention, linear attention, and flash attention address this limitation by reducing the quadratic complexity to near-linear or constant time.
+
+\subsection{前馈网络}
+
+前馈网络（FFN）是 Transformer 架构的关键组件，通常约占模型参数量的三分之二 \cite{geva2021ffnmemory}。在现代仅解码器 LLM 中，FFN 采用门控架构 \cite{shazeer2020glu}：
+
+\begin{equation}
+\operatorname{FFN}(\vecb{x}) = \left[ \sigma(\vecb{x}^\top \mat{W}^{\text{gate}}) \odot \vecb{x}^\top \mat{W}^{\text{up}} \right] \mat{W}^{\text{down}},
+\label{eq:ffn_gated}
+\end{equation}
+其中 $\mat{W}^{\text{gate}}, \mat{W}^{\text{up}} \in \R^{d \times d_{\text{ff}}}$ 为门控投影与上投影，$\mat{W}^{\text{down}} \in \R^{d_{\text{ff}} \times d}$ 为下投影，$\sigma(\cdot)$ 表示非线性激活函数（通常为 SiLU/$\text{Swish}_1$ \cite{ramachandran2017swish} 或 GELU \cite{hendrycks2023gelu}），$\odot$ 表示逐元素乘法。扩展因子 $\frac{d_{\text{ff}}}{d}$ 在实践中通常介于 $2$ 到 $4$ 之间。FFN 在每个序列位置上独立且相同地施加；也就是说，同一组权重被每个词元复用，因此与注意力不同，它不在位置之间混合信息。
+
+有两点性质使该组件与众不同。其一，它持有很大一部分权重，却完全由稠密矩阵乘法构成。由于通用矩阵乘法（GEMM）\cite{goto2008anatomy} 已针对 GPU 等现代加速器架构进行了充分优化，FFN 尽管体量庞大，其求值仍然非常快，任何结构化替代方案都必须与这一基线竞争。其二，已有研究认为 FFN 充当键值记忆 \cite{geva2021ffnmemory} 并中介某些事实性关联 \cite{meng2023ffnfactuallocation}，这使得对它的分解不仅关乎效率，也关乎可解释性。
+
+
+\subsection{面向 LLM 的张量分解概览}
+
+\Cref{tab:decompositions} 沿上文讨论的各项性质对五种格式作了比较。CP 是其中最紧凑的一种，也是唯一带有唯一性保证的一种，这使它在因子本身需要承载语义时成为自然的选择。Tucker 为每个模赋予独立的秩，因此适合各模具有不同语义的张量（例如层与头），代价是核心张量随阶数增长。TT 与 TTM 使参数量保持对阶数线性，是大型矩阵（包括嵌入层、投影矩阵与适配器）的常规选择；TTM 还额外保留其所替代矩阵的算子结构。BT 居于两者之间：比 CP 更丰富，又比单个大 Tucker 核心更具结构性。
+
+
+\begin{table}[!htbp]
+\centering
+\caption{\footnotesize 语言模型中所用张量分解格式概览：参数量、主要优势与劣势，以及代表性应用场景。记号遵循 \cref{subsec:tensor-decompositions}。}
+\label{tab:decompositions}
+\footnotesize
+\begin{tblr}{
+  width = \textwidth,
+  colspec = {Q[2.0cm,m,c]Q[2.75cm,m,c]Q[2.9cm,m,c]Q[2.9cm,m,c]X[m,c]},
+  row{1} = {font=\bfseries},
+  rowsep = 3pt,
+  hline{1,7} = {1pt},
+  hline{2} = {0.6pt},
+  hline{3,4,5,6} = {0.6pt, gray7},
+}
+分解 & 参数量 & 优势 & 劣势 & 在 LLM 中的自然应用场景 \\
+CP \newline \cite{hitchcock1927cp}, \cite{carroll1970analysis}, \cite{harshman1970foundations} & $R \sum_n I_n$ & 最紧凑；在温和条件下唯一，故因子可解释 & CP 秩为 NP 难；最优近似可能不存在；拟合不稳定 & 紧凑嵌入表 \cite{zhou2026tensorizingengram}；因子化 KV 缓存 \cite{zhang2026tpa} \\
+Tucker \cite{tucker1966some} & $\prod_n R_n+\sum_n I_nR_n$ & 逐模取秩；压缩灵活 & 核心张量随阶数 $N$ 指数增长；规范自由度使因子不可直接解释 & 跨头因子共享 \cite{gu2025tensorllm}, \cite{li2026lestd}；KV 缓存中的跨头冗余 \cite{klein2026tuckerattention} \\
+TT \cite{oseledets2011tensor} & $\sum_n R_{n-1}I_nR_n$ & 参数量对阶数 $N$ 线性 & 规范自由度；TT 秩依赖于所选的重排方式 & 张量化嵌入层 \cite{xu2023tensorgpt}、投影矩阵 \cite{yang2024comera}、适配器 \cite{anjum2024ttlora} \\
+TTM \cite{oseledets2010ttm} & $\sum_n R_{n-1}I_nJ_nR_n$ & 保留算子结构 & 与 TT 相同的规范自由度 & 张量化嵌入层 \cite{hrinchuk2020tensorized}、投影矩阵 \cite{chekalina2023ttm}、适配器 \cite{hu2024dota} \\
+BT \cite{lathauwer2008btd} & $\sum_k \Bigl[ \Pi_n R_{kn} + \sum_n I_{n} R_{kn} \Bigr]$ & 介于 CP 的紧凑性与 Tucker 的灵活性之间 & 超参数更多（$K$ 及每项的秩） & 将注意力改写为 BT 表示 \cite{ma2019tensorized} \\
+\end{tblr}
+\end{table}
+
+% The table also highlights that the usefulness of a tensor decomposition depends on the object being tensorized. An embedding table, a layer-head projection stack, a PEFT update tensor, and a KV cache impose different constraints on rank, contraction order, training stability. Every tensorized-LM method should report four details alongside parameter count: (i) the tensorization shape, (ii) the rank pattern, (iii) the contraction strategy, and (iv) the semantic meaning of each mode.
+
+\section{生命周期总览}
+\label{sec:lifecycle-overview}
+
+本节介绍组织本综述的生命周期分类法。\Cref{subsec:taxonomy} 定义各阶段、阶段边界，以及对影响不止一个阶段的方法进行归类所采用的规则。\Cref{subsec:illustrative-examples} 随后以 LLaMA-3-8B 为基础给出具体示例，使该分类法落到实处。生命周期视角与 \cref{sec:components} 中的组件视角互为补充，后者关注哪些 Transformer 对象被张量化；\cref{sec:lifecycle-analysis} 则对各阶段的目标加以形式化并综述相应文献。
+
+\subsection{生命周期分类法}
+\label{subsec:taxonomy}
+
+我们按照语言模型的\emph{生命周期}来组织张量方法：词元化、嵌入、预训练、适配、压缩、推理与可解释性。适配阶段以参数高效微调（PEFT）为主要代表，但也包含为下游用途修改预训练模型的其他过程。\emph{生命周期}一词标识的是引入、利用或分析张量结构的时点；它并不意味着每个模型都遵循一条不可逆的线性序列。例如，适配与压缩可以重复进行或以任意先后次序施加，而可解释性分析可以在部署之前、之中或之后开展。
+
+我们用四个属性来区分各阶段：(i) 在模型生命周期中的\emph{干预时机}，(ii) 主要的\emph{张量对象}，(iii) 方法所优化的\emph{目标}，以及 (iv) \emph{评估准则}。词元化作用于离散的词表与切分规则；嵌入作用于连续的词元表示；预训练学习基座模型的参数；适配学习针对预训练模型的任务或领域特定更新；压缩变换已训练好的模型以降低其资源占用；推理作用于注意力因子、KV 缓存等运行时对象；可解释性则分析、重新表述或刻意施加多重线性结构，以揭示模型机制。这些边界至关重要，因为两个方法可能使用同一种分解，却在求解不同的优化问题，并需要不同的成功证据。
+
+因此，生命周期视角与组件视角是两套正交的分类法。一个方法可以同时由张量化\emph{何时}引入以及它作用于\emph{什么}来定位。例如，FFN 权重的 TTM 表示可以在预训练期间学习得到，可以为压缩而事后拟合，也可以仅用于适配更新。对于跨越多个阶段的方法，我们依据张量约束在何处引入以及优化的是哪个目标，来赋予其主要的生命周期标签；下游影响则作为跨阶段的后果予以记录。因此，一个完整的方法描述至少应说明生命周期阶段、组件或张量对象、张量化方案、分解族与秩、训练机制以及评估指标。\Cref{fig:lifecycle} 展示了该分类法及各阶段的代表性工作，而 \cref{sec:lifecycle-analysis} 的相应小节给出形式化的问题定义与更广泛的文献覆盖。
+% \textcolor{red}{here note, we place only the most relevant works in the figure, while the full list of works is in the corresponding subsections}
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  stage/.style={
+    draw=black!70, line width=1.1pt,
+    rounded corners=7pt,
+    fill=ColStage!55,
+    minimum width=3.0cm, minimum height=0.75cm,
+    font=\small\bfseries, align=center,
+    inner sep=3pt, outer sep=0pt
+  },
+  paperbox/.style={
+    draw=black!60, line width=0.75pt,
+    rounded corners=4pt,
+    fill=white,
+    text width=2.90cm,
+    font=\scriptsize,
+    align=left,
+    inner sep=5pt, outer sep=0pt
+  },
+  nowork/.style={
+    draw=black!40, line width=0.75pt,
+    rounded corners=4pt,
+    fill=ColNone!60,
+    text width=2.90cm,
+    font=\scriptsize,
+    align=left,
+    inner sep=5pt, outer sep=0pt
+  },
+  flow/.style={
+    -{Stealth[length=6pt,width=4pt]},
+    line width=1.0pt, black!70
+  },
+  drop/.style={
+    -{Stealth[length=4pt,width=3pt]},
+    line width=0.75pt, black!55
+  },
+  wrap/.style={
+    -{Stealth[length=6pt,width=4pt]},
+    line width=1.0pt, black!70,
+    rounded corners=11pt
+  },
+]
+\definecolor{ColStage}{RGB}{141,160,203}
+\definecolor{ColNone}{RGB}{220,220,220}
+\def\XS{3.8}
+\def\RY{-5.5}
+\def\Dg{0.50}
+%% ROW 1
+\node[stage] (tok)  at ({0.5*\XS}, 0) {词元化};
+\node[stage] (emb)  at ({1.5*\XS}, 0) {嵌入};
+\node[stage] (pre)  at ({2.5*\XS}, 0) {预训练};
+%% ROW 2
+\node[stage] (peft)  at ({0*\XS}, \RY) {适配};
+\node[stage] (compr)  at ({1*\XS}, \RY) {压缩};
+\node[stage] (infer)  at ({2*\XS}, \RY) {推理};
+\node[stage] (interp) at ({3*\XS}, \RY) {可解释性};
+%% Row-1 arrows
+\draw[flow] (tok.east)   -- (emb.west);
+\draw[flow] (emb.east)   -- (pre.west);
+%% Row-2 arrows
+\draw[flow] (peft.east)  -- (compr.west);
+\draw[flow] (compr.east) -- (infer.west);
+\draw[flow] (infer.east) -- (interp.west);
+%% Wrap arrow
+\draw[wrap]
+    (pre.east)
+    -- ++(0.80, 0)
+    -- ++(0, -4.50)
+    -- ({-2.2}, {-4.50})
+    -- ({-2.2}, {\RY})
+    -- (peft.west);
+%% PAPER BOXES
+\node[nowork, below=\Dg cm of tok] (tok_p) {%
+  \makebox[\linewidth][c]{\textbf{\S\ref{subsec:tokenization}}}\\[2pt]%
+  \rule{\linewidth}{0.4pt}\\[2pt]%
+  \makebox[\linewidth][c]{\textit{暂无已发表工作}}%
+};
+\draw[drop] (tok.south) -- (tok_p.north);
+\node[paperbox, below=\Dg cm of emb] (emb_p) {%
+  \makebox[\linewidth][c]{\textbf{\S\ref{subsec:embeddings}}}\\[2pt]%
+  \rule{\linewidth}{0.4pt}\\[2pt]%
+  TT-embeddings \cite{hrinchuk2020tensorized}, TensorGPT \cite{xu2023tensorgpt}, TN-gram \cite{zhou2026tensorizingengram}, 
+  MorphTE \cite{gan2022morphte}%
+};
+\draw[drop] (emb.south) -- (emb_p.north);
+\node[paperbox, below=\Dg cm of pre] (pre_p) {%
+  \makebox[\linewidth][c]{\textbf{\S\ref{subsec:pre-training}}}\\[2pt]%
+  \rule{\linewidth}{0.4pt}\\[2pt]%
+  Multi-Linear Attention \cite{ma2019tensorized}, GPT-TTM \cite{chekalina2023ttm}, 
+  Hypoformer \cite{li2022hypoformer}, Shapeshifter \cite{pahani2021shapeshifter},  CoMERA \cite{yang2024comera}%
+};
+\draw[drop] (pre.south) -- (pre_p.north);
+\node[paperbox, below=\Dg cm of peft] (peft_p) {%
+  \makebox[\linewidth][c]{\textbf{\S\ref{subsec:peft}}}\\[2pt]%
+  \rule{\linewidth}{0.4pt}\\[2pt]%
+  KronA \cite{edalati2022krona}, DoTA \cite{hu2024dota}, LoRETTA \cite{yang2024loretta},
+  LoRTA \cite{hounie2024lorta}, LoTR \cite{bershatsky2024lotr}, TT-LoRA \cite{anjum2024ttlora}, MetaTT \cite{lopezpiqueres2025metatt}, QuanTA \cite{chen2024quanta},
+  Quantum-PEFT \cite{koikeakino2025quantumpeft}, TeRA \cite{gu2026tera}%
+};
+\draw[drop] (peft.south) -- (peft_p.north);
+\node[paperbox, below=\Dg cm of compr] (compr_p) {%
+  \makebox[\linewidth][c]{\textbf{\S\ref{subsec:compression}}}\\[2pt]%
+  \rule{\linewidth}{0.4pt}\\[2pt]%
+  KnGPT \cite{edalati2021kroneckergpt}, TQCompressor \cite{abronin2024tqcompressor}, 
+  TensorLLM \cite{gu2025tensorllm}, LeSTD \cite{li2026lestd}, CompactifAI \cite{compactifai},
+  Saten \cite{solgi2025saten}, LatentLLM \cite{koikeakino2025latentllm}%
+};
+\draw[drop] (compr.south) -- (compr_p.north);
+\node[paperbox, below=\Dg cm of infer] (infer_p) {%
+  \makebox[\linewidth][c]{\textbf{\S\ref{subsec:inference}}}\\[2pt]%
+  \rule{\linewidth}{0.4pt}\\[2pt]%
+  TPA \cite{zhang2026tpa}, Tucker Attention \cite{klein2026tuckerattention}, DecoQuant \cite{liu2024decoquant}, EinSort \cite{koikeakino2026einsort}%
+};
+\draw[drop] (infer.south) -- (infer_p.north);
+\node[paperbox, below=\Dg cm of interp] (interp_p) {%
+  \makebox[\linewidth][c]{\textbf{\S\ref{subsec:interpretability}}}\\[2pt]%
+  \rule{\linewidth}{0.4pt}\\[2pt]%
+  Bilinear MLPs \cite{pearce2025bilinearmlp}, PolySAE \cite{koromilas2026polysae}, TensorLens \cite{atad2026tensorlens}%
+};
+\draw[drop] (interp.south) -- (interp_p.north);
+\end{tikzpicture}}
+\caption{七阶段生命周期分类法，及各阶段的代表性张量方法。箭头表示常见的模型开发与部署流程：各阶段可以被重新访问、重新排序或事后回溯分析。每个阶段对应 \cref{sec:lifecycle-analysis} 中的一个小节。}
+\label{fig:lifecycle}
+\end{figure}
+
+每个生命周期阶段都暴露出不同的结构化对象和不同的成功标准。\Cref{tab:lifecycle-stages} 总结了各阶段的主要张量化对象、预期收益与特征性风险。所列风险是阶段特定的；横贯各阶段的问题——包括秩的选择、对张量化形状的敏感性、优化稳定性、算子（kernel）支持，以及压缩-实现鸿沟（理论压缩与实际收益之间的差距）——在 \cref{subsec:gaps} 中讨论。
+
+\begin{table}[!htbp]
+\centering
+\caption{\footnotesize 张量方法的生命周期视角：各阶段的主要张量化对象、预期收益与特征性风险。}
+\label{tab:lifecycle-stages}
+\footnotesize
+\begin{tblr}{
+  width = \textwidth,
+  colspec = {Q[2.2cm,m,c]Q[3.4cm,m,c]Q[4.0cm,m,c]X[m,c]},
+  row{1} = {font=\bfseries},
+  rowsep = 3pt,
+  hline{1,9} = {1pt},
+  hline{2} = {0.6pt},
+  hline{3-8} = {0.6pt, gray7},
+}
+阶段 & 张量化对象 & 预期收益 & 主要风险或代价 \\
+词元化 & 词表、文本切分 & 按词元相关性组织词表结构 \emph{（暂无已发表工作）} & 离散且不可微的映射不提供可供因子分解的对象 \\
+嵌入 & 词元表示 & 紧凑的词表规模嵌入表 & 词元表示的表达能力下降 \\
+预训练 & 权重、优化器状态 & 降低权重与优化器状态的内存占用；引入结构先验 & 优化稳定性；未知的标度行为 \\
+适配（以 PEFT 为主） & 适配更新量 & 极致的参数高效微调 & 未合并的适配器使每次前向传播都增加缩并运算 \\
+压缩 & 预训练权重 & 无需完全重训练即可降低内存 & 质量损失与延迟增加 \\
+推理 & KV 缓存、注意力因子 & 长上下文下逐词元的缓存内存节省 & 压缩未能转化为解码加速 \\
+可解释性 & 激活、权重 & 显式的多重线性结构；回路的图示化表示 & 强加多重线性需要从头预训练 \\
+\end{tblr}
+\end{table}
+
+该分类法还阐明了为何仅凭分解名称不足以进行比较。例如，TT 与 TTM 出现在嵌入、预训练、适配和压缩等多个阶段，但其角色各不相同：它们可以定义可训练的基座模型参数化、约束一个更新量，或逼近一个固定的预训练权重。反过来，同一个生命周期阶段可以容纳多个分解族，它们具有不同的秩概念与缩并代价。跨阶段的依赖关系进一步使评估复杂化：预训练期间选定的秩可能约束后续适配的容量；训练后压缩会改变推理期间观察到的算子与内存流量；而可解释性分析既可以研究原始模型，也可以研究张量化后的模型。因此，比较应在共享的生命周期目标下进行，并同时报告阶段特定的质量与系统层面的后果。
+
+% \Cref{tab:draft-processing-chain} lists, for each lifecycle stage, the target tensor object, the expected benefit, and the primary tradeoff. It also illustrates that the same decomposition can carry very different meanings depending on context: a TT factorization of an embedding table reduces memory during inference, whereas the same structure applied to adapter updates controls gradient flow during fine-tuning. Conversely, a single stage can accommodate multiple decomposition families: adaptation can use CP, TT, Tucker, or MPO, and interpretability can apply CP or Tucker factor analysis. The table further exposes inter-stage dependencies: an embedding factorization may affect downstream softmax behavior, tensor ranks fixed during pre-training may constrain subsequent PEFT capacity, and cache tensorization may interact with other attention tensorization techniques.
+
+
+\subsection{$\llama$ 的示例说明}
+\label{subsec:illustrative-examples}
+为了把抽象的生命周期各阶段落到具体方法上，本节对每个阶段各讲解一个代表性方法；各阶段方法的形式化描述与全面比较见 \cref{sec:lifecycle-analysis}。
+词元化阶段没有示例：尽管它仍是分类体系的一部分，但尚无已发表工作对该阶段进行张量化（\cref{subsec:tokenization}）；因此，讲解从嵌入开始。
+本节通篇以 $\llama$ \cite{grattafiori2024llama3} 作为贯穿示例，其配置为 $|V|{=}128{,}000$、$d{=}4096$、$L{=}32$、$H_{\rm Q} = 32$、$H_{\rm KV} = 8$、$d_{\rm ff}{=}14336$、$d_h{=}128$，总参数量约 ${\approx}8.03$B。并非每个阶段都有针对该确切模型的已发表方法，因此在必要之处对记号作了相应调整。
+\begin{figure}[!htbp]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  vec/.style={circle, draw=black!80, line width=1.0pt,
+              minimum size=1.0cm, inner sep=0pt, font=\small},
+  core/.style={circle, draw=black!80, line width=1.0pt,
+              minimum size=0.75cm, inner sep=0pt, font=\scriptsize},
+  mat/.style={circle, draw=black!80, line width=1.0pt,
+              minimum size=1.40cm, inner sep=0pt, font=\small},
+  bond/.style={line width=1.0pt, black!80},
+  leg/.style={line width=1.0pt, black!80},
+  lbl/.style={font=\small},
+  slbl/.style={font=\scriptsize, text=black},
+]
+%% LEFT: Tensorized Embedding Table
+\definecolor{ColI} {RGB}{102,194,165}
+\definecolor{ColII}{RGB}{252,141, 98}
+\definecolor{ColV} {RGB}{141,160,203}
+\pgfmathsetmacro{\RadCirc}{0.50}
+\pgfmathsetmacro{\RadCore}{0.375}
+\pgfmathsetmacro{\Dy}{2.0}
+\pgfmathsetmacro{\Dx}{1.15}
+\pgfmathsetmacro{\Lleg}{0.50}
+\pgfmathsetmacro{\Llegv}{0.80}
+\pgfmathsetmacro{\PadX}{0.3}
+\pgfmathsetmacro{\PadY}{0.95}
+\pgfmathsetmacro{\Lcx}{0.0}
+\pgfmathsetmacro{\Rx}{5.0}
+\pgfmathsetmacro{\Ytop}{3.5}
+\pgfmathsetmacro{\Ybot}{-3.5}
+\pgfmathsetmacro{\Yone}{\Ytop - \PadY}
+\pgfmathsetmacro{\Ytwo}{\Yone - \Dy}
+\pgfmathsetmacro{\YV}{\Ybot + \PadY}
+\pgfmathsetmacro{\Ymid}{0.5*(\Ytop+\Ybot)}
+\pgfmathsetmacro{\Yelps}{0.5*(\Ytwo+\YV)}
+\pgfmathsetmacro{\Rshift}{-0.5*\RadCore}
+\pgfmathsetmacro{\RYone}{\Yone - \Rshift}
+\pgfmathsetmacro{\RYtwo}{\Ytwo - \Rshift}
+\pgfmathsetmacro{\RYV}{\YV   - \Rshift}
+\pgfmathsetmacro{\LboxL}{\Lcx - \RadCirc - \PadX}
+\pgfmathsetmacro{\LboxR}{\Lcx + \RadCirc + \Llegv + \PadX}
+\pgfmathsetmacro{\RboxL}{\Rx - \RadCore - \PadX}
+\pgfmathsetmacro{\RboxR}{\Rx + 3*\Dx + \RadCore + \PadX}
+\pgfmathsetmacro{\ArrLen}{1.0}
+\pgfmathsetmacro{\ArrMid}{0.5*(\LboxR + \RboxL)}
+\pgfmathsetmacro{\ArrL}{\ArrMid - 0.5*\ArrLen}
+\pgfmathsetmacro{\ArrR}{\ArrMid + 0.5*\ArrLen}
+\pgfmathsetmacro{\ABH}{0.10}
+\pgfmathsetmacro{\AHH}{0.22}
+\pgfmathsetmacro{\AHD}{0.26}
+\node[vec, fill=ColI!45]  (E1) at (\Lcx, \Yone) {$\mathbf{e}_1$};
+\node[vec, fill=ColII!45] (E2) at (\Lcx, \Ytwo) {$\mathbf{e}_2$};
+\node[lbl]                     at (\Lcx, \Yelps) {$\vdots$};
+\node[vec, fill=ColV!45]  (EV) at (\Lcx, \YV)   {$\mathbf{e}_V$};
+\foreach \N in {E1, E2, EV}{
+  \draw[leg] (\N.east) -- ++(\Llegv, 0) node[above, slbl] {$d$};
+}
+\fill[white, draw=black!80, line width=0.9pt]
+    (\ArrL, {\Ymid+\ABH}) -- ({\ArrR-\AHD}, {\Ymid+\ABH})
+    -- ({\ArrR-\AHD}, {\Ymid+\AHH}) -- (\ArrR, \Ymid)
+    -- ({\ArrR-\AHD}, {\Ymid-\AHH}) -- ({\ArrR-\AHD}, {\Ymid-\ABH})
+    -- (\ArrL, {\Ymid-\ABH}) -- cycle;
+\foreach \k in {1,2,3,4}{
+  \node[core, fill=ColI!45] (R1\k) at ({\Rx+(\k-1)*\Dx}, \RYone) {$\ten{G}^{(1)}_\k$};
+}
+\foreach \k/\kk in {1/2, 2/3, 3/4}{
+  \draw[bond] (R1\k) -- (R1\kk) node[midway, above=1pt, slbl] {$R_\k$};
+}
+\foreach \k in {1,2,3,4}{
+  \draw[leg] (R1\k.south) -- ++(0, -\Lleg) node[right=1pt, slbl] {$d_\k$};
+}
+\foreach \k in {1,2,3,4}{
+  \node[core, fill=ColII!45] (R2\k) at ({\Rx+(\k-1)*\Dx}, \RYtwo) {$\ten{G}^{(2)}_\k$};
+}
+\foreach \k/\kk in {1/2, 2/3, 3/4}{
+  \draw[bond] (R2\k) -- (R2\kk) node[midway, above=1pt, slbl] {$R_\k$};
+}
+\foreach \k in {1,2,3,4}{
+  \draw[leg] (R2\k.south) -- ++(0, -\Lleg) node[right=1pt, slbl] {$d_\k$};
+}
+\node[lbl] at ({\Rx + 1.5*\Dx}, \Yelps) {$\vdots$};
+\foreach \k in {1,2,3,4}{
+  \node[core, fill=ColV!45] (RV\k) at ({\Rx+(\k-1)*\Dx}, \RYV) {$\ten{G}^{(V)}_\k$};
+}
+\foreach \k/\kk in {1/2, 2/3, 3/4}{
+  \draw[bond] (RV\k) -- (RV\kk) node[midway, above=1pt, slbl] {$R_\k$};
+}
+\foreach \k in {1,2,3,4}{
+  \draw[leg] (RV\k.south) -- ++(0, -\Lleg) node[right=1pt, slbl] {$d_\k$};
+}
+\begin{pgfonlayer}{foreground}
+\node[font=\small\bfseries] at ({0.5*(\LboxL+\RboxR)}, \Ytop + 0.5)
+    {嵌入表的逐行 TT 压缩};
+\pgfmathsetmacro{\Sw}{0.30}
+\draw[black, line width=1.3pt, line cap=rect]
+    ({\LboxL+\Sw}, \Ytop) -- (\LboxL, \Ytop) -- (\LboxL, \Ybot) -- ({\LboxL+\Sw}, \Ybot);
+\draw[black, line width=1.3pt, line cap=rect]
+    ({\LboxR-\Sw}, \Ytop) -- (\LboxR, \Ytop) -- (\LboxR, \Ybot) -- ({\LboxR-\Sw}, \Ybot);
+% \node[lbl] at ({0.5*(\LboxL+\LboxR)}, \Ybot - 0.5)
+%     {$\mathbf{E}\!\in\!\mathbb{R}^{V\times d}$};
+\node[slbl] at (\ArrMid, \Ymid + 0.75) {重排};
+\node[slbl] at (\ArrMid, \Ymid + 0.45) {$+$ TT-SVD};
+\draw[black, line width=1.3pt, line cap=rect]
+    ({\RboxL+\Sw}, \Ytop) -- (\RboxL, \Ytop) -- (\RboxL, \Ybot) -- ({\RboxL+\Sw}, \Ybot);
+\draw[black, line width=1.3pt, line cap=rect]
+    ({\RboxR-\Sw}, \Ytop) -- (\RboxR, \Ytop) -- (\RboxR, \Ybot) -- ({\RboxR-\Sw}, \Ybot);
+% \node[lbl] at ({0.5*(\RboxL+\RboxR)}, \Ybot - 0.5)
+%     {$\mathcal{E}\!\in\!\mathbb{R}^{V \times d_1\times d_2 \times d_3 \times d_4}$};
+\end{pgfonlayer}
+
+\draw[black!35, line width=0.6pt] (9.64, -3.7) -- (9.64, 4.3);
+%% RIGHT: MPO Weight Parameterization
+\begin{scope}[shift={(10.655, 0)}]
+\tikzset{core/.style={circle, draw=black!80, line width=1.0pt,
+              minimum size=1.10cm, inner sep=0pt, font=\scriptsize}}
+\definecolor{ColX}{RGB}{102,194,165}
+\definecolor{ColW}{RGB}{252,141, 98}
+\pgfmathsetmacro{\RadVec}{0.50}
+\pgfmathsetmacro{\RadMat}{0.70}
+\pgfmathsetmacro{\RadCore}{0.55}
+\pgfmathsetmacro{\Lleg}{0.65}
+\pgfmathsetmacro{\Llegout}{0.75}
+\pgfmathsetmacro{\PadX}{0.32}
+\pgfmathsetmacro{\PadY}{0.42}
+\pgfmathsetmacro{\Lxx}{0.0}
+\pgfmathsetmacro{\Cy}{0.0}
+\pgfmathsetmacro{\Dh}{2.0}
+\pgfmathsetmacro{\LWx}{\Lxx + \Dh}
+\pgfmathsetmacro{\Rx}{6.5}
+\pgfmathsetmacro{\Dx}{1.55}
+\pgfmathsetmacro{\RyTop}{1.10}
+\pgfmathsetmacro{\RyBot}{-1.10}
+\pgfmathsetmacro{\RboxL}{\Rx - \RadCore - \PadX}
+\pgfmathsetmacro{\RboxR}{\Rx + 3*\Dx + \RadCore + \PadX}
+\pgfmathsetmacro{\RboxT}{\RyTop + \RadCore + \Lleg + \PadY}
+\pgfmathsetmacro{\RboxB}{\RyBot - \RadCore - \Lleg - \PadY}
+\pgfmathsetmacro{\LboxL}{\Lxx - \RadVec - \PadX}
+\pgfmathsetmacro{\LboxR}{\LWx + \RadMat + \Llegout + \PadX}
+\pgfmathsetmacro{\LboxT}{\RboxT}
+\pgfmathsetmacro{\LboxB}{\RboxB}
+\pgfmathsetmacro{\ArrLen}{1.0}
+\pgfmathsetmacro{\ArrMid}{0.5*(\LboxR + \RboxL)}
+\pgfmathsetmacro{\ArrL}{\ArrMid - 0.5*\ArrLen}
+\pgfmathsetmacro{\ArrR}{\ArrMid + 0.5*\ArrLen}
+\pgfmathsetmacro{\ArrY}{\Cy}
+\pgfmathsetmacro{\ABH}{0.10}
+\pgfmathsetmacro{\AHH}{0.22}
+\pgfmathsetmacro{\AHD}{0.26}
+\node[vec, fill=ColX!35] (Xv) at (\Lxx,  \Cy) {$\vecb{x}$};
+\node[mat, fill=ColW!40] (W)  at (\LWx, \Cy) {$\mat{W}$};
+\draw[bond] (Xv.east) --  (W.west)       node[midway, above=2pt, slbl] {$I$};
+\draw[leg]  (W.east) -- ++(\Llegout, 0)  node[above=1pt, slbl] {$J$};
+\fill[white, draw=black!80, line width=0.9pt]
+    (\ArrL, {\ArrY+\ABH}) -- ({\ArrR-\AHD}, {\ArrY+\ABH})
+    -- ({\ArrR-\AHD}, {\ArrY+\AHH}) -- (\ArrR, \ArrY)
+    -- ({\ArrR-\AHD}, {\ArrY-\AHH}) -- ({\ArrR-\AHD}, {\ArrY-\ABH})
+    -- (\ArrL, {\ArrY-\ABH}) -- cycle;
+
+\pgfmathsetmacro{\RectL}{\Rx - \RadCore}
+\pgfmathsetmacro{\RectR}{\Rx + 3*\Dx + \RadCore}
+\pgfmathsetmacro{\RectCx}{0.5*(\RectL + \RectR)}
+\pgfmathsetmacro{\RectT}{\RyTop + \RadCore}
+\pgfmathsetmacro{\RectB}{\RyTop - \RadCore}
+\draw[draw=black!80, line width=1.0pt, fill=ColX!35, rounded corners=5pt]
+    (\RectL, \RectB) rectangle (\RectR, \RectT);
+\node[font=\small] at (\RectCx, \RyTop) {$\ten{X}$};
+\node[core, fill=ColW!40] (W1) at (\Rx,           \RyBot) {$\ten{W}^{(1)}$};
+\node[core, fill=ColW!40] (W2) at ({\Rx+\Dx},     \RyBot) {$\ten{W}^{(2)}$};
+\node[core, fill=ColW!40] (W3) at ({\Rx+2*\Dx},   \RyBot) {$\ten{W}^{(3)}$};
+\node[core, fill=ColW!40] (W4) at ({\Rx+3*\Dx},   \RyBot) {$\ten{W}^{(4)}$};
+\foreach \a/\b/\lab in {1/2/1, 2/3/2, 3/4/3}{
+  \draw[bond] (W\a) -- (W\b) node[midway, above=1pt, slbl] {$R_\lab$};
+}
+\foreach \k in {1,2,3,4}{
+  \draw[leg] (W\k.south) -- ++(0, -\Lleg) node[right=1pt, slbl] {$J_\k$};
+}
+\foreach \k in {1,2,3,4}{
+  \draw[bond] ({\Rx+(\k-1)*\Dx}, \RectB) -- (W\k.north) node[midway, right=2pt, slbl] {$I_\k$};
+}
+\begin{pgfonlayer}{foreground}
+\node[font=\small\bfseries] at ({0.5*(\LboxL+\RboxR)}, 4.0)
+    {FFN 投影的 TTM 参数化};
+% \node[lbl] at ({0.5*(\LboxL+\LboxR)}, -4.0) {$\mat{W} \in \mathbb{R}^{I\times J}$};
+\node[slbl] at (\ArrMid, \ArrY + 0.42) {TTM};
+% \node[lbl] at ({0.5*(\RboxL+\RboxR)}, -4.0)
+%     {$\ten{W} \in \R^{R_{n-1} \times I_n \times J_N \times R_n}$, $n=1,2,3,4$};
+\path (0, 4.3) -- (0, -3.7);
+\end{pgfonlayer}
+\end{scope}
+\end{tikzpicture}}
+\caption{\textit{左}：每条嵌入行向量 $\vecb{e}_i$ 被重排为张量 $\ten{E}^{(i)}$，随后通过 TT-SVD \cite{oseledets2011tensor} 用以 $\ten{G}^{(i)}_n \in \R^{R_{n-1} \times d_n \times R_n}$ 为核心的 TT 分解对其进行近似。\textit{右}：稠密矩阵 $\mat{W}\in \R^{I \times J}$ 由一条 TTM 核心链 $\ten{W}^{(n)} \in \R^{R_{n-1} \times I_n \times J_n \times R_n}$ 表示。重排后的输入 $\ten{X} \in \R^{I_1 \times I_2 \times I_3 \times I_4}$ 直接与该核心链缩并，产生因子化的输出 $\ten{Y}\in\R^{J_1\times J_2 \times J_3 \times J_4}$。}\label{fig:ex-emb-train}
+\end{figure}
+
+\paragraph{嵌入。} 对嵌入表进行张量化的一种方式是逐行分解：把每一行重排为一个高阶张量并独立分解。TensorGPT \cite{xu2023tensorgpt} 对每个词元嵌入单独压缩。这保留了行与行之间的独立性，契合嵌入层的查找表本质，也使该方案在词表变化时依然有效。在 $\llama$ 中，嵌入表 $\mat{E}\in\R^{128000\times 4096}$ 约含 525M 个参数，且由于该模型不对输入嵌入与输出嵌入做权重绑定 \cite{wolf2017weighttying1}, \cite{inan2017weighttying2}，仅此一张表就约占全部参数的 $6.5\%$。特征轴可以整齐地分解为 $d = 4096 = 8^4$，因此每一行都成为四阶张量，可做 TT 秩为 $(1, R_1, R_2, R_3, 1)$ 的 TT 分解，如 \cref{fig:ex-emb-train}（左）所示。该技术是免训练的，因为 TT-SVD \cite{oseledets2011tensor} 直接作用于预训练好的嵌入。取 $R_1 = R_2 = R_3 = R$ 时，整张表的参数开销为 $128{,}000 \times 16R(1+R) \approx 2R(1+R) \times 10^6$。秩决定了这里的权衡：取 $R=1$ 可将该表压缩 $128{\times}$，而 $R=4$ 只压缩 $12.8{\times}$，但由于 TT-SVD 的截断误差随秩增大而减小，$R=4$ 能保留更多原始嵌入信息。此类压缩在经验上的质量代价见 \cite{xu2023tensorgpt} 的报告。
+
+\paragraph{预训练。}
+从头训练一个采用张量结构权重矩阵的语言模型，是把张量结构用作归纳偏置的最直接方式。
+一种自然的做法是在训练前用 TTM 表示来参数化每个大型稠密权重矩阵 \cite{chekalina2023ttm}。这样稠密矩阵从不会被显式构造出来；取而代之，输入 $\vecb{x}$ 被重排为张量并直接与 TTM 的各核缩并，因此权重及其优化器状态的规模随核而定。
+举一个具体例子：把 TTM 表示用于 $\llama$ 中某个 FFN 块的下投影 $\mat{W}\in\R^{14336\times 4096}$，其输入、输出维度分别分解为 $14336 = 8\times 14\times 16\times 8$ 与 $4096 = 8^4$。如 \cref{fig:ex-emb-train}（右）所示，这给出由四个核组成的 TTM 链
+\begin{equation*}
+\mathcal{W}_1\in\R^{1\times 8\times 8\times R_1},\quad
+\mathcal{W}_2\in\R^{R_1\times 14\times 8\times R_2},\quad
+\mathcal{W}_3\in\R^{R_2\times 16\times 8\times R_3},\quad
+\mathcal{W}_4\in\R^{R_3\times 8\times 8\times 1}.
+\end{equation*}
+若取 $R_1 = R_2 = R_3 = R$，参数总数为 $128R + 240R^2$，而稠密矩阵则为 $14336\times 4096\approx 58.7\text{M}$。例如在秩 $R=64$ 时，TTM 约存储 1M 个参数，对应这一个投影约 $60{\times}$ 的压缩率。Chekalina 等人 \cite{chekalina2023ttm} 证明，用这种 TTM 参数化的层训练 GPT-2（在足够高的秩下）只带来很小的困惑度上升，说明达到这一质量水平并不必须使用稠密参数化
+
+\begin{figure}[!htpb]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  mat/.style={circle, draw=black!80, line width=1.0pt,
+              minimum size=1.60cm, inner sep=0pt, font=\normalsize},
+  core/.style={circle, draw=black!80, line width=1.0pt,
+              minimum size=1.05cm, inner sep=0pt, font=\small},
+  fac/.style={circle, draw=black!80, line width=1.0pt,
+              minimum size=1.05cm, inner sep=0pt, font=\tiny},
+  bond/.style={line width=1.0pt, black!80},
+  leg/.style={line width=1.0pt, black!80},
+  lbl/.style={font=\small},
+  slbl/.style={font=\scriptsize, text=black},
+]
+
+% LEFT: Kronecker Adapter
+\definecolor{ColW}{RGB}{141,160,203}
+\definecolor{ColA}{RGB}{102,194,165}
+\definecolor{ColB}{RGB}{252,141, 98}
+\pgfmathsetmacro{\RadMat}{0.80}
+\pgfmathsetmacro{\RadCore}{0.525}
+\pgfmathsetmacro{\Lleg}{0.72}
+\pgfmathsetmacro{\PadX}{0.32}
+\pgfmathsetmacro{\PadY}{0.45}
+\pgfmathsetmacro{\LWx}{0.0}
+\pgfmathsetmacro{\LWy}{0.0}
+\pgfmathsetmacro{\DyAB}{1.70}
+\pgfmathsetmacro{\DyABH}{\DyAB/2}
+\pgfmathsetmacro{\NegDyABH}{-\DyAB/2}
+\pgfmathsetmacro{\FanHalf}{\DyABH + \RadCore}
+\pgfmathsetmacro{\NegFanHalf}{-\DyABH - \RadCore}
+\pgfmathsetmacro{\FanDepth}{0.72}
+\pgfmathsetmacro{\BondLen}{0.58}
+\pgfmathsetmacro{\LFanX}{4.40}
+\pgfmathsetmacro{\LFanBX}{\LFanX + \FanDepth}
+\pgfmathsetmacro{\CoreX}{\LFanBX + \BondLen + \RadCore}
+\pgfmathsetmacro{\RFanBX}{\CoreX + \RadCore + \BondLen}
+\pgfmathsetmacro{\RFanX}{\RFanBX + \FanDepth}
+\pgfmathsetmacro{\LboxL}{\LWx - \RadMat - \Lleg - \PadX}
+\pgfmathsetmacro{\LboxR}{\LWx + \RadMat + \Lleg + \PadX}
+\pgfmathsetmacro{\RboxL}{\LFanX - \Lleg - \PadX}
+\pgfmathsetmacro{\RboxR}{\RFanX + \Lleg + \PadX}
+\pgfmathsetmacro{\PlusX}{0.5*(\LboxR + \RboxL)}
+\node[mat, fill=ColW!40] (W) at (\LWx, \LWy) {$\bm{\Delta W}$};
+\draw[leg] (W.west) -- ++(-\Lleg, 0) node[above=1pt, slbl] {$I_1I_2$};
+\draw[leg] (W.east) -- ++(\Lleg,  0) node[above=1pt, slbl] {$J_1J_2$};
+\node[font=\large] at (\PlusX, \LWy) {$=$};
+\draw[leg] (\LFanX, 0) -- ++(-\Lleg, 0) node[above=1pt, slbl] {$I_1I_2$};
+\draw[leg] (\RFanX, 0) -- ++( \Lleg, 0) node[above=1pt, slbl] {$J_1J_2$};
+\fill[black!9, draw=black!80, line width=1.0pt]
+    (\LFanBX, \FanHalf)
+    arc[start angle=90, end angle=270, x radius=\FanDepth, y radius=\FanHalf]
+    -- cycle;
+\fill[black!9, draw=black!80, line width=1.0pt]
+    (\RFanBX, \NegFanHalf)
+    arc[start angle=-90, end angle=90, x radius=\FanDepth, y radius=\FanHalf]
+    -- cycle;
+\node[core, fill=ColA!40] (A) at (\CoreX, \DyABH)    {$\mat{A}$};
+\node[core, fill=ColB!40] (B) at (\CoreX, \NegDyABH) {$\mat{B}$};
+\draw[bond] (\LFanBX, \DyABH)    -- (A.west) node[midway, above=1pt, slbl] {$I_1$};
+\draw[bond] (\LFanBX, \NegDyABH) -- (B.west) node[midway, above=1pt, slbl] {$I_2$};
+\draw[bond] (A.east) -- (\RFanBX, \DyABH) node[midway, above=1pt, slbl] {$J_1$};
+\draw[bond] (B.east) -- (\RFanBX, \NegDyABH) node[midway, above=1pt, slbl] {$J_2$};
+\begin{pgfonlayer}{foreground}
+\node[font=\small\bfseries] at ({0.5*(\LboxL+\RboxR)}, 2.57)
+    {适配器更新的克罗内克参数化};
+% \node[lbl] at ({0.5*(\LboxL+\LboxR)}, -3.65)
+%     {$\mathbf{W}\!\in\!\mathbb{R}^{(m_1 m_2)\times(n_1 n_2)}$};
+% \node[lbl] at ({0.5*(\RboxL+\RboxR)}, -3.65)
+%     {$\mathbf{A}\!\in\!\mathbb{R}^{m_1\times n_1},\quad\mathbf{B}\!\in\!\mathbb{R}^{m_2\times n_2}$};
+\path (0, 2.77) -- (0, -3.25);
+\end{pgfonlayer}
+
+\draw[black!35, line width=0.6pt] (9.59, -3.25) -- (9.59, 2.77);
+%% RIGHT: Tucker-3 with Sparse Core
+\begin{scope}[shift={(11.93, 0)}]
+\tikzset{
+  core/.style={circle, draw=black!80, line width=1.0pt,
+              minimum size=1.80cm, inner sep=0pt, font=\small},
+  fac/.style={circle, draw=black!80, line width=1.0pt,
+              minimum size=1.05cm, inner sep=0pt, font=\tiny},
+}
+\definecolor{ColG}{RGB}{252,141, 98}
+\definecolor{ColU}{RGB}{102,194,165}
+\pgfmathsetmacro{\RadW}{0.80}
+\pgfmathsetmacro{\RadG}{0.90}
+\pgfmathsetmacro{\RadU}{0.525}
+\pgfmathsetmacro{\Lleg}{0.72}
+\pgfmathsetmacro{\PadX}{0.32}
+\pgfmathsetmacro{\PadY}{0.45}
+\pgfmathsetmacro{\LWx}{0.0}
+\pgfmathsetmacro{\LWy}{0.0}
+\pgfmathsetmacro{\Rx}{6.95}
+\pgfmathsetmacro{\Gy}{0.0}
+\pgfmathsetmacro{\DxU}{1.80}
+\pgfmathsetmacro{\DyU}{1.80}
+\pgfmathsetmacro{\DiagHalf}{0.58}
+\pgfmathsetmacro{\DashN}{9}
+\pgfmathsetmacro{\DashLen}{2*\DiagHalf*sqrt(2)*28.4528/(2*\DashN-1)}
+\pgfmathsetmacro{\ArrLen}{1.0}
+\pgfmathsetmacro{\ArrMid}{0.5*((\LWx + \RadW + \Lleg + \PadX) + (\Rx - \DxU - \RadU - \Lleg - \PadX))}
+\pgfmathsetmacro{\ArrL}{\ArrMid - 0.5*\ArrLen}
+\pgfmathsetmacro{\ArrR}{\ArrMid + 0.5*\ArrLen}
+\pgfmathsetmacro{\ABH}{0.10}
+\pgfmathsetmacro{\AHH}{0.22}
+\pgfmathsetmacro{\AHD}{0.26}
+\pgfmathsetmacro{\LboxL}{\LWx - \RadW - \Lleg - \PadX}
+\pgfmathsetmacro{\LboxR}{\LWx + \RadW + \Lleg + \PadX}
+\pgfmathsetmacro{\LboxT}{\LWy + \RadW + \Lleg + \PadY}
+\pgfmathsetmacro{\LboxB}{\LWy - \RadW - \Lleg - \PadY}
+\pgfmathsetmacro{\RboxL}{\Rx - \DxU - \RadU - \Lleg - \PadX}
+\pgfmathsetmacro{\RboxR}{\Rx + \DxU + \RadU + \Lleg + \PadX}
+\pgfmathsetmacro{\RboxT}{\Gy + \RadG + \Lleg + \PadY}
+\pgfmathsetmacro{\RboxB}{\Gy - \DyU - \RadU - \Lleg - \PadY}
+\pgfmathsetmacro{\BoxT}{max(\LboxT, \RboxT)}
+\pgfmathsetmacro{\BoxB}{min(\LboxB, \RboxB)}
+\node[mat, fill=ColW!40] (W) at (\LWx, \LWy) {$\ten{W}$};
+\draw[leg] (W.west)  -- ++(-\Lleg,  0) node[above=1pt, slbl] {$d$};
+\draw[leg] (W.east)  -- ++( \Lleg,  0) node[above=1pt, slbl] {$d_h$};
+\draw[leg] (W.north) -- ++(0,  \Lleg)  node[right=1pt, slbl] {$H$};
+\draw[leg] (W.south) -- ++(0, -\Lleg)  node[right=1pt, slbl] {$4$};
+\fill[white, draw=black!80, line width=0.9pt]
+    (\ArrL,            {\LWy+\ABH})
+    -- ({\ArrR-\AHD},  {\LWy+\ABH})
+    -- ({\ArrR-\AHD},  {\LWy+\AHH})
+    -- (\ArrR,          \LWy)
+    -- ({\ArrR-\AHD},  {\LWy-\AHH})
+    -- ({\ArrR-\AHD},  {\LWy-\ABH})
+    -- (\ArrL,         {\LWy-\ABH})
+    -- cycle;
+\node[slbl] at (\ArrMid, \LWy + 0.75) {Tucker};
+\node[slbl] at (\ArrMid, \LWy + 0.45) {$+$ 稀疏性};
+\node[core, fill=ColG!35] (G) at (\Rx, \Gy) {};
+\node[font=\small] at (\Rx + 0.24, {\Gy + 0.36}) {$\ten{G}$};
+\draw[black!60, line width=1.0pt,
+      dash pattern=on \DashLen pt off \DashLen pt]
+    ({\Rx - \DiagHalf}, {\Gy + \DiagHalf}) -- ({\Rx + \DiagHalf}, {\Gy - \DiagHalf});
+\draw[leg] (G.north) -- ++(0, \Lleg) node[right=1pt, slbl] {$H$};
+\node[fac, fill=ColU!40] (U1) at ({\Rx - \DxU}, \Gy)         {$\mat{U}^{(1)}$};
+\node[fac, fill=ColU!40] (U2) at ({\Rx + \DxU}, \Gy)         {$\mat{U}^{(2)}$};
+\node[fac, fill=ColU!40] (U3) at (\Rx,          {\Gy-\DyU})  {$\mat{U}^{(3)}$};
+\draw[bond] (G.west)  -- (U1.east)  node[midway, above=1pt, slbl] {$R_1$};
+\draw[bond] (G.east)  -- (U2.west)  node[midway, above=1pt, slbl] {$R_2$};
+\draw[bond] (G.south) -- (U3.north) node[midway, right=1pt, slbl] {$R_3$};
+\draw[leg] (U1.west)  -- ++(-\Lleg,  0) node[above=1pt, slbl] {$d$};
+\draw[leg] (U2.east)  -- ++( \Lleg,  0) node[above=1pt, slbl] {$d_h$};
+\draw[leg] (U3.south) -- ++(0, -\Lleg)  node[right=1pt, slbl] {$4$};
+\begin{pgfonlayer}{foreground}
+\node[font=\small\bfseries] at ({0.5*(\LboxL+\RboxR)}, \BoxT + 0.50)
+    {带稀疏核的 Tucker 压缩};
+% \node[lbl] at ({0.5*(\LboxL+\LboxR)}, \BoxB - 0.50)
+%     {$\ten{W}\!\in\!\R^{d\times d_h\times 4\times H}$};
+% \node[lbl] at ({0.5*(\RboxL+\RboxR)}, \BoxB - 0.50)
+%     {$\ten{G}\!\in\!\R^{R_1\times R_2\times R_3\times H}$ (sparse),\quad
+%     $\mat{U}^{(i)}\!\in\!\R^{n_i\times r_i}$};
+\end{pgfonlayer}
+\end{scope}
+\end{tikzpicture}}
+\caption{\textit{左}：权重更新被参数化为两个因子矩阵的克罗内克积，$\mat{A}\in\R^{I_1\times J_1}$ 与 $\mat{B}\in\R^{I_2\times J_2}$，从而 $\Delta\mat{W}\in\R^{I_1I_2\times J_1J_2}$。\textit{右}：一层的各注意力投影被堆叠成四阶张量 $\ten{W}\in\R^{d\times d_h\times 4\times H}$，其各模依次索引模型维度 $d$、头维度 $d_h$、投影类型（$\mat{W}^Q,\mat{W}^K,\mat{W}^V,\mat{W}^O$）以及 $H$ 个注意力头。该张量用 Tucker 分解近似，核为 $\ten{G}\in\R^{R_1\times R_2\times R_3\times H}$，因子矩阵为 $\mat{U}^{(1)}\in\R^{d\times R_1}$、$\mat{U}^{(2)}\in\R^{d_h\times R_2}$、$\mat{U}^{(3)}\in\R^{4\times R_3}$，头模保持不压缩。随后对核做稀疏化，如虚线对角线所示。}\label{fig:ex-peft-compr}
+\end{figure}
+
+\paragraph{适配。}
+
+在适配阶段，增量权重更新 $\Delta \mat{W}$ 要么直接被参数化为张量网络，要么通过克罗内克积等张量代数运算加以结构化。KronA \cite{edalati2022krona} 不像 LoRA 那样添加低秩矩阵更新 $\mat{U}\mat{V}^\top \in\R^{I\times J}$ \cite{hu2022lora}（其中 $\mat{U}\in \R^{I \times R}$、$\mat{V} \in \R^{J \times R}$），而是施加克罗内克积增量 $\mat{W}_0 \leftarrow \mat{W}_0 + \alpha(\mat{A}\otimes\mat{B})$，其中 $\mat{A}\in\R^{I_1\times J_1}$、$\mat{B}\in\R^{I_2\times J_2}$，带缩放系数 $\alpha$，且 $I_1 I_2 = I$、$J_1 J_2 = J$。\Cref{fig:ex-peft-compr}（左）给出了相应的张量网络图。由标准恒等式 $\mathrm{rank}(\mat{A}\otimes\mat{B})=\mathrm{rank}(\mat{A})\cdot\mathrm{rank}(\mat{B})$ \cite{golubvanloan}，单个克罗内克项仅需 $I_1J_1+I_2J_2$ 个参数即可使矩阵秩达到 $\min(I_1,J_1)\cdot\min(I_2,J_2)$。相比之下，秩为 $R$ 的 LoRA 更新矩阵秩至多为 $R$，需要 $R(I+J)$ 个参数。也就是说，LoRA 的秩随参数预算线性增长，而克罗内克形式只把各因子的参数规模相加，却把它们的秩相乘。
+这一差距在 $\llama$ 上是具体的。对每头查询投影 $\mat{W}_Q\in\R^{4096\times 128}$，取分解 $(I_1,J_1)=(64,16)$、$(I_2,J_2)=(64,8)$，可得一个仅含 $1{,}536$ 个参数的单项 KronA 适配器，其秩可达 $128$，即满列秩。此处 LoRA 每单位秩需花费 $4{,}224$ 个参数，达到同样的秩要 $540$K 个参数，即便 $R=1$ 也几乎是整个克罗内克适配器的三倍。需要说明的是，这一比较针对的是可达秩而非可达的更新集合：克罗内克项只张成该秩矩阵中一个结构化的子集，而低秩分解则不受约束。
+
+% At the adaptation stage, tensor methods enter through the incremental weight update: the adapter $\Delta\mathcal{W}$ is parameterized directly as a tensor network, or structured via tensor-algebraic operations such as the Kronecker product. KronA \cite{edalati2022krona} proposes instead of adding a low-rank matrix update $\mat{B}\mat{A}\in\R^{I\times J}$ \cite{hu2022lora}, applies a Kronecker product increment $\mat{W}_0 \leftarrow\mat{W}_0+\mat{A}\otimes\mat{B}$, where $\mat{A}\in\R^{I_1\times J_1}$, $\mat{B}\in\R^{I_2\times J_2}$, and $I_1 I_2=I$, $J_1 J_2=J$. By the standard identity $\mathrm{rank}(\mat{A}\otimes\mat{B})=\mathrm{rank}(\mat{A})\cdot\mathrm{rank}(\mat{B})$ \cite{golubvanloan}, a single Kronecker term achieves matrix rank up to $\min(I_1,J_1)\cdot\min(I_2,J_2)$, which can far exceed $1$. By contrast, a LoRA rank-$1$ update $\mat{b}\mat{a}^\top$ has matrix rank exactly $1$ by construction. This expressivity gap is concrete for LLaMA-3-8B: the update for query projection $\mat{W}_Q\in\R^{4096\times 128}$ admits a Kronecker representation with $I_1=64,\,J_1=16$ and $I_2=64,\,J_2=8$ ($4096=64^2$, $128=16{\times}8$), so a KronA adapter stores only $64{\times}16+64{\times}8=1{,}536$ parameters while its matrix rank can reach $16{\times}8=128$ (the full column rank). Achieving rank $128$ with LoRA would require $128\times(4096+128)\approx 540$K parameters. \cref{fig:example-peft} (left) illustrates the corresponding tensor network diagram. KronA \cite{edalati2022krona} reports improvements over LoRA on the GLUE benchmark for T5 model \cite{raffel2023t5}.
+
+\paragraph{压缩。}
+在压缩阶段，张量分解被事后应用于预训练好的权重以降低其内存占用，利用的是训练后的网络中涌现出的低秩结构。LeSTD \cite{li2026lestd} 以整个 MHA 块为对象。对每个头，查询、键、值、输出四个投影被堆叠成一个三阶张量，各头的张量再沿索引头的第四个模堆叠。压缩无需数据，分两步进行。第一步对前三个模计算 Tucker 分解
+% via Higher-Order Orthogonal Iteration (HOOI) \cite{liu2015hooi}
+，因此所有头共享因子矩阵 $\mat{U}^{(1)},\mat{U}^{(2)},\mat{U}^{(3)}$，而各头特有的信息保留在核 $\ten{G}\in\R^{R_1\times R_2\times R_3\times H}$ 的相应切片中；头模不压缩。第二步按重要性得分对核做稀疏化。\Cref{fig:ex-peft-compr}（右）把这两步变换一并示出。在 $\llama$ 中，GQA 使得无法使用单一的头模，因为 $H_{\rm Q}=32$ 而 $H_{KV}=8$，故该构造可拆分为 $\ten{W}_{\rm QO}\in\R^{4096\times128\times2\times32}$ 与 $\ten{W}_{\rm KV}\in\R^{4096\times128\times2\times8}$，分别含 $33.6$M 与 $8.4$M 个参数。较小的 $K/V$ 张量使用更低的模-1 秩，否则其模-1 因子将占主导。在核稀疏度 $70\%$、Tucker 秩分别为 $(1024,64,2,H_{\rm Q})$ 与 $(256,64,2,H_{\rm KV})$ 时，二者缩小到 $5.5$M 与 $1.1$M，整个块压缩 $6.4\times$。剩余部分以共享因子 $\mat{U}^{(1)}$ 为主（$6.6$M 中占 $5.2$M），因此得益于这些因子在头间的摊销，收益随头数增加而增大，而只有核随 $H$ 增长。GQA 对此不利，因为 $K/V$ 张量只有八个头可供摊销。
+
+\begin{figure}[!htbp]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[scale=1.4,
+  mat/.style={circle, draw=black!80, line width=1.0pt,
+              minimum size=1.61cm, inner sep=0pt, font=\small},
+  core/.style={circle, draw=black!80, line width=1.0pt,
+              minimum size=1.26cm, inner sep=0pt, font=\small},
+  bond/.style={line width=1.0pt, black!80},
+  leg/.style={line width=1.0pt, black!80},
+  lbl/.style={font=\small},
+  slbl/.style={font=\scriptsize, text=black},
+]
+\definecolor{ColQ}{RGB}{141,160,203}
+\definecolor{ColA}{RGB}{102,194,165}
+\definecolor{ColB}{RGB}{252,141, 98}
+\pgfmathsetmacro{\RadMat}{0.575}
+\pgfmathsetmacro{\RadCore}{0.45}
+\pgfmathsetmacro{\Lleg}{0.65}
+\pgfmathsetmacro{\LlegS}{0.40}
+\pgfmathsetmacro{\PadX}{0.30}
+\pgfmathsetmacro{\PadXR}{0.60}
+\pgfmathsetmacro{\PadY}{0.30}
+\pgfmathsetmacro{\ABGap}{1.80}
+\pgfmathsetmacro{\LQx}{0.0}
+\pgfmathsetmacro{\LPanY}{0.0}
+\pgfmathsetmacro{\LRx}{3.0}
+\pgfmathsetmacro{\BoxRowA}{\LPanY + 1.45}
+\pgfmathsetmacro{\BoxRowB}{\LPanY - 1.45}
+\pgfmathsetmacro{\BoxL}{\LRx - \RadCore - \PadX}
+\pgfmathsetmacro{\BoxR}{\LRx + \ABGap + \RadCore + \Lleg + \PadXR}
+\pgfmathsetmacro{\BoxTop}{\BoxRowA + \RadCore + \PadY}
+\pgfmathsetmacro{\BoxBot}{\BoxRowB - \RadCore - \LlegS - \PadY}
+\pgfmathsetmacro{\LboxR}{\LQx + \RadMat + \Lleg + \PadX}
+\pgfmathsetmacro{\EqXL}{0.5*(\LboxR + \BoxL)}
+\pgfmathsetmacro{\ZSrcTop}{\BoxRowA + \RadCore + 0.20}
+\pgfmathsetmacro{\ZSrcBot}{\BoxRowA - \RadCore - \LlegS - 0.25}
+\pgfmathsetmacro{\ZoomGap}{1.00}
+\pgfmathsetmacro{\RPBoundLeft}{\BoxR + \ZoomGap}
+\pgfmathsetmacro{\RPBoundTop}{\LPanY + \RadMat + 0.50}
+\pgfmathsetmacro{\RPBoundBot}{\LPanY - \RadMat - \Lleg - 0.50}
+\pgfmathsetmacro{\RQx}{\RPBoundLeft + \RadMat + 0.25}
+\pgfmathsetmacro{\RPanY}{\LPanY}
+\pgfmathsetmacro{\RRx}{\RQx + 3.0}
+\pgfmathsetmacro{\RLboxR}{\RQx + \RadMat + \Lleg + \PadX}
+\pgfmathsetmacro{\RBoxL}{\RRx - \RadCore - \PadX}
+\pgfmathsetmacro{\EqXR}{0.5*(\RLboxR + \RBoxL)}
+\pgfmathsetmacro{\FigL}{\LQx - \RadMat - \Lleg - \PadX}
+\pgfmathsetmacro{\FigR}{\RRx + \ABGap + \RadCore + \Lleg + \PadXR}
+\pgfmathsetmacro{\Sw}{0.30}
+\begin{pgfonlayer}{background}
+\draw[black, line width=1.3pt, line cap=rect]
+    ({\BoxL+\Sw}, \BoxTop) -- (\BoxL, \BoxTop) -- (\BoxL, \BoxBot) -- ({\BoxL+\Sw}, \BoxBot);
+\draw[black, line width=1.3pt, line cap=rect]
+    ({\BoxR-\Sw}, \BoxTop) -- (\BoxR, \BoxTop) -- (\BoxR, \BoxBot) -- ({\BoxR-\Sw}, \BoxBot);
+\fill[black!6, rounded corners=4pt]
+    ({\BoxL+0.07}, \ZSrcTop) rectangle ({\BoxR-0.07}, \ZSrcBot);
+\draw[draw=black!45, line width=0.6pt, dashed, rounded corners=4pt]
+    ({\BoxL+0.07}, \ZSrcTop) rectangle ({\BoxR-0.07}, \ZSrcBot);
+\draw[draw=black!55, line width=1.0pt, dashed, rounded corners=10pt]
+    (\RPBoundLeft, \RPBoundTop) rectangle (\FigR, \RPBoundBot);
+\end{pgfonlayer}
+\draw[black!38, line width=0.65pt, dashed]
+    (\BoxR, \ZSrcTop) -- (\RPBoundLeft, \RPBoundTop);
+\draw[black!38, line width=0.65pt, dashed]
+    (\BoxR, \ZSrcBot) -- (\RPBoundLeft, \RPBoundBot);
+\node[mat, fill=ColQ!40] (Q) at (\LQx, \LPanY) {$\ten{K}$};
+\draw[leg] (Q.west)  -- ++(-\Lleg, 0) node[above=1pt, slbl] {$T$};
+\draw[leg] (Q.south) -- ++(0, -\Lleg) node[right=1pt, slbl] {$H$};
+\draw[leg] (Q.east)  -- ++(\Lleg, 0)  node[above=1pt, slbl] {$d_h$};
+\node[font=\normalsize] at (\EqXL, \LPanY) {$=$};
+\node[core, fill=ColA!40] (A1) at (\LRx,          \BoxRowA) {$\mat{A}_1$};
+\node[core, fill=ColB!40] (B1) at ({\LRx+\ABGap}, \BoxRowA) {$\mat{B}_1$};
+\draw[bond] (A1.east) -- (B1.west) node[midway, above=2pt, slbl] {$R_{\rm K}$};
+\draw[leg]  (A1.south) -- ++(0, -\LlegS) node[right=1pt, slbl] {$H$};
+\draw[leg]  (B1.east)  -- ++(\Lleg, 0)   node[above=1pt, slbl] {$d_h$};
+\node[font=\large] at ({0.5*(2*\LRx + \ABGap)}, \LPanY) {$\vdots$};
+\node[core, fill=ColA!40] (AT) at (\LRx,          \BoxRowB) {$\mat{A}_T$};
+\node[core, fill=ColB!40] (BT) at ({\LRx+\ABGap}, \BoxRowB) {$\mat{B}_T$};
+\draw[bond] (AT.east) -- (BT.west) node[midway, above=2pt, slbl] {$R_{\rm K}$};
+\draw[leg]  (AT.south) -- ++(0, -\LlegS) node[right=1pt, slbl] {$H$};
+\draw[leg]  (BT.east)  -- ++(\Lleg, 0)   node[above=1pt, slbl] {$d_h$};
+\node[mat, fill=ColQ!40] (Qt) at (\RQx, \RPanY) {$\mat{K}_t$};
+\draw[leg] (Qt.south) -- ++(0, -\Lleg) node[right=1pt, slbl] {$H$};
+\draw[leg] (Qt.east)  -- ++(\Lleg, 0)  node[above=1pt, slbl] {$d_h$};
+\node[font=\normalsize] at (\EqXR, \RPanY) {$=$};
+\node[core, fill=ColA!40] (At) at (\RRx,          \RPanY) {$\mat{A}_t$};
+\node[core, fill=ColB!40] (Bt) at ({\RRx+\ABGap}, \RPanY) {$\mat{B}_t$};
+\draw[bond] (At.east) -- (Bt.west) node[midway, above=2pt, slbl] {$R_{\rm K}$};
+\draw[leg]  (At.south) -- ++(0, -\Lleg) node[right=1pt, slbl] {$H$};
+\draw[leg]  (Bt.east)  -- ++(\Lleg, 0)  node[above=1pt, slbl] {$d_h$};
+\begin{pgfonlayer}{foreground}
+\node[font=\small\bfseries]
+    at ({0.5*(\FigL + \FigR)}, {\BoxTop + 0.60}) {TPA 中的键张量};
+% \pgfmathsetmacro{\CapY}{\BoxBot - 0.50}
+% \node[lbl] at (\LQx, \CapY)
+%     {$\mathcal{Q}\!\in\!\mathbb{R}^{T\times h\times d_h}$};
+% \node[lbl] at ({0.5*(\BoxL + \BoxR)}, \CapY)
+%     {$\sum_{i=1}^T \mathbf{e}_i \circ \mathbf{A}_i^\top\mathbf{B}_i\!\in\!\mathbb{R}^{T\times h\times d_h}$};
+% \node[lbl] at ({0.5*(\RPBoundLeft + \FigR)}, \CapY)
+%     {$\mathbf{Q}_t\!\in\!\mathbb{R}^{h\times d_h},\quad
+%       \mathbf{A}_t\!\in\!\mathbb{R}^{R_Q\times h},\quad
+%       \mathbf{B}_t\!\in\!\mathbb{R}^{R_Q\times d_h}$};
+\end{pgfonlayer}
+\end{tikzpicture}}
+  \caption{\textit{左}：完整的键张量 $\ten{K}\in\R^{T\times H \times d_h}$ 分解为堆叠的 $\mat{K}_t$ 矩阵 \cite{zhang2026tpa}。\textit{右}：（虚线框）对单个词元 $t$，键矩阵 $\mat{K}_t\in\R^{H \times d_h}$ 表示为沿秩模 $R_{\rm K}$ 的缩并 $\mat{A}_t^\top\mat{B}_t$，其中 $\mat{A}_t\in\R^{R_{\rm K}\times H}$、$\mat{B}_t\in\R^{R_{\rm K}\times d_h}$。为示意简便，因子 $\frac{1}{R_{\rm K}}$ 的缩放已省略。}
+\label{fig:example-inference}
+\end{figure}
+
+\paragraph{推理。} 推理（inference）阶段张量化的自然对象是 KV 缓存，其规模随序列长度线性增长。张量积注意力（Tensor Product Attention, TPA）\cite{zhang2026tpa} 对每个词元的查询、键、值矩阵做因子分解，使缓存的键和值从不被显式构造。对词元 $t$，键矩阵 $\mat{K}_t\in\R^{H\times d_h}$ 写成 $\frac{1}{R_{\rm K}}\mat{A}_t^\top\mat{B}_t$，其中 $\mat{A}_t\in\R^{R_K\times H}$、$\mat{B}_t\in\R^{R_K\times d_h}$，$\mat{Q}_t$ 与 $\mat{V}_t$ 类似。\Cref{fig:example-inference} 展示了这种双因子情形；也可以采用因子更多的变体。缓存因子的开销为每词元 $(R_K+R_V)(H+d_h)$ 个数值，而非 $2Hd_h$：对 $\llama$ 规模的层（$H=32$、$d_h=128$），在 $R_{\rm K} = R_{\rm V} = 2$ 的假设下为 $640$ 对 $8{,}192$，缩减 $12.8\times$。这里的基线是多头注意力，因为 TPA 涵盖了二者：MHA、MQA 与 GQA 都是它的非上下文特例。作为对比，$\llama$ 的分组查询注意力在 $H_{\rm KV}=8$ 个组间共享键和值，因此每词元存储 $2H_{\rm KV}d_h=2{,}048$ 个数值；因子化表示还要再小 $3.2\times$。
+
+\paragraph{可解释性。} 
+
+双线性 MLP \cite{pearce2025bilinearmlp} 去掉了门控 FFN 中的逐元素非线性，使该层变成与一个三阶张量 $\ten{B} \in \R^{d \times d \times d}$ 的精确缩并（\cref{sec:component-ffn}，式 \eqref{eq:bilinear-forward-pass}）。对 $\llama$ 而言，这意味着把全部 $32$ 个门控 FFN 块替换为双线性块。参数量保持不变，但 SwiGLU 从架构中消失，因此模型必须从头预训练。
+所得张量支持三种分析方式，区别在于对特征已有多少了解。若同时给定某层输入特征 $\mat{F}^{\rm in} \in \R^{f\times 4096}$ 与输出特征 $\mat{F}^{\rm out} \in \R^{f\times 4096}$ 的字典（例如由稀疏自编码器得到），把它们缩并进全部三个模，即可将 $\ten{B} \in \R^{4096 \times 4096 \times 4096}$ 改写到特征基下：$\tilde{\ten{B}} = \ten{B} \times_1 \mat{F}^{\rm out} \times_2 \mat{F}^{\rm in} \times_3 \mat{F}^{\rm in} \in \R^{f \times f \times f}$，此时 $\tilde{\ten{B}}$ 的每个元素对应一对输入特征为某个输出特征提供的交互。若只给定一个输出特征 $\vecb{u} \in \R^{4096}$（例如反嵌入的一行），缩并输出模后得到对称交互矩阵 $\mat{Q} = \ten{B} \times_1 \vecb{u}^\top \in \R^{4096 \times 4096}$，其特征向量是驱动 $\vecb{u}$ 的输入方向，特征值则衡量各方向二次贡献的权重。若对特征一无所知，也可以直接分析该张量，例如通过 HOSVD。因此三条路线在代价与前提条件上都不同：把特征缩并掉可让分析保持在矩阵规模，而最后一条路线要触碰完整张量——每层有 $d^3 \approx 69$B 个元素。
+
+
+\section{Transformer 的张量化}
+\label{sec:components}
+
+当前文献对 Transformer 各模块的张量化主要采取按组件的方式进行。具体而言，已有工作大多聚焦于单个 Transformer 子模块，例如嵌入层 \cite{xu2023tensorgpt}、注意力机制 \cite{ma2019tensorized} 或 FFN \cite{chekalina2023ttm}。鉴于三个子模块在结构约束上存在显著差异，本节沿用同样的按组件组织方式，我们称之为本综述的\emph{组件视角}。首先，\cref{sec:tensor-strategies} 介绍张量化策略的二分法。然后，\cref{sec:component-emb,sec:component-att,sec:component-ffn} 依次讨论各子模块，涵盖张量对象从何而来、哪些张量化策略在结构上与之兼容，以及关键挑战是什么。最后，\cref{sec:component-sum} 给出结构性总览。
+
+
+\subsection{张量化策略}
+\label{sec:tensor-strategies}
+
+张量化策略可以按张量对象的模是否携带语义来分类。若各模具有已知语义，例如序列中的位置或注意力头索引，我们称之为\emph{模特定}（mode-specific）张量化。此时，关于语义含义的知识使我们能够利用张量的结构。例如，分解因子可以在结构相似的模之间共享，从而降低内存消耗。
+\emph{强加}（imposed）张量化则出现在模被任意指派的情形，例如把权重矩阵重排成某个兼容形状。此时原则上没有任何因素限制张量网络的选择；相反，选择的动机可能来自人们希望在参数化上施加的归纳偏置 \cite{hamreras2025tensorization}。
+这一区分构成了后续各节组件分析的组织框架。
+
+
+\subsection{嵌入层}
+\label{sec:component-emb}
+
+在嵌入张量化方面可以辨识出三条结构上互不相同的研究路线，它们的差异在于张量对象如何产生以及哪些分解在结构上与之兼容。
+
+\paragraph{经典嵌入表。}
+设 $\mat{E} \in \R^{|\set{V}| \times d}$ 为标准词元嵌入矩阵，其中每一行是一个独立的词元表示。由于各行相互独立，该矩阵不携带更高阶的组织结构。因此，张量化只能以两种方式强加：或者将每一行独立地重排为张量，或者将整个矩阵视为一个张量。逐行方式保留了行间的独立性，而对整个矩阵进行张量化则可能破坏这种独立性。但无论哪种方式，分解后的嵌入在推理时都需要一链缩并才能恢复完整向量，而不像直接查表那样一步取得。这就在压缩率与推理延迟之间造成了权衡。
+
+\paragraph{n-gram 嵌入表。}
+
+当经典嵌入层被 n-gram 嵌入 $\mat{E}_{\rm ngram} \in \R^{|\set{V}|^n\times d}$ \cite{huang2025overtokenized} 取代时，就产生了结构上不同的张量，其中每个条目表示一个由 $n$ 个词元构成的序列。对词表轴重排之后，所得张量的每个模对应 n-gram 中一个不同的位置。因此，这里的张量化是模特定的。当 $n\ge 2$ 且词表规模取任何现实值时，完整表格之大令内存存储无法承受 \cite{zhou2026tensorizingengram}。于是，张量分解不再是事后施加的压缩选择，而是能够对这一对象进行任何操作的结构性必需。以张量分解形式对 n-gram 表进行参数化会引入一个秩超参数。该秩直接控制所学表示的表达能力，秩越高，最终损失越低 \cite{zhou2026tensorizingengram}。这体现了在内存约束下选择最优秩所涉及的关键权衡。
+
+\paragraph{基于词素的嵌入表。} 
+
+也可以不为每个词元存储一个表示，而是维护一张更小的词素（morpheme，即构成词元的子词元单元）表。这一基于词素的矩阵 $\mat{E}_{\rm morpheme}$ 大小为 $|\set{M}| \times d$，其中 $|\set{M}| \ll |\set{V}|$，因而比标准嵌入层紧凑得多。词元向量随后经由张量代数运算从词素嵌入构造而来 \cite{gan2022morphte}，这使得该张量化是模特定的，因为每个模对应词内的一个词素位置。然而，这引入了额外的超参数，且所得词表示的表达能力可能不如直接查表。
+
+\subsection{注意力机制}
+\label{sec:component-att}
+
+注意力机制暴露出若干结构上互不相同的张量对象，每个对象都有其不同的张量化理据。我们将它们归纳为三种情形。
+
+\paragraph{Q、K、V 张量。}
+对于隐藏状态 $\ten{X}\in\R^{B\times T\times d}$，MHA 产生查询、键与值张量
+\begin{equation}
+\ten{Q} \in \R^{B \times H_{\rm Q} \times T \times d_h}, \quad \ten{K},\ten{V}\in\R^{B\times H_{\rm KV}\times T\times d_h},
+\end{equation}
+其中四个模分别为批量、头、序列位置与头维数。这些张量是激活而非静态权重，因此我们也使用记号 $\ten{Q}(x), \ten{K}(x),\ten{V}(x)$。由于每个模都承担不同的语义角色，这里的张量化是模特定的。首要的关注对象是 KV 缓存，即 $\ten{K}, \ten{V}$ 张量。利用这些张量的结构可以显著降低 KV 缓存的内存占用以及推理时的数据传输量。
+然而，利用这一结构仍然并非易事，原因如下。第一，张量方法必须与 FlashAttention \cite{dao2022flashattention} 等高效注意力实现兼容，或者达到相当的 GPU 利用率水平。第二，张量方法必须在压缩率与模型质量两方面都追平或超过 GQA、MLA 等非张量方案。第三，RoPE \cite{su2023rope} 兼容性是一个额外约束，因为 RoPE 在推理时对 $\mat{Q}$ 与 $\mat{K}$ 施加依赖位置的旋转；因此，任何因子化或压缩后的 KV 缓存表示都必须支持这些旋转。可见，张量化 KV 缓存的关键设计挑战在于高效的 GPU 实现、与非张量方案的竞争力，以及 RoPE 兼容性。
+
+
+% \paragraph{Attention score tensor.}
+% The attention score tensor $\ten{A}\in\R^{B\times H\times T\times T}$, obtained as:
+% \begin{equation}
+% \ten{A}(b, h, q, k) = \operatorname{softmax}\left(\frac{\ten{Q}(b, h, q, :) \ten{K}(b, h, k, :)^\top}{\sqrt{d_h}}\right) ,
+% \end{equation}
+% where $B$ is the batch size, $H$ is the number of heads, and $T$ is the sequence length. Each mode carries a distinct semantic meaning, making it a mode-specific tensor in our notation. Unlike $\ten{Q}$, $\ten{K}$, $\ten{V}$, which are obtained from trained parameters, the score tensor is computed at inference time (possibly implicitly) and is not optimized directly. This makes it a purely analytical object -- one that can be examined via post-hoc tensor decompositions. Such decompositions can reveal latent factors or patterns in attention behavior.
+
+\paragraph{投影矩阵。}
+我们区分两种对投影矩阵进行张量化的途径。第一种通过强加重排将每个矩阵 $\mat{W}_Q, \mat{W}_K, \mat{W}_V, \mat{W}_O$ 独立处理，这在结构上与 FFN 张量化完全相同，将在 \cref{sec:component-ffn} 中讨论。第二种则跨层、跨头、跨投影类型地将投影堆叠成一个联合张量，从而引入语义模。投影矩阵 $\mat{W}_{Q, h}^{(\ell)}, \mat{W}_{K, h}^{(\ell)}, \mat{W}_{V, h}^{(\ell)} \in\R^{d\times d_h}$（对应每个头 $h$ 与层 $\ell$）与 $\mat{W}_{O}^{(\ell)} \in\R^{Hd_h\times d}$ 的形状不同：$\mat{W}_{O}^{(\ell)}$ 从全部 $H$ 个头的拼接输出映射而来，因而在一个维度上宽 $H$ 倍，构造联合张量时必须考虑到这一点。若排除 $\mat{W}_{O}^{(\ell)}$，查询、键与值投影可组装为：
+
+\begin{equation}
+\label{eq:WQKV}
+\ten{W}_{QKV} = \operatorname{stack}_{\ell,p,h}\!\left(\mat{W}_{p,h}^{(\ell)}\right) \in\R^{L\times 3\times H\times d\times d_h},
+\quad p\in\{Q,K,V\},
+\end{equation}
+其中 $\ell$ 与 $h$ 分别为层索引与头索引。为纳入 $\mat{W}_{O}^{(\ell)}$，我们把 $(\mat{W}_{O}^{(\ell)})^\top$ 划分为 $H$ 个块 $\mat{W}_{O,h}^{(\ell)} \in\R^{d\times d_h}$，每块对应单个头。于是：
+
+\begin{equation}
+\label{eq:QKVO}
+\ten{W}_{QKVO} = \operatorname{stack}_{\ell,p,h}\!\left(\mat{W}_{p,h}^{(\ell)}\right) \in\R^{L\times 4 \times H \times d \times d_h},
+\quad p\in\{Q,K,V,O\}.
+\end{equation}
+对 $\ten{W}_{QKV}$ 与 $\ten{W}_{QKVO}$ 而言，层、投影类型与头这些模都携带明确的语义。这种模特定结构支持跨层与跨头的因子共享，已被现有方法广泛利用 \cite{li2026lestd}。关键的权衡在于共享带来的压缩收益与共享所引入的模间耦合增强之间。
+
+\subsection{前馈网络}
+\label{sec:component-ffn}
+
+FFN 矩阵 $\mat{W}_{\rm gate}$、$\mat{W}_{\rm up}$ 与 $\mat{W}_{\rm down}$ 既可以作为线性映射独立处理，也可以组织成一个联合张量。以下两段讨论这两种途径，它们恰好分别落在模特定/强加这一区分的两侧。
+
+
+\paragraph{TT 与 TTM。}
+
+在强加张量化下，投影矩阵 $\mat{W}$ 被重排为高阶张量 $\ten{W}$，随后用张量网络对其进行参数化或分解。张量化方案（即 $\ten{W}$ 的形状与阶数）以及张量网络的拓扑都是自由的设计选择。以 TT 与 TTM 为代表的 TT 家族在当前文献中占主导地位。
+
+
+设 $I = \prod_{n=1}^N I_n$，$J = \prod_{m=1}^M J_m$。在 \emph{TT 张量化}下，投影 $\mat{W} \in \R^{I \times J}$ 与输入 $\vecb{x} \in \R^{I}$ 分别被重排为 $\ten{W} \in \R^{I_1 \times \cdots \times I_N \times J_1 \times \cdots \times J_M}$ 与 $\ten{X} \in \R^{I_{1} \times \cdots \times I_{N}}$。将 $\ten{W}$ 表示为具有三阶核 $\ten{G}^{(1)}, \dots, \ten{G}^{(N+M)}$ 的 TT 格式，则输出 $\vecb{y}^\top = \vecb{x}^\top \mat{W}$ 按元素计算为
+\begin{equation}
+  \ten{Y}_{j_1, \dots, j_M} = \sum_{i_1=1, \dots, i_N=1}^{I_1, \dots, I_N} \ten{X}_{i_1, \dots, i_N} \ten{G}^{(1)}_{:, i_1, :} \cdots \ten{G}^{(N)}_{:, i_N, :} \cdot \ten{G}^{(N+1)}_{:, j_1, :} \cdots \ten{G}^{(N+M)}_{:, j_M, :},
+\end{equation}
+随后 $\ten{Y} \in \R^{J_1 \times \cdots \times J_M}$ 被重排回 $\vecb{y}$。
+\emph{TTM 张量化}则要求两个因子分解具有相同长度，即 $I = \prod_{n=1}^N I_n$，$J = \prod_{n=1}^N J_n$。投影被重排为 $\ten{W} \in \R^{I_1 \times J_1 \times \cdots \times I_N \times J_N}$，使每个输入模与相应的输出模配对，缩并变为
+\begin{equation}
+  \ten{Y}_{j_1, \dots, j_N} = \sum_{i_1=1, \dots, i_N=1}^{I_1, \dots, I_N} \ten{X}_{i_1, \dots, i_N} \ten{G}^{(1)}_{:, i_1, j_1, :} \cdots \ten{G}^{(N)}_{:, i_N, j_N, :}, 
+\end{equation}
+其中 $\ten{G}^{(n)} \in \R^{R_{n-1} \times I_n \times J_n \times R_n}$ 为 TTM 核。两种格式的差别在于模的排序方式：TT 将全部 $N+M$ 个模顺序串成一条链，而 TTM 在单个核内部把第 $n$ 个输入模与第 $n$ 个输出模耦合起来，使链长减半。
+
+在 TT 张量化中，核 $N$ 与 $N+1$ 之间的切分把全部输入模与全部输出模分离开，因此重构矩阵 $\mat{W}$ 的秩以 $R_{N}$ 为上界 \cite{oseledets2011tensor}。对 TTM 张量化，\cite{hrinchuk2020tensorized} 的定理 1 指出：几乎所有秩以固定集合 $\set{R}$ 为上界的 TTM，重构出的矩阵都是满秩 $\min(I, J)$ 的。因此，原则上任意学习得到的 TTM 投影都能表示满秩矩阵。但在实践中，Li 等人 \cite{li2022hypoformer} 报告低秩的 TTM 参数化难以保持表达能力。
+
+% The key tradeoff here is between compression and latency. A tensorized layer replaces a single GEMM, whose implementations reach near-peak utilization on modern GPU hardware \cite{goto2008anatomy}, \cite{osama2023streamk}, with a sequential chain of small contractions, paying for the parameter savings in kernel launch overhead. This solution to this challenge remains an open direction (\cref{sec:future-directions}).
+
+这里的关键权衡在于压缩与延迟之间。张量化层用一链顺序执行的小缩并取代单次 GEMM，而现代 GPU 对大规模矩阵计算高度优化，对这类小规模缩并的处理却很糟糕，因此张量化模型虽然能削减参数量与 FLOPs，运行速度仍可能慢于其稠密对应模型；要实现真正的加速，需要核函数（kernel）层面的工作，例如优化缩并本身、消除后端开销 \cite{yang2024comera}。这一挑战的通用解法仍是一个开放方向（\cref{sec:future-directions}）。
+
+
+
+\paragraph{双线性 FFN}
+
+当去掉逐元素非线性后，门控 FFN 就成为\emph{双线性}的 \cite{shazeer2020glu}：
+\begin{equation}
+    \vecb{z}^\top = (\vecb{x}^\top \mat{W}^{\rm gate}) \odot ( \vecb{x}^\top \mat{W}^{\rm up}), \quad \vecb{y}^\top = \vecb{z}^\top \mat{W}^{\rm down}.
+\end{equation}
+这一情形与上文不同：该层关于 $\vecb{x}$ 是多重线性的，因而容许精确的张量表示。固定一个隐藏坐标 $\alpha$。由于 $(\vecb{x}^\top \mat{W})_\alpha = \vecb{x}^\top \mat{W}_{:, \alpha}$，两个分支合并为一个二次型：
+\begin{equation}
+  \vecb{z}_\alpha = (\vecb{x}^\top \mat{W}^{\rm gate})_\alpha \cdot (\vecb{x}^\top \mat{W}^{\rm up})_\alpha = \bigl(\vecb{x}^\top \mat{W}^{\rm gate}_{:, \alpha}\bigr)\bigl(\vecb{x}^\top \mat{W}^{\rm up}_{:, \alpha}\bigr) = \vecb{x}^\top \mat{W}^{\rm gate}_{:, \alpha} \bigl(\mat{W}^{\rm up}_{:, \alpha}\bigr)^\top \vecb{x} = \vecb{x}^\top \mat{B}_{\alpha} \vecb{x}.
+\end{equation}
+注意只有 $\mat{B}_\alpha$ 的对称部分对二次型有贡献，因此不失一般性可将 $\mat{B}_\alpha$ 替换为 $\tfrac{1}{2}(\mat{B}_\alpha + \mat{B}_\alpha^\top)$。经下投影传播并对 $\alpha$ 求和，得到：
+\begin{equation}
+  \vecb{y}_\beta = \sum_{\alpha=1}^{d_{\rm ff}} \vecb{z}_\alpha \mat{W}^{\rm down}_{\alpha, \beta} = \sum_{\alpha=1}^{d_{\rm ff}} (\vecb{x}^\top \mat{B}_{\alpha} \vecb{x}) \mat{W}^{\rm down}_{\alpha, \beta} = \vecb{x}^\top \left( \sum_{\alpha=1}^{d_{\rm ff}} \mat{W}^{\rm down}_{\alpha, \beta} \mat{B}_{\alpha} \right) \vecb{x} = \vecb{x}^\top \ten{B}_{\beta, :, :} \vecb{x},
+\end{equation}
+于是整层坍缩为单次缩并
+\begin{equation}
+\label{eq:bilinear-forward-pass}
+  \vecb{y}^\top = \ten{B} \times_2 \vecb{x}^\top \times_3 \vecb{x}^\top,
+\end{equation}
+其中 $\ten{B} \in \R^{d \times d \times d}$，且每个切片 $\ten{B}_{\beta, :, :}$ 都是对称的。$\ten{B}$ 的各模携带语义：两个输入坐标与一个输出坐标，因此这里是 FFN 中张量化为模特定的位置。Pearce 等人 \cite{pearce2025bilinearmlp} 直接将其用作机制可解释性工具，从 $\ten{B}$ 中发现回路。
+现实的障碍在于，已部署的 LLM 仍以门控变体为默认 \cite{shazeer2020glu}，因此要得到双线性 FFN 必须从头训练。
+
+若存在非线性激活，这样的表示便不存在。三个矩阵仍可堆叠为：
+\begin{equation}
+\label{eq:SGUD}
+  \ten{S} = \bigl[ \mat{W}^{\rm gate}, \mat{W}^{\rm up}, (\mat{W}^{\rm down})^\top \bigr] \in \R^{3 \times d \times d_{\rm ff}},
+\end{equation}
+其中各模分别索引投影类型、输入维数与隐藏维数；与式 \eqref{eq:QKVO} 类似，这些堆叠还可以跨层进一步拼接，或在 MoE 模型中跨专家拼接，从而得到更高阶的张量。然而，与式 \eqref{eq:bilinear-forward-pass} 中的 $\ten{B}$ 不同，$\ten{S}$ 不具有多重线性算子的含义：它的第一个模完全不参与前向传播。
+
+
+\subsection{组件总览}
+\label{sec:component-sum}
+
+\Cref{tab:components} 对按组件的分析给出总览。「张量化类型」一列沿用 \cref{sec:tensor-strategies} 的模特定/强加分类，「关键权衡」一列指出占主导地位的约束。
+
+\begin{table}[!htbp]
+\centering
+\caption{张量化 Transformer 组件的结构性总览。张量化策略沿用 \cref{sec:tensor-strategies} 的分类。}
+\label{tab:components}
+\small
+\begin{tblr}{
+  width = \textwidth,
+  colspec = {Q[2.0cm,m,c]Q[4.0cm,m,c]Q[2.4cm,m,c]X[m,c]},
+  row{1} = {font=\bfseries},
+  cell{2}{1} = {r=3}{},
+  cell{5}{1} = {r=2}{},
+  cell{7}{1} = {r=3}{},
+  rowsep = 3pt,
+  hline{1,10} = {1pt},
+  hline{2} = {0.6pt},
+  hline{5,7} = {0.6pt, gray7},
+}
+组件 & 张量对象 & 张量化策略 & 关键权衡 \\
+嵌入层 & $\mat{E}\in\R^{|\set{V}|\times d}$ & 强加 & 压缩 vs.\ 查表延迟 \\
+ & $\mat{E}_{\rm ngram}\in\R^{|\set{V}|^n\times d}$ & 模特定 & 内存可行性 vs.\ 秩选择难度 \\
+ & $\mat{E}_{\rm morpheme}\in\R^{|\set{M}|\times d}$ & 模特定 & 内存缩减 vs.\ 表示的表达能力 \\
+注意力机制 & $\ten{Q} \in\R^{B\times H_{\rm Q}\times T\times d_h}; \newline \ten{K},\ten{V}\in\R^{B\times H_{\rm KV}\times T\times d_h}$ & 模特定 & KV 缓存压缩 vs.\ 核函数效率与质量持平 \\
+ & $\ten{W}_{QKV}\in\R^{L\times 3\times H\times d\times d_h}$, $\ten{W}_{QKVO}\in\R^{L\times 4\times H\times d\times d_h}$ & 模特定 & 参数共享 vs.\ 独立性降低 \\
+FFN & $\mat{W}_{\rm up},\mat{W}_{\rm gate}\in\R^{d\times d_{\rm ff}},$ \newline $\mat{W}_{\rm down}\in\R^{d_{\rm ff}\times d}$ & 强加 & 压缩 vs.\ 延迟（缩并 vs.\ GEMM） \\
+ & $\ten{B}\in\R^{d\times d\times d}$（双线性） & 模特定 & 精确的多重线性结构 vs.\ 从头训练 \\
+ & $\ten{S}\in\R^{3\times d\times d_{\rm ff}}$（堆叠） & 模特定 & 整层的联合表示 vs.\ 无算子语义 \\
+\end{tblr}
+\end{table}
+
+
+\section{贯穿生命周期的张量化}
+\label{sec:lifecycle-analysis}
+
+本节展开生命周期视角：按照 \cref{sec:lifecycle-overview} 中引入的生命周期分类，把面向 LLM 的张量方法应用按阶段组织起来。每个小节先给出形式化的问题定义，随后是文献综述，并在文献覆盖充分时附上一张汇总表。对文献稀疏的阶段，则直接指出其空白。
+% Finally, \cref{subsec:component-vs-stage} closes the section with a component-vs-stage comparison, mapping the component-wise view of \cref{sec:components} against the stage-wise view of the current section.
+
+\subsection{词元化}
+\label{subsec:tokenization}
+
+词元化阶段把原始文本映射为取自固定词表 $\set{V}$ 的子词单元序列，词表通常由字节对编码 (byte-pair encoding) \cite{sennrich2016bpe} 或一元语法语言模型 (unigram language model) \cite{kudo2018unigramlm} 生成，并常通过 SentencePiece \cite{kudo2018sentencepiece} 来实施。
+词表是一组离散符号，分词器又是不可微的映射，这使得该阶段成为张量方法的一个特殊目标：在词元被嵌入之前，并不存在连续的多重线性对象。
+
+据我们所知，尚无已发表的工作把张量方法应用于词元化过程本身。
+与之最接近的张量工作要晚一步，始于词元的表示：MorphTE \cite{gan2022morphte} 把形态学结构注入嵌入表，TN-gram \cite{zhou2026tensorizingengram} 则对 $n$-gram 嵌入进行张量化 (\cref{subsec:embeddings})。两者都把词表视为给定。分词器已有随机化 \cite{kudo2018unigramlm}, \cite{provilkov2020bpedropout} 乃至可学习化 \cite{tay2022charformer} 的做法，但尚未被张量化。我们在 \cref{sec:future-directions} 中概述了张量化在这一阶段可能带来的收益。
+
+
+
+% The tokenization stage maps raw text to a sequence of subword units via a tokenizer, typically Byte-Pair Encoding (BPE) \cite{sennrich2016neural} or SentencePiece \cite{kudo2018sentencepiece}. The resulting token vocabulary $\mathcal{V}$ of size $V$ can be viewed as a set of symbols with no inherent continuous representation. Tensorization at this stage would impose structure on the vocabulary, such as morphological, phonetic, or orthographic similarities among tokens. Formally, given a vocabulary $\mathcal{V}$ and a feature function $\phi: \mathcal{V} \rightarrow \R^d$, one may seek a compressed representation via tensor decomposition:
+% \begin{equation}
+% \min_{\mathcal{V}' \subset \mathcal{V}, \|\mathcal{V}'\| \le V'} \mathcal{L}_{\rm LM}(\mathcal{V}' ; \theta),
+% \end{equation}
+% where $\mathcal{V}'$ is a tensor-factorized vocabulary and $V' \ll V$. However, this is a significantly under-explored area.
+
+% \textit{No published work currently applies tensor decompositions directly to the tokenization stage of modern LLMs.} While subword regularization \cite{kudo2018subword} and BPE-dropout \cite{provilkov2020bpe} explore stochastic tokenization, and Uni-Parser \cite{shen2022uniparser} learns tokenization via neural parsing, none of these use tensor structure to compress or organize the vocabulary. Tensorized tokenization remains a promising open problem (see \cref{sec:future-directions}).
+
+
+\subsection{嵌入}
+\label{subsec:embeddings}
+
+\paragraph{问题定义。}
+
+对嵌入层进行张量化可以追求不同的优化目标，这与预训练（见 \cref{subsec:pre-training}）和压缩（见 \cref{subsec:compression}）的两类目标相呼应：要么从零训练嵌入矩阵，要么对预训练好的嵌入矩阵施加免训练的压缩方案。与 \cref{subsec:pre-training} 和 \cref{subsec:compression} 中讨论的方法不同，这两种情形都只影响嵌入层，模型的其余部分保持不变。这一二分法与 \cref{sec:component-emb} 中按表类型的分类正交，因为任一表类型都可能出现在任一目标之下。
+
+\paragraph{文献综述。}
+
+在 LLM 出现之前，NLP 中的张量方法主要用于语言单元的表示学习。早期工作通过受 Tucker 分解启发的因子化 \cite{cruys2013svo} 以及词向量上的张量代数运算 \cite{etal2014svotensorspaces}，为主-谓-宾三元组构造表示。第二条研究路线源于把嵌入学习问题重述为共现矩阵的矩阵分解。这促生了张量扩展：把情感 \cite{rahimi2021tenssent} 或框架语义角色标注 \cite{etal2017frame} 等额外信息聚合进更高阶的共现张量，再对其分解以产生词表示，从而获得更丰富的表示。然而，随着 LLM 的发展，目标从基于张量的表示增强转向了对已学习嵌入表的压缩与参数化。
+
+在现代 LLM 中，对经典嵌入层（见 \cref{sec:component-emb}）进行张量化的主流做法依赖 TT 族分解。Hrinchuk 等人 \cite{hrinchuk2020tensorized} 用 TTM 表示替换嵌入层，并从零训练模型。
+% Combined with weight tying \cite{wolf2017weighttying1},
+该参数化在语言建模任务上为 Transformer-XL \cite{dai2019transformerxl} 实现了可观的压缩 \cite{hrinchuk2020tensorized}。然而，这一方法需要在该参数化下从零训练；而且如 \cref{sec:component-emb} 所讨论，行独立性被破坏：词元的排列顺序可能影响表示质量 \cite{hrinchuk2020tensorized}。TensorGPT \cite{xu2023tensorgpt} 则独立处理嵌入层的每一行；具体而言，对已预训练的模型，把每一行重排后经 TT-SVD \cite{oseledets2011tensor} 压缩（见 \cref{fig:ex-emb-train} 左）。这免除了重新训练，但表示能力可能较弱，并会增加推理 (inference) 延迟。
+
+
+在标准嵌入表之外，张量方法还被用于两种结构上不同的场景：n-gram 嵌入表与基于词素的嵌入表（见 \cref{sec:component-emb}）。在第一种情形中，TN-gram \cite{zhou2026tensorizingengram} 把 n-gram 嵌入表参数化为 CP 表示，将参数量从关于 $n$ 呈指数增长的 $\mathcal{O}(|\set{V}|^nd)$ 降为线性的 $\mathcal{O}(Rn|\set{V}| + Rd)$。同时，每个 CP 因子对应 n-gram 中的一个特定位置，使分解具有可解释性。不过，与 TT-Embedding 一样，由于 CP 参数化内在于 n-gram 表，TN-gram 必须从零训练。在第二种情形中，MorphTE \cite{gan2022morphte} 走了另一条路：它不压缩词级表，而是维护一个小的词素嵌入表，把词表示构造为词素向量的克罗内克积（原文称之为张量积）。这大幅缩减了嵌入表的规模，但同样需要从零训练，以使模型适配这样的嵌入。
+
+\paragraph{对比。} \Cref{tab:embeddings-methods} 从结构角度对比上述嵌入方法。每种方法针对结构上不同的嵌入表，服务于不同的表示目的与应用领域。因此，这些方法之间无法公平比较，这也是此处不设压缩率或困惑度列的原因。表中列出所采用的分解、嵌入表类型，以及是否需要训练阶段（免训练对比从零训练）。
+
+\begin{table}[!htbp]
+\centering
+\caption{\footnotesize 嵌入阶段张量方法的结构性对比。}
+\label{tab:embeddings-methods}
+\footnotesize
+\begin{tblr}{
+  width = \textwidth,
+  colspec = {Q[3.0cm,m,c]Q[4.5cm,m,c]Q[3.5cm,m,c]X[m,c]},
+  row{1} = {font=\bfseries},
+  rowsep = 3pt,
+  hline{1,6} = {1pt},
+  hline{2} = {0.6pt},
+  hline{3,4,5} = {0.6pt, gray7},
+}
+方法 & 分解 & 嵌入表 & 训练 \\
+TT-embeddings \cite{hrinchuk2020tensorized} & TTM & 经典 & 从零训练 \\
+TensorGPT \cite{xu2023tensorgpt} & TT 逐行 & 经典 & 免训练 \\
+TN-gram \cite{zhou2026tensorizingengram} & CP &  N-gram & 从零训练 \\
+MorphTE \cite{gan2022morphte} & 词素嵌入的\newline 克罗内克积 & 基于词素 & 从零训练 \\
+\end{tblr}
+\end{table}
+
+\subsection{预训练}
+\label{subsec:pre-training}
+
+\paragraph{问题定义。}
+
+张量化预训练的优化目标可以表述为如下约束优化问题：
+\begin{equation}
+\begin{aligned}
+& \min_{\ten{W} \in \mathfrak{TN}(\set{R})} \mathcal{L}_{\rm LM} (\ten{W}; \ \mathcal{D}_{\rm LM}), \\
+& {\rm s.t.} ~ m(\ten{W}) \leq M,\ c(\ten{W}) \leq C
+% \rm s.t. \quad &\text{memory/latency budget.}
+\end{aligned}
+\end{equation}
+其中 $\ten{W}$ 表示语言模型的张量化权重，$\mathfrak{TN}(\set{R})$ 是给定秩集合 $\set{R}$ 时的张量网络参数族，$\mathcal{L}_{\rm LM}$ 是语料 $\mathcal{D}_{\rm LM}$ 上的语言建模损失。预算约束用两个函数来反映张量化的不同影响：$m(\cdot)$ 度量内存，通常是存储的参数加上训练期间达到的峰值内存占用；$c(\cdot)$ 度量计算，即缩并的 FLOPs，或它们在目标硬件上引起的延迟。
+与压缩目标（见 \cref{subsec:compression}）不同，预训练目标没有作为参照的稠密 $\mat{W}$，因此张量化权重 $\ten{W}$ 要从零训练。而且与嵌入阶段（见 \cref{subsec:embeddings}）不同，这里的张量化可以针对 Transformer 的任意部分。
+
+\paragraph{文献综述。} 
+
+在 Transformer 之外，张量方法早已用于 NLP。概率语言模型曾直接以张量分解构建：张量空间语言模型 (Tensor Space Language Model, TSLM) \cite{zhang2019tslm} 把句子表示为词向量的张量积，再把下一个词元的条件概率表达为两个张量的内积。张量列语言模型 (Tensor Train Language Model, TTLM) \cite{su2024ttlm} 延续这一路线，用 TT 分解对语言模型进行参数化。
+
+% On the other hand, tensorization of fully connected layers in neural networks has been explored: dense layers were parameterized in TT form \cite{novikov2015tensorizing}. The next discussed work follows this approach by tensorizing some components within the Transformer architecture.
+
+若干工作把注意力机制本身重述为张量网络，以
+缓解 Transformer 架构在复杂度上的劣势。Ma 等人
+\cite{ma2019tensorized} 将其完全改写为 BT 形式（式~\eqref{eq:btd}）：查询、键
+与值充当一个三阶张量的因子矩阵 $\mat{A}^{(1)} = \mat{Q}$、$\mat{A}^{(2)} = \mat{K}$、
+$\mat{A}^{(3)} = \mat{V}$，在全部 $K$ 个块之间共享，各块仅
+在其对角核心张量 $\ten{G}_k \in \R^{R \times R \times R}$ 上不同；于是每个块项
+扮演经典 MHA 中一个头的角色，头数由 $K$ 取代，头
+维数由秩 $R$ 取代。这一构造换来了因子共享与低秩核心，代价是非平凡的因果掩码；
+作者对这一问题基本未作解释，在阅读
+\cref{tab:pre-training-methods} 中的困惑度时应牢记这一点。TensorCoder
+\cite{zhang2020tensorcoder} 付出了类似代价：其按维注意力把复杂度从 $\mathcal{O}(T^2 d)$ 降到
+$\mathcal{O}(T d^2)$，但仅限编码器，因为
+因果掩码使解码器回到 $\mathcal{O}(T^2 d^2)$。总体而言，张量网络能够在结构上改变
+注意力，而自回归掩码是其中的约束性限制。
+
+更大一类方法保持注意力机制不变，转而单独对权重
+投影进行张量化，这延续了早期对神经网络张量化的工作
+\cite{novikov2015tensorizing}。GPT-TTM \cite{chekalina2023ttm} 把这一思想用于 LLM，
+用 TTM 参数化替换稠密层中的每一个投影矩阵
+(\cref{sec:component-ffn})。困难正如该处所述：低 TTM 秩既是该格式
+值得使用的区间，也是其全秩
+表达能力最难保持的区间。Hypoformer \cite{li2022hypoformer} 以一个
+混合层 $\mat{W} = \begin{bmatrix} \mat{W}_{\rm dense} \\ \mat{W}_{\rm TTM}  \end{bmatrix}$ 应对这一问题，其中 $\mat{W}_{\rm dense} \in \R^{\alpha I \times J}$、$\mat{W}_{\rm TTM} \in \R^{(1-\alpha)I \times J}$，低秩 TTM
+分支与稠密分支并行传播，输入向量在两个分支之间
+按受控比例 ($\alpha$ / $1 - \alpha$) 划分，从而把张量网络的压缩能力与
+稠密矩阵的全秩表达能力结合起来。不过，这两种方法都在训练前
+固定了秩，因此要满足给定预算需要代价高昂的搜索。CoMERA \cite{yang2024comera} 则把秩本身纳入
+优化：它将 TT 参数化与对角因子交错排列
+\begin{equation*}
+  \ten{W} = \ten{G}^{(1)} \leftindex_{-1} \times^1 ~ \mat{D}^{(1)} \leftindex_{-1} \times^1 ~ \ten{G}^{(2)} \leftindex_{-1} \times^1 ~ \dots \leftindex_{-1} \times^1 ~ \mat{D}^{(N - 1)} \leftindex_{-1} \times^1 ~ \ten{G}^{(N)}
+\end{equation*}
+从而在一个多目标优化问题中，借助矩阵 $\mat{D}^{(n)} \in \R^{R_{n} \times R_{n}}$ 在训练期间动态调整 TT 秩。
+作者还给出了经 CUDA Graph 优化的框架实现。
+TT 族并非唯一选择；Shapeshifter \cite{pahani2021shapeshifter} 转而把所有矩阵参数化为
+克罗内克积之和，尽管其中项数同样是事先固定的。
+
+\paragraph{对比。} 
+\Cref{tab:pre-training-methods} 对比张量化预训练方法，且仅限于那些在语言建模基准上报告了困惑度的工作。只有多重线性注意力 \cite{ma2019tensorized} 与 GPT-TTM \cite{chekalina2023ttm} 满足这一条件，且各自在两个经过验证的规模上出现。但二者的证据强度并不相同：多重线性注意力 \cite{ma2019tensorized} 是与深度和宽度都不同的 Transformer-XL 基线比较的，其压缩效果可能反映了配置的改变。Shapeshifter \cite{pahani2021shapeshifter}、Hypoformer \cite{li2022hypoformer} 与 CoMERA \cite{yang2024comera} 被略去，因为它们完全没有报告语言建模验证，其压缩主张无法与 LM 预训练规模的证据相比较。鉴于就标度定律 (Scaling Laws) \cite{kaplan2020scalinglaws} 而言，标度行为是预训练阶段的核心关切，这一区分在此尤为重要；因此，在下结论之前必须了解某一方法的经验证据究竟覆盖到多远。
+
+
+\begin{table}[!htbp]
+\centering
+\caption{\footnotesize 张量化预训练方法对比。各列定义如下：「分解」表示底层分解及其秩 $R$；「基线」表示计算 $\Delta$ PPL 时对照的模型；「参数量」给出张量化模型的参数数目；CR 表示压缩率，$\rm CR = \frac{\text{\# parameters}_{\rm baseline}}{\text{\# parameters}_{\rm tensorized}}$。我们计算 $\Delta \rm PPL = \frac{\text{perplexity}_{\rm tensorized} - \text{perplexity}_{\rm baseline}}{\text{perplexity}_{\rm baseline}} \times 100$，其中 $\downarrow$ 表示数值越低越好。}
+
+\label{tab:pre-training-methods}
+\footnotesize
+\begin{tblr}{
+  width = \textwidth,
+  colspec = {Q[2.0cm,m,c]Q[2.0cm,m,c]Q[2.75cm,m,c]Q[2.5cm,m,c]Q[1.25cm,m,c]Q[0.8cm,m,c]X[m,c]},
+  row{1} = {font=\bfseries},
+  cell{2}{1} = {r=2}{},
+  cell{2}{2} = {r=2}{},
+  cell{4}{1} = {r=2}{},
+  rowsep = 3pt,
+  hline{1,6} = {1pt},
+  hline{2} = {0.6pt},
+  hline{4} = {0.6pt, gray7},
+}
+方法 & 分解 & 基线 & 训练 / 测试数据集 & $\#$参数量 & CR &$\Delta$ PPL ($\downarrow$) \\
+多重线性注意力 (core 2) \cite{ma2019tensorized} & BT & Transformer-XL Large (257M) \cite{dai2019transformerxl} & WikiText-103 / WikiText-103 & 85M & 3.01\textsuperscript{*} & 3.28 \\
+ & & Transformer-XL Large (0.8B)  & One-Billion / One-Billion & 160M & 5.0\textsuperscript{*} & -10.55 \\
+GPT-TTM \cite{chekalina2023ttm} & TTM (R=64) & $\text{GPT-2}_{\rm small}$ \cite{radford2019language} & WikiText-103 / WikiText-103 & 84M & 1.49 & 3.02 \\
+ & TTM (R=72) & $\text{GPT-2}_{\rm medium}$ \cite{radford2019language} & OpenWebText / WikiText-103 & 218M & 1.63 & 50.05 \\
+\end{tblr}
+\vspace{2pt}
+\begin{flushleft}
+\footnotesize
+\textsuperscript{*} 该压缩率是相对一个深度与宽度均不相同的基线计算的；参见正文讨论。
+
+\end{flushleft}
+\end{table}
+
+
+\subsection{适配}
+\label{subsec:peft}
+
+\paragraph{问题定义。}
+
+张量化 PEFT 将 LoRA \cite{hu2022lora} 的思想加以推广，把更新参数化为一个低秩张量网络。张量化适配的一般优化问题为
+\begin{equation}
+\begin{aligned}
+& \min_{\Delta \ten{W} \in \mathfrak{TN}(\set{R})} \mathcal{L}_{\rm task}(\ten{W}_0 + \Delta \ten{W}; \ \mathcal{D}_{\rm task}), \\
+& {\rm s.t.} ~ m(\Delta \ten{W}) \leq M,\ c(\Delta \ten{W}) \leq C
+\end{aligned}
+\end{equation}
+其中 $\ten{W}_0$ 是冻结的预训练骨干网络，$\Delta \ten{W}$ 被约束在给定秩集合 $\set{R}$ 对应的张量族 $\mathfrak{TN}(\set{R})$ 中，$\mathcal{D}_{\rm task}$ 是特定任务的数据集。内存预算 $m(\cdot)$ 与 \cref{subsec:pre-training} 中的相同，只是作用于更新部分。计算预算 $c(\cdot)$ 取决于适配器的部署方式：若训练后将适配器合并进 $\ten{W}_0$，则推理代价不高于单独的骨干网络；若无法合并——例如多个适配器共享同一骨干网络的多任务服务场景——则其缩并会在每次前向传播中执行，必须计入代价。
+
+$\Delta \ten{W}$ 的张量化可取两种形式之一。在\emph{局部}（local）方式中，每个更新分别被重排并参数化为一个张量；在\emph{全局}（global）方式中，所有矩阵的更新被聚合成单个张量——类似于式 \eqref{eq:WQKV} 与 \eqref{eq:SGUD} 中的张量——再联合参数化。
+
+\paragraph{文献概览。}
+
+第一类工作遵循局部张量化路线，即每个更新矩阵独立张量化。KronA \cite{edalati2022krona} 用 Kronecker 秩-1 分解取代低秩矩阵分解；如 \cref{subsec:illustrative-examples} 所讨论的，由此得到的更新矩阵可以是满秩的。DoTA \cite{hu2024dota} 用 MPO 表示每个更新矩阵，其初始化来自预训练权重 $\mat{W}_0 \in \R^{I \times J}$ 的 MPO 分解，同时保持残差矩阵 $\mat{W}_{\rm res} = \mat{W}_0 - \operatorname{MPO}(\mat{W}_0)$ 冻结。此外，与 QLoRA \cite{dettmers2023qlora} 类似，文献提出了 QDoTA \cite{hu2024dota}：以 bFloat16 训练更新部分，而将冻结部分转换为 NormalFloat4 \cite{dettmers2023qlora}。LoRETTA \cite{yang2024loretta} 给出两种使用矩阵 TT 参数化的变体：$\text{LoRETTA}_{\text{adp}}$ 在每个注意力块和 FFN 块之后插入一个受 Houlsby 启发 \cite{houlsby2019adapters}、经 TT 参数化的适配器；$\text{LoRETTA}_{\text{rep}}$ 则做类 LoRA 的低秩分解增量更新 $\Delta \mat{W} = \mat{B}\mat{A}$，其中矩阵 $\mat{B} \in \R^{I \times R}$ 与 $\mat{A} \in \R^{R \times J}$ 经 TT 参数化。TT-LoRA \cite{anjum2024ttlora} 延续这条 TT 参数化路线，但不再分别参数化 $\mat{B}$ 与 $\mat{A}$，而是直接以 TT 形式参数化 $\Delta \mat{W}$。总体而言，上述方法都是独立地适配每个权重矩阵。
+
+还有一小簇工作受量子张量网络文献启发。QuanTA \cite{chen2024quanta} 先将更新矩阵重排，再将其参数化为由一组小「门」（gate，即只连接两个轴的张量）构造的量子电路张量网络。其主要优势在于 QuanTA 的张量网络表示不受低秩限制，因为这类更新可以是高秩的 \cite{chen2024quanta}。与之相关但结构不同的方法 Quantum-PEFT \cite{koikeakino2025quantumpeft} 则沿用 AdaLoRA \cite{zhang2023adalora} 的类 SVD 更新参数化：$\Delta \mat{W} = \mat{U} \bm{\Lambda} \mat{V}^\top$，其中 $\mat{U} \in \R^{I \times R}$、$\bm{\Lambda} \in \R^{R \times R}$、$\mat{V} \in \R^{J \times R}$。但与 AdaLoRA 通过正则项以不严格的方式施加正交性不同，Quantum-PEFT 借助 Pauli 参数化在构造上使 $\mat{U}$ 与 $\mat{V}$ 正交。其参数量随矩阵维度按对数增长，而非如 LoRA 那样线性增长，对角因子则贡献 $R$ 个参数。这使得它在显著更小的参数预算下取得相当的下游性能。
+
+
+第二类工作遵循全局路线，把所有更新权重聚合成单个张量，再用某种分解对其参数化。LoRTA \cite{hounie2024lorta} 对所有权重采用 CP 参数化，将其组成一个 5 阶张量 $\Delta \ten{W} \in \R^{d\times d_h\times H\times L\times M}$，各模分别表示模型维度与头维度、头的数量、层索引以及投影类型（查询、键、值、输出）。LoTR \cite{bershatsky2024lotr} 则提议将所有更新矩阵沿第三个模逐一堆叠，组成三阶张量 $\Delta \ten{W} \in \R^{d \times d \times N}$，再对该张量施加 Tucker-2 参数化：
+$\Delta \ten{W} = \ten{G} \times_1 \mat{A} \times_2 \mat{B}$，
+其中因子 $\mat{A}$ 与 $\mat{B}$ 在所有堆叠的投影更新之间共享，有助于使微调更加参数高效。TeRA \cite{gu2026tera} 经由不同路径达到同一全局原则：先将每个更新矩阵单独重排并作为 N 阶张量做 Tucker 分解，然后约束所得核心张量与因子在所有更新矩阵之间共享。共享的核心张量与因子随机初始化并保持冻结，只训练每个更新各自的对角附加因子。尽管以逐矩阵方式起步，正是冻结的共享核心张量与因子使 TeRA 归入这一簇而非局部一簇。MetaTT \cite{lopezpiqueres2025metatt} 构造 4 阶更新张量 $\Delta \ten{W} \in \R^{d\times L\times M\times d_h}$，其中 $d$ 与 $d_h$ 为模型维度与头维度，$L$ 为层数，$M$ 为投影类型，随后对该张量采用 TT 参数化。此外，该方法还提出了一种自适应秩优化策略 \cite{lopezpiqueres2025metatt}。
+
+
+% One work slightly changes the optimization goal from single downstream task adaptation to multi-task learning, meaning adapting to several downstream tasks simultaneously. TT-LoRA MoE \cite{kunwar2025ttloramoe} combines the idea of TT-LoRA and the sparse-MoE architecture \cite{shazeer2017moe} to address this issue. The learning process comprises two stages: (1) training $N$ different TT-LoRA adapters independently, one for each task, and (2) training a small expert router to select the needed adapter. This architecture makes TT-LoRA MoE an efficient solution for multi-task deployment.
+
+\paragraph{比较。}
+
+\Cref{tab:peft-methods} 比较了上文讨论的各张量化 PEFT 方法。对每种方法，表中首先给出其所基于的分解，以及它遵循前文介绍的局部还是全局张量化原则；随后给出原始论文中针对一个或多个模型发表的参数量与精度结果。这些数字虽能提供总体印象，但在方法之间仍不完全可比：所用模型大体相近却并不总相同，而所报告的相对精度本身是各论文在其自有基准测试套件上计算的均值，不同方法的基准测试套件有时并不一致。
+
+\begin{table}[!htbp]
+\centering
+\caption{\footnotesize 张量化 PEFT 方法比较。参数量百分比 $\% \rm Params = \frac{\text{parameters}_{\rm method}}{\text{parameters}_{\rm baseline}} \times 100$，相对性能 Rel. Perf. = $\frac{\text{score}_{\rm method}}{\text{score}_{\rm baseline}} \times 100$，其中基线（baseline）为全量微调。$\text{score}_{\rm method}$ 与 $\text{score}_{\rm baseline}$ 为相应论文中报告的跨基准测试平均指标。若报告了多个秩，R 表示分解的秩。$\uparrow$ 表示数值越高越好。}
+\label{tab:peft-methods}
+\footnotesize
+\begin{tblr}{
+  width = \textwidth,
+  colspec = {Q[3.0cm,m,c]Q[2.0cm,m,c]Q[1.5cm,m,c]Q[2.7cm,m,c]Q[2.0cm,m,c]X[m,c]},
+  row{1} = {font=\bfseries},
+  cell{3}{1} = {r=2}{},
+  cell{3}{2} = {r=2}{},
+  cell{3}{3} = {r=2}{},
+  cell{8}{1} = {r=3}{},
+  cell{8}{2} = {r=3}{},
+  cell{8}{3} = {r=3}{},
+  % cell{12}{1} = {r=2}{},
+  cell{12}{2} = {r=2}{},
+  cell{12}{3} = {r=2}{},
+  cell{14}{1} = {r=2}{},
+  cell{14}{2} = {r=2}{},
+  cell{14}{3} = {r=2}{},
+  cell{16}{1} = {r=2}{},
+  cell{16}{2} = {r=2}{},
+  cell{16}{3} = {r=2}{},
+  % cell{18}{1} = {r=3}{},
+  cell{18}{2} = {r=3}{},
+  cell{18}{3} = {r=3}{},
+  rowsep = 3pt,
+  hline{1,21} = {1pt},
+  hline{2,12} = {0.6pt},
+  hline{3,5,6,8,11,14,16,18} = {0.6pt, gray7},
+}
+方法 & 分解 & 类型 & 模型 & $\%$ 参数量 & 相对性能（$\uparrow$） \\
+KronA \cite{edalati2022krona} & Kronecker & 局部 & T5 \cite{raffel2023t5} & 0.07 & 100.57 \\
+DoTA \cite{hu2024dota} & MPO & 局部 & LLaMA-2-7B \cite{touvron2023llama2} & 0.15 & 100.49 \\
+ & & & LLaMA-3-8B \cite{grattafiori2024llama3} & 0.06 & 99.43 \\
+$\text{LoRETTA}_{\rm rep}$ \cite{yang2024loretta} & TT & 局部 &  LLaMA-2-7B \textsuperscript{\textsection}  \cite{touvron2023llama2}  & 0.0076 & 92.31 \\
+TT-LoRA \cite{anjum2024ttlora} & TT & 局部 & LLaMA-2-7B \cite{touvron2023llama2}  & 0.0015 & 106.87 \\
+ & & & LLaMA3-8B \cite{grattafiori2024llama3}  & 0.0025 & 107.56\textsuperscript{*} \\
+QuanTA \cite{chen2024quanta} & 量子电路 & 局部 & LLaMA-2-7B \cite{touvron2023llama2} & 0.041 & 100.49 \\
+ & & & LLaMA-3-8B \cite{touvron2023llama2} & 0.035 & 106.19\textsuperscript{*} \\
+ & & & $\text{DeBERTaV3}_{\rm base}$\textsuperscript{\textdagger} \cite{he2023debertav3} & 0.051 & 99.56 \\
+Quantum-PEFT \cite{koikeakino2025quantumpeft} & 类 SVD & 局部 &  $\text{DeBERTaV3}_{\rm base}$ \cite{he2023debertav3} & 0.007 & 100.57 \\
+LoRTA(R=8) \cite{hounie2024lorta} & CP & 全局 & LLaMA-2-7B \cite{touvron2023llama2}  & 0.00043 & 99.22 \\
+LoRTA(R=16) \cite{hounie2024lorta} & & & $\text{RoBERTa}_{\rm base}$ \cite{liu2019roberta} & 0.012  & 102.15\textsuperscript{*} \\
+LoTR \cite{bershatsky2024lotr} & Tucker & 全局 & $\text{RoBERTa}_{\rm base}$ \cite{liu2019roberta} & 0.26 & 91.44 \\
+ & & & $\text{RoBERTa}_{\rm large}$ \cite{liu2019roberta} & 0.092 & 93.36 \\
+TeRA \cite{gu2026tera} & Tucker & 全局 & LLaMA-2-7B \cite{touvron2023llama2}  & 0.0039 & 94.13 \\
+ & & & LLaMA-3-8B \cite{grattafiori2024llama3} & 0.0033 & 98.46 \\
+MetaTT(R=16) \cite{lopezpiqueres2025metatt} & TT & 全局 & LLaMA-2-7B \cite{touvron2023llama2}  & 0.0021 & 96.86\textsuperscript{*} \\
+MetaTT(R=64) \cite{lopezpiqueres2025metatt} & & & LLaMA-2-7B \cite{touvron2023llama2}  & 0.098 & 98.86\textsuperscript{*} \\
+MetaTT(R=64) \cite{lopezpiqueres2025metatt} & & & $\text{RoBERTa}_{\rm base}$ \cite{liu2019roberta} & 0.125 & 93.35 \\
+\end{tblr}
+\vspace{2pt}
+\begin{flushleft}
+\footnotesize
+\textsuperscript{\textsection} 这些结果取自 \cite{anjum2024ttlora} \\
+\textsuperscript{*} 相对于最佳 LoRA 得分计算，而非全量微调 \\
+\textsuperscript{\textdagger} 这些结果取自 \cite{koikeakino2025quantumpeft}
+\end{flushleft}
+\end{table}
+
+\subsection{压缩}
+\label{subsec:compression}
+
+\paragraph{问题定义。}
+
+训练后压缩可以视为一个两阶段过程。第一阶段最小化原始权重与分解后权重之间的重构误差
+\begin{equation}
+\label{eq:compression}
+\ten{Z}^* =\arg\min_{\ten{Z}\in\mathfrak{TN}(\set{R})}\|\ten{W}-\ten{Z}\|_F^2,
+\end{equation}
+其中 $\ten{W}$ 汇集待压缩的预训练权重，$\ten{Z}$ 是其张量化近似，$\mathfrak{TN}(\set{R})$ 是承认给定分解、秩集合为 $\set{R}$ 的张量集合；最小化解 $\ten{Z}^*$ 即为压缩后的模型。
+其后是一个可选的第二阶段（以下称为\emph{修复}，healing），以式 \eqref{eq:compression} 得到的分解权重 $\ten{Z}^*$ 为初始，在修复数据集上重新训练分解后的模型
+\begin{equation}
+\label{eq:healing}
+\min_{\ten{Z} \in \mathfrak{TN}(\set{R})} \mathcal{L}_{\rm heal}(\ten{Z}; \ \mathcal{D}_{\rm heal}), \quad \ten{Z}^{(0)} = \ten{Z}^*.
+\end{equation}
+修复可以从在某个数据集上的短时重训练 \cite{compactifai} 到轻量级知识蒸馏方法 \cite{tahaei2021kroneckerbert} 不等，因此修复损失 $\mathcal{L}_{\rm heal}$ 不限于预训练的语言建模损失。
+修复阶段并非表面性的补救：Zagitov 等人 \cite{zagitov2026rethinking} 从理论与经验上证明，式 \eqref{eq:compression} 的重构目标与功能保持并不一致。因此，在 Frobenius 范数意义下最优的 $\ten{Z}^*$ 未必是算子意义下的好解。在他们的实验中，即便轻量的 LoRA 式修补也只能恢复部分损失的质量，这提示修复应当成为一个完整的压缩后训练阶段。
+    
+
+另一种做法是，第一阶段在校准数据集上最小化激活误差 \cite{koikeakino2025latentllm}
+\begin{equation}
+\label{eq:compression-activation}
+\ten{Z}^* = \arg\min_{\ten{Z} \in \mathfrak{TN}(\set{R})}
+  \sum_{i \in \set{I}} \lambda_i \,
+  \mathbb{E}_{x \sim \mathcal{D}_{\rm cal}}
+  \bigl\| (\mat{W}_i - \mat{Z}_i)\, \vecb{x}_i \bigr\|_2^2 .
+\end{equation}
+其中 $\set{I}$ 为被压缩组件的索引，既包括单个投影，也包括某方法联合分解的投影组；$\mat{W}_i$、$\mat{Z}_i$ 是 $\ten{W}$ 与 $\ten{Z}$ 的相应切片。激活 $\vecb{x}_i$ 是未压缩模型中校准样本 $x \sim \mathcal{D}_{\rm cal}$ 在组件 $i$ 处诱导的输入，$\mathcal{D}_{\rm cal}$ 为校准数据集。权重 $\lambda_i > 0$ 用于使各项成比例，因为各组件的输出维度与激活尺度可能不同，不加权的求和会让其中最大者占主导。
+
+
+
+\paragraph{文献概览。} 
+
+一类工作使用 Kronecker 分解，它能在保持分解后矩阵高秩的同时获得高压缩率。
+% Initially, such an approach, with a Kronecker rank-1 decomposition of each projection, was applied to the BERT model \cite{devlin2019bert} and followed by a KD healing stage \cite{tahaei2021kroneckerbert}. 
+最初，Tahaei 等人 \cite{tahaei2021kroneckerbert} 对 BERT 模型 \cite{devlin2019bert} 的每个投影施加 Kronecker 秩-1 分解，随后接一个知识蒸馏（KD）修复阶段。
+沿此方向，KnGPT \cite{edalati2021kroneckergpt} 用同样的方法压缩 GPT-2 模型 \cite{radford2019language}，取得与 DistilGPT2 \cite{sanh2019distilbert} 相同的压缩率，且困惑度更优、训练时间大幅缩短。TQCompressor \cite{abronin2024tqcompressor} 随后在 Kronecker 参数化中加入列与行置换，在基准测试上质量相当的同时提升了压缩率。
+
+另有多项工作探索用 Tucker 分解进行模型压缩。TRAWL \cite{luo2025trawl} 是最早对由投影矩阵聚合而成的张量施加张量分解的工作之一，其动机不仅是压缩，还有降噪。TRAWL 探索了将由投影矩阵逐一堆叠而成的三阶张量分别做 CP 分解与 Tucker 分解。
+沿此路线，TensorLLM \cite{gu2025tensorllm} 提议在分离出头维度的四阶张量上操作：对该张量施加 Tucker 分解，头所在的模保持不压缩；这可以视为逐头的完整 Tucker 分解，因子共享而三阶核心张量各异。在 GPT-J \cite{wang2021gpt_j} 与 LLaMA2 \cite{touvron2023llama2} 上，这带来了高压缩率，精度甚至优于未压缩模型。然而，精确的分解需要较高的 Tucker 秩，稠密核心张量随之成为新的内存瓶颈。为缓解该问题，LeSTD \cite{li2026lestd} 提出两阶段方案：(1) 按 TensorLLM 的方式求核心张量与共享因子；(2) 通过剪去不重要的值对四阶核心张量做稀疏化。作者还提出了一种无需重构即可推理的算法，它带来更好的精度，且吞吐量与 TensorLLM 及非张量方法相当或更高。
+
+其他分解也得到了探索。CompactifAI \cite{compactifai} 对 LLaMA2-7B \cite{touvron2023llama2} 的预训练权重施加 MPO 分解，然后在若干数据集上进行不足一个 epoch 的修复训练。作者系统地将该方法与量化技术进行对比与组合。Saten \cite{solgi2025saten} 同样利用稀疏性，但方式与 LeSTD \cite{li2026lestd} 不同：Saten 先用基于误差的 TT-SVD \cite{oseledets2011tensor} 分解权重矩阵，再对残差 $\mat{W} - \mat{W}_{\rm TT}$ 构造可加的稀疏修正。LatentLLM \cite{koikeakino2025latentllm} 遵循式 \eqref{eq:compression-activation} 的激活感知优化目标，通过对三个投影组——查询与键、值与输出、up 与 down——的联合预条件分解来构建压缩。在 OPT \cite{zhang2022opt} 全部规模上的验证表明，LatentLLM 优于激活感知的非张量方法。
+
+
+\paragraph{比较。} 
+
+\Cref{tab:compression} 对上文的压缩方法进行了比较与汇总。「模型」列给出原始论文中用于验证的模型；若某方法在多个模型上报告结果，我们选取最接近 6-7B 规模的一个，若未报告该规模的模型，则采用论文提供的任何模型。若表中同一方法占两行，则一行对应较激进的压缩（小），另一行对应最温和的压缩（大）。此表旨在给出总体图景，其中涉及不同的基准测试集：有的无需训练，有的带修复阶段，有的逐任务微调。因此，从该表得出的结论确有局限，阅读时应牢记这些差异。
+
+
+\begin{table}[!htbp]
+\centering
+\caption{\footnotesize 张量化压缩方法比较。模型——压缩目标，修复——用于修复或校准的数据集（「-」表示无修复），CR——压缩率，$\rm CR = \frac{\text{\# parameters}_{\rm uncompressed}}{\text{\# parameters}_{\rm compressed}}$。对于单一数据集/基准测试：$\Delta \rm PPL = \frac{\text{perplexity}_{\rm compressed} - \text{perplexity}_{\rm uncompressed}}{\text{perplexity}_{\rm uncompressed}} \times 100$，$\text{Rel. Perf.} = \frac{\text{score}_{\rm compressed}}{\text{score}_{\rm uncompressed}} \times 100$。当列出多个数据集/基准测试时，相应指标按平均计算。$\downarrow$、$\uparrow$ 分别表示数值越低或越高越好。}
+\label{tab:compression}
+\footnotesize
+\begin{tblr}{
+  width = \textwidth,
+  colspec = {Q[2.6cm,m,c]Q[2.25cm,m,c]Q[2.1cm,m,c]Q[3.25cm,m,c]Q[1.0cm,m,c]X[m,c]},
+  row{1} = {font=\bfseries},
+  cell{5}{2} = {r=2}{},
+  cell{5}{3} = {r=2}{},
+  cell{8}{2} = {r=2}{},
+  cell{8}{3} = {r=2}{},
+  cell{10}{2} = {r=2}{},
+  cell{10}{3} = {r=2}{},
+  rowsep = 3pt,
+  hline{1,12} = {1pt},
+  hline{2} = {0.6pt},
+  hline{3,4,5,7,8,10} = {0.6pt, gray7},
+}
+方法 & 模型 & 修复 & PPL 数据集 / \newline 基准测试 & CR & $\Delta$ PPL（$\downarrow$）/\newline 相对性能（$\uparrow$） \\
+KnGPT \cite{edalati2021kroneckergpt} & $\text{GPT-2}_{\rm small}$ \cite{radford2019language} & OpenWebText  & WikiText-103\textsuperscript{\textdagger} / \newline GLUE & $1.5$ & 9.04 / 99.82 \\
+TQ- \newline -Compressor \cite{abronin2024tqcompressor} & $\text{GPT-2}_{\rm small}$ \cite{radford2019language} & OpenWebText & WikiText-103,\newline WikiText-2, Lambada / \newline - & $1.5$ & 37.31 / -  \\
+TensorLLM \cite{gu2025tensorllm} & LLaMA2-7B \cite{touvron2023llama2} & - & - / \newline HotPotQA,  FEVER, \newline Bios Profession, \newline BigBenchWikidataQA & $3.54$ - \newline - $5.81$\textsuperscript{*} & - / 106.92 \\
+LeSTD \cite{li2026lestd} \newline （大） & GPT-J \cite{wang2021gpt_j} & - & WikiText-2 / \newline MathQA, GSM8K, \newline TruthfulQA & 1.25  & 0.68 / 88.30 \\
+LeSTD \cite{li2026lestd} \newline （小） & & & WikiText-2 / \newline MathQA, GSM8K, \newline TruthfulQA & 2.5 & 459.37 / 43.78 \\
+CompactifAI \cite{compactifai} & LLaMA2-7B \newline (float-16) \cite{touvron2023llama2} & Ultrachat, \newline Alpaca, \newline OpenHermess & - / \newline MMLU, \newline HellaSwag, BoolQ, \newline TriviaQ, GSM8K & 3.34\textsuperscript{\textsection} & - / 97.25 \\
+Saten(2:4) \cite{solgi2025saten} & LLaMA3.2-1B \newline \cite{metaai2024llama321b} & 逐任务\newline 微调 & - / \newline BoolQ, CB, WSC, \newline COPA  & 1.59 & - / 101.33 \\
+Saten(u) \cite{solgi2025saten} & & & - / \newline BoolQ, CB, WSC, \newline COPA  & 3.26 & - / 88.34 \\
+LatentLLM \cite{koikeakino2025latentllm} \newline （大） & OPT-6.7B \cite{zhang2022opt} & C4（用于\newline 校准） & WikiText-2, \newline PTB, C4 / \newline - & 1.11 & 0.81 / - \\
+LatentLLM \cite{koikeakino2025latentllm} \newline （小） & & & WikiText-2, \newline PTB, C4 / \newline - & 1.67 & 54.39 / - \\
+\end{tblr}
+
+\vspace{2pt}
+\begin{flushleft}
+\footnotesize
+\textsuperscript{\textdagger} 所报告的困惑度在 WikiText-103 测试集上计算，但模型是在 WikiText-103 训练集上微调的 \cite{edalati2021kroneckergpt}。 \\
+\textsuperscript{*} 压缩率仅针对 MHA 参数报告，而非整个模型 \cite{gu2025tensorllm}。 \\
+\textsuperscript{\textsection} 注意该压缩率仅计入参数量，未计入内存占用，后者还受量化影响 \cite{compactifai}。
+\end{flushleft}
+\end{table}
+
+\subsection{推理}
+\label{subsec:inference}
+
+\paragraph{问题定义。} 给定多头注意力（MHA）针对输入 $x$ 所产生的 KV 缓存张量：$\ten{C}(x) = \bigl(\ten{K}(x), \ten{V}(x)\bigr) \in\R^{2\times L\times B\times H_{\rm KV}\times T\times d_h}$，推理（inference）阶段的目标大致可以表述为：
+\begin{equation}
+  \begin{aligned}
+      & \min_{\Pi} \mathbb{E}_{x \sim \mathcal{D}} \Bigl[ \mu \bigl(\ten{C}(x), \Pi(x)\bigr) \Bigr] \\
+      & \rm s.t. \quad \text{memory/latency budget},
+  \end{aligned}
+\end{equation}
+其中 $\Pi(\cdot)$ 满足：对于从输入分布 $\mathcal{D}$ 中抽取的每一个 $x$，$\Pi(x) \in \mathfrak{TN}(\set{R})$ 都是 KV 缓存的一个张量网络近似，$\mathfrak{TN}(\set{R})$ 表示在给定秩集合 $\set{R}$ 之下的张量网络族；$\mu(\cdot, \cdot)$ 是某种误差度量，例如缓存张量上的重构误差或激活感知损失，与 \cref{subsec:compression} 中的做法类似。我们在此并不试图给出完全严格的形式化，因为尚无任何工作显式地提出或求解这一联合约束问题；这些方法共同的隐含目标是，为 KV 缓存找到一种高效的张量参数化或分解，在保持生成质量并维持或提升推理吞吐量的同时，大幅降低内存占用。
+
+% \paragraph{Compression-realization gap}
+
+% Tensorized models can have fewer parameters but slower inference and training due to a suboptimal contraction path or low GPU utilization. This phenomenon can be formalized and measured as
+% \begin{equation}
+% \rho_{\rm gap}=\frac{\text{parameter compression ratio}}{\text{wall-clock or memory-throughput speedup}}.
+% \label{eq:rho-gap}
+% \end{equation}
+% A large $\rho_{\rm gap}$ indicates that mathematical compression is not translating into system-level benefit -- we refer to this as the \emph{compression-realization gap}. This metric is potentially useful when comparing tensor methods with quantization \cite{frantar2023gptq} and FlashAttention-style IO-aware methods \cite{dao2022flashattention,dao2023flashattention2, shah2024flashattention3}.
+
+
+
+\paragraph{文献概览。} 已有若干工作探索了不同的基于张量的 KV 缓存压缩途径。TPA \cite{zhang2026tpa} 把逐词元切片 $\mat{Q}_t, \mat{K}_t, \mat{V}_t \in \R^{H \times d_h}$ 参数化为一系列上下文感知的张量积之和
+\begin{equation}
+\mat{K}_t = \frac{1}{R_{\rm K}} \sum_{r=1}^{R_{\rm K}} \vecb{a}_r^{\rm K}(x_t) \circ \vecb{b}_r^{\rm K}(x_t),
+\end{equation}
+其中 $\vecb{a}_r^{\rm K}(x_t) \in \R^H, \vecb{b}_r^{\rm K}(x_t) \in \R^{d_h}$ 是依赖上下文的变换。它等价于 $\frac{1}{R_K} \mat{A}^{\rm K}_t(x_t)^\top \mat{B}^{\rm K}_t(x_t)$，其中 $\mat{A}_t(x_t) = [\vecb{a}^{\rm K}_1(x_t), \ldots, \vecb{a}^{\rm K}_{R_{\rm K}}(x_t)] \in \R^{R_{\rm K} \times H}$，$\mat{B}_t(x_t) = [\vecb{b}_1^{\rm K}(x_t), \ldots, \vecb{b}_{R_{\rm K}}^{\rm K}(x_t)] \in \R^{R_{\rm K} \times d_h}$，也就是键矩阵的一个低秩分解，正如 \cref{subsec:illustrative-examples} 中就推理阶段所讨论的那样。查询与值也作同样处理。由此每个词元的内存开销为 $(R_K + R_V)(H + d_h)$，而 MHA 为 $2 H d_h$。Tucker Attention \cite{klein2026tuckerattention} 的出发点是这样一个观察：非张量化的 KV 缓存方法（MQA、GQA、MLA）未能利用跨头冗余。受此启发，该方法首先把注意力计算改写为张量形式，随后通过 Tucker 分解对权重张量加以参数化，从而得以利用这种跨头冗余。每个词元的内存占用降至 2R，其中 R 是一个秩超参数。
+DecoQuant \cite{liu2024decoquant} 观察到，把一个权重矩阵作 MPO 分解、拆成一个大核与一个小核时，大核中的权重分布较窄，而小核中的权重分布较宽。这促使作者提出一种混合精度量化方案：对大核采用低精度量化，对小核采用高精度量化。
+EinSort \cite{koikeakino2026einsort} 探索了置换的思想，其动机来自这样一项发现：对矩阵的元素进行排序，能够得到明显更好的低秩近似。在此基础上，该框架提出在压缩之前使用一个可逆置换 $\pi[\cdot]$，而在压缩之后通过 $\pi^{-1}$ 恢复原有次序。这一压缩框架被应用于 KV 缓存（需要注意的是，此类方法同样可用于权重压缩场景）。这也带来了新的挑战，因为必须为每个词元存储置换次序，其代价可能相当可观。
+
+\paragraph{比较。} 
+
+\Cref{tab:inference} 从结构维度比较了上述张量化 KV 缓存压缩方法。表中未纳入困惑度（PPL）、基准测试得分与延迟，原因是各方法所报告数值之间的可比性有限；例如 TPA 的实验设定是与基线的参数量相匹配，而 Tucker Attention 则确实减少了参数量。表格转而在两个维度上给出结构比较：所依据的分解族，以及该方法属于事后应用、无需额外训练（免训练），还是需要从头训练整个模型。
+
+\begin{table}[!htbp]
+\centering
+\caption{\footnotesize 张量化推理方法的结构比较。}
+\label{tab:inference}
+\footnotesize
+\begin{tblr}{
+  width = \textwidth,
+  colspec = {Q[5.0cm,m,c]Q[5.0cm,m,c]X[m,c]},
+  row{1} = {font=\bfseries},
+  rowsep = 3pt,
+  hline{1,6} = {1pt},
+  hline{2} = {0.6pt},
+  hline{3,4,5} = {0.6pt, gray7},
+}
+方法 & 分解 & 训练 \\
+TPA \cite{zhang2026tpa} & CP & 从头训练\\
+Tucker Attention \cite{klein2026tuckerattention} & Tucker & 从头训练\\
+DecoQuant \cite{liu2024decoquant} & MPO + 量化 & 免训练 \\
+EinSort \cite{koikeakino2026einsort} & 任意 & 免训练 \\
+\end{tblr}
+\end{table}
+
+\subsection{可解释性}
+\label{subsec:interpretability}
+
+\paragraph{问题定义。} 
+
+可解释性的目标在结构上与本综述其余部分有所不同。前面各阶段遵循一种隐含范式：在最小化内存、训练与推理代价的同时，让模型的能力尽可能强。可解释性则旨在理解并解释已有模型。由于这一目标本身较为模糊，我们在此不给出形式化的目标。
+
+\paragraph{文献概览。}
+
+除词元化之外，可解释性是本综述中发展最不成熟的阶段，其中几乎所有工作都是近期出现的。张量理论在此处的贡献不在于效率，而在于描述：它提供了一种把模型所计算的内容写下来的方式，从而使模型的结构变得可见。就其最弱的形式而言，这种贡献纯粹是记号层面的；Taylor \cite{taylor2024interpretabilitysurvey4} 用图形化的张量记号重写了 \cite{elhage2021mathematical} 中的数学框架，一直涵盖到归纳头的构造，使电路变成了图示。
+
+关于可解释性的三项实质性工作，在如何处理多重线性上各不相同。Bilinear MLPs \cite{pearce2025bilinearmlp} 对其加以\emph{施加}。去掉逐元素非线性之后的门控线性单元，可以精确地由一个三阶权重张量描述，因此仅凭权重就能对其进行分析。我们在 \cref{sec:component-ffn} 中讨论过这种双线性构造，并在 \cref{subsec:illustrative-examples} 中把它作为示例给出。
+PolySAE \cite{koromilas2026polysae} 则相反，它在原本缺失多重线性之处\emph{引入}多重线性，因为标准稀疏自编码器 \cite{cunningham2023sae} 把激活重构为字典原子的线性组合，从而无法把一个复合概念与其各组成部分的共现区分开来。PolySAE 保留线性编码器，但在解码器中加入二次项与三次项，并借助共享投影子空间上的低秩张量分解使其在计算上可行，在 GPT-2 small 上仅额外增加约 $3\%$ 的参数。
+TensorLens \cite{atad2026tensorlens} 则对整个模型加以\emph{重新表述}：包括注意力、FFN、归一化与残差连接在内的整个 Transformer 堆栈，被化为一个依赖输入的单一算子，其表示形式为四阶张量 $\ten{T} \in \R^{T \times d \times T \times d}$。
+该张量充当一种广义的注意力矩阵，既取代各个单独的注意力图，也取代跨头、跨层的启发式聚合方式，从而给出对模型的全局描述。
+
+\paragraph{比较。} 
+上述可解释性工作所分析的对象各不相同，因此我们不为它们提供比较表格。
+
+
+% \subsection{Component vs Life-cycle stage overview}
+% \label{sec:component-vs-lifecycle}
+
+% \begin{table}[!htbp]
+% \centering
+% \caption{Cross-reference of lifecycle stages and Transformer components, with representative works at each intersection.}
+% \label{tab:component-lifecycle}
+% \small
+% \rowcolors{2}{gray!10}{white}
+% \renewcommand{\arraystretch}{1.5}
+% \begin{tabularx}{\textwidth}{p{3.5cm}p{3.5cm}p{3.5cm}X}
+% \toprule
+% \rowcolor{white}
+% Lifecycle stage & Embedding Table & Attention & FFN \\
+% \midrule
+% Tokenization    & & & \\
+% Embeddings      & & & \\
+% pre-training     & & & \\
+% PEFT            & & & \\
+% Compression     & & & \\
+% Inference       & & & \\
+% Interpretability & & & \\
+% \bottomrule
+% \end{tabularx}
+% \end{table}
+
+\section{与相邻效率方法的关系}
+\label{sec:neighboring-methods}
+
+\begin{table}[!htbp]
+\centering
+\caption{\footnotesize 张量方法与相邻 LLM 效率技术的比较。表中着重说明二者之间的相互作用与互补性。}
+\label{tab:neighboring}
+\footnotesize
+\begin{tblr}{
+width = \textwidth,
+colspec = {Q[2.0cm,m,c]Q[2.5cm,m,c]Q[3.0cm,m,c]Q[3.0cm,m,c]X[m,c]},
+row{1} = {font=\bfseries},
+rowsep = 3pt,
+hline{1,9} = {1pt},
+hline{2} = {0.6pt},
+hline{3,4,5,6,7,8} = {0.6pt, gray7},
+}
+技术 & 目标 & 典型优势 & 典型局限 & 张量方法如何与之相互作用 \\
+低秩适配器（Low-rank Adapters）\cite{hu2022lora, zhang2023adalora} & 单个矩阵或更新量 & 简单、成熟、易于实现 & 局限于二维结构 & 张量化 PEFT 将低秩结构推广到跨层、跨模块与跨头（\cref{subsec:peft}）\\
+量化 \cite{frantar2023gptq, dettmers2022llmint8, liu2023llmqat} & 数值精度 & 显著降低内存、有硬件支持 & 低比特宽度下质量下降；训练后方法通常需要校准数据 & 张量因子可以量化到不同精度 \cite{liu2024decoquant} \\
+剪枝 / 稀疏化 \cite{frantar2023sparsegpt, ashkboos2024slicegpt} & 权重：神经元、块、注意力头 & 移除权重及相应计算 & 不规则稀疏可能带来速度损失 & 张量网络可与结构化稀疏相结合 \cite{solgi2025saten, li2026lestd} \\
+知识蒸馏（KD）\cite{hinton2015distillingknowledge} & 模型行为 & 在更小模型中恢复性能 & 需要数据与训练 & 张量化的学生模型可以从稠密教师模型蒸馏而来 \cite{edalati2021kroneckergpt} \\
+高效注意力 \cite{dao2022flashattention, wang2020linformer, deepseekai2025deepseekv32} & 注意力计算与内存流量 & 解决长上下文瓶颈 & 通常不减少 FFN 或嵌入参数 & 张量化注意力可与 IO 感知方法及线性/稀疏方法互补 \cite{ma2019tensorized} \\
+KV 缓存 \cite{shazeer2019mqa, ainslie2023gqa, deepseekai2024deepseekv2} & 推理时缓存的键与值 & 降低长上下文解码的缓存内存与带宽 & 可能损害模型质量 & MQA、GQA 等非张量方法是更一般张量参数化的特例 \cite{zhang2026tpa, klein2026tuckerattention} \\
+MoE 路由 \cite{shazeer2017moe, fedus2022switch} & 每个词元激活的参数量 & 在不激活全部参数的情况下扩展容量 & 路由与负载均衡复杂 & 专家索引成为额外的模，从而单个分解即可在专家之间共享结构 \cite{xu2026tdmoe} \\
+\end{tblr}
+\end{table}
+
+张量方法与其他 LLM 效率技术之间存在相互作用。\Cref{tab:neighboring} 针对每一项相邻技术，说明其目标、典型优势与局限，以及它与张量方法相互作用的确切方式。
+一个关键观察是：张量方法无需与这些技术作为互斥的替代方案相互竞争。在实际部署中，张量因子可以被量化，张量化适配器可以在量化后的骨干网络上训练，张量压缩之后还可以接知识蒸馏。
+
+\paragraph{如何理解这些相互作用。}
+\cref{tab:neighboring} 的最后一列包含三种在概念上不同的关系。第一，各技术可以是\emph{可组合的}：张量化改变结构性参数数量或算子图，量化改变精度，剪枝改变支撑集，知识蒸馏改变训练信号。这些方法作用于不同的设计变量，因此可以联合优化。第二，张量方法可以\emph{推广}相邻方法。当更新量只有两个模时即退化为矩阵低秩适配，而张量化 PEFT 将共享扩展到跨层、跨头或跨模块；类似地，MQA 与 GQA 可视为对注意力投影或缓存状态的更一般张量分解的受限情形。第三，各方法可能\emph{重叠}，即高效注意力核、线性或稀疏注意力与张量化注意力可能针对同一部分计算或内存流量。此时组合的收益是第一种方法已经改变瓶颈之后的边际收益，而不是两个独立报告的加速比的乘积。
+
+例如就量化而言，一个紧凑内存模型的存储量为
+\begin{equation}
+\label{eq:memory-budget}
+M_{\rm bits} = \sum_{k=1}^{K} n_k b_k + M_{\rm meta},
+\end{equation}
+其中张量化模型存储为 $K$ 个因子/核张量，$n_k$ 是第 $k$ 部分保留的标量个数，$b_k$ 是其以比特计的精度，$M_{\rm meta}$ 汇集了除数值本身之外该格式所需的开销，例如量化尺度与零点。
+按这种写法，两种技术作用于同一表达式的不同参数：张量化决定 $n_k$，量化决定 $b_k$，且两者都按因子分别选择。诸如先分解再量化、或对已量化模型进行分解这类顺序流程，在考察另一个参数之前就已固定了一个参数，因而只搜索了这一空间的一个切片，没有理由认为其结果是最优的。为不同因子分配不同精度的方案是走出该切片的第一步 \cite{liu2024decoquant}，且这一论点并不局限于量化。
+最后一项 $M_{\rm meta}$ 决定了结构性节省能否在存储格式中得以保留。例如，规则结构几乎无需额外描述开销，而不规则结构——哪个组携带哪个尺度、哪些核张量元素在剪枝后幸存——则必须逐一枚举。由于高压缩率往往正是通过引入这种不规则性获得的，仅按数值计算的压缩率可能高估实际占用内存的节省程度。
+
+\paragraph{组合顺序与误差相互作用。}
+即便两种技术针对不同变量，其次序也可能很重要。分解会改变所得因子的分布与敏感度，从而改变每个因子可以被量化到多激进的程度。分解之前剪枝可能破坏因子分解本可利用的低秩模式，而分解之后对因子剪枝则引入另一种结构化近似。蒸馏既可用于直接训练张量化的学生模型，也可作为压缩之后的修复阶段。因此，两种技术的误差不必线性叠加：它们可能相互放大、部分抵消，或充当隐式正则化项。所以组合方法应作为一个联合流程来优化和评估，而不是用各技术单独调优的超参数拼装而成。
+
+\paragraph{瓶颈感知的组合。}
+合适的组合取决于哪种资源在运行场景中占主导地位。如果权重带宽是瓶颈，张量化结合量化或结构化稀疏可以减少每个词元读取的字节数。在长上下文解码中，注意力与 KV 缓存方法更可能占主导，因此张量缓存分解应与 MQA/GQA 及 IO 感知内核一并评估。对于适配任务，张量化更新可以减少可训练状态，而量化骨干网络则控制冻结模型的内存占用。知识蒸馏又有所不同：它可以恢复质量或迁移行为，但其收益必须与额外的训练成本相权衡。这种分阶段的视角可以避免把并未改善当前非瓶颈资源的方法误记为端到端收益。
+
+这一局限可以用 Amdahl 型上界来表述。设 $p$ 为基线运行时间中受某项技术影响的比例，$S_{\rm target}$ 为该部分的加速比，则端到端加速比满足
+\begin{equation}
+S_{\rm e2e} \leq \frac{1}{(1-p)+p/S_{\rm target}}.
+\label{eq:neighboring-amdahl}
+\end{equation}
+因此，即使张量化模块可以任意快，当未张量化的 FFN、注意力、通信或框架开销主导其余运行时间时，也只能带来有限的收益。针对不同瓶颈的方法可以互补，而针对同一部分的方法则收益递减。这也解释了为什么同一组合对预填充、解码、微调和批量服务场景的帮助程度可能大相径庭。
+
+\paragraph{组合方法的评估。}
+一个有说服力的比较应包含四个系统：稠密基线、仅张量方法、仅相邻技术，以及二者的组合，且都在相同质量、相同硬件与精度条件下进行。只报告组合结果会使收益难以归因于张量化。此外，内存核算应包含张量元数据、量化尺度、稀疏索引、临时缩并缓冲区以及适配器状态。延迟应按预填充与解码分别统计，并同时报告单模块与端到端结果。最后，应明确说明操作次序以及每个基线的调参预算，并且应对张量化部分和完整流程分别报告 \cref{eq:rho-gap} 中的 $\rho_{\rm gap}$。
+
+\section{与概率张量网络的关系}
+\label{sec:prob-tensor-nets}
+% \color{blue}
+张量分解与概率图模型（probabilistic graphical models, PGM）之间的联系十多年来已被广泛认识，主要出现在无监督学习与密度估计的语境中 \cite{hameed2025efficient,han2018unsupervised,miller2021tensor,vieijra2022generative,glasser2019expressive}。人们常援引这种关系来为序列数据的张量网络架构提供依据，但这一对应关系十分微妙，需要仔细限定。本节阐明张量分解对应于 PGM 的确切条件，讨论这些对应关系对实值张量网络的局限，并概述其对语言建模的启示。
+
+\subsection{作为图模型参数化的张量分解}
+
+$N$ 个离散随机变量 $X_1,X_2,\dots, X_N$ 上的联合概率质量函数可以表示为一个元素非负且总和为一的张量 $\ten{P} \in \R^{I_1 \times I_2\times \dots \times I_N}$。许多常见 PGM 对应于 $\ten{P}$ 的低秩或结构化张量分解，张量分解直接编码了模型的条件独立性结构。
+
+\paragraph{CP 分解与朴素贝叶斯。}
+CP 分解将 $N$ 阶张量表示为
+\begin{equation}
+\ten{P}_{i_1,\dots,i_N} = \sum_{r=1}^{R} \lambda_r \mat{A}^{(1)}_{i_1,r} \mat{A}^{(2)}_{i_2,r} \cdots \mat{A}^{(N)}_{i_N,r}.
+\end{equation}
+如果 $\ten{P}$ 是联合概率张量，且元素 $\lambda_r, \mat{A}^{(n)}_{i_n,r}$ 非负并经过适当归一化，则 CP 表示恰好对应于带隐类变量 $Z \in \{1,2,\dots,R\}$ 的朴素贝叶斯模型。具体而言，每个观测变量 $X_n$ 在给定 $Z$ 时条件独立，条件分布为 $\Pr(X_n = i_n \mid Z = r) \propto \mat{A}^{(n)}_{i_n,r}$，先验为 $\Pr(Z = r) \propto \lambda_r$（差一个归一化常数）。这一对应在张量分解文献中广为人知，并已被用于主题建模 \cite{anandkumar2014tensor} 与非负张量分解 \cite{cichocki2009nonnegative}。
+
+
+\paragraph{TT 分解与隐马尔可夫模型。}
+张量列分解 \cite{oseledets2011tensor} 将张量表示为：
+\begin{equation}
+\ten{P}_{i_1,\dots,i_N} = \mat{G}^{(1)}_{i_1} \mat{G}^{(2)}_{i_2} \cdots \mat{G}^{(N)}_{i_N},
+\end{equation}
+其中每个 $\mat{G}^{(n)}_{i_n} \in \R^{R_{n-1} \times R_n}$ 是第 $n$ 个核张量的一个矩阵切片，且 $R_0 = R_N = 1$。
+
+如果元素非负且核张量满足一定的列随机归一化条件，则 TT 格式等价于隐马尔可夫模型（hidden Markov model, HMM）\cite{glasser2019expressive}。具体而言，键维数 $R_n$ 对应位置 $n$ 处的隐状态数，核张量 $\mat{G}^{(n)}_{i_n}$ 编码从隐状态 $R_{n-1}$ 到 $R_n$ 的转移概率以及 $X_n = i_n$ 的发射概率。
+% \cite{schollwock2011dmrg}
+这一联系已被用于基于张量网络的密度估计 \cite{han2018unsupervised}、生成建模 \cite{glasser2020probabilistic} 与序列建模 \cite{stoudenmire2016supervised}。
+
+同样，这一对应关系是有条件的：权重矩阵的无约束实值 TT 表示并不对应 HMM。其核张量不是随机矩阵，键维数没有概率解释，也不存在潜在的随机过程。TT 格式只是一种结构化的低秩参数化，恰好在代数形式上与 HMM 的参数化相同，但不具备概率语义。
+
+\paragraph{块项分解与更一般的 PGM。}
+块项（BT）分解将张量表示为若干 Tucker 块之和：
+\begin{equation}
+\ten{P} = \sum_{k=1}^{K} \ten{G}_k \times_1 \mat{A}^{(1)}_k \times_2 \mat{A}^{(2)}_k \cdots \times_N \mat{A}^{(N)}_k.
+\end{equation}
+当因子与核张量非负且归一化时，BT 分解可以表示隐变量模型的混合，例如朴素贝叶斯混合（每个块是一个朴素贝叶斯分量）或更一般的层次模型。反之，无约束的 BT 分解没有 PGM 解释，应纯粹视为一种灵活的张量参数化。
+
+\subsection{作为矩阵值随机过程的张量网络}
+
+「矩阵值马尔可夫链」一词常被不严格地用来描述对矩阵序列的 TTM 或 MPO 参数化。这一术语形象但并不形式精确。MPO 是如下形式的张量网络：
+\begin{equation}
+\ten{W}_{i_1,j_1,\dots,i_N,j_N} = \mat{G}^{(1)}_{i_1,j_1} \mat{G}^{(2)}_{i_2,j_2} \cdots \mat{G}^{(N)}_{i_N,j_N},
+\end{equation}
+其中每个 $\mat{G}^{(n)}_{i_n,j_n} \in \R^{R_{n-1} \times R_n}$ 是由输入-输出对 $(i_n, j_n)$ 索引的矩阵切片。
+
+这种表示\emph{不是}概率意义上的马尔可夫链。它没有转移概率，没有保持概率总量的状态空间，也没有随机解释。「矩阵值」指的是每个切片都是矩阵，「链」指的是这些矩阵的顺序缩并。它是一个有用的助记说法，但除非核张量被显式约束为列随机矩阵并施加相应的归一化条件，否则不应将其理解为蕴含概率意义上的马尔可夫过程
+
+\subsection{对语言模型的启示}
+
+张量分解与 PGM 的对应关系对语言建模中的张量方法有若干启示：
+
+\begin{enumerate}
+\item \textbf{可解释性：}当张量分解应用于嵌入表、注意力张量或激活张量时，各因子\emph{并不}自动对应主题、句法角色或语义特征等可解释的隐变量。要使因子在概率意义上可解释，分解必须非负且正确归一化。实践中很少如此；多数 LLM 张量化采用针对重构误差或任务损失优化的实值分解。
+
+\item \textbf{生成建模：}如果目标是直接由张量网络构建生成式语言模型，则分解必须受约束以表示有效的概率分布。这要求非负性与归一化，二者会使优化复杂化，并可能相比无约束实值分解降低表达能力。
+
+\item \textbf{序列结构：}TT 与 MPO 格式天然适合序列数据，因为它们施加的链式结构与词元的时间或位置次序相呼应。然而，这种结构上的相似并不意味着模型在概率意义上捕获了时间依赖；它只是说明该参数化与数据的序列性质相契合。
+
+\item \textbf{统一视角：}把张量分解视为 PGM 的参数化，为语言模型中的张量方法提供了统一视角。它提示张量化可被看作对模型表示施加某种条件独立性结构，从而可能成为一种有用的归纳偏置。这一视角对理解张量化架构的表达能力与泛化性质尤为相关。
+\end{enumerate}
+
+% \color{black}
+    % It is worth noting that tensor decompositions are closely related to probabilistic graphical models. A CP decomposition of a joint probability tensor $P(x_1,x_2,\ldots,x_N)$ corresponds to a naive Bayes model, while a TT/MPS decomposition corresponds to a hidden Markov model \cite{novikov2015tensorizing}. This connection suggests that tensor methods for language models can be viewed as imposing a particular probabilistic structure on the model's representations. In particular, the MPO parametrization of weight matrices can be interpreted as a matrix-valued Markov chain, which may explain why TT/MPS works well for sequential data like text.
+
+\section{软件概览}
+\label{sec:software-overview}
+
+
+\subsection{软件包与框架。}
+
+\paragraph{Python 张量库。}本段列出与深度学习场景兼容或专为其设计的最相关的 Python 软件包。TensorLy \cite{kossaifi2019tensorly} 是通用张量工具箱，可运行于多种后端，包括 NumPy \cite{harris2020numpy}、JAX \cite{bradbury2018jax} 与 PyTorch \cite{paszke2019pytorch}，而 tntorch \cite{usvyatsov2022tntorch} 则直接面向 PyTorch。面向张量化训练的软件包构建于成熟的深度学习框架之上：TensorLy-Torch \cite{kossaifi2024tensorlytorch} 面向 PyTorch，T3F \cite{novikov2020t3f} 面向 TensorFlow \cite{abadi2016tensorflow}。其他软件包，如 TensorKrowch \cite{pareja2024tensorkrowch} 与 tn4ml \cite{puljak2025tn4ml}，面向更广泛的机器学习应用。最后，quimb \cite{gray2018quimb} 支持跨多种后端的任意拓扑张量网络，cotengra \cite{gray2021hyperoptimized} 则专注于优化其缩并。
+
+\paragraph{软硬件协同设计。}另一条研究路线针对张量化层进行软硬件协同设计。ETTE \cite{gong2023ette} 与 Huang 等人 \cite{huang2025gvsa} 优化张量化线性层的前向传播以加速推理，而 FETTA \cite{lu2026fetta} 与 Tian 等人 \cite{tian2025fpga} 的 FPGA 设计则同时覆盖训练与推理。
+
+\paragraph{其他。}其余工具可分为三组。一类面向 Python 之外的语言，包括 Julia、C++ 与 MATLAB，例如 ITensor \cite{fishman2022itensor}、TenDeC++ \cite{huang2019tendec} 与 Tensor Toolbox \cite{bader2026tensortoolbox}。另一类实现单一分解族而不专注于深度学习，如 Scikit-TT \cite{gelss2019scikittt}。第三类已有五年以上未更新：TTAX \cite{novikov2021ttax}、TorchMPS \cite{miller2019torchmps} 与 TedNet \cite{yu2022tednet}。
+
+\subsection{案例研究}
+
+现在我们考察两项近期研究，它们展示了这些工具在不同规模下的实际用法：一个处于研究规模，另一个处于生产规模。Javanmard 等人 \cite{javanmard2026mpopicogpt} 对 PicoGPT \cite{osborne2026picogptjl}（一个小型 GPT-2 风格的字符级模型）的每个线性层应用 MPO 参数化。其工作提供了开源的 \texttt{MPOLinear} 模块，其核张量既可由稠密矩阵初始化，也可用标准 PyTorch 自动微分从零训练。他们在 Tiny Shakespeare 数据集上将张量化模型与稠密基线进行了对照验证。Kozyrev 等人 \cite{kozyrev2026minima} 提出 Minima——一个面向生产规模 LLM 的可部署压缩流程。该流程由敏感度分析、Tucker/TT/张量环压缩、简短的修复阶段、定制 Triton/CUDA 内核以及投机解码组成。作者在 Qwen3-32B \cite{yang2025qwen3} 模型上对其进行了验证。
+
+
+\section{讨论}
+\label{sec:future-directions}
+本节讨论面向 LLM 的张量方法所面临的挑战、鸿沟与未来研究方向。
+
+\subsection{压缩-实现鸿沟}
+% \color{blue}
+张量化模型一个反复出现的问题是：参数量大幅减少，却很少能在训练或推理中转化为成比例的加速。我们在此不报告新的测量结果；目的在于为这一现象命名、区分它的两个来源，并确定一套使它在不同方法之间可比较的协议。直观上，我们关心的量是
+\begin{equation*}
+  \rho_{\rm gap} = \frac{\text{theoretical compression}}{\text{practical speedup}},
+\end{equation*}
+其分子是论文通常所宣称的，分母则是用户实际所得的。设 $B$ 表示字节总数，$F$ 表示浮点运算次数（FLOPs），$T$ 表示实际运行时间（wall-clock time），下标``dense''与``TN''分别指基线稠密模型及其张量化对应模型。我们将字节压缩、FLOPs 压缩与加速比定义为
+\begin{equation}
+  C_B = \frac{B_{\rm dense}}{B_{\rm TN}}, \quad
+  C_F = \frac{F_{\rm dense}}{F_{\rm TN}}, \quad
+  S_T = \frac{T_{\rm dense}}{T_{\rm TN}}.
+\end{equation}
+这些量只有在共同的实验设置下才可比，我们要求该设置满足：(i) 相同的设备与数值精度，从而共享峰值吞吐量；(ii) 经过优化的稠密基线；(iii) 稠密模型与 TN 模型质量相当；(iv) 三个量具有相同的范围，或按模块、或端到端；以及 (v) 声明所处的运行区间，并将预填充（prefill）与解码分别报告，因为它们分处计算受限/内存受限边界的两侧。
+
+我们将\emph{压缩-实现鸿沟}（compression-realization gap）定义为
+\begin{equation}
+  \rho_{\rm gap} = \frac{C_B}{S_T}
+  = \underbrace{\frac{C_B}{C_F}}_{\text{algorithmic}} \times
+    \underbrace{\frac{C_F}{S_T}}_{\text{realization}},
+  \label{eq:rho-gap}
+\end{equation}
+它把这一鸿沟拆分为两个互补且可分别施策的部分。算法项只取决于分解方式与缩并方案，而与硬件无关；当分解特有的秩增大时 FLOPs 增长快于内存，或使用了次优的缩并顺序时，它就大于一。实现项则可以用硬件利用率来精确解读。模型 FLOPs 利用率（Model FLOPs utilization）是相对设备峰值吞吐量定义的，即 $\mathrm{MFU} = F / (T \cdot F_{\rm peak})$，从而 $T = F / (\mathrm{MFU} \cdot F_{\rm peak})$。将其代入 $S_T$，并利用条件 (i) 所保证的共享 $F_{\rm peak}$，我们得到
+\begin{equation}
+  \frac{C_F}{S_T} = \frac{\mathrm{MFU}_{\rm dense}}{\mathrm{MFU}_{\rm TN}}.
+\end{equation}
+这一恒等式只有在计算受限区间才有意义，此时 FLOPs 主宰运行时间。在内存受限区间，运行时间由所搬运的字节数决定，与之类似的量是实际达到的内存带宽利用率。
+
+$\rho_{\rm gap} = 1$ 意味着系统将理想化的字节压缩因子全部兑现为加速。典型情形是 $\rho_{\rm gap} > 1$，两个因子将其归因于：或是某种以算术为代价换取内存的分解，或是某个对设备利用得比稠密 GEMM 更差的模型。在内存受限区间，$\rho_{\rm gap} < 1$ 也可能出现——此时缩减权重或 KV 缓存恰恰减少了制约运行时间的那种资源，因而加速可能超过字节压缩。由于该度量只是将名义压缩与实现的加速作对比，它同样适用于量化 \cite{frantar2023gptq, dettmers2022llmint8, liu2023llmqat}、稀疏化 \cite{frantar2023sparsegpt, ashkboos2024slicegpt} 以及 IO 感知的注意力内核 \cite{dao2022flashattention}，从而为比较张量方法与非张量方法提供了共同基础；我们将在 \cref{subsec:gaps} 中回到这一点。
+% \color{black}
+
+% \subsection{Challenges and Pitfalls}
+% \label{sec:challenges}
+% Despite their promise, tensor methods for language models face several significant challenges that are often underreported in the literature.
+% \begin{itemize}
+% \item{Rank Selection and Sensitivity}
+% Choosing the right tensor ranks is a critical hyperparameter that is often treated heuristically. For TT/MPS, increasing ranks by 1 can dramatically increase the parameter count (by $O(I R)$), making rank search expensive. Moreover, the optimal rank varies across layers: attention projections may require higher ranks than FFN projections \cite{vadlamannati2023partial}. The sensitivity of downstream performance to rank choices is rarely quantified systematically.
+
+% \item{Hardware Compatibility}
+% Tensor decompositions introduce irregular memory access patterns and small matrix multiplications that are poorly optimized on modern GPUs. While GEMM operations (large matrix multiplications) achieve near-peak FLOP utilization, the sequential contractions in TT/MPS often achieve only 10-30\% of peak performance \cite{goto2008anatomy}. This creates a $\rho_{\rm gap}$ (Eq.~\ref{eq:rho-gap}) between theoretical parameter reduction and actual speedup.
+
+% \item{Training Instability}
+% Training tensorized models from scratch can be unstable due to the constrained parameter space \cite{chekalina2023ttm}. Gradient magnitudes can vary significantly across tensor factors, requiring careful learning rate scheduling. Some methods \cite{yang2024comera} address this with adaptive rank allocation, but the problem is not fully solved.
+
+% \item{Evaluation Pitfalls}
+% Many tensor method papers report parameter counts without measuring actual memory usage or latency. This is problematic because:
+% \begin{itemize}
+%     \item Tensor factors may not be contiguous in memory
+%     \item Small tensor operations introduce kernel launch overhead
+%     \item Quantization is often applied in addition to tensor decomposition, conflating the benefits
+% \end{itemize}
+% We recommend that future work report the complete memory footprint (including overhead) and end-to-end latency for realistic sequence lengths.
+% \end{itemize}
+
+\subsection{鸿沟、挑战与可能的解决方案}
+\label{subsec:gaps}
+本小节汇集被综述工作自身所报告的开放问题。我们从所综述论文的局限性与未来工作章节中提取这些问题，并按主题加以归类。对每一处鸿沟，我们都描述其中出现的挑战以及可能解决它们的方向。\Cref{tab:gap-map} 以紧凑的形式呈现这些内容，随后的段落则更详细地讨论每一处鸿沟。
+
+\begin{table}[!htbp]
+\centering
+\caption{\footnotesize 张量方法文献中的鸿沟与挑战概览。}
+\label{tab:gap-map}
+\footnotesize
+\begin{tblr}{
+  width = \textwidth,
+  colspec = {Q[4.0cm,m,c]Q[5.5cm,m,c]X[m,c]},
+  row{1} = {font=\bfseries},
+  rowsep = 3pt,
+  hline{1,10} = {1pt},
+  hline{2} = {0.6pt},
+  hline{3,4,5,6,7,8,9} = {0.6pt, gray7},
+}
+鸿沟 & 挑战 & 可能的解决方案 \\
+硬件兼容性 & 小规模、顺序且不规则的缩并未能充分利用 GPU 并行性，因此参数更少未必意味着计算更快 & 提供融合且结构感知内核的开源 Triton/CUDA 库，并通过实测 $\rho_{\rm gap}$ 进行评估 \\
+秩选择 & 最优秩在不同层与组件类型之间各不相同；矩阵自适应方案难以直接推广到张量秩 & 自适应秩分配算法，并与固定秩启发式方法进行基准对比 \\
+张量化方案 & 参数量相同的方案在质量与缩并代价上各有差异；方案选择是一次复杂搜索，其目标函数评估代价高昂 & 构造一个可采纳的方案集合并对其进行高效搜索，按验证损失、内存与缩并代价为候选方案打分 \\
+新型张量网络 & 更丰富的拓扑引入更复杂的秩/方案选择，并抬高缩并代价与延迟 & 按组件/阶段评估尚未充分探索的拓扑，同时报告质量、内存与延迟 \\
+训练/优化动力学 & 由于张量参数化改变了损失景观，而优化器却是为稠密权重矩阵调校的，训练可能不稳定 & 对各核的梯度尺度与初始化进行诊断；采用考虑张量结构的优化例程 \\
+规模化 & 在大规模下从零训练张量化模型超出了多数学术机构的算力，这对预训练阶段影响最大 & 测量质量与压缩率如何随规模变化，从而给出张量化模型的类标度律 \\
+与相邻效率方法的兼容性 & 与其他效率方法的正交性在原则上成立，但收益能否叠加、误差如何复合仍属未知 & 通过消融实验将张量化的贡献与其他方法的贡献分离开来 \\
+基准测试与评估 & 各方法使用不同的基线、数据集与逐篇调参，因此所报告的收益无法直接比较 & 在共享基线上按阶段建立基准测试，将压缩-实现鸿沟与质量一并报告 \\
+\end{tblr}
+\end{table}
+
+\paragraph{硬件兼容性。} 
+
+所有组件与阶段的张量化都面临一个共同挑战：硬件兼容性。现代 GPU 是为稠密 GEMM 而设计的——后者规模大、规则且高度可并行，而张量缩并却是小规模、顺序且不规则的，因此参数更少的模型未必运行得更快。
+% This discrepancy between theoretical and practical speedup is what $\rho_{\rm gap}$ (\cref{eq:rho-gap}) measures.
+弥合这一压缩-实现鸿沟很可能是一个内核层面的问题。有两类 GPU 内核可以应对它。融合内核将一连串缩并合并为单次启动，从而消除每次启动的开销，并把中间因子保留在快速存储器中，而不必写回全局内存。结构感知内核则利用分解施加于各因子上的结构（例如稀疏核），而不将其视为稠密数组。一个切实可行的方案是实现此类内核的开源 Triton 或 CUDA 库，并以实测 $\rho_{\rm gap}$（式 \ref{eq:rho-gap}）报告其收益。
+
+\paragraph{秩选择。}
+
+秩是张量化模型的主要调控旋钮。统一的秩选择是一种便捷的启发式方法，但并非最优，因为最优秩在不同层与组件类型之间可能各不相同。原则上，自适应分配秩的算法在同等参数预算下应优于统一分配。与此同时，将诸如 AdaLoRA \cite{zhang2023adalora} 之类的矩阵自适应方案推广到张量秩并非易事。若干被综述的研究 \cite{yang2024comera}、\cite{lopezpiqueres2025metatt}，以及超出本文范围的工作 \cite{hawkins2019rankselection1}、\cite{hawkins2021rankselection2}、\cite{gu2022heat}，都提出了用于自动秩分配的自适应方案。
+% CoMERA \cite{yang2024comera} treats the rank as an optimization variable of its modified TT parametrization and adjusts it during training.
+% MetaTT \cite{lopezpiqueres2025metatt} exploits DMRG-style alternating minimization for adaptive rank tuning.
+然而，一种通用且普遍适用的自适应秩分配方法仍然缺失。
+
+% As a possible step in this direction, rank allocation could be made sensitivity-aware.
+% Let $\varepsilon_m(\set{R}_m)$ be the approximation error of module $m \in \set{M}$ for
+% given ranks $\set{R}_m$, and let $s_m$ be its downstream sensitivity. One can then
+% select ranks by solving
+% \begin{equation}
+% \begin{aligned}
+%   & \min_{\set{R}_1,\ldots,\set{R}_{|\set{M}|}}\sum_{m=1}^{|\set{M}|}s_m\,\varepsilon_m(\set{R}_m) \\
+%   \rm s.t. \quad & \sum_{m=1}^{|\set{M}|} \operatorname{Mem}_m (\set{R}_m)\le \operatorname{Mem}_0,
+% \end{aligned}
+% \end{equation}
+% where $\operatorname{Mem}_m(\cdot)$ is the memory cost of module $m$ and
+% $\operatorname{Mem}_0$ is the memory budget. This would allocate more rank to modules
+% whose errors affect activations, logits, or other downstream behaviors.
+
+\paragraph{张量化方案。}
+
+第二个设计选择关乎张量化方案本身，即模型参数如何成为张量对象，以及在实际中哪种可采纳的映射效果最佳。例如，在施加式设定中（\cref{sec:tensor-strategies}），将权重矩阵 $\mat{W}$ 变为张量 $\ten{W}$ 需要选择模的数目及其大小，而这些选择并不显然。不同的选择可能给出相同的参数量，却在逼近质量与缩并代价上有所不同。这一领域在理论上仍显不足。
+
+% although the problem can be stated formally. Let
+% $\operatorname{Mem}(\cdot, \cdot)$ and $\operatorname{Contr}(\cdot, \cdot)$ denote
+% memory and contraction cost, respectively. To find the optimal tensor shape
+% $\phi^{\star}$ among admissible reshapes $\Phi$, one can pose the following
+% optimization problem:
+% \begin{equation}
+% \phi^{\star}=\arg\min_{\phi\in\Phi}
+% \left[
+% \mathcal{L}_{\rm val}\bigl(f_{\theta}(\phi,\set{R})\bigr)
+% +\lambda \operatorname{Mem}(\phi,\set{R})
+% +\gamma \operatorname{Contr}(\phi,\set{R})
+% \right],
+% \end{equation}
+% where $f_{\theta}(\phi,\set{R})$ is the trained tensorized model with shape $\phi$ and
+% ranks $\set{R}$, $\mathcal{L}_{\rm val}$ is the validation loss, and $\lambda,\gamma$
+% are tradeoff hyperparameters. The open question is how to construct an admissible
+% $\Phi$ and how to optimize over it efficiently.
+
+
+\paragraph{新型张量网络。}
+
+应用新型张量网络是一个自然且有前景的方向。例如，在施加式张量化设定中，原则上没有任何东西将可用的张量网络限定为 TTM；更丰富的拓扑同样有效。深层张量网络在表达能力与内存效率上可能优于诸如 TTM 之类的浅层链式拓扑，并且它们已在 LLM 与 NLP 之外的领域展现出可喜的结果 \cite{adtn}，这提示它们或许也能迁移到 LLM 设定中。然而，张量网络越深、越复杂，计算延迟就越高，因为缩并代价随之增长。张量环 \cite{zhao2016tensorring}、树结构 \cite{gracedyck2010h_tucker}、全连接 \cite{zheng2021fctn}、PEPS \cite{verstraete2008peps}、受 MERA 启发 \cite{vidal2008mera} 以及 Kronecker 张量分解 \cite{batselier2017ktd} 等网络，在 LLM 张量化中仍有待深入探索。
+
+
+\paragraph{训练与优化动力学。} 
+
+使用标准技术与优化器训练张量化模型可能并不稳定 \cite{barratt2022tnunstabletraining}。一个原因在于，张量参数化显著改变了损失景观，因此为稠密权重矩阵设计与调校的优化器（如 Adam）对张量化模型而言未必最优 \cite{yang2024comera}。目前仍然缺失的，是对张量化训练在这一景观中如何表现的理解，包括梯度幅值如何在各核之间分布、核的初始化如何影响收敛，以及这些量在训练过程中如何演化。此类诊断还能指明优化器实际上需要纠正什么。随后，研究考虑张量结构的优化例程便有望让训练既更快又更稳定；一些方法（如 MetaTT \cite{lopezpiqueres2025metatt}）正指向这一方向。
+
+\paragraph{规模化。} 
+
+从零训练一个张量化语言模型代价高昂，而在多个规模上训练、乃至在大规模上训练，更是超出了多数学术团队的算力 \cite{chekalina2023ttm}。这对预训练阶段影响最大。悬而未决的问题是：随着模型增大，张量化的收益如何变化——具体而言，压缩率与质量在各个规模上表现如何，从而为张量化语言模型提供一类比于标度律 \cite{kaplan2020scalinglaws} 的规律。现有证据离此尚远（\cref{tab:pre-training-methods}）。在其他阶段，规模化同样是一个现实问题，因为一个模型能被压缩到何种程度取决于它是如何训练的。近期的模型往往经过蒸馏，可能更难压缩 \cite{solgi2025saten}。因此，在某一模型上测得的压缩率未必能推广到更新或更大的模型。
+
+\paragraph{与相邻效率方法的兼容性。} 
+
+\Cref{sec:neighboring-methods} 讨论了张量方法与量化、剪枝、蒸馏及其他效率技术之间的关系。原则上，它们大多与张量化正交，但其实际交互——包括收益能否叠加以及误差如何复合——仍是一个悬而未决的问题。
+
+
+\paragraph{基准测试与评估。}
+
+不同论文所报告的数字往往无法直接比较：各方法在不同的基线与数据集上评估，且分别调参，因此所报告质量的差异可能来自实验设置，而不仅仅来自方法本身。要断言某方法优于另一方法，需要在共享基线上进行比较，并以同一套流程为每种方法调校超参数。基准测试能够提供这一点，而且很可能每个阶段都应各有一套，因为各阶段所优化的目标并不相同。无论哪个阶段，此类基准测试都必须将压缩-实现鸿沟（式 \ref{eq:rho-gap}）与质量一并报告。否则，一个在纸面上节省参数、却未在 GPU 上节省时间的方法，就与一个两者兼省的方法无从区分。
+
+% \subsection{Multimodality}
+% Multimodal tensor objects can be written as
+% \begin{equation}
+% \ten{F}\in\R^{M\times L\times T_m\times d},
+% \end{equation}
+% where $M$ indexes modality, $L$ layer, $T_m$ modality-specific position, and $d$ feature dimension. Tucker or block-term decompositions could separate modality-specific factors from shared reasoning cores. This connects tensor methods to visual-language models such as Flamingo and LLaVA-style systems \cite{alayrac2022flamingo,liu2024visual}.
+
+\subsection{未来方向}
+
+上一小节聚焦于为使现有张量方法变得可靠且高效而必须清除的障碍。这里我们强调一些更长期的方向，它们改变张量化在模型生命周期中的切入点、其所作用的对象，或其意图提供的能力。这些方向将针对具体阶段的文献延伸至张量原生的语言模型设计。
+
+\paragraph{词元化。} 
+
+尚无张量方法触及词元化器（\cref{subsec:tokenization}），尽管词元之间的关联一旦使用词表便告丢失：由 BPE 及其变体构建的词表是一组子词字符串，但每个字符串仅通过其索引被使用。因此，共享同一词素的两个词元可能获得毫不相关的嵌入。张量方法是施加反映这种关联之结构的自然途径。MorphTE \cite{gan2022morphte} 为嵌入这样做了，但它从外部分析器获取分词结果，并保持词表不变。更广泛地说，词表与嵌入表仍是先后依次构建的；如何联合构建二者仍是一个未解问题。其障碍在于，词元化器是一个离散、不可微的映射，因此不存在可供分解的连续对象。
+
+\paragraph{可解释性。}
+可解释性之所以未被充分探索，原因恰恰相反。这一阶段并非空白，而是新生，并且在我们看来最具前景。除记号方面的工作外，\cref{subsec:interpretability} 中综述的每一种方法都是在过去一年中出现的。它们共同表明，多重线性结构能够以三种方式支撑理解。它可以被\emph{添加}到分析工具中，如 PolySAE \cite{koromilas2026polysae}；也可以从一个本身即为多重线性、却未如此书写的模型中被\emph{重构}出来，如 TensorLens \cite{atad2026tensorlens}；还可以在训练时作为归纳偏置被\emph{施加}进去，如双线性层 \cite{pearce2025bilinearmlp}。最后一条路径要求最高，因为它需要从零进行预训练，同时影响也最深远，因为它把可解释性变成了对架构的一项设计约束。
+
+另一个独立的机会是图形化张量记号 \cite{taylor2024interpretabilitysurvey4}。它的直接收益在于阐释：一张图能够说明某方法对哪些模进行缩并、共享或截断；据此，我们鼓励张量可解释性方法的作者以这种方式绘制其构造。除此之外，这种记号本身就是一件推理工具，因为追问一个网络容许哪些缩并顺序、分解方式与共享因子，能够揭示新的机制。
+
+\paragraph{生命周期级协同设计。}
+现有方法大多只在生命周期的某一个阶段优化张量化，而将其周边阶段视为固定不变。相反，一个张量原生的模型可以协同设计嵌入分解、基础模型秩、适配子空间、训练后压缩与推理时的缩并调度。这种耦合很重要，因为一个使预训练损失最小的秩模式可能并不适合后续的 PEFT，而一个在代数上紧凑的分解可能在解码期间难以高效执行。因此，一种有用的表述是多目标的：在明确的资源预算下，联合选择张量化方案与秩，以优化质量、训练内存、适配容量、服务延迟与能耗。结果应以 Pareto 前沿的形式报告。
+
+\paragraph{张量化训练状态与分布式学习。}
+现有文献主要关注模型权重、适配器与 KV 缓存，但大规模训练还需存储激活、梯度、优化器矩以及通信缓冲区。这些对象天然带有与层、微批次、序列位置、注意力头或专家以及设备相关联的模。跨此类模利用低秩结构，既能减少加速器内存，也能减少设备间通信，从而将张量化从模型表示扩展到完整的训练状态。核心难点在于，这些张量是瞬态且非平稳的：它们的有效秩可能在训练过程中发生变化，而逼近误差会随优化不断累积。因此，未来工作应当将收敛性、数值稳定性、通信字节数、同步代价与端到端训练吞吐量一并评估。
+
+\paragraph{条件式与弹性张量化。}
+几乎所有被综述的方法都使用对每个输入保持固定的秩与缩并图。一个更灵活的模型则可以按层、词元、上下文长度、任务或置信度有条件地分配张量容量，仅当额外的核或秩分量足以改善预测时才激活它们。这将把秩从静态的架构超参数转变为运行时的计算预算，并可提供可控的质量--延迟权衡。系统层面的挑战相当可观：可变的缩并形状会干扰批处理、编译与融合内核。因此，评估必须包含最坏情况内存与尾延迟，而不仅仅是平均 FLOPs 或平均秩。
+
+\paragraph{多模态与模块化架构。}
+多模态语言模型与专家混合架构暴露出单一稠密文本模型所不具备的语义模，包括模态、专家、路由组、空间位置与时间位置。Tucker 分解、块项分解、树结构分解或共享核分解，可以将全局共享的语言学因子与特定于模态或专家的因子分离开来。这或许为在各模块间复制完整投影矩阵与适配器矩阵的做法提供了一种有原则的替代方案。悬而未决的问题在于：如何在保留特定模态容量、路由均衡与稀有专家行为的同时，避免因共享核限制过严而产生负迁移。这一方向还将检验：语义上有意义的张量模在大规模下是否比施加式重排更为鲁棒。
+
+% \paragraph{\rev{Canonicalization and longitudinal analysis.}}
+% \rev{Tensor factors are generally non-unique because of permutation, scaling, rotation, and gauge freedoms. This ambiguity is harmless when only reconstruction quality matters, but it obstructs interpretability and makes factors difficult to compare across random seeds, checkpoints, ranks, or model variants. Canonical gauges, factor-alignment procedures, and uncertainty estimates for recovered components would make tensor explanations more reproducible. They would also enable longitudinal questions that current methods cannot answer cleanly: whether a factor emerges early or late in training, persists through adaptation and compression, or splits and merges as rank changes. Connecting factor stability to calibration, robustness, and knowledge retention would provide a stronger test of whether a tensor component reflects a genuine mechanism rather than an arbitrary parameterization.}
+
+
+\section{结论}
+\label{sec:conclusion}
+% \color{olive}
+本综述透过统一的张量理论视角考察了面向语言模型的张量方法，并沿 LLM 生命周期的七个阶段对相关文献加以梳理。这一综合归纳出两点发现。其一，某一组件可用的张量化策略取决于其各模是否承载语义。注意力张量与堆叠投影张量容许按模特定的分解，而前馈网络与嵌入表通常依赖施加式重排以及诸如 TT 与 TTM 之类的链式张量网络。其二，同一族分解在不同阶段反复出现；例如 TT 与 TTM 就出现在嵌入、预训练、PEFT 与压缩之中。尽管如此，各阶段的目标并不相同：预训练在参数预算下优化语言建模损失，而压缩则优化重构误差或激活感知的失真。这一区分对方法设计与评估具有实际意义。
+
+生命周期视角还使这一领域覆盖的不均衡变得可见。词元化尚未被张量方法触及，可解释性是最新的阶段、且在我们看来最具前景，而预训练则缺乏用以说明张量化如何与标度律相互作用的多规模证据。贯穿各阶段的核心障碍是压缩-实现鸿沟，因为节省参数很少能转化为成比例的加速。我们将其形式化为度量 $\rho_{\rm gap}$，它把由分解与缩并方案决定的算法项，与由模型对设备利用得好坏决定的实现项分离开来。我们所勾画的方向兼顾这一问题的两侧。融合内核与结构感知内核针对实现侧，而自适应秩分配、被理解得更透彻的张量化方案以及更丰富的张量网络拓扑则针对算法侧。这些方向还应辅之以按阶段设立、将 $\rho_{\rm gap}$ 与质量一并报告的基准测试。
+
+总体而言，本综述将张量方法视为 LLM 研究内部一个自洽的子领域。我们希望它既能作为对现有工作的一份参考，也能成为下一代张量化语言模型的一个切入点。
+
+% \color{blue}
+% This survey has examined tensor methods for language models through a unified algebraic lens, organizing the literature across the seven stages of the LLM lifecycle. Several findings emerge from this synthesis. First, the tensorization strategies available to a given component depend critically on whether its modes carry semantic meaning: attention tensors and stacked projection tensors admit mode-specific factor sharing, while feed-forward networks and embedding tables typically rely on imposed reshaping and chain-like tensor networks such as TT and TTM. Second, the same decomposition families recur across multiple lifecycle stages---TT and TTM appear in embeddings, pre-training, PEFT, and compression---yet the optimization objectives differ fundamentally: training from scratch optimizes for task loss under a parameter budget, whereas post-hoc compression optimizes for reconstruction error or activation-aware distortion. This distinction has practical consequences for method design and evaluation.
+
+% The survey also reveals notable gaps. The tokenization stage remains entirely unaddressed by tensor methods, despite the structural relatedness of subword units being a natural target for tensor factorization. The pre-training stage lacks systematic evidence on how tensorization interacts with scaling laws; the available results (Table~7) are limited to two methods at modest scales. The inference stage is represented by a single mature approach to KV-cache tensorization, with several others appearing only in concurrent work. Interpretability, while the most recent and promising direction, is still in its formative phase, with three distinct approaches---bilinear layers, polynomial sparse autoencoders, and end-to-end tensor reformulation---that have not yet been compared or integrated.
+
+% Looking forward, we identify several concrete directions that emerge directly from these gaps. Hardware compatibility is the most immediate obstacle: tensorized models reduce parameters but often increase latency due to small, sequential contractions that underutilize GPU parallelism. Addressing this requires kernel-level work---fused contractions and structure-aware kernels---and systematic reporting of \(\rho_{\mathrm{gap}}\) to ensure that theoretical compression translates to practical gains. Rank selection remains an open problem, with uniform heuristics dominating despite the clear non-uniformity of optimal ranks across layers and component types. Finally, the relationship between tensor methods and neighboring efficiency techniques---quantization, pruning, distillation---is underexplored; the gains may be orthogonal, but how errors compose is unknown.
+
+% This survey provides a foundation for treating tensor methods as a coherent subfield within LLM research. We hope it serves both as a reference for existing work and as a starting point for the next generation of tensor-native language models.
+%  \color{black}
+% Tensor methods offer a principled algebraic language for describing, compressing, adapting, and interpreting large language models across their entire training and deployment lifecycle. The survey has organized existing work into a seven-stage lifecycle framework and identified structural gaps: the tokenization stage is essentially untouched; pre-training-time tensorization lacks scaling-law characterization; KV-cache tensorization is represented by only one mature paper; and tensor-based interpretability remains an open problem. \textcolor{red}{The proposed $\rho_{\rm gap}$ metric and rank-sensitivity allocation framework offer concrete tools for the community to bridge the gap between theoretical compression ratios and practical system-level gains.}
+
+{\sloppy\printbibliography}
+
+
+\end{document}

@@ -1,0 +1,257 @@
+Using the copy tensor, we can write this as:
+\begin{align}\label{eqn:parametrized-prob}
+    \PP(X_1,\cdots,X_4) \simeq
+    \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{-0.35}
+    \def\x{0}
+  \node[tensor,fill=red!30!white] (D) at (\x-1,\y-0.25){$\Gt_1$};
+  \node[tensor,fill=red!50!white] (A) at (\x,\y-0.25){\scalebox{0.85}{$\Gt_2$}};
+  \node[tensor,fill=blue!50!white] (B) at (\x+1,\y-0.25){$\Gt_3$};
+   \node[tensor,fill=blue!20!white] (C) at (\x+2,\y-0.25){$\Gt_4$};
+   \node[tensor,fill=red!30!white] (G1) at (\x-1,\y+1){$\Gt_1$};
+  \node[tensor,fill=red!50!white] (G2) at (\x,\y+1){\scalebox{0.85}{$\Gt_2$}};
+  \node[tensor,fill=blue!50!white] (G3) at (\x+1,\y+1){$\Gt_3$};
+   \node[tensor,fill=blue!20!white] (G4) at (\x+2,\y+1){$\Gt_4$};
+    \draw[edge](G1) -- (G2)node [midway,above] {\edgelabel{$R_1$}};
+    \draw[edge](G2) -- (G3)node [midway,above] {\edgelabel{$R_2$}};
+    \draw[edge](G3) -- (G4)node [midway,above] {\edgelabel{$R_3$}};
+    \draw[edge](D) -- (A) node [midway,above] {\edgelabel{$R_1$}};
+    \draw[edge](A) -- (B) node [midway,above] {\edgelabel{$R_2$}};
+    \draw[edge](B) -- (C) node [midway,above] {\edgelabel{$R_3$}};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_1) at (\x-1,\y+0.35) {};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_2) at (\x,\y+0.35) {};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_3) at (\x+1,\y+0.35) {};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_4) at (\x+2,\y+0.35) {};
+    \draw[edge](D)--(G1);
+    \draw[edge](A)--(G2);
+    \draw[edge](B)--(G3);    \draw[edge](C)--(G4);
+    \draw[edge](m_1) -- (\x-1.35,\y+0.35);
+    \draw[edge](m_4) -- (\x+2.35,\y+0.35);
+    \draw[edge](m_2) -- (\x-0.35,\y+0.35);
+    \draw[edge](m_3) -- (\x+1.35,\y+0.35);
+\end{tikzpicture}
+\end{align}
+
+To ensure that the probabilities sum to one, we can choose to model un-normalized squared-root probabilities, since, as we will see, computing the normalization constant is very easy when the probability tensor is in the TT format. We thus assume that
+$$\PP(X_1=i_1,\cdots,X_N=i_N) = \frac{(\Tt_{i_1,\cdots,i_N})^2}{\zeta},$$
+where $\zeta = \sum_{i_1,\cdots,i_N}(\Tt_{i_1,\cdots,i_N})^2$ is the normalization constant. Similarly to efficient operations in the TT format presented in Section~\ref{sec:efficient-operations}, this normalization factor can be efficiently computed in the TT format: 
+$$\zeta= \sum_{i_1,\cdots,i_4}\Tt_{i_1,\cdots,i_4}^2
+=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{-0.35}
+    \def\x{0}
+  \node[tensor,fill=red!30!white] (D) at (\x-1,\y-0.25){$\Gt_1$};
+  \node[tensor,fill=red!50!white] (A) at (\x,\y-0.25){\scalebox{0.85}{$\Gt_2$}};
+    \node[tensor,fill=blue!50!white] (B) at (\x+1,\y-0.25){$\Gt_3$};
+    \node[tensor,fill=blue!20!white] (C) at (\x+2,\y-0.25){$\Gt_4$};
+     \node[tensor,fill=red!30!white] (G1) at (\x-1,\y+1){$\Gt_1$};
+    \node[tensor,fill=red!50!white] (G2) at (\x,\y+1){\scalebox{0.85}{$\Gt_2$}};
+    \node[tensor,fill=blue!50!white] (G3) at (\x+1,\y+1){$\Gt_3$};
+    \node[tensor,fill=blue!20!white] (G4) at (\x+2,\y+1){$\Gt_4$};
+
+    \draw[edge](G1) -- (G2)node [midway,above] {\edgelabel{$R_1$}};
+    \draw[edge](G2) -- (G3)node [midway,above] {\edgelabel{$R_2$}};
+    \draw[edge](G3) -- (G4)node [midway,above] {\edgelabel{$R_3$}};
+    \draw[edge](D) -- (A) node [midway,above] {\edgelabel{$R_1$}};
+    \draw[edge](A) -- (B) node [midway,above] {\edgelabel{$R_2$}};
+    \draw[edge](B) -- (C) node [midway,above] {\edgelabel{$R_3$}};
+    \draw[edge](G1)--(D);
+    \draw[edge](G2)--(A);
+    \draw[edge](G3)--(B);
+    \draw[edge](G4)--(C);
+\end{tikzpicture}.
+$$
+The idea above is also called \emph{Born Machine}~\citep{glasser2019expressive,han2018unsupervised}.
+Similarly to what we showed in Section~\ref{sub:probs}, we can compute marginal distributions of TT parametrized probability distributions~(see Eq.~\eqref{eqn:parametrized-prob}) as tensor networks:
+\begin{enumerate}
+    \item %
+    Using the law of total probabilities, the marginal distribution of $X_2,X_3$, and $X_4$ can be expressed as 
+    \begin{align*}
+    \PP(X_2=i_2, X_3=i_3, X_4=i_4) 
+    &= \sum_{i_1=1}^{d_1}\PP(X_1=i_1,\cdots,X_4=i_4)\\ 
+    &=
+    \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{-0.35}
+    \def\x{0}
+  \node[tensor,fill=red!30!white] (D) at (\x-1,\y-0.25){$\Gt_1$};
+  \node[tensor,fill=red!50!white] (A) at (\x,\y-0.25){\scalebox{0.85}{$\Gt_2$}};
+  \node[tensor,fill=blue!50!white] (B) at (\x+1,\y-0.25){$\Gt_3$};
+   \node[tensor,fill=blue!20!white] (C) at (\x+2,\y-0.25){$\Gt_4$};
+   \node[tensor,fill=red!30!white] (G1) at (\x-1,\y+1){$\Gt_1$};
+  \node[tensor,fill=red!50!white] (G2) at (\x,\y+1){\scalebox{0.85}{$\Gt_2$}};
+  \node[tensor,fill=blue!50!white] (G3) at (\x+1,\y+1){$\Gt_3$};
+   \node[tensor,fill=blue!20!white] (G4) at (\x+2,\y+1){$\Gt_4$};
+    \draw[edge](G1) -- (G2)node [midway,above] {\edgelabel{$R_1$}};
+    \draw[edge](G2) -- (G3)node [midway,above] {\edgelabel{$R_2$}};
+    \draw[edge](G3) -- (G4)node [midway,above] {\edgelabel{$R_3$}};
+    \draw[edge](D) -- (A) node [midway,above] {\edgelabel{$R_1$}};
+    \draw[edge](A) -- (B) node [midway,above] {\edgelabel{$R_2$}};
+    \draw[edge](B) -- (C) node [midway,above] {\edgelabel{$R_3$}};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_1) at (\x-1,\y+0.35) {};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_2) at (\x,\y+0.35) {};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_3) at (\x+1,\y+0.35) {};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_4) at (\x+2,\y+0.35) {};
+    \draw[edge](D)--(G1);
+    \draw[edge](A)--(G2);
+    \draw[edge](B)--(G3);    \draw[edge](C)--(G4);
+    \draw[edge](m_1) -- (\x-1.35,\y+0.35);
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m) at (\x-1.35,\y+0.35) {};
+    \draw[edge](m_4) -- (\x+2.35,\y+0.35) node [right] {\scalebox{0.7}{\indcolor{$i_4$}}};;
+    \draw[edge](m_2) -- (\x-0.35,\y+0.35) node [left] {\scalebox{0.7}{\indcolor{$i_2$}}};;
+    \draw[edge](m_3) -- (\x+1.35,\y+0.35) node [right] {\scalebox{0.7}{\indcolor{$i_3$}}};;
+\end{tikzpicture}
+=
+\sum_{i_1}^{d_1}\Tt_{i_1,\cdots,i_4},
+    \end{align*}
+for all $i_2\in[d_1],i_3\in[d_3]$ and $i_4\in[d_4]$. 
+\item We can similarly express the remaining marginal distributions. For example, the marginal distribution of $X_2$ can be written as
+\begin{align*}
+    \PP(X_2=i_2) 
+    &= \sum_{i_1,i_3,i_4=1}^{d_1,d_3,d_4}\PP(X_1=i_1,\cdots,X_4=i_4)\\ 
+    &=
+    \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{-0.35}
+    \def\x{0}
+  \node[tensor,fill=red!30!white] (D) at (\x-1,\y-0.25){$\Gt_1$};
+  \node[tensor,fill=red!50!white] (A) at (\x,\y-0.25){\scalebox{0.85}{$\Gt_2$}};
+  \node[tensor,fill=blue!50!white] (B) at (\x+1,\y-0.25){$\Gt_3$};
+   \node[tensor,fill=blue!20!white] (C) at (\x+2,\y-0.25){$\Gt_4$};
+   \node[tensor,fill=red!30!white] (G1) at (\x-1,\y+1){$\Gt_1$};
+  \node[tensor,fill=red!50!white] (G2) at (\x,\y+1){\scalebox{0.85}{$\Gt_2$}};
+  \node[tensor,fill=blue!50!white] (G3) at (\x+1,\y+1){$\Gt_3$};
+   \node[tensor,fill=blue!20!white] (G4) at (\x+2,\y+1){$\Gt_4$};
+    \draw[edge](G1) -- (G2)node [midway,above] {\edgelabel{$R_1$}};
+    \draw[edge](G2) -- (G3)node [midway,above] {\edgelabel{$R_2$}};
+    \draw[edge](G3) -- (G4)node [midway,above] {\edgelabel{$R_3$}};
+    \draw[edge](D) -- (A) node [midway,above] {\edgelabel{$R_1$}};
+    \draw[edge](A) -- (B) node [midway,above] {\edgelabel{$R_2$}};
+    \draw[edge](B) -- (C) node [midway,above] {\edgelabel{$R_3$}};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_1) at (\x-1,\y+0.35) {};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_2) at (\x,\y+0.35) {};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_3) at (\x+1,\y+0.35) {};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_4) at (\x+2,\y+0.35) {};
+    \draw[edge](D)--(G1);
+    \draw[edge](A)--(G2);
+    \draw[edge](B)--(G3);    
+    \draw[edge](C)--(G4);
+    \draw[edge](m_1) -- (\x-1.35,\y+0.35);
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_5) at (\x-1.35,\y+0.35) {};
+    \draw[edge](m_4) -- (\x+2.35,\y+0.35);
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_6) at (\x+2.35,\y+0.35) {};
+    \draw[edge](m_2) -- (\x-0.35,\y+0.35) node [left] {\scalebox{0.7}{\indcolor{$i_2$}}};;
+    \draw[edge](m_3) -- (\x+1.35,\y+0.35);
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m_7) at (\x+1.35,\y+0.35) {};
+\end{tikzpicture}
+=
+\sum_{i_1,i_3,i_4=1}^{d_1,d_3,d_4}\Tt_{i_1,\cdots,i_4},
+    \end{align*}
+\end{enumerate}
+\subsection{Computing Expectations of Random Tensor Networks} 
+We will now show how the tensor networks formalism can help us derive complex properties of random tensors. 
+We begin this section by presenting two very useful propositions.
+The first one is a trivial consequence of linearity of expectation, but will prove to be very useful in this section.
+\begin{proposition}\label{prop:inner-expectation}
+    Let $\At$ and $\Bt$ be two independent random tensor networks. tensor networks. Then their inner product in expectation is 
+$$\EE\left(\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!blue!50!white] (At) at (\x,\y){\scalebox{0.85}{$\At$}};
+    \node[tensor,fill=red!30!blue!50!white] (Bt) at (\x+1,\y){\scalebox{0.85}{$\Bt$}};
+    \draw[edge] (At) -- (Bt);
+    \draw[edge] (At) to [out=45,in=135] (Bt);
+    \draw[edge] (At) to [out=-45,in=-135] (Bt);
+    \draw[edge](At)--(\x-0.85,\y);
+    \draw[edge](At)--(\x-0.75,\y+0.5);    \draw[edge](At)--(\x-0.75,\y-0.5);
+    \draw[edge](Bt)--(\x+1.85,\y);
+    \draw[edge](Bt)--(\x+1.75,\y+0.5);    \draw[edge](Bt)--(\x+1.75,\y-0.5);
+\end{tikzpicture} \right)
+=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.8cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!blue!50!white] (At) at (\x,\y){\scalebox{0.85}{$\EE(\At)$}};
+    \node[tensor,fill=red!30!blue!50!white] (Bt) at (\x+1.5,\y){\scalebox{0.85}{$\EE(\Bt)$}};
+    \draw[edge] (At) -- (Bt);
+    \draw[edge] (At) to [out=45,in=135] (Bt);
+    \draw[edge] (At) to [out=-45,in=-135] (Bt);
+    \draw[edge](At)--(\x-0.85,\y);
+    \draw[edge](At)--(\x-0.75,\y+0.5);    \draw[edge](At)--(\x-0.75,\y-0.5);
+    \draw[edge](Bt)--(\x+2.35,\y);
+    \draw[edge](Bt)--(\x+2.25,\y+0.5);    \draw[edge](Bt)--(\x+2.25,\y-0.5);
+\end{tikzpicture}.
+$$
+\begin{proof}
+The result directly follows from the linearity of the expected value and the independence of $\At$ and $\Bt$.
+\end{proof}
+\end{proposition}
+The second one shows an interesting properties of matrices whose entries are drawn from a Gaussian distribution: the expectation of the outer product of such a matrix with itself reduces to a very simple tensor network. 
+\begin{proposition}\label{prop:outer-prod}Let $\Ab\in\RR^{m\times n}$ be a random matrix whose elements are drawn identically and independently from the standard normal distribution. The expected value of the outer product of $\Ab$ with itself is 
+$$\EE\left(
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.15}
+    \def\x{0}
+    \node[tensor,fill=green!50!blue!20!white] (A) at (\x,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=green!50!blue!20!white] (B) at (\x+1.5,\y){\scalebox{0.85}{$\Ab$}};
+    \draw[edge](A) -- (\x-0.55,\y-0.55);
+    \node[draw=none] () at (\x-0.5,\y-0.3) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge](A) -- (\x+0.55,\y-0.55);
+    \node[draw=none] () at (\x+0.5,\y-0.3) {\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge](B) -- (\x+1,\y-0.55);
+    \node[draw=none] () at (\x+1,\y-0.3) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge](B) -- (\x+2,\y-0.55);
+    \node[draw=none] () at (\x+2,\y-0.3) {\scalebox{0.7}{\dimcolor{$n$}}};
+\end{tikzpicture}
+\right)
+=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \draw[edge] (\x+1.45,\y-0.1) to [out=100,in=80] (\x+3,\y-0.1);
+    \node[draw=none] () at (\x+2.25,\y+0.5) {\scalebox{0.6}{\dimcolor{$n$}}};
+    \node[draw=none] () at (\x+1,\y+0.5) {\scalebox{0.6}{\dimcolor{$m$}}};
+\end{tikzpicture},
+$$
+where the right-hand side
+is the outer product of two Kronecker delta~(i.e., $
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \draw[edge] (\x+1.45,\y-0.1) to [out=100,in=80] (\x+3,\y-0.1);
+    \node[draw=none] () at (\x+0.15,\y-0.25) {\scalebox{0.7}{\indcolor{$i_1$}}};
+    \node[draw=none] () at (\x+3,\y-0.25) {\scalebox{0.7}{\indcolor{$i_4$}}};
+    \node[draw=none] () at (\x+1.85,\y-0.25) {\scalebox{0.7}{\indcolor{$i_3$}}};
+    \node[draw=none] () at (\x+1.45,\y-0.25) {\scalebox{0.7}{\indcolor{$i_2$}}};
+\end{tikzpicture}
+=\delta_{i_1i_3}\delta_{i_2i_4}$ for $i_1,i_3\in[m]$ and $i_2,i_4\in[n]$).
+\begin{proof}
+Since the entries of $\Ab$ are drawn independently from $\mathcal{N}(0,1)$, its vectorization follows a multivariate normal distribution, $\vectorize(\Ab) \sim \mathcal{N}(\mathbf{0},\Ib_{mn})$, and thus $\EE(\vectorize(\Ab)\vectorize(\Ab)^\ts) = \Ib_{mn}$. This means that 
+$$ \EE(\Ab_{i_1i_2}\Ab_{i_3i_4})=
+\begin{cases}
+        1 & \text{ if } i_1=i_3\text{ and } i_2=i_4\\
+        0 & \text{ otherwise, }
+    \end{cases} 
+    $$
+hence, $\EE(\Ab\outprod\Ab)_{i_1i_2i_3i_4}=\EE(\Ab_{i_1i_2}\Ab_{i_3i_4}) = \delta_{i_1i_3}\delta_{i_2i_4}=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \draw[edge] (\x+1.45,\y-0.1) to [out=100,in=80] (\x+3,\y-0.1);
+    \node[draw=none] () at (\x+0.15,\y-0.25) {\scalebox{0.7}{\indcolor{$i_1$}}};
+    \node[draw=none] () at (\x+3,\y-0.25) {\scalebox{0.7}{\indcolor{$i_4$}}};
+    \node[draw=none] () at (\x+1.85,\y-0.25) {\scalebox{0.7}{\indcolor{$i_3$}}};
+    \node[draw=none] () at (\x+1.45,\y-0.25) {\scalebox{0.7}{\indcolor{$i_2$}}};
+\end{tikzpicture}$, for all $i_1,i_3\in[m]$ and $i_2,i_4\in[n]$.
+

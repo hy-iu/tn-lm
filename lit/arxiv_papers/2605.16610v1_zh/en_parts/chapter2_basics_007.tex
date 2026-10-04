@@ -1,0 +1,113 @@
+\subsection{Matrix Factorization in Tensor Networks}
+Tensor factorizations can be depicted in tensor network diagrams, just like any other operation. In this section, we will introduce graphical diagrams for matrix factorizations. More general factorizations of higher-order tensors will be covered in Chapter~\ref{chapter:tensor-decomposition}. In tensor networks, factorization means splitting a single node into multiple nodes. We will refer to its inverse operation as merging, i.e., combining multiple nodes into a single node. This process can be clearly illustrated in the following tensor network diagram:
+\begin{align*}
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (A) at (\x,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!50!white] (B) at (\x+2,\y){\scalebox{0.85}{$\Bb$}};
+    \node[tensor,fill=blue!30!red!30!white] (C) at (\x+1,\y-1){\scalebox{0.85}{$\Cb$}};
+    \node[tensor,fill=red!80!blue!60!white] (D) at (\x+3,\y-1){\scalebox{0.85}{$\Db$}};
+    \draw[edge](A) -- (C) node [midway,above] {\scalebox{0.7}{\dimcolor{$r_1$}}};
+    \draw[edge](C) -- (D) node [midway,above] {\scalebox{0.7}{\dimcolor{$r_2$}}};
+    \draw[edge](B) -- (D) node [midway,above] {\scalebox{0.7}{\dimcolor{$r_3$}}};
+    \draw[edge](B) -- (C) node [midway,above] {\scalebox{0.7}{\dimcolor{$r_3$}}};
+    \draw[edge](A) -- (\x-0.8,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge](B) -- (\x+2.8,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \node[draw=none]() at (\x+4.5,\y-0.15){\scalebox{1}{$\xrightarrow[]{\text{merging}}$}};
+    \node[draw=none]() at 
+    (\x+4.5,\y-0.75){\scalebox{1}{$\xleftarrow[\text{factorizing}]{}$}};
+    \node[tensor,fill=red!30!blue!50!white] (M) at (\x+6.5,\y-0.5){\scalebox{0.85}{$\Mb$}};
+    \draw[edge](M) -- (\x+7.5,\y-0.5) node [midway,above] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge](M) -- (\x+5.5,\y-0.5) node [midway,above] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+\end{tikzpicture}
+\end{align*}
+Therefore, we can represent any matrix decomposition in tensor network diagrams. We will see in the following chapters that the QR and singular value decompositions (SVD) are two decompositions that are often used in tensor network algorithm to split nodes. Both of these decompositions factorize a matrix into a product of matrices, some of them satisfying orthogonality constraints. We will use visual cues to represent such orthogonality constraints in tensor network diagrams:
+\paragraph{Left and right orthonormal matrices and tensors}
+We call a matrix $\Ub\in\RR^{m\times n}$ \emph{left-orthogonal} if the contraction  of its transpose with itself from  the left yields the identity matrix~($\Ub^\ts\Ub = \Ib_{n}$).
+Similarly, a matrix $\Vb\in\RR^{m\times n}$ is \emph{right-orthogonal} if the contraction with its transpose from the right yields the identity matrix
+($\Vb\Vb^\ts = \Ib_{m}$). In tensor network diagrams, we will use half-colored nodes to denote such orthogonality structure, in such a way that when connecting two copies of an orthogonal node using the legs on the uncolored part, the result is the identity. For example, a left orthogonal matrix $\Ub\in\RR^{m\times n}$ will be represented as 
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0};
+
+    
+    \node[tensor, path picture={
+    \fill[fill=red!30!white](path picture bounding box.south east)
+        -- 
+    (path picture bounding box.north east) --
+    (path picture bounding box.north west) -- cycle;
+    }, shift={(\x,\y)}] (Ut) {$\Ub$};
+    \draw[edge](Ut) -- (\x-1,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge](Ut) -- (\x+1,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$n$}}};
+\end{tikzpicture}, leading to 
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0};
+
+    \node[tensor, path picture={
+    \fill[fill=red!30!white](path picture bounding box.south west)
+    -- 
+    (path picture bounding box.north east) --
+    (path picture bounding box.north west) -- cycle;
+    }, shift={(\x,\y)}] (U) {$\Ub$};
+    
+    \node[tensor, path picture={
+    \fill[fill=red!30!white](path picture bounding box.south east)
+        -- 
+    (path picture bounding box.north east) --
+    (path picture bounding box.north west) -- cycle;
+    }, shift={(\x+1,\y)}] (Ut) {$\Ub$};
+
+    \draw[edge] (U) -- (Ut) node [midway,above] {\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge](Ut) -- (\x+2,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge](U) -- (\x-1,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$n$}}};
+    \node[draw=none] () at (\x+2.3,\y) {\scalebox{0.8}{\dimcolor{$=$}}};
+    \draw[edge](\x+2.5,\y) -- (\x+4,\y)node [midway,above] {\scalebox{0.7}{\dimcolor{$n$}}};
+    \node[draw=none] () at (\x+4.3,\y) {\scalebox{0.8}{\dimcolor{$=$}}};
+\end{tikzpicture} $\Ib_n$. 
+Similarly, a right-orthogonal matrix $\Vb\in\RR^{m\times n}$ will be drawn as 
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0};
+
+    \node[tensor, path picture={
+    \fill[fill=red!30!white](path picture bounding box.south west)
+    -- 
+    (path picture bounding box.north east) --
+    (path picture bounding box.north west) -- cycle;
+    }, shift={(\x,\y)}] (Vt) {$\Vb$};
+    \draw[edge](Vt) -- (\x-1,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge](Vt) -- (\x+1,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$n$}}};
+\end{tikzpicture} and we have
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0};
+
+    \node[tensor, path picture={
+    \fill[fill=red!30!white](path picture bounding box.south west)
+    -- 
+    (path picture bounding box.north east) --
+    (path picture bounding box.north west) -- cycle;
+    }, shift={(\x,\y)}] (U) {$\Vb$};
+    
+    \node[tensor, path picture={
+    \fill[fill=red!30!white](path picture bounding box.south east)
+        -- 
+    (path picture bounding box.north west) --
+    (path picture bounding box.north east) -- cycle;
+    }, shift={(\x+1,\y)}] (Ut) {$\Vb$};
+
+    \draw[edge] (U) -- (Ut) node [midway,above] {\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge](Ut) -- (\x+2,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge](U) -- (\x-1,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$m$}}};
+    \node[draw=none] () at (\x+4.3,\y) {\scalebox{0.8}{\dimcolor{$=$}}};
+    \node[draw=none] () at (\x+2.3,\y) {\scalebox{0.8}{\dimcolor{$=$}}};
+    \draw[edge](\x+2.5,\y) -- (\x+4,\y)node [midway,above] {\scalebox{0.7}{\dimcolor{$m$}}};
+\end{tikzpicture} $\Ib_m$.
+

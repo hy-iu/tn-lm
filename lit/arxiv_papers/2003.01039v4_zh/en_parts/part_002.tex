@@ -1,0 +1,30 @@
+\section{Background}
+
+We consider sequences over a finite alphabet $\Sigma$, with $\Sigma^n$ denoting the set of all length-$n$ strings, $\Sigma^*$ the set of all strings, and $\varepsilon$ the empty string. We use $\lVert v\rVert$ to denote the 2-norm of a vector, matrix, or higher-order tensor $v$, and $\Tr(M)=\sum_{i=1}^D M_{ii}$ to denote the trace of a square matrix $M\in\field{D\times D}$.
+
+A real-valued\footnote{The restriction to real-valued tensors is natural for machine learning, but differs from the standard in quantum physics of using complex parameters. The results given here carry over to the complex setting, and only require the replacement of some tensors by their complex conjugate.} tensor $\mc{T} \in \R^{d_1\times d_2\times\cdots\times d_n}$ is said to have shape $(\seq{d}{n})$, and can be specified by an indexed collection of elements $\mc{T}_{\seq{i}{n}} \in \R$, where each index $i_k \in [d_k] := \{1, 2, \ldots, d_k\}$. Tensors with $n$ indices are said to be $n$th order, and the set of $n$th order tensors form a vector space of dimension $\Pi_{k=1}^n d_k$.
+%
+\begin{figure}[tb]
+\vskip 0.1in
+\begin{center}
+\centerline{\includegraphics[width=\columnwidth]{contraction.pdf}}
+\caption{(a-b) Two well-known cases of tensor contractions, inner products of vectors and matrix multiplication. (c) A simple tensor network, where 2nd, 3rd, and 4th order tensors are contracted to form a 3rd order tensor. In numerical libraries, small tensor contractions can be computed with the \texttt{einsum} function, and the output $\mc{X}$ is independent of contraction order. (d) The u-MPS model, which uses a core tensor $\mc{A}$ of shape $(D, d, D)$ and $D$-dimensional vectors $\alpha$ and $\omega$ to define tensors of arbitrary order. (e) The length-$n$ normalization factor $\Z_n$ defined by \eqnref{eq:partition_n}, expressed as a network of tensor contractions. (f) The 4th order tensor $\E$ defined by two copies of the u-MPS core tensor $\mc{A}$. The contraction of $\E$ with a matrix on the left or right gives the left and right \emph{transfer operators} of the u-MPS, linear maps which allow the efficient computation of $\Z_n$ via \eqnref{eq:normalization}.}
+\label{fig:contraction}
+\end{center}
+% \vskip -0.2in
+\end{figure}
+%
+Matrices, vectors, and scalars are the simplest examples of tensors, of 2nd, 1st, and 0th order, respectively. Tensor contraction is a generalization of both matrix multiplication and vector inner product, and multiplies two tensors along a pair of indices with equal dimension. If the tensors $\mc{T}$ and $\mc{T'}$ have respective shapes $(d_1,\ldots,d_k,\ldots,d_n)$ and $(d'_1,\ldots,d'_{k'},\ldots,d'_{n'})$, for $d_k = d'_{k'}$, then the contraction of the $k$ and $k'$ indices gives a product tensor $\mc{T''}$, described by elements
+%
+\begin{align}
+\label{eq:contraction}
+& T''_{i_1,\ldots,i_{k-1},i_{k+1},\ldots,i_{n},i'_1,\ldots,i'_{k'-1},i'_{k'+1},\ldots,i'_{n'}} = \nonumber\\
+&\hspace{2.5cm} \sum_{i_k=1}^{d_k}\mc{T}_{i_1,\ldots,i_k,\ldots,i_{n}} \mc{T}'_{i'_1,\ldots,i_{k},\ldots,i'_{n'}}.
+\end{align}
+%
+The contraction operation \eqnref{eq:contraction} is more easily understood with a convenient graphical notation~(see Figure~\ref{fig:contraction}), where individual tensors correspond to nodes in an undirected graph, and edges describe contractions to be performed. Contracting along an index corresponds to merging two connected nodes, to produce a new node whose outgoing edges are the union of those in the tensors being contracted. An important property of tensor contraction is its generalized associativity, so that a network of tensors can be contracted in any order, with the final product tensor being the same in every case.
+
+A natural example of an $n$th order tensor is a probability distribution over length-$n$ sequences $\Sigma^n$, where the probabilities associated with all possible sequences form the $|\Sigma|^n$ separate tensor elements. This exponential growth in the number of elements makes dense representations of higher order tensors infeasible, but convenient tensor decompositions frequently permit the efficient manipulation of tensors with high order, even into the thousands.
+
+The fixed-size matrix product state~\citep{perez2007}~(MPS, also known as tensor train~\citep{oseledets2011})~model parameterizes an $n$th order tensor $\mc{T}$ with shape $(\seq{d}{n})$ as a sequential contraction of $n$ independent tensor ``cores'' $\{\mc{A}^{(j)}\}_{j=1}^n$, which form the parameters of the model. Each $\mc{A}^{(j)}$ has shape $(D_{j-1}, d_j, D_j)$, where $D_0 = D_n = 1$. The dimensions $D_j$ are referred to as bond dimensions (or ranks) of the MPS, and by choosing the $D_j$ to be sufficiently large, it is possible to exactly represent any $n$th order tensor.
+

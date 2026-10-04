@@ -1,0 +1,163 @@
+\section{Transformer 的张量化}
+\label{sec:components}
+
+当前文献对 Transformer 各模块的张量化主要采取按组件的方式进行。具体而言，已有工作大多聚焦于单个 Transformer 子模块，例如嵌入层 \cite{xu2023tensorgpt}、注意力机制 \cite{ma2019tensorized} 或 FFN \cite{chekalina2023ttm}。鉴于三个子模块在结构约束上存在显著差异，本节沿用同样的按组件组织方式，我们称之为本综述的\emph{组件视角}。首先，\cref{sec:tensor-strategies} 介绍张量化策略的二分法。然后，\cref{sec:component-emb,sec:component-att,sec:component-ffn} 依次讨论各子模块，涵盖张量对象从何而来、哪些张量化策略在结构上与之兼容，以及关键挑战是什么。最后，\cref{sec:component-sum} 给出结构性总览。
+
+
+\subsection{张量化策略}
+\label{sec:tensor-strategies}
+
+张量化策略可以按张量对象的模是否携带语义来分类。若各模具有已知语义，例如序列中的位置或注意力头索引，我们称之为\emph{模特定}（mode-specific）张量化。此时，关于语义含义的知识使我们能够利用张量的结构。例如，分解因子可以在结构相似的模之间共享，从而降低内存消耗。
+\emph{强加}（imposed）张量化则出现在模被任意指派的情形，例如把权重矩阵重排成某个兼容形状。此时原则上没有任何因素限制张量网络的选择；相反，选择的动机可能来自人们希望在参数化上施加的归纳偏置 \cite{hamreras2025tensorization}。
+这一区分构成了后续各节组件分析的组织框架。
+
+
+\subsection{嵌入层}
+\label{sec:component-emb}
+
+在嵌入张量化方面可以辨识出三条结构上互不相同的研究路线，它们的差异在于张量对象如何产生以及哪些分解在结构上与之兼容。
+
+\paragraph{经典嵌入表。}
+设 $\mat{E} \in \R^{|\set{V}| \times d}$ 为标准词元嵌入矩阵，其中每一行是一个独立的词元表示。由于各行相互独立，该矩阵不携带更高阶的组织结构。因此，张量化只能以两种方式强加：或者将每一行独立地重排为张量，或者将整个矩阵视为一个张量。逐行方式保留了行间的独立性，而对整个矩阵进行张量化则可能破坏这种独立性。但无论哪种方式，分解后的嵌入在推理时都需要一链缩并才能恢复完整向量，而不像直接查表那样一步取得。这就在压缩率与推理延迟之间造成了权衡。
+
+\paragraph{n-gram 嵌入表。}
+
+当经典嵌入层被 n-gram 嵌入 $\mat{E}_{\rm ngram} \in \R^{|\set{V}|^n\times d}$ \cite{huang2025overtokenized} 取代时，就产生了结构上不同的张量，其中每个条目表示一个由 $n$ 个词元构成的序列。对词表轴重排之后，所得张量的每个模对应 n-gram 中一个不同的位置。因此，这里的张量化是模特定的。当 $n\ge 2$ 且词表规模取任何现实值时，完整表格之大令内存存储无法承受 \cite{zhou2026tensorizingengram}。于是，张量分解不再是事后施加的压缩选择，而是能够对这一对象进行任何操作的结构性必需。以张量分解形式对 n-gram 表进行参数化会引入一个秩超参数。该秩直接控制所学表示的表达能力，秩越高，最终损失越低 \cite{zhou2026tensorizingengram}。这体现了在内存约束下选择最优秩所涉及的关键权衡。
+
+\paragraph{基于词素的嵌入表。} 
+
+也可以不为每个词元存储一个表示，而是维护一张更小的词素（morpheme，即构成词元的子词元单元）表。这一基于词素的矩阵 $\mat{E}_{\rm morpheme}$ 大小为 $|\set{M}| \times d$，其中 $|\set{M}| \ll |\set{V}|$，因而比标准嵌入层紧凑得多。词元向量随后经由张量代数运算从词素嵌入构造而来 \cite{gan2022morphte}，这使得该张量化是模特定的，因为每个模对应词内的一个词素位置。然而，这引入了额外的超参数，且所得词表示的表达能力可能不如直接查表。
+
+\subsection{注意力机制}
+\label{sec:component-att}
+
+注意力机制暴露出若干结构上互不相同的张量对象，每个对象都有其不同的张量化理据。我们将它们归纳为三种情形。
+
+\paragraph{Q、K、V 张量。}
+对于隐藏状态 $\ten{X}\in\R^{B\times T\times d}$，MHA 产生查询、键与值张量
+\begin{equation}
+\ten{Q} \in \R^{B \times H_{\rm Q} \times T \times d_h}, \quad \ten{K},\ten{V}\in\R^{B\times H_{\rm KV}\times T\times d_h},
+\end{equation}
+其中四个模分别为批量、头、序列位置与头维数。这些张量是激活而非静态权重，因此我们也使用记号 $\ten{Q}(x), \ten{K}(x),\ten{V}(x)$。由于每个模都承担不同的语义角色，这里的张量化是模特定的。首要的关注对象是 KV 缓存，即 $\ten{K}, \ten{V}$ 张量。利用这些张量的结构可以显著降低 KV 缓存的内存占用以及推理时的数据传输量。
+然而，利用这一结构仍然并非易事，原因如下。第一，张量方法必须与 FlashAttention \cite{dao2022flashattention} 等高效注意力实现兼容，或者达到相当的 GPU 利用率水平。第二，张量方法必须在压缩率与模型质量两方面都追平或超过 GQA、MLA 等非张量方案。第三，RoPE \cite{su2023rope} 兼容性是一个额外约束，因为 RoPE 在推理时对 $\mat{Q}$ 与 $\mat{K}$ 施加依赖位置的旋转；因此，任何因子化或压缩后的 KV 缓存表示都必须支持这些旋转。可见，张量化 KV 缓存的关键设计挑战在于高效的 GPU 实现、与非张量方案的竞争力，以及 RoPE 兼容性。
+
+
+% \paragraph{Attention score tensor.}
+% The attention score tensor $\ten{A}\in\R^{B\times H\times T\times T}$, obtained as:
+% \begin{equation}
+% \ten{A}(b, h, q, k) = \operatorname{softmax}\left(\frac{\ten{Q}(b, h, q, :) \ten{K}(b, h, k, :)^\top}{\sqrt{d_h}}\right) ,
+% \end{equation}
+% where $B$ is the batch size, $H$ is the number of heads, and $T$ is the sequence length. Each mode carries a distinct semantic meaning, making it a mode-specific tensor in our notation. Unlike $\ten{Q}$, $\ten{K}$, $\ten{V}$, which are obtained from trained parameters, the score tensor is computed at inference time (possibly implicitly) and is not optimized directly. This makes it a purely analytical object -- one that can be examined via post-hoc tensor decompositions. Such decompositions can reveal latent factors or patterns in attention behavior.
+
+\paragraph{投影矩阵。}
+我们区分两种对投影矩阵进行张量化的途径。第一种通过强加重排将每个矩阵 $\mat{W}_Q, \mat{W}_K, \mat{W}_V, \mat{W}_O$ 独立处理，这在结构上与 FFN 张量化完全相同，将在 \cref{sec:component-ffn} 中讨论。第二种则跨层、跨头、跨投影类型地将投影堆叠成一个联合张量，从而引入语义模。投影矩阵 $\mat{W}_{Q, h}^{(\ell)}, \mat{W}_{K, h}^{(\ell)}, \mat{W}_{V, h}^{(\ell)} \in\R^{d\times d_h}$（对应每个头 $h$ 与层 $\ell$）与 $\mat{W}_{O}^{(\ell)} \in\R^{Hd_h\times d}$ 的形状不同：$\mat{W}_{O}^{(\ell)}$ 从全部 $H$ 个头的拼接输出映射而来，因而在一个维度上宽 $H$ 倍，构造联合张量时必须考虑到这一点。若排除 $\mat{W}_{O}^{(\ell)}$，查询、键与值投影可组装为：
+
+\begin{equation}
+\label{eq:WQKV}
+\ten{W}_{QKV} = \operatorname{stack}_{\ell,p,h}\!\left(\mat{W}_{p,h}^{(\ell)}\right) \in\R^{L\times 3\times H\times d\times d_h},
+\quad p\in\{Q,K,V\},
+\end{equation}
+其中 $\ell$ 与 $h$ 分别为层索引与头索引。为纳入 $\mat{W}_{O}^{(\ell)}$，我们把 $(\mat{W}_{O}^{(\ell)})^\top$ 划分为 $H$ 个块 $\mat{W}_{O,h}^{(\ell)} \in\R^{d\times d_h}$，每块对应单个头。于是：
+
+\begin{equation}
+\label{eq:QKVO}
+\ten{W}_{QKVO} = \operatorname{stack}_{\ell,p,h}\!\left(\mat{W}_{p,h}^{(\ell)}\right) \in\R^{L\times 4 \times H \times d \times d_h},
+\quad p\in\{Q,K,V,O\}.
+\end{equation}
+对 $\ten{W}_{QKV}$ 与 $\ten{W}_{QKVO}$ 而言，层、投影类型与头这些模都携带明确的语义。这种模特定结构支持跨层与跨头的因子共享，已被现有方法广泛利用 \cite{li2026lestd}。关键的权衡在于共享带来的压缩收益与共享所引入的模间耦合增强之间。
+
+\subsection{前馈网络}
+\label{sec:component-ffn}
+
+FFN 矩阵 $\mat{W}_{\rm gate}$、$\mat{W}_{\rm up}$ 与 $\mat{W}_{\rm down}$ 既可以作为线性映射独立处理，也可以组织成一个联合张量。以下两段讨论这两种途径，它们恰好分别落在模特定/强加这一区分的两侧。
+
+
+\paragraph{TT 与 TTM。}
+
+在强加张量化下，投影矩阵 $\mat{W}$ 被重排为高阶张量 $\ten{W}$，随后用张量网络对其进行参数化或分解。张量化方案（即 $\ten{W}$ 的形状与阶数）以及张量网络的拓扑都是自由的设计选择。以 TT 与 TTM 为代表的 TT 家族在当前文献中占主导地位。
+
+
+设 $I = \prod_{n=1}^N I_n$，$J = \prod_{m=1}^M J_m$。在 \emph{TT 张量化}下，投影 $\mat{W} \in \R^{I \times J}$ 与输入 $\vecb{x} \in \R^{I}$ 分别被重排为 $\ten{W} \in \R^{I_1 \times \cdots \times I_N \times J_1 \times \cdots \times J_M}$ 与 $\ten{X} \in \R^{I_{1} \times \cdots \times I_{N}}$。将 $\ten{W}$ 表示为具有三阶核 $\ten{G}^{(1)}, \dots, \ten{G}^{(N+M)}$ 的 TT 格式，则输出 $\vecb{y}^\top = \vecb{x}^\top \mat{W}$ 按元素计算为
+\begin{equation}
+  \ten{Y}_{j_1, \dots, j_M} = \sum_{i_1=1, \dots, i_N=1}^{I_1, \dots, I_N} \ten{X}_{i_1, \dots, i_N} \ten{G}^{(1)}_{:, i_1, :} \cdots \ten{G}^{(N)}_{:, i_N, :} \cdot \ten{G}^{(N+1)}_{:, j_1, :} \cdots \ten{G}^{(N+M)}_{:, j_M, :},
+\end{equation}
+随后 $\ten{Y} \in \R^{J_1 \times \cdots \times J_M}$ 被重排回 $\vecb{y}$。
+\emph{TTM 张量化}则要求两个因子分解具有相同长度，即 $I = \prod_{n=1}^N I_n$，$J = \prod_{n=1}^N J_n$。投影被重排为 $\ten{W} \in \R^{I_1 \times J_1 \times \cdots \times I_N \times J_N}$，使每个输入模与相应的输出模配对，缩并变为
+\begin{equation}
+  \ten{Y}_{j_1, \dots, j_N} = \sum_{i_1=1, \dots, i_N=1}^{I_1, \dots, I_N} \ten{X}_{i_1, \dots, i_N} \ten{G}^{(1)}_{:, i_1, j_1, :} \cdots \ten{G}^{(N)}_{:, i_N, j_N, :}, 
+\end{equation}
+其中 $\ten{G}^{(n)} \in \R^{R_{n-1} \times I_n \times J_n \times R_n}$ 为 TTM 核。两种格式的差别在于模的排序方式：TT 将全部 $N+M$ 个模顺序串成一条链，而 TTM 在单个核内部把第 $n$ 个输入模与第 $n$ 个输出模耦合起来，使链长减半。
+
+在 TT 张量化中，核 $N$ 与 $N+1$ 之间的切分把全部输入模与全部输出模分离开，因此重构矩阵 $\mat{W}$ 的秩以 $R_{N}$ 为上界 \cite{oseledets2011tensor}。对 TTM 张量化，\cite{hrinchuk2020tensorized} 的定理 1 指出：几乎所有秩以固定集合 $\set{R}$ 为上界的 TTM，重构出的矩阵都是满秩 $\min(I, J)$ 的。因此，原则上任意学习得到的 TTM 投影都能表示满秩矩阵。但在实践中，Li 等人 \cite{li2022hypoformer} 报告低秩的 TTM 参数化难以保持表达能力。
+
+% The key tradeoff here is between compression and latency. A tensorized layer replaces a single GEMM, whose implementations reach near-peak utilization on modern GPU hardware \cite{goto2008anatomy}, \cite{osama2023streamk}, with a sequential chain of small contractions, paying for the parameter savings in kernel launch overhead. This solution to this challenge remains an open direction (\cref{sec:future-directions}).
+
+这里的关键权衡在于压缩与延迟之间。张量化层用一链顺序执行的小缩并取代单次 GEMM，而现代 GPU 对大规模矩阵计算高度优化，对这类小规模缩并的处理却很糟糕，因此张量化模型虽然能削减参数量与 FLOPs，运行速度仍可能慢于其稠密对应模型；要实现真正的加速，需要核函数（kernel）层面的工作，例如优化缩并本身、消除后端开销 \cite{yang2024comera}。这一挑战的通用解法仍是一个开放方向（\cref{sec:future-directions}）。
+
+
+
+\paragraph{双线性 FFN}
+
+当去掉逐元素非线性后，门控 FFN 就成为\emph{双线性}的 \cite{shazeer2020glu}：
+\begin{equation}
+    \vecb{z}^\top = (\vecb{x}^\top \mat{W}^{\rm gate}) \odot ( \vecb{x}^\top \mat{W}^{\rm up}), \quad \vecb{y}^\top = \vecb{z}^\top \mat{W}^{\rm down}.
+\end{equation}
+这一情形与上文不同：该层关于 $\vecb{x}$ 是多重线性的，因而容许精确的张量表示。固定一个隐藏坐标 $\alpha$。由于 $(\vecb{x}^\top \mat{W})_\alpha = \vecb{x}^\top \mat{W}_{:, \alpha}$，两个分支合并为一个二次型：
+\begin{equation}
+  \vecb{z}_\alpha = (\vecb{x}^\top \mat{W}^{\rm gate})_\alpha \cdot (\vecb{x}^\top \mat{W}^{\rm up})_\alpha = \bigl(\vecb{x}^\top \mat{W}^{\rm gate}_{:, \alpha}\bigr)\bigl(\vecb{x}^\top \mat{W}^{\rm up}_{:, \alpha}\bigr) = \vecb{x}^\top \mat{W}^{\rm gate}_{:, \alpha} \bigl(\mat{W}^{\rm up}_{:, \alpha}\bigr)^\top \vecb{x} = \vecb{x}^\top \mat{B}_{\alpha} \vecb{x}.
+\end{equation}
+注意只有 $\mat{B}_\alpha$ 的对称部分对二次型有贡献，因此不失一般性可将 $\mat{B}_\alpha$ 替换为 $\tfrac{1}{2}(\mat{B}_\alpha + \mat{B}_\alpha^\top)$。经下投影传播并对 $\alpha$ 求和，得到：
+\begin{equation}
+  \vecb{y}_\beta = \sum_{\alpha=1}^{d_{\rm ff}} \vecb{z}_\alpha \mat{W}^{\rm down}_{\alpha, \beta} = \sum_{\alpha=1}^{d_{\rm ff}} (\vecb{x}^\top \mat{B}_{\alpha} \vecb{x}) \mat{W}^{\rm down}_{\alpha, \beta} = \vecb{x}^\top \left( \sum_{\alpha=1}^{d_{\rm ff}} \mat{W}^{\rm down}_{\alpha, \beta} \mat{B}_{\alpha} \right) \vecb{x} = \vecb{x}^\top \ten{B}_{\beta, :, :} \vecb{x},
+\end{equation}
+于是整层坍缩为单次缩并
+\begin{equation}
+\label{eq:bilinear-forward-pass}
+  \vecb{y}^\top = \ten{B} \times_2 \vecb{x}^\top \times_3 \vecb{x}^\top,
+\end{equation}
+其中 $\ten{B} \in \R^{d \times d \times d}$，且每个切片 $\ten{B}_{\beta, :, :}$ 都是对称的。$\ten{B}$ 的各模携带语义：两个输入坐标与一个输出坐标，因此这里是 FFN 中张量化为模特定的位置。Pearce 等人 \cite{pearce2025bilinearmlp} 直接将其用作机制可解释性工具，从 $\ten{B}$ 中发现回路。
+现实的障碍在于，已部署的 LLM 仍以门控变体为默认 \cite{shazeer2020glu}，因此要得到双线性 FFN 必须从头训练。
+
+若存在非线性激活，这样的表示便不存在。三个矩阵仍可堆叠为：
+\begin{equation}
+\label{eq:SGUD}
+  \ten{S} = \bigl[ \mat{W}^{\rm gate}, \mat{W}^{\rm up}, (\mat{W}^{\rm down})^\top \bigr] \in \R^{3 \times d \times d_{\rm ff}},
+\end{equation}
+其中各模分别索引投影类型、输入维数与隐藏维数；与式 \eqref{eq:QKVO} 类似，这些堆叠还可以跨层进一步拼接，或在 MoE 模型中跨专家拼接，从而得到更高阶的张量。然而，与式 \eqref{eq:bilinear-forward-pass} 中的 $\ten{B}$ 不同，$\ten{S}$ 不具有多重线性算子的含义：它的第一个模完全不参与前向传播。
+
+
+\subsection{组件总览}
+\label{sec:component-sum}
+
+\Cref{tab:components} 对按组件的分析给出总览。「张量化类型」一列沿用 \cref{sec:tensor-strategies} 的模特定/强加分类，「关键权衡」一列指出占主导地位的约束。
+
+\begin{table}[!htbp]
+\centering
+\caption{张量化 Transformer 组件的结构性总览。张量化策略沿用 \cref{sec:tensor-strategies} 的分类。}
+\label{tab:components}
+\small
+\begin{tblr}{
+  width = \textwidth,
+  colspec = {Q[2.0cm,m,c]Q[4.0cm,m,c]Q[2.4cm,m,c]X[m,c]},
+  row{1} = {font=\bfseries},
+  cell{2}{1} = {r=3}{},
+  cell{5}{1} = {r=2}{},
+  cell{7}{1} = {r=3}{},
+  rowsep = 3pt,
+  hline{1,10} = {1pt},
+  hline{2} = {0.6pt},
+  hline{5,7} = {0.6pt, gray7},
+}
+组件 & 张量对象 & 张量化策略 & 关键权衡 \\
+嵌入层 & $\mat{E}\in\R^{|\set{V}|\times d}$ & 强加 & 压缩 vs.\ 查表延迟 \\
+ & $\mat{E}_{\rm ngram}\in\R^{|\set{V}|^n\times d}$ & 模特定 & 内存可行性 vs.\ 秩选择难度 \\
+ & $\mat{E}_{\rm morpheme}\in\R^{|\set{M}|\times d}$ & 模特定 & 内存缩减 vs.\ 表示的表达能力 \\
+注意力机制 & $\ten{Q} \in\R^{B\times H_{\rm Q}\times T\times d_h}; \newline \ten{K},\ten{V}\in\R^{B\times H_{\rm KV}\times T\times d_h}$ & 模特定 & KV 缓存压缩 vs.\ 核函数效率与质量持平 \\
+ & $\ten{W}_{QKV}\in\R^{L\times 3\times H\times d\times d_h}$, $\ten{W}_{QKVO}\in\R^{L\times 4\times H\times d\times d_h}$ & 模特定 & 参数共享 vs.\ 独立性降低 \\
+FFN & $\mat{W}_{\rm up},\mat{W}_{\rm gate}\in\R^{d\times d_{\rm ff}},$ \newline $\mat{W}_{\rm down}\in\R^{d_{\rm ff}\times d}$ & 强加 & 压缩 vs.\ 延迟（缩并 vs.\ GEMM） \\
+ & $\ten{B}\in\R^{d\times d\times d}$（双线性） & 模特定 & 精确的多重线性结构 vs.\ 从头训练 \\
+ & $\ten{S}\in\R^{3\times d\times d_{\rm ff}}$（堆叠） & 模特定 & 整层的联合表示 vs.\ 无算子语义 \\
+\end{tblr}
+\end{table}
+
+

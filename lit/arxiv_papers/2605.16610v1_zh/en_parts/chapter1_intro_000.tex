@@ -1,0 +1,80 @@
+\newpage
+\section*{Introduction}
+High–dimensional data arise naturally in many areas of science and engineering, including machine learning, signal processing, computational physics, and statistics. Such data are often represented as tensors, i.e., multi–dimensional generalizations of matrices. While tensors provide a natural representation for multi–modal structure, their direct manipulation quickly becomes challenging as the order of the tensor grows: the number of parameters increases exponentially, and algebraic expressions involving many indices become difficult to interpret and implement.
+
+Tensor networks (TNs) provide an effective framework for addressing these challenges.
+Originally introduced by~\cite{penrose1971applications} and extensively developed in the quantum physics community, the graphical language of tensor networks encodes tensor contractions as edges in a graph, a formalism that not only reduces notational overhead but also reveals structural properties of tensor operations that are obscured by index notation. Despite the central role of high-dimensional tensors in modern machine learning and numerical analysis, tensor network diagrams remain underutilized outside of quantum computing, partly due to the lack of a self-contained mathematical reference accessible to a broad technical audience.
+The goal of this manuscript is to provide a self-contained guide to tensor networks and their use in tensor algebra. We present the main operations on tensors, such as contractions, products, and reshaping, through graphical notation, and show how classical tensor decompositions and related computations can be naturally expressed in this framework. In addition, we illustrate how tensor networks simplify the derivation of gradients and the manipulation of high-dimensional probability distributions.
+
+Throughout, we demonstrate that the diagrammatic approach does not merely simplify notation; it yields genuinely shorter and more transparent proofs of classical identities, rank bounds, and gradient formulas that would otherwise require laborious index manipulation. 
+
+
+
+\subsection*{Organization}
+
+This manuscript is organized into five chapters, each building on the previous to develop 
+a complete and self-contained treatment of tensor networks.
+
+\medskip
+\noindent\textbf{Chapter 1: Tensor Network Basics.}
+We introduce the graphical language of tensor networks from first principles. Tensors are 
+represented as nodes with labeled legs, and contractions are encoded as shared edges. We 
+develop the core operations: inner products, outer products, traces, and Frobenius norms within this framework, demonstrating how familiar matrix identities extend naturally to 
+higher-order tensors. The chapter concludes with copy tensors (hyperedges) and graphical 
+representations of matrix factorizations, including QR decomposition and singular value 
+decomposition (SVD).
+
+\medskip
+\noindent\textbf{Chapter 2: Operations on Tensors.}
+We treat tensor reshaping operations, fibers, slices, matricization, and vectorization, formally and graphically. We then develop the principal tensor products: the mode-$n$ 
+product, the Kronecker product, the Khatri-Rao product, and the Hadamard product, each accompanied by diagrammatic proofs of their key identities. The chapter closes with a general theorem bounding the rank of tensor matricizations via cuts in the tensor network graph, unifying several classical rank inequalities under a single framework.
+
+\medskip
+\noindent\textbf{Chapter 3: Tensor Decompositions.}
+We present the three principal decomposition models for high-dimensional tensors. The CANDECOMP/PARAFAC (CP) decomposition expresses a tensor as a sum of rank-one terms; the Tucker decomposition generalizes this via a compressed core tensor and factor matrices,
+and the Tensor Train (TT) decomposition provides a chain-structured factorization whose parameter count scales linearly with tensor order. For each model, we provide the mathematical formulation, its tensor network diagram, rank characterizations, and computational algorithms, including Higher-Order SVD (HOSVD) for Tucker and the TT-SVD and Alternating Least Squares (ALS) algorithms for TT. We further discuss efficient algebraic operations in TT format and briefly survey advanced architectures, including Tensor Ring, Projected Entangled Pair States (PEPS), and Hierarchical Tucker decompositions.
+
+\medskip
+\noindent\textbf{Chapter 4: Computing Gradients of Tensor Networks.}
+We develop a graphical calculus for the differentiation of tensor network functions. Starting 
+from classical definitions of gradients and Jacobians, we establish that the Jacobian of a tensor network with respect to any core tensor is obtained simply by removing that core from the diagram. This yields transparent, diagram-level proofs of classical derivative 
+identities, including gradients of quadratic forms and trace functionals, and extends naturally to networks where a core appears multiple times. We illustrate the framework with two applications: gradient-based optimization of 
+the CP decomposition, and backpropagation through weight matrices parameterized in 
+Matrix Product Operator (MPO) format.
+
+\medskip
+\noindent\textbf{Chapter 5: Probability Distributions and Random Tensor Networks.}
+We explore two interconnected applications of tensor networks to probability and 
+statistics. First, we show how joint probability distributions over discrete random 
+variables can be encoded as tensors, and how marginals and conditionals reduce to simple 
+diagrammatic operations. We then discuss how the Tensor Train format provides an 
+efficient, structured parameterization of high-dimensional distributions, including 
+Born Machine-style representations rooted in quantum physics. Second, we compute 
+the expectations of random tensor networks whose entries are drawn from the standard normal 
+distribution. Using Isserlis' theorem and diagrammatic reasoning, we derive closed-form 
+expressions for quantities such as $\EE[\|\Ab\Bb\|_F^2]$ and 
+$\EE[(\Ab^\ts \Ab)^{\kron 2}]$ with a brevity that would be difficult to achieve through conventional index-based methods.
+
+\bigskip
+\subsection*{Target Audience}
+
+This manuscript is intended as a self-contained reference for researchers and 
+practitioners who work with high-dimensional data and wish to develop fluency with tensor 
+networks. The material is broadly accessible: a working knowledge of linear algebra 
+at the level of a first undergraduate course, including matrix multiplication, 
+QR decomposition, and SVD are sufficient for the majority of the text.
+
+The presentation is designed to serve multiple communities simultaneously. For 
+\textit{mathematicians}, the manuscript provides rigorous 
+definitions, rank characterizations, and algorithm analyses grounded in linear algebra 
+theory. For \textit{researchers in machine learning and data science}, it offers a practical 
+toolkit to parameterize high-dimensional weight matrices, compute gradients through 
+structured tensor decompositions, and compactly model complex distributions. For 
+\textit{physicists and quantum computing researchers}, it bridges the diagrammatic 
+conventions of tensor networks with the language of applied mathematics. 
+
+All tensor network diagrams in this manuscript are typeset using \LaTeX\ with the \texttt{TikZ} 
+package, and the diagrammatic notation is gradually introduced so that no prior exposure 
+to tensor network diagrams is assumed.
+
+

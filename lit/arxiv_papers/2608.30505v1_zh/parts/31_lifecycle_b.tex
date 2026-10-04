@@ -1,0 +1,198 @@
+\subsection{$\llama$ 的示例说明}
+\label{subsec:illustrative-examples}
+为了把抽象的生命周期各阶段落到具体方法上，本节对每个阶段各讲解一个代表性方法；各阶段方法的形式化描述与全面比较见 \cref{sec:lifecycle-analysis}。
+词元化阶段没有示例：尽管它仍是分类体系的一部分，但尚无已发表工作对该阶段进行张量化（\cref{subsec:tokenization}）；因此，讲解从嵌入开始。
+本节通篇以 $\llama$ \cite{grattafiori2024llama3} 作为贯穿示例，其配置为 $|V|{=}128{,}000$、$d{=}4096$、$L{=}32$、$H_{\rm Q} = 32$、$H_{\rm KV} = 8$、$d_{\rm ff}{=}14336$、$d_h{=}128$，总参数量约 ${\approx}8.03$B。并非每个阶段都有针对该确切模型的已发表方法，因此在必要之处对记号作了相应调整。
+\begin{figure}[!htbp]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  vec/.style={circle, draw=black!80, line width=1.0pt,
+              minimum size=1.0cm, inner sep=0pt, font=\small},
+  core/.style={circle, draw=black!80, line width=1.0pt,
+              minimum size=0.75cm, inner sep=0pt, font=\scriptsize},
+  mat/.style={circle, draw=black!80, line width=1.0pt,
+              minimum size=1.40cm, inner sep=0pt, font=\small},
+  bond/.style={line width=1.0pt, black!80},
+  leg/.style={line width=1.0pt, black!80},
+  lbl/.style={font=\small},
+  slbl/.style={font=\scriptsize, text=black},
+]
+%% LEFT: Tensorized Embedding Table
+\definecolor{ColI} {RGB}{102,194,165}
+\definecolor{ColII}{RGB}{252,141, 98}
+\definecolor{ColV} {RGB}{141,160,203}
+\pgfmathsetmacro{\RadCirc}{0.50}
+\pgfmathsetmacro{\RadCore}{0.375}
+\pgfmathsetmacro{\Dy}{2.0}
+\pgfmathsetmacro{\Dx}{1.15}
+\pgfmathsetmacro{\Lleg}{0.50}
+\pgfmathsetmacro{\Llegv}{0.80}
+\pgfmathsetmacro{\PadX}{0.3}
+\pgfmathsetmacro{\PadY}{0.95}
+\pgfmathsetmacro{\Lcx}{0.0}
+\pgfmathsetmacro{\Rx}{5.0}
+\pgfmathsetmacro{\Ytop}{3.5}
+\pgfmathsetmacro{\Ybot}{-3.5}
+\pgfmathsetmacro{\Yone}{\Ytop - \PadY}
+\pgfmathsetmacro{\Ytwo}{\Yone - \Dy}
+\pgfmathsetmacro{\YV}{\Ybot + \PadY}
+\pgfmathsetmacro{\Ymid}{0.5*(\Ytop+\Ybot)}
+\pgfmathsetmacro{\Yelps}{0.5*(\Ytwo+\YV)}
+\pgfmathsetmacro{\Rshift}{-0.5*\RadCore}
+\pgfmathsetmacro{\RYone}{\Yone - \Rshift}
+\pgfmathsetmacro{\RYtwo}{\Ytwo - \Rshift}
+\pgfmathsetmacro{\RYV}{\YV   - \Rshift}
+\pgfmathsetmacro{\LboxL}{\Lcx - \RadCirc - \PadX}
+\pgfmathsetmacro{\LboxR}{\Lcx + \RadCirc + \Llegv + \PadX}
+\pgfmathsetmacro{\RboxL}{\Rx - \RadCore - \PadX}
+\pgfmathsetmacro{\RboxR}{\Rx + 3*\Dx + \RadCore + \PadX}
+\pgfmathsetmacro{\ArrLen}{1.0}
+\pgfmathsetmacro{\ArrMid}{0.5*(\LboxR + \RboxL)}
+\pgfmathsetmacro{\ArrL}{\ArrMid - 0.5*\ArrLen}
+\pgfmathsetmacro{\ArrR}{\ArrMid + 0.5*\ArrLen}
+\pgfmathsetmacro{\ABH}{0.10}
+\pgfmathsetmacro{\AHH}{0.22}
+\pgfmathsetmacro{\AHD}{0.26}
+\node[vec, fill=ColI!45]  (E1) at (\Lcx, \Yone) {$\mathbf{e}_1$};
+\node[vec, fill=ColII!45] (E2) at (\Lcx, \Ytwo) {$\mathbf{e}_2$};
+\node[lbl]                     at (\Lcx, \Yelps) {$\vdots$};
+\node[vec, fill=ColV!45]  (EV) at (\Lcx, \YV)   {$\mathbf{e}_V$};
+\foreach \N in {E1, E2, EV}{
+  \draw[leg] (\N.east) -- ++(\Llegv, 0) node[above, slbl] {$d$};
+}
+\fill[white, draw=black!80, line width=0.9pt]
+    (\ArrL, {\Ymid+\ABH}) -- ({\ArrR-\AHD}, {\Ymid+\ABH})
+    -- ({\ArrR-\AHD}, {\Ymid+\AHH}) -- (\ArrR, \Ymid)
+    -- ({\ArrR-\AHD}, {\Ymid-\AHH}) -- ({\ArrR-\AHD}, {\Ymid-\ABH})
+    -- (\ArrL, {\Ymid-\ABH}) -- cycle;
+\foreach \k in {1,2,3,4}{
+  \node[core, fill=ColI!45] (R1\k) at ({\Rx+(\k-1)*\Dx}, \RYone) {$\ten{G}^{(1)}_\k$};
+}
+\foreach \k/\kk in {1/2, 2/3, 3/4}{
+  \draw[bond] (R1\k) -- (R1\kk) node[midway, above=1pt, slbl] {$R_\k$};
+}
+\foreach \k in {1,2,3,4}{
+  \draw[leg] (R1\k.south) -- ++(0, -\Lleg) node[right=1pt, slbl] {$d_\k$};
+}
+\foreach \k in {1,2,3,4}{
+  \node[core, fill=ColII!45] (R2\k) at ({\Rx+(\k-1)*\Dx}, \RYtwo) {$\ten{G}^{(2)}_\k$};
+}
+\foreach \k/\kk in {1/2, 2/3, 3/4}{
+  \draw[bond] (R2\k) -- (R2\kk) node[midway, above=1pt, slbl] {$R_\k$};
+}
+\foreach \k in {1,2,3,4}{
+  \draw[leg] (R2\k.south) -- ++(0, -\Lleg) node[right=1pt, slbl] {$d_\k$};
+}
+\node[lbl] at ({\Rx + 1.5*\Dx}, \Yelps) {$\vdots$};
+\foreach \k in {1,2,3,4}{
+  \node[core, fill=ColV!45] (RV\k) at ({\Rx+(\k-1)*\Dx}, \RYV) {$\ten{G}^{(V)}_\k$};
+}
+\foreach \k/\kk in {1/2, 2/3, 3/4}{
+  \draw[bond] (RV\k) -- (RV\kk) node[midway, above=1pt, slbl] {$R_\k$};
+}
+\foreach \k in {1,2,3,4}{
+  \draw[leg] (RV\k.south) -- ++(0, -\Lleg) node[right=1pt, slbl] {$d_\k$};
+}
+\begin{pgfonlayer}{foreground}
+\node[font=\small\bfseries] at ({0.5*(\LboxL+\RboxR)}, \Ytop + 0.5)
+    {嵌入表的逐行 TT 压缩};
+\pgfmathsetmacro{\Sw}{0.30}
+\draw[black, line width=1.3pt, line cap=rect]
+    ({\LboxL+\Sw}, \Ytop) -- (\LboxL, \Ytop) -- (\LboxL, \Ybot) -- ({\LboxL+\Sw}, \Ybot);
+\draw[black, line width=1.3pt, line cap=rect]
+    ({\LboxR-\Sw}, \Ytop) -- (\LboxR, \Ytop) -- (\LboxR, \Ybot) -- ({\LboxR-\Sw}, \Ybot);
+% \node[lbl] at ({0.5*(\LboxL+\LboxR)}, \Ybot - 0.5)
+%     {$\mathbf{E}\!\in\!\mathbb{R}^{V\times d}$};
+\node[slbl] at (\ArrMid, \Ymid + 0.75) {重排};
+\node[slbl] at (\ArrMid, \Ymid + 0.45) {$+$ TT-SVD};
+\draw[black, line width=1.3pt, line cap=rect]
+    ({\RboxL+\Sw}, \Ytop) -- (\RboxL, \Ytop) -- (\RboxL, \Ybot) -- ({\RboxL+\Sw}, \Ybot);
+\draw[black, line width=1.3pt, line cap=rect]
+    ({\RboxR-\Sw}, \Ytop) -- (\RboxR, \Ytop) -- (\RboxR, \Ybot) -- ({\RboxR-\Sw}, \Ybot);
+% \node[lbl] at ({0.5*(\RboxL+\RboxR)}, \Ybot - 0.5)
+%     {$\mathcal{E}\!\in\!\mathbb{R}^{V \times d_1\times d_2 \times d_3 \times d_4}$};
+\end{pgfonlayer}
+
+\draw[black!35, line width=0.6pt] (9.64, -3.7) -- (9.64, 4.3);
+%% RIGHT: MPO Weight Parameterization
+\begin{scope}[shift={(10.655, 0)}]
+\tikzset{core/.style={circle, draw=black!80, line width=1.0pt,
+              minimum size=1.10cm, inner sep=0pt, font=\scriptsize}}
+\definecolor{ColX}{RGB}{102,194,165}
+\definecolor{ColW}{RGB}{252,141, 98}
+\pgfmathsetmacro{\RadVec}{0.50}
+\pgfmathsetmacro{\RadMat}{0.70}
+\pgfmathsetmacro{\RadCore}{0.55}
+\pgfmathsetmacro{\Lleg}{0.65}
+\pgfmathsetmacro{\Llegout}{0.75}
+\pgfmathsetmacro{\PadX}{0.32}
+\pgfmathsetmacro{\PadY}{0.42}
+\pgfmathsetmacro{\Lxx}{0.0}
+\pgfmathsetmacro{\Cy}{0.0}
+\pgfmathsetmacro{\Dh}{2.0}
+\pgfmathsetmacro{\LWx}{\Lxx + \Dh}
+\pgfmathsetmacro{\Rx}{6.5}
+\pgfmathsetmacro{\Dx}{1.55}
+\pgfmathsetmacro{\RyTop}{1.10}
+\pgfmathsetmacro{\RyBot}{-1.10}
+\pgfmathsetmacro{\RboxL}{\Rx - \RadCore - \PadX}
+\pgfmathsetmacro{\RboxR}{\Rx + 3*\Dx + \RadCore + \PadX}
+\pgfmathsetmacro{\RboxT}{\RyTop + \RadCore + \Lleg + \PadY}
+\pgfmathsetmacro{\RboxB}{\RyBot - \RadCore - \Lleg - \PadY}
+\pgfmathsetmacro{\LboxL}{\Lxx - \RadVec - \PadX}
+\pgfmathsetmacro{\LboxR}{\LWx + \RadMat + \Llegout + \PadX}
+\pgfmathsetmacro{\LboxT}{\RboxT}
+\pgfmathsetmacro{\LboxB}{\RboxB}
+\pgfmathsetmacro{\ArrLen}{1.0}
+\pgfmathsetmacro{\ArrMid}{0.5*(\LboxR + \RboxL)}
+\pgfmathsetmacro{\ArrL}{\ArrMid - 0.5*\ArrLen}
+\pgfmathsetmacro{\ArrR}{\ArrMid + 0.5*\ArrLen}
+\pgfmathsetmacro{\ArrY}{\Cy}
+\pgfmathsetmacro{\ABH}{0.10}
+\pgfmathsetmacro{\AHH}{0.22}
+\pgfmathsetmacro{\AHD}{0.26}
+\node[vec, fill=ColX!35] (Xv) at (\Lxx,  \Cy) {$\vecb{x}$};
+\node[mat, fill=ColW!40] (W)  at (\LWx, \Cy) {$\mat{W}$};
+\draw[bond] (Xv.east) --  (W.west)       node[midway, above=2pt, slbl] {$I$};
+\draw[leg]  (W.east) -- ++(\Llegout, 0)  node[above=1pt, slbl] {$J$};
+\fill[white, draw=black!80, line width=0.9pt]
+    (\ArrL, {\ArrY+\ABH}) -- ({\ArrR-\AHD}, {\ArrY+\ABH})
+    -- ({\ArrR-\AHD}, {\ArrY+\AHH}) -- (\ArrR, \ArrY)
+    -- ({\ArrR-\AHD}, {\ArrY-\AHH}) -- ({\ArrR-\AHD}, {\ArrY-\ABH})
+    -- (\ArrL, {\ArrY-\ABH}) -- cycle;
+
+\pgfmathsetmacro{\RectL}{\Rx - \RadCore}
+\pgfmathsetmacro{\RectR}{\Rx + 3*\Dx + \RadCore}
+\pgfmathsetmacro{\RectCx}{0.5*(\RectL + \RectR)}
+\pgfmathsetmacro{\RectT}{\RyTop + \RadCore}
+\pgfmathsetmacro{\RectB}{\RyTop - \RadCore}
+\draw[draw=black!80, line width=1.0pt, fill=ColX!35, rounded corners=5pt]
+    (\RectL, \RectB) rectangle (\RectR, \RectT);
+\node[font=\small] at (\RectCx, \RyTop) {$\ten{X}$};
+\node[core, fill=ColW!40] (W1) at (\Rx,           \RyBot) {$\ten{W}^{(1)}$};
+\node[core, fill=ColW!40] (W2) at ({\Rx+\Dx},     \RyBot) {$\ten{W}^{(2)}$};
+\node[core, fill=ColW!40] (W3) at ({\Rx+2*\Dx},   \RyBot) {$\ten{W}^{(3)}$};
+\node[core, fill=ColW!40] (W4) at ({\Rx+3*\Dx},   \RyBot) {$\ten{W}^{(4)}$};
+\foreach \a/\b/\lab in {1/2/1, 2/3/2, 3/4/3}{
+  \draw[bond] (W\a) -- (W\b) node[midway, above=1pt, slbl] {$R_\lab$};
+}
+\foreach \k in {1,2,3,4}{
+  \draw[leg] (W\k.south) -- ++(0, -\Lleg) node[right=1pt, slbl] {$J_\k$};
+}
+\foreach \k in {1,2,3,4}{
+  \draw[bond] ({\Rx+(\k-1)*\Dx}, \RectB) -- (W\k.north) node[midway, right=2pt, slbl] {$I_\k$};
+}
+\begin{pgfonlayer}{foreground}
+\node[font=\small\bfseries] at ({0.5*(\LboxL+\RboxR)}, 4.0)
+    {FFN 投影的 TTM 参数化};
+% \node[lbl] at ({0.5*(\LboxL+\LboxR)}, -4.0) {$\mat{W} \in \mathbb{R}^{I\times J}$};
+\node[slbl] at (\ArrMid, \ArrY + 0.42) {TTM};
+% \node[lbl] at ({0.5*(\RboxL+\RboxR)}, -4.0)
+%     {$\ten{W} \in \R^{R_{n-1} \times I_n \times J_N \times R_n}$, $n=1,2,3,4$};
+\path (0, 4.3) -- (0, -3.7);
+\end{pgfonlayer}
+\end{scope}
+\end{tikzpicture}}
+\caption{\textit{左}：每条嵌入行向量 $\vecb{e}_i$ 被重排为张量 $\ten{E}^{(i)}$，随后通过 TT-SVD \cite{oseledets2011tensor} 用以 $\ten{G}^{(i)}_n \in \R^{R_{n-1} \times d_n \times R_n}$ 为核心的 TT 分解对其进行近似。\textit{右}：稠密矩阵 $\mat{W}\in \R^{I \times J}$ 由一条 TTM 核心链 $\ten{W}^{(n)} \in \R^{R_{n-1} \times I_n \times J_n \times R_n}$ 表示。重排后的输入 $\ten{X} \in \R^{I_1 \times I_2 \times I_3 \times I_4}$ 直接与该核心链缩并，产生因子化的输出 $\ten{Y}\in\R^{J_1\times J_2 \times J_3 \times J_4}$。}\label{fig:ex-emb-train}
+\end{figure}

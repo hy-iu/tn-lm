@@ -1,0 +1,127 @@
+\subsection{面向专家混合（MoE）的张量分解}
+\label{sec:td-moe}
+
+% \textcolor{red}{We extend this evaluation to MoE architectures by applying TD-MoE~\citep{tdmoe2026} on Qwen3-30B-A3B and GPT-OSS-20B, tracking both perplexity and downstream accuracy (Appendices~\ref{app:td_moe},~\ref{app:td_moe_gpt_oss}).}
+\begin{wrapfigure}{r}{0.52\textwidth}
+\vspace{-4mm}
+\centering
+\includegraphics[width=\linewidth]{emnlp/figs/moe_main_left_ppl_c4.pdf}
+\caption{\texttt{TD-MoE} 与 \texttt{MoBE} 在 Qwen3-30B-A3B 模型上的 C4 困惑度。}
+\label{fig:moe_main}
+\vspace{-6mm}
+\end{wrapfigure}
+MoE 层是张量化格外有吸引力的目标。自 Switch Transformers \citep{switch} 以来，MoE 模型始终在专家专精与负载均衡之间的权衡下训练，这往往导致各专家的表示彼此重叠。在分组式设计 \citep{moge,himoe} 中这一效应更为显著。因此，专家维度提供了一个自然的张量模，Tucker 分解可借以利用跨专家的冗余，这正是 \texttt{TD-MoE} \citep{tdmoe2026} 所提出的思路。与之互补的是一条基于矩阵的路线，即 \texttt{MoBE}~\citep{chen2025mobe}：它把每个专家的 up/gate 权重矩阵分解为 $W = AB$ 以利用跨专家冗余，其中 $A$ 为专家专有，而 $B$ 被重参数化为同一层内所有专家共享的基矩阵 $\{B_i\}$ 的线性组合，该分解通过最小化逐层重构误差学习得到。我们在 Qwen3-30B-A3B~\citep{qwen3technicalreport}（128 个专家、8 个激活）上检验张量格式的结构对齐能否转化为更好的训练后压缩效果，并以矩阵分解基线 \texttt{MoBE} 为参照对 \texttt{TD-MoE} 进行基准测试。关于 GPT-OSS-20B~\citep{openai2025gptoss} 的补充实验见附录~\ref{app:td_moe_gpt_oss}。
+ 
+% \paragraph{Progressive layer compression.}
+按照附录~\ref{app:td_moe} 中的协议，图~\ref{fig:moe_main} 汇总了 \texttt{MoBE} 与 \texttt{TD-MoE} 的对比结果。令人意外的是，尽管两种方法在压缩过程中都采用了基于梯度的优化，\texttt{TD-MoE} 的表现却明显逊于 \texttt{MoBE}。在所有测试的压缩率下，\texttt{MoBE} 都保持接近原始模型，而 \texttt{TD-MoE} 则显著退化，这说明张量格式与专家索引之间的结构对齐本身，并不足以带来相对于共享基矩阵分解方法的压缩优势。因此，Tucker 分解用于 MoE 时的结果明显优于用于 MHA 时的结果，却仍远弱于基于矩阵的方法 MoBE。这一观察引出如下问题。
+
+\begin{tcolorbox}
+    \textbf{Q2}：\textit{在所考察的这两类架构上，张量分解表现出上述行为的根本原因是什么？}
+\end{tcolorbox}
+
+\paragraph{专家模才是制约瓶颈。}
+在 GPT-OSS-20B 上以 $\rho = 0.4$ 进行的受控消融实验，比较了
+等存储量下的两种秩分配方案：
+\emph{preserve} 把专家模的秩固定为 $r_1 = K$（所有专家
+仍各自占据不同的潜方向），而 \emph{compress} 将其降至
+$r_1 < K$，并把省下的预算重新分配给特征模
+（附录~\ref{app:td_moe_gpt_oss}，图~\ref{fig:gpt_oss_preserve_vs_compress}）。
+在所有基准测试上，\emph{compress} 始终不及 \emph{preserve}，
+这证实了至少对该模型而言，各专家方向并不可互换，
+而 Tucker 分解所自然假定的``专家位于某个低秩
+子空间中''正是制约瓶颈。
+ 
+% \paragraph{Tensor vs.\ matrix decomposition.}
+% A natural counterfactual is to forgot the expert tensor mode entirely
+% and apply a matrix decomposition independently. We compare TD-MoE
+% against MoBE~\citep{chen2025mobe} at $\rho \in \{0.2, 0.4\}$ on
+% Qwen3-30B-A3B. Figure~\ref{fig:moe_main} (right) plots the
+% residual-stream activation geometry: at matched bits saved, TD-MoE
+% produces larger mean activation angles \emph{and} drives the
+% residual-stream norm ratio further from~1 than MoBE, and trails on
+% C4 perplexity. The structural
+% advantage of the explicit expert mode is therefore not realised in
+% practice --- tensor formats collapse expert heterogeneity that the
+% matrix baseline preserves.
+ 
+% \paragraph{Takeaway.}
+% Across both dense models (\S\ref{sec:tensor_decomp}) and MoE
+% architectures, tensor decompositions are no better than -- and often
+% worse than -- their matrix counterparts at the same compression
+% ratio, despite structural alignment. The next section makes this
+% mechanism precise via a unified activation-geometry diagnostic that
+% covers both regimes.
+% В экспах использовать НЕ LeSTD/TensorLLM, а ТТ/Tucker
+
+
+
+\begin{figure*}[t]
+  \centering
+  \begin{subfigure}[t]{0.60\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{emnlp/figs/activation_geometry_joint_separate_color.pdf}
+    \caption{GPT-J~6B 与 LLaMA~2~7B 稠密模型与压缩模型的激活几何对比。}
+    \label{fig:activation_geometry_dense}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{0.38\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{emnlp/figs/moe_main_right_geometry.pdf}
+    \caption{Qwen3-30B-A3B 上 \texttt{TD-MoE}
+    在 $\rho \in \{0.2, 0.4\}$ 下与 \texttt{MoBE} 的激活几何对比。}
+    \label{fig:activation_geometry_moe}
+  \end{subfigure}
+  \vspace{-0.5em}
+  \caption{\textbf{残差流激活几何。}
+  \textbf{(a)}~稠密模型的张量压缩。
+  \textbf{(b)}~MoE 的张量压缩与矩阵压缩对比。
+  每个点对应一次覆盖所测层范围的压缩运行。
+  颜色表示 C4 困惑度，标记形状表示分解族，
+  标记大小表示不计嵌入时节省的比特数。}
+  \label{fig:activation_geometry}
+\end{figure*}
+
+\subsection{LLM 中张量分解的结构性失配}
+\label{sec:mismatch}
+
+% подпись поменять, написать че происходит вообще 
+% к фигуре кепчур должен быть короткий и понятный, чтобы было понятно че происходит
+% В тексте подробно получить 
+
+为回答 \textbf{Q2}，我们设计了一项实验：对每一次压缩运行（无论是稠密模型还是 MoE），在最后一个被分解的模块之后比较原始模型与压缩模型的残差流激活。该诊断刻画的是达到目标压缩率之前所有被分解层的累积效应，而非单层的局部误差。我们用稠密激活向量与压缩激活向量之间的平均夹角及其范数比来量化这种偏离，并在评测词元上取平均。
+
+图~\ref{fig:activation_geometry} 显示所有模型都呈现同一模式。困惑度低的运行在方向与尺度上都贴近稠密模型的轨迹，而困惑度高的运行则表现出更大的角度漂移、范数收缩，或两者兼有。这表明张量化是通过逐步扭曲残差流的几何结构来损害质量的，而不只是增大了参数重构误差。因此，主要局限并不在于 Tucker 或 TT 分解的局部表达能力，而在于它们在不做额外训练的情况下无法保持 LLM 所诱导的异质表示几何。我们将在下一节对此作出解释。
+
+% 
+% \subsection{Tensor Train for Feed-Forward Layers}
+
+% \textcolor{red}{Where experimental references?}
+
+% For FFN layers, Tucker decomposition degenerates to standard matrix factorization, so we instead evaluate Tensor Train (TT), which tensorizes FFN weights into higher-order tensors and factorizes them into sequential cores.
+
+% However, TT exhibits similar failure modes. ... Output analysis shows reduced angular diversity and distorted norm distributions, indicating that TT also compresses representations into overly restricted latent structure.
+
+% Thus, even more flexible tensorizations fail to avoid the core trade-off between compression and representation diversity.
+
+\subsection{对激活恢复至关重要的权重}
+\label{sec:superweights}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.9\textwidth]{emnlp/figs/llama2_layer01_mlp_down_proj_combined_percent_restored.pdf}
+  \vspace{-2mm}
+  \caption{\textbf{(a)}~权重矩阵中内点（inlier）、已知超级权重、幅值最大的若干元素
+    以及按激活加权的 top-$k$ 坐标的位置。
+    \textbf{(b)}~被追踪元素的恢复比例随保留 SVD 秩的变化。
+    }
+  \label{fig:superweigths}
+  \vspace{-1em}
+\end{figure*}
+
+众所周知，LLM 中一小部分被称为超级权重（super-weight）与离群值（outlier）~\citep{superweight} 的参数对模型质量有着不成比例的关键作用：哪怕只删除其中一个标量，困惑度也可能上升数个数量级。这些参数在幅值上未必最大，而是占据某些特定坐标，主导特定的激活方向，其所携带的 Frobenius 质量却微乎其微。因此，以最小化全局 Frobenius 目标为标准低秩投影会系统性地把它们丢弃，恰恰在最关键的坐标上造成严重的谱失真。超级权重还会在各层间持续诱发大幅激活离群值~\citep{sun2024massive,SinksAndSpikes_2026}，在压缩之下进一步放大这一效应。
+
+为在实证上验证这一论断，我们首先观察到：在 LLaMA~2~7B 模型上（其超级权重位于第一个 MLP 下投影矩阵的坐标 $(2533,\,7890)$ 处~\citep{SinksAndSpikes_2026}），LoRA 微调能够以 $10^{-4}$ 的绝对误差恢复原始的超级权重标量。为进行更系统的考察，我们对该矩阵施加 \texttt{HASSLE-free}：其稀疏/低秩分解与基于 Hessian 的重要性打分相结合，可恢复原始未压缩激活幅值的 $95\%$，从而给出一组有原则依据的关键权重坐标参考集。随后我们对同一矩阵施加秩逐步增大的截断 SVD，以确定分别恢复超级权重、激活离群值以及 \texttt{HASSLE-free} 所选全部坐标所需的最小秩。我们还在附录~\ref{app:single_layer_decomposition} 中给出实验，表明对该层剪枝会使模型崩溃。
+
+结果见图~\ref{fig:superweigths}。如第一个子图所示，\texttt{HASSLE-free} 所选权重的列索引与已识别出的离群值及超级权重坐标高度吻合。此外，图~\ref{fig:superweigths} 的第二个子图揭示：仅恢复超级权重就需要至少 $1500$ 的秩，而要恢复 \texttt{HASSLE-free} 识别出的全部关键权重，所需秩已接近原始矩阵的秩。这一结果有直接的推论：仅保留主奇异分量的基于分解的方法，系统性地无法刻画 LLM 权重的细粒度结构，因为忠实重构需要 $r \gg \nicefrac{(\min \{m, n\})}{2}$，远超实践中所用的秩。为厘清超级权重所起的作用，我们在一个不含超级权重的层上重复了同样的实验，得到了定性一致的恢复结果（附录~\ref{app:no-superweights}）。这一对照实验尤其具有启发性：它表明超级权重的恢复虽是必要的，却不足以实现激活的恢复；对秩截断的病态敏感性反映的是 LLM 权重矩阵更深层的结构性性质，而非局部的离群现象。因此我们得出结论：朴素的秩截断对于压缩 LLM 权重而言是一种本质上不充分的策略。
+
+

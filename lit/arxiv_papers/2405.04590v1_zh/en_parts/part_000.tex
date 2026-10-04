@@ -1,0 +1,176 @@
+%%%%%%%% ICML 2023 EXAMPLE LATEX SUBMISSION FILE %%%%%%%%%%%%%%%%%
+
+\documentclass{article}
+\usepackage{xeCJK}
+\setCJKmainfont{SimSun}[ItalicFont=KaiTi, BoldFont=SimHei]
+\setCJKsansfont{SimHei}
+\setCJKmonofont{SimSun}
+\renewcommand{\figurename}{图}
+\renewcommand{\tablename}{表}
+\renewcommand{\refname}{参考文献}
+\renewcommand{\abstractname}{摘要}
+
+% Recommended, but optional, packages for figures and better typesetting:
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{booktabs} % for professional tables
+
+% hyperref makes hyperlinks in the resulting PDF.
+% If your build breaks (sometimes temporarily if a hyperlink spans a page)
+% please comment out the following usepackage line and replace
+% \usepackage{icml2023} with \usepackage[nohyperref]{icml2023} above.
+\usepackage{hyperref}
+% Attempt to make hyperref and algorithmic work together better:
+\newcommand{\theHalgorithm}{\arabic{algorithm}}
+
+% Use the following line for the initial blind version submitted for review:
+% \usepackage{icml2023}
+
+
+% If accepted, instead use the following line for the camera-ready submission:
+\usepackage[accepted]{icml2023}
+\renewcommand{\algorithmicrequire}{\textbf{输入:}}
+\renewcommand{\algorithmicensure}{\textbf{输出:}}
+\renewcommand{\algorithmname}{算法}
+
+% For theorems and such
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{amsthm}
+\renewcommand{\proofname}{证明}
+
+% if you use cleveref..
+\usepackage[capitalize,noabbrev]{cleveref}
+\crefname{figure}{图}{图}\Crefname{figure}{图}{图}
+\crefname{table}{表}{表}\Crefname{table}{表}{表}
+\crefname{equation}{式}{式}\Crefname{equation}{式}{式}
+\crefname{section}{节}{节}\Crefname{section}{节}{节}
+\crefname{appendix}{附录}{附录}\Crefname{appendix}{附录}{附录}
+\usepackage{comment}
+\usepackage{epigraph}
+% Optional math commands from https://github.com/goodfeli/dlbook_notation.
+\input{math_commands.tex}
+
+% \usepackage[table]{xcolor}
+
+\usepackage{wrapfig}
+\usepackage{braket}
+\usepackage{multirow}
+\usepackage{booktabs} % toprule
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{color,xcolor}
+\usepackage{array}
+% \usepackage[ruled,vlined]{algorithm2e}
+\usepackage{algorithm}
+% \usepackage{algpseudocode}
+\usepackage{todonotes}
+\newcommand{\benyou}[1]{{\bf \color{blue} [[benyou says ``#1'']]}}
+\newcommand{\qiuchi}[1]{{\bf \color{red} [[qiuchi says ``#1'']]}}
+\newcommand{\panfeng}[1]{{\bf \color{green} [[prof. says ``#1'']]}}
+\newcommand{\zhan}[1]{{\bf \color{orange} [[zhan says ``#1'']]}}
+\newcommand{\jgs}[1]{{\bf \color{magenta} [[Jakob says ``#1'']]}}
+% \usepackage{subcaption}
+\usepackage{amsthm}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% THEOREMS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\theoremstyle{plain}
+\newtheorem{theorem}{定理}[section]
+\newtheorem{proposition}[theorem]{命题}
+\newtheorem{lemma}[theorem]{引理}
+\newtheorem{corollary}[theorem]{推论}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{定义}
+\newtheorem{assumption}[theorem]{假设}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{注}
+\newtheorem{claim}[theorem]{断言}
+
+% Todonotes is useful during development; simply uncomment the next line
+%    and comment out the line below the next line to turn off comments
+%\usepackage[disable,textsize=tiny]{todonotes}
+% \usepackage[textsize=tiny]{todonotes}
+
+
+% The \icmltitle you define below is probably too long as a header.
+% Therefore, a short form for the running title is supplied here:
+% \icmltitlerunning{Submission and Formatting Instructions for ICML 2023}
+
+\begin{document}
+
+\twocolumn[
+\icmltitle{基于张量列的语言建模\\（Language Modeling Using Tensor Trains）}
+% \benyou{
+% minor points:
+
+% 1. please highlight somewhere what does "Real-world" really mean and in which sense the previous work is not real-world.
+
+% 3. conclusion sections  seems too simple:  the current one seems to just list very detailed technical implementation. summarize some findings/contribution, and why it is important to the community and its potential to future machine learning, and also give some limitations (I do think there shoud be some.)
+
+% 4. is there any experimental parts showing something related to long-term dependency as we stated in the very beginning of the introduction? if not why? This is important because one wonders the motivation to use TTLM. People do not like "yet-another-approach", they cares which problems do we additionally solve and why it is important.
+
+
+% }
+% It is OKAY to include author information, even for blind
+% submissions: the style file will automatically remove it for you
+% unless you've provided the [accepted] option to the icml2023
+% package.
+
+% List of affiliations: The first argument should be a (short)
+% identifier you will use later to specify author affiliations
+% Academic affiliations should list Department, University, City, Region, Country
+% Industry affiliations should list Company, City, Region, Country
+
+% You can specify symbols, otherwise they are numbered in order.
+% Ideally, you should not use this facility. Affiliations will be numbered
+% in order of appearance and this is the preferred way.
+\icmlsetsymbol{equal}{*}
+
+\begin{icmlauthorlist}
+\icmlauthor{Zhan Su}{equal,yyy}
+\icmlauthor{Yuqin Zhou}{equal,yyy}
+\icmlauthor{Fengran Mo}{comp}
+\icmlauthor{Jakob Grue Simonsen}{yyy}
+% \icmlauthor{Firstname5 Lastname5}{yyy}
+% \icmlauthor{Firstname6 Lastname6}{sch,yyy,comp}
+% \icmlauthor{Firstname7 Lastname7}{comp}
+% \icmlauthor{Firstname8 Lastname8}{sch}
+% \icmlauthor{Firstname8 Lastname8}{yyy,comp}
+% \icmlauthor{}{sch}
+%\icmlauthor{}{sch}
+\end{icmlauthorlist}
+
+\icmlaffiliation{yyy}{Department of Computer Science, University of Copenhagen, Copenhagen, Denmark}
+\icmlaffiliation{comp}{Department of Computer Science and Operations Research, University of Montreal, Quebec, Canada}
+
+\icmlcorrespondingauthor{Zhan Su}{zhan.su@di.ku.dk}
+\icmlcorrespondingauthor{Jakob Grue Simonsen}{simonsen@di.ku.dk}
+
+% You may provide any keywords that you
+% find helpful for describing your paper; these are used to populate
+% the "keywords" metadata in the PDF but will not be shown in the document
+% \icmlkeywords{Machine Learning, ICML}
+
+\vskip 0.3in
+]
+
+
+% this must go after the closing bracket ] following \twocolumn[ ...
+
+% This command actually creates the footnote in the first column
+% listing the affiliations and the copyright notice.
+% The command takes one argument, which is text to display at the start of the footnote.
+% The \icmlEqualContribution command is standard text for equal contribution.
+% Remove it (just {}) if you do not need this facility.
+
+% \printAffiliationsAndNotice{}  % leave blank if no need to mention equal contribution
+\printAffiliationsAndNotice{\icmlEqualContribution} % otherwise use the standard text.
+
+\begin{abstract}
+We propose a novel tensor network language model based on the simplest tensor network (i.e., tensor trains), called `Tensor Train Language Model' (TTLM). TTLM represents sentences in an exponential space constructed by the tensor product of words, but computing the probabilities of sentences in a low-dimensional fashion. We demonstrate that the architectures of  Second-order RNNs, Recurrent Arithmetic Circuits (RACs), and Multiplicative Integration RNNs are, essentially, special cases of TTLM. Experimental evaluations on real language modeling tasks show that the proposed variants of TTLM (i.e., TTLM-Large and TTLM-Tiny) outperform the vanilla Recurrent Neural Networks (RNNs) with low-scale of hidden units. \footnote{The code is available at \url{https://github.com/shuishen112/tensortrainlm}.}
+\end{abstract}
+

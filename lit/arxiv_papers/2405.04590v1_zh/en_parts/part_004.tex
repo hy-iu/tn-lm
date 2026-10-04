@@ -1,0 +1,42 @@
+\subsection{Language Models in a Tensor Space}
+\label{sec:lmts}
+
+
+% \subsubsection*{\textbf{Text representation}}
+
+% Suppose a given text consists of $N$ words $ X = \{x^{(1)}, x^{(2)}, \cdots ,x^{(N)}\}$ and let $\vf_i$ be a feature extractor,  each view of $X$ could be represented as a concatenation of feature maps:
+
+% $$
+% \small
+% \Phi(X)_\textrm{concat} = (\vf_1 (x^{(1)});  \vf_2 (x^{(2)}); \cdots ;  \vf_N (x^{(N)}))
+% $$
+
+% where $\vf_i$ could be one-hot encoding or word embedding.
+
+Natural language typically has complex dependencies between features (e.g., tokens or words) \citep{hou2013mining}\footnote{Such  dependencies (including collocation) have been viewed as an analogy of entanglement \citep{hou2013mining}.} that are not captured well by standard methods such as feature concatenation.  One could also see a similar interaction between any arbitrary features in factorization machines \citep{rendle2010factorization}. Given text consists of $N$ words $X = [x^{(1)}, x^{(2)}, \cdots ,x^{(N)}]$ and a feature extractor $\vf_i \in \mathbb{R}^{I_i}$ (it can be one-hot encoding or word embedding), we now define a representation of $X$ designed to capture these dependencies:
+%
+\begin{equation} 
+\begin{split}
+    \label{eq: Phi X}
+    \Phi(X) 
+    &= \vf_1 (x^{(1)}) \otimes  \vf_2 (x^{(2)}) \cdots \otimes \vf_N (x^{(N)}) \\
+    &= \bigotimes^N_{i=1} \vf_i (x^{(i)}) \\
+    % &= \includegraphics[width=2cm, height = 0.9cm]{figure/G.png}
+\end{split}
+\end{equation}
+%
+where the tensor space is  $\mathbb{R}^{I_1}\otimes\mathbb{R}^{I_2} \otimes\cdots\otimes\mathbb{R}^{I_N}$. Each component of $\vf_i$ represents independent meaning-bearing units, such as morphemes or latent factors.  For simplicity, we assume that a text shares the same one-hot encoding $\vf(x^{(t)}) \in \mathbb{R}^{|V|}$ in later sections. Consequently, $\Phi(X)$ is a $|V|^N$-dimensional tensor that records all possible combinations of words in $X$. 
+
+Inspired by \cite{zhang2019generalized, kossaifi2020tensor}, we define a tensor regression model to compute the probability for each text $X$:
+%
+\begin{align} 
+    \label{eq: general definition}
+    p(X)
+    &= \langle\mathcal{A}, \Phi(X)\rangle \nonumber \\
+    &= \sum_{i_1,i_2,\cdots,i_N = 1}^{|V|} \mathcal{A}_{i_1,\cdots, i_N} \cdot \Phi(X)_{i_1,\cdots, i_N}
+\end{align}
+%
+where $\langle \cdot \rangle$ denotes the inner product of two same-sized tensors, and  $\mathcal{A}$ is a regression weight tensor of the same shape as $\Phi(X)$ in the tensor space $\mathbb{V}^{\otimes N} = \underbrace{\mathbb{V} \otimes \cdots \otimes \mathbb{V}}_N $ where $\mathbb{V}$ refers to $\mathbb{R}^{|V|}$. Similar functions were considered in \cite{novikov2016exponential, NIPS2016_6211, khrulkov2018expressive, zhang2019generalized}.
+
+% The diagrammatic notation of Eq. \ref{eq: general definition} is \includegraphics[scale=0.10]{figure/d_original.png}. 
+

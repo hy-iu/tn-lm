@@ -1,0 +1,21 @@
+\begin{tikzpicture}[baseline={(current bounding box.center)}]
+	\def\l{.8};
+    
+    \draw[obj2, rounded corners=3pt] (0,-\l) -- (-\l,-\l) -- (-\l,-\l/2);
+    \draw[obj2, rounded corners=3pt] (0,0) -- (-\l,0) -- (-\l,-\l/2);
+    \draw[obj2, rounded corners=3pt] (-\l,\l/2) -- (-2*\l,\l/2) -- (-2*\l,0);
+    \draw[obj2, rounded corners=3pt] (-\l,-\l/2) -- (-2*\l,-\l/2) -- (-2*\l,0);
+    \draw[obj2] (-2*\l,0) -- (-3*\l,0);
+    
+    \node[draw=black, line width=.7pt, fill=gray!20, circle, inner sep=2.9pt] at (-\l,-\l/2) {};
+    \node[draw=black, line width=.7pt, fill=gray!20, circle, inner sep=2.9pt] at (-2*\l,0) {};
+    
+    \node at (-\l,-\l/2) {$\sss k$};
+    \node at (-2*\l,0) {$\sss l$};
+    
+    \node[above] at (-\l/2,0) {$\sss b$};
+    \node[below] at (-\l/2,-\l) {$\sss c$};
+    \node[below] at (-3*\l/2,-\l/2) {$\sss f$};		
+    \node[above] at (-5/2*\l,0)  {$\sss d$};
+    \node[above] at (-3*\l/2,\l/2) {$\sss a$};
+\end{tikzpicture}

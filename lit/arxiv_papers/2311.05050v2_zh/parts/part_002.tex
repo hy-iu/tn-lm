@@ -1,0 +1,69 @@
+\section{编码结构（Encoding structure）}
+
+生成建模的目标是在给定训练数据集的条件下对联合概率 $p(\vect{x})$ 进行建模。一旦模型训练良好，它就可以用来生成理想情况下应与训练数据分布相似的新样本。在本工作中，我们采用传统的 Born 机器（Born machine）结构，它以量子波函数 $\ket{\Psi_\theta}$ 为 backbone，并将编码 token 作为量子测量算符 $M(\vect{x})=\{M_{\gamma}(x_i)|x_i\in V\}$，其中 $\gamma$、$\theta$ 分别是来自嵌入（embedding）与 MPS 的可训练参数，$V$ 是全部词表的集合。每个数据点 $\vect{x}=(x_1,x_2,...,x_n)$ 的联合概率可以通过量子测量 $M_\gamma(\vect{x})=\bigotimes_{i}M_{\gamma}(x_i)$ 在给定量子波函数下的期望值来嵌入：
+\begin{equation}\label{eq: P}
+    p_{\theta, \gamma}(\vect{x})=\bra{\Psi_\theta}\bigotimes_{i}M_{\gamma}(x_i)\ket{\Psi_\theta},
+\end{equation}
+其中 backbone 量子态是归一化的，即 $\braket{\Psi_\theta}{\Psi_\theta}=1$。为了保证编码后的概率相对于整个输入空间是\textit{实的}、\textit{半正定}且\textit{归一化}的，我们把嵌入算符限制为正算符取值测量（positive operator-valued measurements, POVM），它们是\textit{厄米}的、\textit{半正定}的，且总体上\textit{归一化}：
+\begin{equation}\label{eq: emb}
+\begin{split}
+    \forall x_{i}\in V,\ M_{\gamma}(x_i)&=M^{\dagger}_{\gamma}(x_i)\succeq 0,\\
+    \sum_{i}M_{\gamma}(x_i)&=I.
+\end{split}
+\end{equation}
+其中 $I$ 表示恒等算符。先前的研究已经探索了自适应 POVM 的多种实现方式 \cite{2022arXiv220807817G, 2023arXiv230315353Z, 2021PRXQ....2d0342G}；本工作通过在 Born 机器的序列数据建模中对可训练 token 嵌入采用 QR 分解，将这一概念加以扩展。
+
+
+在先前的 Born 机器模型参数化方案中，嵌入约束是通过把每个 token $x_i\in\dsN$ 直接指定为由 token 索引所标记的基态的相应投影算符 $\ket{x_i}\bra{x_i}$ 来满足的\cite{PhysRevX.8.031012}。这等价于把 POVM 固定为 one-hot 嵌入矩阵 $M_\text{one-hot}(x_i)_{\alpha\beta}=\delta_{\alpha,x_i}\delta_{\beta,x_i}$，其矩阵维数严格等于词表大小（vocabulary size）。虽然 one-hot 嵌入可以满足 \eqnref{eq: emb}，但这一嵌入方案是预先定义好的、不可训练的。它无法充分利用算符空间，因而是次优的。相比之下，可训练的 POVM 嵌入使得有可能在同一个 Hilbert 空间中容纳更多 token，并进一步把量子态的物理维数（physical dimension）作为额外的超参数来提升模型的表达能力。在本文中，我们提出一种可训练的参数化方法，它在满足 \eqnref{eq: emb} 的同时能够发挥算符空间的潜力。
+
+参数 $\gamma$ 被初始化为形状为 $(v \times p, p)$ 的复张量，其中 $v$ 表示词表大小，$p$ 表示量子态的物理维数。随后对 $\gamma$ 施加 QR 分解 $\gamma=Q_\gamma R_\gamma$，并将得到的 $Q_{\gamma}$ 矩阵进一步重塑为 $(v, p, p)$，再与其厄米共轭做批量相乘，得到量子测量矩阵。
+\begin{equation}\label{eq: parametrization}
+    M_{\gamma}(x_{i})=Q^{\dagger}_{\gamma}(x_i)Q_{\gamma}(x_i), \ x_i\in V.
+\end{equation}
+上述构造保证了 \eqnref{eq: emb} 中的约束自动得到满足，并且物理维数成为一个可调节的超参数。
+
+遵循 \cite{PhysRevX.8.031012}，backbone 量子态可以用归一化的 MPS（matrix product state，矩阵乘积态）高效参数化，并且在基于梯度的优化过程中，相应的等距（isometric）约束 $\braket{\Psi_\theta}{\Psi_\theta}=1$ 通过等距优化方法加以保持\cite{wen2013feasible,2022MLS&T...3a5020G}。在物理 Hilbert 空间中显式选取基 $\ket{\vect{\beta}}=\ket{\beta_1,\beta_2,\cdots,\beta_n}$ 后，MPS 波函数可以表示为
+\begin{equation}\label{eq: mps}
+\braket{\vect{\beta}}{\Psi_\theta}=\sum_{b_1 b_2...b_{n-1}}(A_{\theta 1})^{\beta_1}_{b_1} (A_{\theta 2})^{\beta_2}_{b_1 b_2}\dots (A_{\theta n})^{\beta_n}_{b_{n-1}},
+\end{equation}
+它由一系列在位点 $i$ 处以 $\theta$ 参数化的张量 $A_{\theta i}$ 来描述。张量 $A_{\theta i}$ 是等距（isometry）的，其含义是：在收缩 $A_{\theta i}$ 与 $A_{\theta i}^*$（复共轭）之间的入腿之后，出腿构成一个恒等映射，
+\begin{equation}
+\sum_{b_i,\beta_i} (A_{\theta i}^*)_{b_{i-1}b_{i}}^{\beta_i}(A_{\theta i})_{b'_{i-1}b_{i}}^{\beta_i}=\delta_{b_{i-1}b'_{i-1}.}
+\end{equation}
+等距结构在 \figref{fig: tn} 中由箭头标示。采用等距 MPS 有若干优点。首先，它保证了所建模概率分布的归一化，从而可以直接进行对数似然（log-likelihood）优化。其次，
+它允许通过求和消去后续 token，把概率分布高效地边缘化（marginalization）到首个 token 上。
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=240pt]{tn.pdf}
+\caption{概率模型 $p_{\theta,\gamma}(\vect{x})$ 的张量网络表示。MPS 张量 $A_{\theta i}$ 为蓝色圆圈，测量算符 $M_\gamma(x_i)$ 为橙色方框。等距结构由张量腿上的箭头标示，表示从较大的 Hilbert 空间投影到较小的子空间。}
+\label{fig: tn}
+\end{center}
+\end{figure}
+
+给定 Born 机器易于处理的对数似然，针对指定数据集的无监督学习目标函数即为负对数似然（negative log-likelihood, NLL）\begin{equation}
+\mathcal{L}=-\frac{1}{N}\sum_{\vect{x}\in \text{data}}\log p_{\theta,\gamma}(\vect{x}),
+\end{equation}
+其中 $N$ 表示数据集的大小。\figref{fig: tn} 展示了单个数据点按一维形状 $\vect{x}=(x_1,x_2,...,x_n)$ 进行概率编码的张量网络。基于 NLL 优化参数的训练过程在 算法~\ref{alg:train} 中给出。
+
+
+\begin{algorithm}[H]
+\caption{Born 机器的训练过程}
+\label{alg:train}
+\begin{algorithmic}
+\REQUIRE 训练数据集 $D$，学习率（learning rate）$\eta$
+\STATE 初始化参数 $\theta$，$\gamma$
+\WHILE{未收敛}
+    \FOR{每个数据样本 $x \in D$}
+        \STATE 使用 \eqnref{eq: P} 计算联合概率 $p_{\theta,\gamma}(x)$
+        \STATE 计算 NLL 损失 $L = -\log p_{\theta,\gamma}(x)$
+        \STATE 计算梯度 $\nabla_{\theta} L$，$\nabla_{\gamma} L$
+        \STATE 更新参数：
+        \STATE $\theta \leftarrow \theta - \eta \nabla_{\theta} L$
+        \STATE $\gamma \leftarrow \gamma - \eta \nabla_{\gamma} L$
+    \ENDFOR
+    \STATE 检查是否收敛
+\ENDWHILE
+\ENSURE 优化后的参数 $\theta$，$\gamma$
+\end{algorithmic}
+\end{algorithm}

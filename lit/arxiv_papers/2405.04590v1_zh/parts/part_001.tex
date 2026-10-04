@@ -1,0 +1,31 @@
+\section{引言}
+
+% A \textit{language model} assigns probabilities of sequences of words from the vocabulary $V$; the number of distinct sentences increases exponentially w.r.t to their length $N$. Hence the domain of a language model is, by definition, the exponential space $V^N$.  However, due to the vanilla exponential space being intractable, existing work tends to use recurrent architectures to generate conditional probabilities based on the context (typically encapsulated as a fixed-length dense vector). This indeed simplifies the calculation.
+
+% Human languages, like many biological systems including families of proteins, genomes, and neurons in the brain, have significant long-range correlations that decay with a power law \citep{tagliazucchi2012criticality, mora2011biological}. However,  $n$-gram models have long-range correlations that decay exponentially which belie the essential critical behavior inherent in language \citep{pestun2017language}. Even 
+% current network models like LSTM \cite{hochreiter1997long} are still hard to match long-range and higher-order statistics of natural languages \citep{lin2016critical}.
+
+人类语言与许多生物系统（包括蛋白质家族、基因组以及大脑中的神经元）一样，具有随幂律衰减的显著长程关联 \citep{tagliazucchi2012criticality, mora2011biological}。
+而 LSTM \cite{hochreiter1997long} 等现有网络模型仍难以匹配自然语言的长程与高阶统计特性 \citep{lin2016critical}。
+
+
+最近，研究者们转向了张量网络语言建模，其中所包含的模型具有按幂律衰减的关联函数 \citep{pestun2017tensor,pestun2017language,miller2021tensor}。张量网络（tensor network）大致上是将大张量分解为若干较小张量集合的分解方式，已在物理学、数学和机器学习中得到应用 \citep{cohen2016expressive}。然而，所谓的“张量网络语言模型”或者只是一个有待实践证明的概念 \cite{pestun2017tensor}，或者由于其建模概率的方式而不适用于真实世界的语言建模任务 \citep{miller2021tensor}。为使张量网络语言建模走向实用，我们迈出了将其应用于真实语言建模数据集的第一步。
+
+作为概念验证工作，我们推导了张量列语言模型（Tensor Train Language Model, TTLM）（即最简单的张量网络）。在技术上，我们基于由词表示的张量积所构造的指数级语义空间来表示句子。句子的概率由两个高维张量的内积定义：输入 $\Phi(X)$ 与全局
+系数 $\mathcal{A}$，并被分解为条件概率。
+
+在 TTLM 框架下，我们提出了两个变体：TTLM-Tiny 与 TTLM-Large。此外，我们阐明了所提出的 TTLM 与一系列循环神经网络（Recurrent Neural Network, RNN）（即二阶 RNN \citep{goudreau1994first}、循环算术电路（Recurrent Arithmetic Circuit, RAC）\citep{levine2018benefits} 以及乘性集成 RNN（MI-RNN）\citep{wu_multiplicative_2016}）之间的关系。这些联系为理解 RNN 提供了新的视角，并为 TTLM 给出了一些自然的实现。
+
+
+我们对这些 TTLM 变体进行了基准测试，并分析了其工作机制与行为上的差异。在语言建模任务上的实验结果表明，在相同训练设置下，我们的 TTLM 变体可以优于 Vanilla-RNN。这些结果证明了 TTLM 的可行性。
+
+
+我们的主要贡献可概括如下：
+\begin{itemize}
+    % \item We propose a novel Tensor Train Language Model, as a first attempt to apply tensor networks on real-world language modeling tasks.
+    \item 我们提出了一个新颖的张量列语言模型（TTLM），作为张量网络如何应用于真实世界语言建模数据集的一个示范。
+    \item 我们提出了两个新颖的 TTLM 变体，即 TTLM-Large 与 TTLM-Tiny，并从理论上证明了 TTLM 与一系列现有 RNN 之间的关系。
+    \item 与 Vanilla-RNN 相比，在 WikiText-2 与 PTB 数据集上，TTLM-Large 分别将 perplexity 降低了 14.3 和 16.0，TTLM-Tiny 分别将 perplexity 降低了 1.7 和 8.5。
+\end{itemize}
+
+

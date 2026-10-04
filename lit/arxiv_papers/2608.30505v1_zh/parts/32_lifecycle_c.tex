@@ -1,0 +1,306 @@
+
+\paragraph{嵌入。} 对嵌入表进行张量化的一种方式是逐行分解：把每一行重排为一个高阶张量并独立分解。TensorGPT \cite{xu2023tensorgpt} 对每个词元嵌入单独压缩。这保留了行与行之间的独立性，契合嵌入层的查找表本质，也使该方案在词表变化时依然有效。在 $\llama$ 中，嵌入表 $\mat{E}\in\R^{128000\times 4096}$ 约含 525M 个参数，且由于该模型不对输入嵌入与输出嵌入做权重绑定 \cite{wolf2017weighttying1}, \cite{inan2017weighttying2}，仅此一张表就约占全部参数的 $6.5\%$。特征轴可以整齐地分解为 $d = 4096 = 8^4$，因此每一行都成为四阶张量，可做 TT 秩为 $(1, R_1, R_2, R_3, 1)$ 的 TT 分解，如 \cref{fig:ex-emb-train}（左）所示。该技术是免训练的，因为 TT-SVD \cite{oseledets2011tensor} 直接作用于预训练好的嵌入。取 $R_1 = R_2 = R_3 = R$ 时，整张表的参数开销为 $128{,}000 \times 16R(1+R) \approx 2R(1+R) \times 10^6$。秩决定了这里的权衡：取 $R=1$ 可将该表压缩 $128{\times}$，而 $R=4$ 只压缩 $12.8{\times}$，但由于 TT-SVD 的截断误差随秩增大而减小，$R=4$ 能保留更多原始嵌入信息。此类压缩在经验上的质量代价见 \cite{xu2023tensorgpt} 的报告。
+
+\paragraph{预训练。}
+从头训练一个采用张量结构权重矩阵的语言模型，是把张量结构用作归纳偏置的最直接方式。
+一种自然的做法是在训练前用 TTM 表示来参数化每个大型稠密权重矩阵 \cite{chekalina2023ttm}。这样稠密矩阵从不会被显式构造出来；取而代之，输入 $\vecb{x}$ 被重排为张量并直接与 TTM 的各核缩并，因此权重及其优化器状态的规模随核而定。
+举一个具体例子：把 TTM 表示用于 $\llama$ 中某个 FFN 块的下投影 $\mat{W}\in\R^{14336\times 4096}$，其输入、输出维度分别分解为 $14336 = 8\times 14\times 16\times 8$ 与 $4096 = 8^4$。如 \cref{fig:ex-emb-train}（右）所示，这给出由四个核组成的 TTM 链
+\begin{equation*}
+\mathcal{W}_1\in\R^{1\times 8\times 8\times R_1},\quad
+\mathcal{W}_2\in\R^{R_1\times 14\times 8\times R_2},\quad
+\mathcal{W}_3\in\R^{R_2\times 16\times 8\times R_3},\quad
+\mathcal{W}_4\in\R^{R_3\times 8\times 8\times 1}.
+\end{equation*}
+若取 $R_1 = R_2 = R_3 = R$，参数总数为 $128R + 240R^2$，而稠密矩阵则为 $14336\times 4096\approx 58.7\text{M}$。例如在秩 $R=64$ 时，TTM 约存储 1M 个参数，对应这一个投影约 $60{\times}$ 的压缩率。Chekalina 等人 \cite{chekalina2023ttm} 证明，用这种 TTM 参数化的层训练 GPT-2（在足够高的秩下）只带来很小的困惑度上升，说明达到这一质量水平并不必须使用稠密参数化
+
+\begin{figure}[!htpb]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  mat/.style={circle, draw=black!80, line width=1.0pt,
+              minimum size=1.60cm, inner sep=0pt, font=\normalsize},
+  core/.style={circle, draw=black!80, line width=1.0pt,
+              minimum size=1.05cm, inner sep=0pt, font=\small},
+  fac/.style={circle, draw=black!80, line width=1.0pt,
+              minimum size=1.05cm, inner sep=0pt, font=\tiny},
+  bond/.style={line width=1.0pt, black!80},
+  leg/.style={line width=1.0pt, black!80},
+  lbl/.style={font=\small},
+  slbl/.style={font=\scriptsize, text=black},
+]
+
+% LEFT: Kronecker Adapter
+\definecolor{ColW}{RGB}{141,160,203}
+\definecolor{ColA}{RGB}{102,194,165}
+\definecolor{ColB}{RGB}{252,141, 98}
+\pgfmathsetmacro{\RadMat}{0.80}
+\pgfmathsetmacro{\RadCore}{0.525}
+\pgfmathsetmacro{\Lleg}{0.72}
+\pgfmathsetmacro{\PadX}{0.32}
+\pgfmathsetmacro{\PadY}{0.45}
+\pgfmathsetmacro{\LWx}{0.0}
+\pgfmathsetmacro{\LWy}{0.0}
+\pgfmathsetmacro{\DyAB}{1.70}
+\pgfmathsetmacro{\DyABH}{\DyAB/2}
+\pgfmathsetmacro{\NegDyABH}{-\DyAB/2}
+\pgfmathsetmacro{\FanHalf}{\DyABH + \RadCore}
+\pgfmathsetmacro{\NegFanHalf}{-\DyABH - \RadCore}
+\pgfmathsetmacro{\FanDepth}{0.72}
+\pgfmathsetmacro{\BondLen}{0.58}
+\pgfmathsetmacro{\LFanX}{4.40}
+\pgfmathsetmacro{\LFanBX}{\LFanX + \FanDepth}
+\pgfmathsetmacro{\CoreX}{\LFanBX + \BondLen + \RadCore}
+\pgfmathsetmacro{\RFanBX}{\CoreX + \RadCore + \BondLen}
+\pgfmathsetmacro{\RFanX}{\RFanBX + \FanDepth}
+\pgfmathsetmacro{\LboxL}{\LWx - \RadMat - \Lleg - \PadX}
+\pgfmathsetmacro{\LboxR}{\LWx + \RadMat + \Lleg + \PadX}
+\pgfmathsetmacro{\RboxL}{\LFanX - \Lleg - \PadX}
+\pgfmathsetmacro{\RboxR}{\RFanX + \Lleg + \PadX}
+\pgfmathsetmacro{\PlusX}{0.5*(\LboxR + \RboxL)}
+\node[mat, fill=ColW!40] (W) at (\LWx, \LWy) {$\bm{\Delta W}$};
+\draw[leg] (W.west) -- ++(-\Lleg, 0) node[above=1pt, slbl] {$I_1I_2$};
+\draw[leg] (W.east) -- ++(\Lleg,  0) node[above=1pt, slbl] {$J_1J_2$};
+\node[font=\large] at (\PlusX, \LWy) {$=$};
+\draw[leg] (\LFanX, 0) -- ++(-\Lleg, 0) node[above=1pt, slbl] {$I_1I_2$};
+\draw[leg] (\RFanX, 0) -- ++( \Lleg, 0) node[above=1pt, slbl] {$J_1J_2$};
+\fill[black!9, draw=black!80, line width=1.0pt]
+    (\LFanBX, \FanHalf)
+    arc[start angle=90, end angle=270, x radius=\FanDepth, y radius=\FanHalf]
+    -- cycle;
+\fill[black!9, draw=black!80, line width=1.0pt]
+    (\RFanBX, \NegFanHalf)
+    arc[start angle=-90, end angle=90, x radius=\FanDepth, y radius=\FanHalf]
+    -- cycle;
+\node[core, fill=ColA!40] (A) at (\CoreX, \DyABH)    {$\mat{A}$};
+\node[core, fill=ColB!40] (B) at (\CoreX, \NegDyABH) {$\mat{B}$};
+\draw[bond] (\LFanBX, \DyABH)    -- (A.west) node[midway, above=1pt, slbl] {$I_1$};
+\draw[bond] (\LFanBX, \NegDyABH) -- (B.west) node[midway, above=1pt, slbl] {$I_2$};
+\draw[bond] (A.east) -- (\RFanBX, \DyABH) node[midway, above=1pt, slbl] {$J_1$};
+\draw[bond] (B.east) -- (\RFanBX, \NegDyABH) node[midway, above=1pt, slbl] {$J_2$};
+\begin{pgfonlayer}{foreground}
+\node[font=\small\bfseries] at ({0.5*(\LboxL+\RboxR)}, 2.57)
+    {适配器更新的克罗内克参数化};
+% \node[lbl] at ({0.5*(\LboxL+\LboxR)}, -3.65)
+%     {$\mathbf{W}\!\in\!\mathbb{R}^{(m_1 m_2)\times(n_1 n_2)}$};
+% \node[lbl] at ({0.5*(\RboxL+\RboxR)}, -3.65)
+%     {$\mathbf{A}\!\in\!\mathbb{R}^{m_1\times n_1},\quad\mathbf{B}\!\in\!\mathbb{R}^{m_2\times n_2}$};
+\path (0, 2.77) -- (0, -3.25);
+\end{pgfonlayer}
+
+\draw[black!35, line width=0.6pt] (9.59, -3.25) -- (9.59, 2.77);
+%% RIGHT: Tucker-3 with Sparse Core
+\begin{scope}[shift={(11.93, 0)}]
+\tikzset{
+  core/.style={circle, draw=black!80, line width=1.0pt,
+              minimum size=1.80cm, inner sep=0pt, font=\small},
+  fac/.style={circle, draw=black!80, line width=1.0pt,
+              minimum size=1.05cm, inner sep=0pt, font=\tiny},
+}
+\definecolor{ColG}{RGB}{252,141, 98}
+\definecolor{ColU}{RGB}{102,194,165}
+\pgfmathsetmacro{\RadW}{0.80}
+\pgfmathsetmacro{\RadG}{0.90}
+\pgfmathsetmacro{\RadU}{0.525}
+\pgfmathsetmacro{\Lleg}{0.72}
+\pgfmathsetmacro{\PadX}{0.32}
+\pgfmathsetmacro{\PadY}{0.45}
+\pgfmathsetmacro{\LWx}{0.0}
+\pgfmathsetmacro{\LWy}{0.0}
+\pgfmathsetmacro{\Rx}{6.95}
+\pgfmathsetmacro{\Gy}{0.0}
+\pgfmathsetmacro{\DxU}{1.80}
+\pgfmathsetmacro{\DyU}{1.80}
+\pgfmathsetmacro{\DiagHalf}{0.58}
+\pgfmathsetmacro{\DashN}{9}
+\pgfmathsetmacro{\DashLen}{2*\DiagHalf*sqrt(2)*28.4528/(2*\DashN-1)}
+\pgfmathsetmacro{\ArrLen}{1.0}
+\pgfmathsetmacro{\ArrMid}{0.5*((\LWx + \RadW + \Lleg + \PadX) + (\Rx - \DxU - \RadU - \Lleg - \PadX))}
+\pgfmathsetmacro{\ArrL}{\ArrMid - 0.5*\ArrLen}
+\pgfmathsetmacro{\ArrR}{\ArrMid + 0.5*\ArrLen}
+\pgfmathsetmacro{\ABH}{0.10}
+\pgfmathsetmacro{\AHH}{0.22}
+\pgfmathsetmacro{\AHD}{0.26}
+\pgfmathsetmacro{\LboxL}{\LWx - \RadW - \Lleg - \PadX}
+\pgfmathsetmacro{\LboxR}{\LWx + \RadW + \Lleg + \PadX}
+\pgfmathsetmacro{\LboxT}{\LWy + \RadW + \Lleg + \PadY}
+\pgfmathsetmacro{\LboxB}{\LWy - \RadW - \Lleg - \PadY}
+\pgfmathsetmacro{\RboxL}{\Rx - \DxU - \RadU - \Lleg - \PadX}
+\pgfmathsetmacro{\RboxR}{\Rx + \DxU + \RadU + \Lleg + \PadX}
+\pgfmathsetmacro{\RboxT}{\Gy + \RadG + \Lleg + \PadY}
+\pgfmathsetmacro{\RboxB}{\Gy - \DyU - \RadU - \Lleg - \PadY}
+\pgfmathsetmacro{\BoxT}{max(\LboxT, \RboxT)}
+\pgfmathsetmacro{\BoxB}{min(\LboxB, \RboxB)}
+\node[mat, fill=ColW!40] (W) at (\LWx, \LWy) {$\ten{W}$};
+\draw[leg] (W.west)  -- ++(-\Lleg,  0) node[above=1pt, slbl] {$d$};
+\draw[leg] (W.east)  -- ++( \Lleg,  0) node[above=1pt, slbl] {$d_h$};
+\draw[leg] (W.north) -- ++(0,  \Lleg)  node[right=1pt, slbl] {$H$};
+\draw[leg] (W.south) -- ++(0, -\Lleg)  node[right=1pt, slbl] {$4$};
+\fill[white, draw=black!80, line width=0.9pt]
+    (\ArrL,            {\LWy+\ABH})
+    -- ({\ArrR-\AHD},  {\LWy+\ABH})
+    -- ({\ArrR-\AHD},  {\LWy+\AHH})
+    -- (\ArrR,          \LWy)
+    -- ({\ArrR-\AHD},  {\LWy-\AHH})
+    -- ({\ArrR-\AHD},  {\LWy-\ABH})
+    -- (\ArrL,         {\LWy-\ABH})
+    -- cycle;
+\node[slbl] at (\ArrMid, \LWy + 0.75) {Tucker};
+\node[slbl] at (\ArrMid, \LWy + 0.45) {$+$ 稀疏性};
+\node[core, fill=ColG!35] (G) at (\Rx, \Gy) {};
+\node[font=\small] at (\Rx + 0.24, {\Gy + 0.36}) {$\ten{G}$};
+\draw[black!60, line width=1.0pt,
+      dash pattern=on \DashLen pt off \DashLen pt]
+    ({\Rx - \DiagHalf}, {\Gy + \DiagHalf}) -- ({\Rx + \DiagHalf}, {\Gy - \DiagHalf});
+\draw[leg] (G.north) -- ++(0, \Lleg) node[right=1pt, slbl] {$H$};
+\node[fac, fill=ColU!40] (U1) at ({\Rx - \DxU}, \Gy)         {$\mat{U}^{(1)}$};
+\node[fac, fill=ColU!40] (U2) at ({\Rx + \DxU}, \Gy)         {$\mat{U}^{(2)}$};
+\node[fac, fill=ColU!40] (U3) at (\Rx,          {\Gy-\DyU})  {$\mat{U}^{(3)}$};
+\draw[bond] (G.west)  -- (U1.east)  node[midway, above=1pt, slbl] {$R_1$};
+\draw[bond] (G.east)  -- (U2.west)  node[midway, above=1pt, slbl] {$R_2$};
+\draw[bond] (G.south) -- (U3.north) node[midway, right=1pt, slbl] {$R_3$};
+\draw[leg] (U1.west)  -- ++(-\Lleg,  0) node[above=1pt, slbl] {$d$};
+\draw[leg] (U2.east)  -- ++( \Lleg,  0) node[above=1pt, slbl] {$d_h$};
+\draw[leg] (U3.south) -- ++(0, -\Lleg)  node[right=1pt, slbl] {$4$};
+\begin{pgfonlayer}{foreground}
+\node[font=\small\bfseries] at ({0.5*(\LboxL+\RboxR)}, \BoxT + 0.50)
+    {带稀疏核的 Tucker 压缩};
+% \node[lbl] at ({0.5*(\LboxL+\LboxR)}, \BoxB - 0.50)
+%     {$\ten{W}\!\in\!\R^{d\times d_h\times 4\times H}$};
+% \node[lbl] at ({0.5*(\RboxL+\RboxR)}, \BoxB - 0.50)
+%     {$\ten{G}\!\in\!\R^{R_1\times R_2\times R_3\times H}$ (sparse),\quad
+%     $\mat{U}^{(i)}\!\in\!\R^{n_i\times r_i}$};
+\end{pgfonlayer}
+\end{scope}
+\end{tikzpicture}}
+\caption{\textit{左}：权重更新被参数化为两个因子矩阵的克罗内克积，$\mat{A}\in\R^{I_1\times J_1}$ 与 $\mat{B}\in\R^{I_2\times J_2}$，从而 $\Delta\mat{W}\in\R^{I_1I_2\times J_1J_2}$。\textit{右}：一层的各注意力投影被堆叠成四阶张量 $\ten{W}\in\R^{d\times d_h\times 4\times H}$，其各模依次索引模型维度 $d$、头维度 $d_h$、投影类型（$\mat{W}^Q,\mat{W}^K,\mat{W}^V,\mat{W}^O$）以及 $H$ 个注意力头。该张量用 Tucker 分解近似，核为 $\ten{G}\in\R^{R_1\times R_2\times R_3\times H}$，因子矩阵为 $\mat{U}^{(1)}\in\R^{d\times R_1}$、$\mat{U}^{(2)}\in\R^{d_h\times R_2}$、$\mat{U}^{(3)}\in\R^{4\times R_3}$，头模保持不压缩。随后对核做稀疏化，如虚线对角线所示。}\label{fig:ex-peft-compr}
+\end{figure}
+
+\paragraph{适配。}
+
+在适配阶段，增量权重更新 $\Delta \mat{W}$ 要么直接被参数化为张量网络，要么通过克罗内克积等张量代数运算加以结构化。KronA \cite{edalati2022krona} 不像 LoRA 那样添加低秩矩阵更新 $\mat{U}\mat{V}^\top \in\R^{I\times J}$ \cite{hu2022lora}（其中 $\mat{U}\in \R^{I \times R}$、$\mat{V} \in \R^{J \times R}$），而是施加克罗内克积增量 $\mat{W}_0 \leftarrow \mat{W}_0 + \alpha(\mat{A}\otimes\mat{B})$，其中 $\mat{A}\in\R^{I_1\times J_1}$、$\mat{B}\in\R^{I_2\times J_2}$，带缩放系数 $\alpha$，且 $I_1 I_2 = I$、$J_1 J_2 = J$。\Cref{fig:ex-peft-compr}（左）给出了相应的张量网络图。由标准恒等式 $\mathrm{rank}(\mat{A}\otimes\mat{B})=\mathrm{rank}(\mat{A})\cdot\mathrm{rank}(\mat{B})$ \cite{golubvanloan}，单个克罗内克项仅需 $I_1J_1+I_2J_2$ 个参数即可使矩阵秩达到 $\min(I_1,J_1)\cdot\min(I_2,J_2)$。相比之下，秩为 $R$ 的 LoRA 更新矩阵秩至多为 $R$，需要 $R(I+J)$ 个参数。也就是说，LoRA 的秩随参数预算线性增长，而克罗内克形式只把各因子的参数规模相加，却把它们的秩相乘。
+这一差距在 $\llama$ 上是具体的。对每头查询投影 $\mat{W}_Q\in\R^{4096\times 128}$，取分解 $(I_1,J_1)=(64,16)$、$(I_2,J_2)=(64,8)$，可得一个仅含 $1{,}536$ 个参数的单项 KronA 适配器，其秩可达 $128$，即满列秩。此处 LoRA 每单位秩需花费 $4{,}224$ 个参数，达到同样的秩要 $540$K 个参数，即便 $R=1$ 也几乎是整个克罗内克适配器的三倍。需要说明的是，这一比较针对的是可达秩而非可达的更新集合：克罗内克项只张成该秩矩阵中一个结构化的子集，而低秩分解则不受约束。
+
+% At the adaptation stage, tensor methods enter through the incremental weight update: the adapter $\Delta\mathcal{W}$ is parameterized directly as a tensor network, or structured via tensor-algebraic operations such as the Kronecker product. KronA \cite{edalati2022krona} proposes instead of adding a low-rank matrix update $\mat{B}\mat{A}\in\R^{I\times J}$ \cite{hu2022lora}, applies a Kronecker product increment $\mat{W}_0 \leftarrow\mat{W}_0+\mat{A}\otimes\mat{B}$, where $\mat{A}\in\R^{I_1\times J_1}$, $\mat{B}\in\R^{I_2\times J_2}$, and $I_1 I_2=I$, $J_1 J_2=J$. By the standard identity $\mathrm{rank}(\mat{A}\otimes\mat{B})=\mathrm{rank}(\mat{A})\cdot\mathrm{rank}(\mat{B})$ \cite{golubvanloan}, a single Kronecker term achieves matrix rank up to $\min(I_1,J_1)\cdot\min(I_2,J_2)$, which can far exceed $1$. By contrast, a LoRA rank-$1$ update $\mat{b}\mat{a}^\top$ has matrix rank exactly $1$ by construction. This expressivity gap is concrete for LLaMA-3-8B: the update for query projection $\mat{W}_Q\in\R^{4096\times 128}$ admits a Kronecker representation with $I_1=64,\,J_1=16$ and $I_2=64,\,J_2=8$ ($4096=64^2$, $128=16{\times}8$), so a KronA adapter stores only $64{\times}16+64{\times}8=1{,}536$ parameters while its matrix rank can reach $16{\times}8=128$ (the full column rank). Achieving rank $128$ with LoRA would require $128\times(4096+128)\approx 540$K parameters. \cref{fig:example-peft} (left) illustrates the corresponding tensor network diagram. KronA \cite{edalati2022krona} reports improvements over LoRA on the GLUE benchmark for T5 model \cite{raffel2023t5}.
+
+\paragraph{压缩。}
+在压缩阶段，张量分解被事后应用于预训练好的权重以降低其内存占用，利用的是训练后的网络中涌现出的低秩结构。LeSTD \cite{li2026lestd} 以整个 MHA 块为对象。对每个头，查询、键、值、输出四个投影被堆叠成一个三阶张量，各头的张量再沿索引头的第四个模堆叠。压缩无需数据，分两步进行。第一步对前三个模计算 Tucker 分解
+% via Higher-Order Orthogonal Iteration (HOOI) \cite{liu2015hooi}
+，因此所有头共享因子矩阵 $\mat{U}^{(1)},\mat{U}^{(2)},\mat{U}^{(3)}$，而各头特有的信息保留在核 $\ten{G}\in\R^{R_1\times R_2\times R_3\times H}$ 的相应切片中；头模不压缩。第二步按重要性得分对核做稀疏化。\Cref{fig:ex-peft-compr}（右）把这两步变换一并示出。在 $\llama$ 中，GQA 使得无法使用单一的头模，因为 $H_{\rm Q}=32$ 而 $H_{KV}=8$，故该构造可拆分为 $\ten{W}_{\rm QO}\in\R^{4096\times128\times2\times32}$ 与 $\ten{W}_{\rm KV}\in\R^{4096\times128\times2\times8}$，分别含 $33.6$M 与 $8.4$M 个参数。较小的 $K/V$ 张量使用更低的模-1 秩，否则其模-1 因子将占主导。在核稀疏度 $70\%$、Tucker 秩分别为 $(1024,64,2,H_{\rm Q})$ 与 $(256,64,2,H_{\rm KV})$ 时，二者缩小到 $5.5$M 与 $1.1$M，整个块压缩 $6.4\times$。剩余部分以共享因子 $\mat{U}^{(1)}$ 为主（$6.6$M 中占 $5.2$M），因此得益于这些因子在头间的摊销，收益随头数增加而增大，而只有核随 $H$ 增长。GQA 对此不利，因为 $K/V$ 张量只有八个头可供摊销。
+
+\begin{figure}[!htbp]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[scale=1.4,
+  mat/.style={circle, draw=black!80, line width=1.0pt,
+              minimum size=1.61cm, inner sep=0pt, font=\small},
+  core/.style={circle, draw=black!80, line width=1.0pt,
+              minimum size=1.26cm, inner sep=0pt, font=\small},
+  bond/.style={line width=1.0pt, black!80},
+  leg/.style={line width=1.0pt, black!80},
+  lbl/.style={font=\small},
+  slbl/.style={font=\scriptsize, text=black},
+]
+\definecolor{ColQ}{RGB}{141,160,203}
+\definecolor{ColA}{RGB}{102,194,165}
+\definecolor{ColB}{RGB}{252,141, 98}
+\pgfmathsetmacro{\RadMat}{0.575}
+\pgfmathsetmacro{\RadCore}{0.45}
+\pgfmathsetmacro{\Lleg}{0.65}
+\pgfmathsetmacro{\LlegS}{0.40}
+\pgfmathsetmacro{\PadX}{0.30}
+\pgfmathsetmacro{\PadXR}{0.60}
+\pgfmathsetmacro{\PadY}{0.30}
+\pgfmathsetmacro{\ABGap}{1.80}
+\pgfmathsetmacro{\LQx}{0.0}
+\pgfmathsetmacro{\LPanY}{0.0}
+\pgfmathsetmacro{\LRx}{3.0}
+\pgfmathsetmacro{\BoxRowA}{\LPanY + 1.45}
+\pgfmathsetmacro{\BoxRowB}{\LPanY - 1.45}
+\pgfmathsetmacro{\BoxL}{\LRx - \RadCore - \PadX}
+\pgfmathsetmacro{\BoxR}{\LRx + \ABGap + \RadCore + \Lleg + \PadXR}
+\pgfmathsetmacro{\BoxTop}{\BoxRowA + \RadCore + \PadY}
+\pgfmathsetmacro{\BoxBot}{\BoxRowB - \RadCore - \LlegS - \PadY}
+\pgfmathsetmacro{\LboxR}{\LQx + \RadMat + \Lleg + \PadX}
+\pgfmathsetmacro{\EqXL}{0.5*(\LboxR + \BoxL)}
+\pgfmathsetmacro{\ZSrcTop}{\BoxRowA + \RadCore + 0.20}
+\pgfmathsetmacro{\ZSrcBot}{\BoxRowA - \RadCore - \LlegS - 0.25}
+\pgfmathsetmacro{\ZoomGap}{1.00}
+\pgfmathsetmacro{\RPBoundLeft}{\BoxR + \ZoomGap}
+\pgfmathsetmacro{\RPBoundTop}{\LPanY + \RadMat + 0.50}
+\pgfmathsetmacro{\RPBoundBot}{\LPanY - \RadMat - \Lleg - 0.50}
+\pgfmathsetmacro{\RQx}{\RPBoundLeft + \RadMat + 0.25}
+\pgfmathsetmacro{\RPanY}{\LPanY}
+\pgfmathsetmacro{\RRx}{\RQx + 3.0}
+\pgfmathsetmacro{\RLboxR}{\RQx + \RadMat + \Lleg + \PadX}
+\pgfmathsetmacro{\RBoxL}{\RRx - \RadCore - \PadX}
+\pgfmathsetmacro{\EqXR}{0.5*(\RLboxR + \RBoxL)}
+\pgfmathsetmacro{\FigL}{\LQx - \RadMat - \Lleg - \PadX}
+\pgfmathsetmacro{\FigR}{\RRx + \ABGap + \RadCore + \Lleg + \PadXR}
+\pgfmathsetmacro{\Sw}{0.30}
+\begin{pgfonlayer}{background}
+\draw[black, line width=1.3pt, line cap=rect]
+    ({\BoxL+\Sw}, \BoxTop) -- (\BoxL, \BoxTop) -- (\BoxL, \BoxBot) -- ({\BoxL+\Sw}, \BoxBot);
+\draw[black, line width=1.3pt, line cap=rect]
+    ({\BoxR-\Sw}, \BoxTop) -- (\BoxR, \BoxTop) -- (\BoxR, \BoxBot) -- ({\BoxR-\Sw}, \BoxBot);
+\fill[black!6, rounded corners=4pt]
+    ({\BoxL+0.07}, \ZSrcTop) rectangle ({\BoxR-0.07}, \ZSrcBot);
+\draw[draw=black!45, line width=0.6pt, dashed, rounded corners=4pt]
+    ({\BoxL+0.07}, \ZSrcTop) rectangle ({\BoxR-0.07}, \ZSrcBot);
+\draw[draw=black!55, line width=1.0pt, dashed, rounded corners=10pt]
+    (\RPBoundLeft, \RPBoundTop) rectangle (\FigR, \RPBoundBot);
+\end{pgfonlayer}
+\draw[black!38, line width=0.65pt, dashed]
+    (\BoxR, \ZSrcTop) -- (\RPBoundLeft, \RPBoundTop);
+\draw[black!38, line width=0.65pt, dashed]
+    (\BoxR, \ZSrcBot) -- (\RPBoundLeft, \RPBoundBot);
+\node[mat, fill=ColQ!40] (Q) at (\LQx, \LPanY) {$\ten{K}$};
+\draw[leg] (Q.west)  -- ++(-\Lleg, 0) node[above=1pt, slbl] {$T$};
+\draw[leg] (Q.south) -- ++(0, -\Lleg) node[right=1pt, slbl] {$H$};
+\draw[leg] (Q.east)  -- ++(\Lleg, 0)  node[above=1pt, slbl] {$d_h$};
+\node[font=\normalsize] at (\EqXL, \LPanY) {$=$};
+\node[core, fill=ColA!40] (A1) at (\LRx,          \BoxRowA) {$\mat{A}_1$};
+\node[core, fill=ColB!40] (B1) at ({\LRx+\ABGap}, \BoxRowA) {$\mat{B}_1$};
+\draw[bond] (A1.east) -- (B1.west) node[midway, above=2pt, slbl] {$R_{\rm K}$};
+\draw[leg]  (A1.south) -- ++(0, -\LlegS) node[right=1pt, slbl] {$H$};
+\draw[leg]  (B1.east)  -- ++(\Lleg, 0)   node[above=1pt, slbl] {$d_h$};
+\node[font=\large] at ({0.5*(2*\LRx + \ABGap)}, \LPanY) {$\vdots$};
+\node[core, fill=ColA!40] (AT) at (\LRx,          \BoxRowB) {$\mat{A}_T$};
+\node[core, fill=ColB!40] (BT) at ({\LRx+\ABGap}, \BoxRowB) {$\mat{B}_T$};
+\draw[bond] (AT.east) -- (BT.west) node[midway, above=2pt, slbl] {$R_{\rm K}$};
+\draw[leg]  (AT.south) -- ++(0, -\LlegS) node[right=1pt, slbl] {$H$};
+\draw[leg]  (BT.east)  -- ++(\Lleg, 0)   node[above=1pt, slbl] {$d_h$};
+\node[mat, fill=ColQ!40] (Qt) at (\RQx, \RPanY) {$\mat{K}_t$};
+\draw[leg] (Qt.south) -- ++(0, -\Lleg) node[right=1pt, slbl] {$H$};
+\draw[leg] (Qt.east)  -- ++(\Lleg, 0)  node[above=1pt, slbl] {$d_h$};
+\node[font=\normalsize] at (\EqXR, \RPanY) {$=$};
+\node[core, fill=ColA!40] (At) at (\RRx,          \RPanY) {$\mat{A}_t$};
+\node[core, fill=ColB!40] (Bt) at ({\RRx+\ABGap}, \RPanY) {$\mat{B}_t$};
+\draw[bond] (At.east) -- (Bt.west) node[midway, above=2pt, slbl] {$R_{\rm K}$};
+\draw[leg]  (At.south) -- ++(0, -\Lleg) node[right=1pt, slbl] {$H$};
+\draw[leg]  (Bt.east)  -- ++(\Lleg, 0)  node[above=1pt, slbl] {$d_h$};
+\begin{pgfonlayer}{foreground}
+\node[font=\small\bfseries]
+    at ({0.5*(\FigL + \FigR)}, {\BoxTop + 0.60}) {TPA 中的键张量};
+% \pgfmathsetmacro{\CapY}{\BoxBot - 0.50}
+% \node[lbl] at (\LQx, \CapY)
+%     {$\mathcal{Q}\!\in\!\mathbb{R}^{T\times h\times d_h}$};
+% \node[lbl] at ({0.5*(\BoxL + \BoxR)}, \CapY)
+%     {$\sum_{i=1}^T \mathbf{e}_i \circ \mathbf{A}_i^\top\mathbf{B}_i\!\in\!\mathbb{R}^{T\times h\times d_h}$};
+% \node[lbl] at ({0.5*(\RPBoundLeft + \FigR)}, \CapY)
+%     {$\mathbf{Q}_t\!\in\!\mathbb{R}^{h\times d_h},\quad
+%       \mathbf{A}_t\!\in\!\mathbb{R}^{R_Q\times h},\quad
+%       \mathbf{B}_t\!\in\!\mathbb{R}^{R_Q\times d_h}$};
+\end{pgfonlayer}
+\end{tikzpicture}}
+  \caption{\textit{左}：完整的键张量 $\ten{K}\in\R^{T\times H \times d_h}$ 分解为堆叠的 $\mat{K}_t$ 矩阵 \cite{zhang2026tpa}。\textit{右}：（虚线框）对单个词元 $t$，键矩阵 $\mat{K}_t\in\R^{H \times d_h}$ 表示为沿秩模 $R_{\rm K}$ 的缩并 $\mat{A}_t^\top\mat{B}_t$，其中 $\mat{A}_t\in\R^{R_{\rm K}\times H}$、$\mat{B}_t\in\R^{R_{\rm K}\times d_h}$。为示意简便，因子 $\frac{1}{R_{\rm K}}$ 的缩放已省略。}
+\label{fig:example-inference}
+\end{figure}
+
+\paragraph{推理。} 推理（inference）阶段张量化的自然对象是 KV 缓存，其规模随序列长度线性增长。张量积注意力（Tensor Product Attention, TPA）\cite{zhang2026tpa} 对每个词元的查询、键、值矩阵做因子分解，使缓存的键和值从不被显式构造。对词元 $t$，键矩阵 $\mat{K}_t\in\R^{H\times d_h}$ 写成 $\frac{1}{R_{\rm K}}\mat{A}_t^\top\mat{B}_t$，其中 $\mat{A}_t\in\R^{R_K\times H}$、$\mat{B}_t\in\R^{R_K\times d_h}$，$\mat{Q}_t$ 与 $\mat{V}_t$ 类似。\Cref{fig:example-inference} 展示了这种双因子情形；也可以采用因子更多的变体。缓存因子的开销为每词元 $(R_K+R_V)(H+d_h)$ 个数值，而非 $2Hd_h$：对 $\llama$ 规模的层（$H=32$、$d_h=128$），在 $R_{\rm K} = R_{\rm V} = 2$ 的假设下为 $640$ 对 $8{,}192$，缩减 $12.8\times$。这里的基线是多头注意力，因为 TPA 涵盖了二者：MHA、MQA 与 GQA 都是它的非上下文特例。作为对比，$\llama$ 的分组查询注意力在 $H_{\rm KV}=8$ 个组间共享键和值，因此每词元存储 $2H_{\rm KV}d_h=2{,}048$ 个数值；因子化表示还要再小 $3.2\times$。
+
+\paragraph{可解释性。} 
+
+双线性 MLP \cite{pearce2025bilinearmlp} 去掉了门控 FFN 中的逐元素非线性，使该层变成与一个三阶张量 $\ten{B} \in \R^{d \times d \times d}$ 的精确缩并（\cref{sec:component-ffn}，式 \eqref{eq:bilinear-forward-pass}）。对 $\llama$ 而言，这意味着把全部 $32$ 个门控 FFN 块替换为双线性块。参数量保持不变，但 SwiGLU 从架构中消失，因此模型必须从头预训练。
+所得张量支持三种分析方式，区别在于对特征已有多少了解。若同时给定某层输入特征 $\mat{F}^{\rm in} \in \R^{f\times 4096}$ 与输出特征 $\mat{F}^{\rm out} \in \R^{f\times 4096}$ 的字典（例如由稀疏自编码器得到），把它们缩并进全部三个模，即可将 $\ten{B} \in \R^{4096 \times 4096 \times 4096}$ 改写到特征基下：$\tilde{\ten{B}} = \ten{B} \times_1 \mat{F}^{\rm out} \times_2 \mat{F}^{\rm in} \times_3 \mat{F}^{\rm in} \in \R^{f \times f \times f}$，此时 $\tilde{\ten{B}}$ 的每个元素对应一对输入特征为某个输出特征提供的交互。若只给定一个输出特征 $\vecb{u} \in \R^{4096}$（例如反嵌入的一行），缩并输出模后得到对称交互矩阵 $\mat{Q} = \ten{B} \times_1 \vecb{u}^\top \in \R^{4096 \times 4096}$，其特征向量是驱动 $\vecb{u}$ 的输入方向，特征值则衡量各方向二次贡献的权重。若对特征一无所知，也可以直接分析该张量，例如通过 HOSVD。因此三条路线在代价与前提条件上都不同：把特征缩并掉可让分析保持在矩阵规模，而最后一条路线要触碰完整张量——每层有 $d^3 \approx 69$B 个元素。
+
+

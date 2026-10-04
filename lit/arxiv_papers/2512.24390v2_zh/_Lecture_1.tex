@@ -1,0 +1,240 @@
+\section{第一讲：动机与 MPS 流形}
+\subsection{双指数墙与希尔伯特空间的幻象}\label{sec:Illusion}
+在深入本讲义之前，认识量子多体问题所带来的真正挑战至关重要。正如人们在每一门量子力学课程中所学到的那样，希尔伯特空间的维度随构成粒子数呈指数级增长。这与经典情形其实并无太大不同——经典比特可能构成的字符串数目同样随比特数呈指数级增长。然而，由于量子力学允许态的\emph{叠加}（superposition）并由此产生\emph{纠缠}（entanglement），一个自然的问题不是希尔伯特空间由多少个基底态张成，而是希尔伯特空间中的态究竟有多少能够通过源于局域（少体）相互作用的某种物理机制被实际探索，特别是借助量子计算机进行探索。
+
+更具体且精确地说，让我们考虑文献~\cite{Poulin2011}中提出的如下问题：在 $N$ 个量子比特的希尔伯特空间中，从一个参考态出发运行量子计算机，在随系统尺寸呈多项式增长的时间内，能够到达指数级巨大的多体希尔伯特空间的哪一部分？为了对此进行估算，我们考虑希尔伯特空间中围绕点 $\ket{\psi}$ 的所谓态的\emph{$\varepsilon$-球}（$\varepsilon$-balls），即考虑满足下式的态 $\ket{\varphi}$：
+\begin{equation}
+    \vert\braket{\psi}{\varphi}\vert \gtrsim 1 - \varepsilon.
+\end{equation}
+一个简单的几何论证表明，这类 $\varepsilon$-球所占希尔伯特空间总容积的比例按 $\mc O\big(\varepsilon^{2^N}\big)$ 标度，即仅占整个希尔伯特空间极其微小的\emph{双指数}（double-exponentially）（!）比例！由于这一标度行为，任何物理系统（包括量子计算机）要与特定的 $\varepsilon$-球产生重叠，所需时间至少随系统尺寸呈指数增长。我们由此得出结论：绝大多数态都是非物理的，对于描述物理系统完全无关紧要——希尔伯特空间只是一个（便利的）幻象，因为那些需要耗费指数级漫长时间才能制备的多粒子态，无法通过任何合理的物理过程制备出来。
+
+\bigskip\noindent 这一引人注目的结果表明，我们在理解量子多体系统方面发生了一场范式转变，即物理波函数是那些具有低复杂度的波函数。更具体地说，我们期望量子多体系统的基态存在于一个物理上相关的低复杂度态\emph{流形}（manifold）之上，出于所有实际目的，我们希望用\emph{少量}参数来参数化该流形，即参数数量随粒子数呈多项式标度。粗略地说，流形是局部类似于平坦欧几里得空间的空间。这意味着对于流形上的每一个点，都可以关联一个线性\emph{切空间}（tangent space），其维度即为该流形的维度。
+狄拉克（Dirac）的（诸多）伟大洞见之一在于：人们可以将流形解释为态的变分集合，从而完全无需离开该流形便可在其上开展物理研究。让我们将一般的态变分流形记为
+\begin{equation}
+    \mc M = \big\{\ket{\Psi(\vec z)} \ \big\vert\ \vec z \in \mbb C^n\big\}.
+\end{equation}
+我们将任意点 $\vec z$ 处的线性切空间记作 $T_\vec z \mc M$。该切空间中的一般态具有形式
+\begin{equation}
+    \sum_i x^i \pdv{}{z^i} \ket{\Psi(\vec z)},
+\end{equation}
+其中 $x^i$ 为复系数。现在假设我们希望计算某一受多体哈密顿量 $H$ 演化的态 $\ket{\Psi(\vec z)}$ 的时间演化：
+\begin{equation}
+    i\pdv{}{t} \ket{\Psi(\vec z)} = H\ket{\Psi(\vec z)}.
+\end{equation}
+此时 $i\pdv{}{t} \ket{\Psi(\vec z)}=i\sum_i\dot z^i\pdv{}{z^i} \ket{\Psi(\vec z)}$ 可以被视作 $T_\vec z \mc M$ 中的一个切向量。然而，对于一般的哈密顿量，嵌入 $\mc M$ 的环境希尔伯特空间中的向量 $H\ket{\Psi(\vec z)}$ 指向切平面\emph{之外}，因而不再属于该变分类。狄拉克的提议是在该流形上定义一个作用量，但出于我们的目的，更方便的做法是将其视作 $H\ket{\psi(\vec z)}$ 在流形切空间 $T_\vec z \mc M$ 上的正交投影。从几何上看，可以将这种投影理解为最小化如下距离：
+\begin{equation}
+    \min_{\{\dot z^i\}_i} \norm{i\sum_i\dot z^i\pdv{}{z^i} \ket{\Psi(\vec z)} - H \ket{\Psi(\vec z)}}.
+\end{equation}
+将点 $\vec z$ 处的正交投影算符记为 $\mc P_{T_\vec z}$，我们可以将其对 $H\ket{\psi(\vec z)}$ 的作用图示如下：
+\begin{equation}
+    \inputtikz{TangentPlane} \,\, .
+\end{equation}
+由此得到的\emph{含时变分原理}（time-dependent variational principle, TDVP）方程
+\begin{equation}
+    i\pdv{}{t} \ket{\Psi(\vec z)} = \mc P_{T_\vec z}H\ket{\Psi(\vec z)},
+\end{equation}
+便描述了流形 $\mc M$ 上一般多体态的一组高度非线性（源于切空间投影算符的出现）微分方程。重要的是，可以证明流形 $\mc M$ 是\emph{辛}（symplectic）流形。这特别意味着能量的期望值、对称性生成元以及其他运动常数在 TDVP 方程演化下是严格守恒的。
+
+\bigskip\noindent 这种求解多体问题的流形方法已在众多领域获得了极其非凡的成功。事实上，毫不夸张地说，自薛定谔方程被发现以来，攻克量子多体问题的所有进展，本质上都在于寻找这类承载相关物理过程的良好态流形。\emph{矩阵乘积态}（matrix product state, MPS）及其高维推广——如二维\emph{投影纠缠对态}（projected entangled-pair state, PEPS）——便构成了这样的态类，我们稍后将对其进行介绍。但在介绍之前，不妨花些时间从流形视角讨论其他几类对某些读者而言可能更为熟悉的变分态类。
+\paragraph{自由费米子与 Hartree-Fock}
+在多费米子体系中，最广为人知的变分流形大概是\emph{Slater 行列式}（Slater determinant）流形~\cite{Slater1929}。Slater 行列式用 $N$ 个单粒子轨道 $\psi_i$（$i=1,\dots,N$）参数化 $N$ 费米子波函数，表示为如下形式的行列式：
+\begin{equation}
+    \Psi({\bf x}_1,\dots,{\bf x}_N) =
+    \begin{vmatrix}
+    \psi_1({\bf x}_1) & \dots & \psi_N({\bf x}_1) \\
+    \psi_1({\bf x}_2) & \dots & \psi_N({\bf x}_2) \\
+    \vdots & \ddots & \vdots \\
+    \psi_1({\bf x}_N) & \dots & \psi_N({\bf x}_N)
+    \end{vmatrix}.
+\end{equation}
+根据其构造，Slater 行列式在交换任意两个费米子时显式反对称，与 Pauli 不相容原理（Pauli exclusion principle）相契合。此外，请注意表示 Slater 行列式所需的参数数量随电子数\emph{线性}增长，因此 Slater 行列式仅张成希尔伯特空间中一个指数级微小的子流形。用于近似求解 $N$ 费米子薛定谔方程的 \emph{Hartree-Fock} 方法，正是定义在该态类上的自洽变分方法：通过将 TDVP 原理应用于该流形，可以获得含时与定态薛定谔方程的近似解。该方法的成功无论怎样强调都不为过。它使我们能够以极高精度模拟分子和材料，而这在传统精确方法下是完全不可行的。事实上，Hartree-Fock 方法使我们能够从第一性原理理解元素周期表结构与能带结构~\cite{Slater1935,Hartree1947}。
+\paragraph{相互作用玻色子的场相干态} 与 Slater 行列式相对应的玻色体系对应物同样存在，即\emph{场相干态}（field coherent state）流形。对于玻色创生算符\footnote{在本段中，我们将破例在算符上方添加帽子以避免与标量函数混淆。} $\hat \psi^\dagger(\vec x)$，对于任意函数 $\varphi (\vec x):\mbb R^3\rightarrow\mbb C$，相干态具有形式
+\begin{equation}
+    \ket{\Psi[\varphi]} = \exp(\int d^3\vec x \varphi(\vec x)\hat\psi^\dagger(\vec x)) \ket{\Omega},
+\end{equation}
+其中 $\ket{\Omega}$ 是由 $\hat\psi(\vec x)\ket{\Omega}=0$（$\forall\vec x$）所刻画的玻色真空。回想一下，相干态是湮灭算符的精确本征态，即 $\hat\psi(\vec x)\ket{\Psi[\varphi]} = \varphi(\vec x)\ket{\Psi[\varphi]}$。现在我们将 TDVP 应用于哈密顿量
+\begin{equation}
+    H = \int d^3\vec x \hat \psi^\dagger(\vec x) \bigg( -\frac{1}{2m}\nabla^2 + V(\vec x)\bigg)\hat\psi(\vec x) + \frac{U}{2} \hat\psi^\dagger(\vec x)\hat\psi^\dagger(\vec x)\hat\psi(\vec x)\hat\psi(\vec x),
+\end{equation}
+该哈密顿量描述处于外势 $V$ 并具有接触相互作用的稀薄玻色气体。此时可以发现，TDVP 方程直接导出了（含时）\emph{Gross-Pitaevskii} 方程：
+\begin{equation}
+    i\pdv{}{t}\varphi(\vec x) = -\frac{\nabla^2}{2m}\varphi(\vec x) + V(\vec x)\varphi(\vec x) + U\vert\varphi(\vec x)\vert^2\varphi(\vec x).
+\end{equation}
+尽管这一推导非常简练，Gross-Pitaevskii 方程已被极其成功地用于描述玻色-爱因斯坦凝聚（Bose-Einstein condensate）的行为~\cite{GP}。
+
+\bigskip\noindent 这里我们仅强调了在指数级巨大的希尔伯特空间中定义和参数化变分流形的若干最常用且最成功的方法。除此之外，我们略去了诸如\emph{耦合簇方法}（coupled cluster method）~\cite{CC}等大量后 Hartree-Fock 方法。
+\subsection{量子自旋系统：单配性与阻挫}
+量子晶格系统为一般的量子多体系统或量子场论提供了一种极其有用且深刻的理想化模型。在这一框架下，晶格是对空间的离散化，其顶点（某些情况下也包括边）上承载着量子自由度。从量子场论的角度看，这是规避紫外发散（UV-divergences）最可控的方式~\cite{Kogut1979,Kogut1982}。从凝聚态物理与原子物理的角度看，晶格系统为相关自由度提供了有效的（压缩的）描述。
+
+在本讲义中，我们将关注一维或二维空间量子多体晶格模型的低能物理。将研究限制在低能扇区通常是合理的，因为在大多数实际材料中，费米温度约为 $10^4\,\text{K}$ 的量级，远高于实验的典型温度标度（若考虑电子系统，甚至室温也显得非常冷）。同样在量子场论中，当计算散射实验的截面等物理量时，基态及其低能激发态通常正是人们最感兴趣的态。通常，所考虑的希尔伯特空间是 qudit 的张量积，我们将其记作 $\mc H=(\mbb C^d)^N\equiv\bigotimes_{i=1}^N \mbb C^d$；除非另有说明，我们将考虑热力学极限（thermodynamic limit）$N\rightarrow \infty$，同时忽略有关极限顺序的细微差别。然而请注意，相应希尔伯特空间的维度作为系统尺寸的函数仍然是指数级的，因此晶格系统同样受到这种多体指数墙的困扰。
+
+由于\emph{阻挫}（frustration）的存在，获取此类模型基态的良好近似通常极非显而易见。在此语境下，阻挫指的是基态无法同时最小化哈密顿量各项能量的特性。举例而言，考虑 $(1+1)$ 维中典型的自旋 1/2 反铁磁 Heisenberg 链：
+\begin{equation}\label{eq:Heisenberg}
+    H = \sum_{\expval{\msf i,\msf j}} \vec{S}_\msf i \cdot \vec{S}_\msf j.
+\end{equation}
+若只考虑两个自旋，基态将是由密度矩阵 $\rho=\ketbra{\phi}$ 给出的单态，其中 $\ket{\phi}=\frac{1}{\sqrt{2}}(\ket{\uparrow\downarrow} - \ket{\downarrow\uparrow})$。
+对于具有 $N$ 个自旋的自旋链，若基态的所有约化密度矩阵 $\rho_{\msf i,\msf i+1}$ 都等于该单态，总能量显然将被最小化——但这显然是不可能的：\emph{纠缠单配性}（monogamy of entanglement）决定了这样的态不可能存在~\cite{Coffman1999,Osborne2006}。事实上，不存在任何三体态 $\rho_{ABC}\geq 0$，使得 $\Tr_C(\rho_{ABC}) = \Tr_B(\rho_{ABC})=\ketbra{\phi}$。因此，纠缠单配性必然导致阻挫。
+
+纠缠单配性还可用于解释为何随着空间维度的增加，平均场理论（mean field theory）变得越来越精确。考虑一个具有大配位数的晶格而非一维自旋链，其哈密顿量同样是所有近邻自旋间反铁磁 Heisenberg 相互作用之和。直观上，在这种情况下，对于任意给定自旋，其与其他自旋的纠缠必须分散在如此多的近邻之间，以至于基态必然非常接近可分态 $\otimes_i \ket{\psi_i}$，从而使平均场理论变得精确。虽然这里的讨论略显粗略，但借助\emph{量子 de Finetti 定理}（quantum de Finetti theorem）~\cite{Raggio1989}可以使该论证变得严格。该定理刻画了在不同子系统置换下保持不变的多体密度矩阵，并在证明量子密码学协议的安全性中发挥着重要作用。
+
+从上述讨论中我们推导出，基态不可能使其所有 $\rho_{\msf i, \msf i+1}$ 均为自旋单态。现在我们转而寻找一种在某种意义上\emph{尽可能接近}自旋单态的态。为此，人们可以尝试将\emph{共振价键态}（resonating valence bond state）作为基态的 ansatz：
+\begin{equation}
+    \ket{\Psi} = \ket{\Psi_+} + \ket{\Psi_-}, \quad {\rm where} \quad
+    \ket{\Psi_\pm} = \prod_\msf i \big( \ket{\uparrow\downarrow}_{2\msf i,2\msf i\pm 1} - \ket{\downarrow\uparrow}_{2\msf i,2\msf i\pm 1} \big).
+\end{equation}
+图形上可以将该态表示为
+\begin{equation}
+    \inputtikz{RVB},
+\end{equation}
+其中波浪线代表近邻格点之间的自旋单态。事实上，$\ket{\Psi_\pm}$ 张成了 Majumdar 和 Ghosh 在文献~\cite{Majumdar1969}中引入的模型的二维基态子空间。注意到该态具有我们所期望的所有对称性：它具有 ${\rm SU}(2)$ 对称性，并具有平移、时间反演和空间反射不变性。这非常重要，因为基态（或更确切地说是基态子空间）应当继承哈密顿量的所有对称性。更重要的是，它具有非零的纠缠，因此我们预期该态的能量比平均场近似更接近真实的基态能量。尽管如此，事实证明该态的能量对于 Heisenberg 模型的真实基态能量而言仍然是一个相当差的近似，因为它大幅高估了基态能量。
+
+至此应该清楚的是，写出具有正确对称性且能作为我们感兴趣的多体量子哈密顿量基态 ansatz 的纠缠态是极其困难的。然而，价键态暗示了一种特定的构造途径。受 Majumdar-Ghosh 模型的启发，Affleck、Kennedy、Tasaki 与 Lieb（AKLT）于 1987 年提出了一种由成对纠缠的自旋 1/2 粒子构建的态，这些粒子在每个晶格格点上被投影为一个自旋 1 粒子~\cite{Affleck1987}。他们的构造如下：从一条自旋 1/2 粒子链出发，其中每隔一对近邻粒子处于自旋单态。在每个格点 $\msf i$ 上，将最右边的粒子与下一个格点 $\msf i+1$ 上最左边的粒子结合在一起，形成一个\emph{物理}（physical）格点。构成物理格点的两个\emph{虚}（virtual）自旋 1/2 粒子随后被投影到它们的自旋 1 子空间上。该态的图形表示更为直观明了：
+\begin{equation}
+    \ket{\Psi_{\rm AKLT}} = \inputtikz{AKLT} \, ,
+\end{equation}
+其中
+\begin{equation}
+    \inputtikz{AKLT_proj}.
+\end{equation}
+正如上述作者所证明的，该态是一个与自旋 1 Heisenberg 模型密切相关的哈密顿量的基态，并且被认为属于同一个（对称保护）相（在\cref{sec:PhasesOfMatter}中将进一步讨论）。由于两个近邻格点恰好涉及一个自旋单态，构成这些物理自由度的 4 个组成自旋 1/2 粒子不可能处于耦合的自旋 2 态。因此，该态被两个自旋 1 构成的自旋 2 子空间上的投影算符所湮灭。由此，该态是 AKLT 哈密顿量的基态：
+\begin{equation}\label{eq:AKLTHam}
+    H = \sum_\msf i \vec{S}_\msf i \cdot \vec{S}_{\msf i+1} + \frac{1}{3} \big( \vec{S}_\msf i \cdot \vec {S}_{\msf i+1} \big)^2,
+\end{equation}
+其中局域两体项在相差一个常数平移和前置系数的意义下，可以被识别为自旋 2 投影算符。
+\subsection{张量网络与面积律}\label{sec:AreaLaw}
+在 AKLT 提出几年后的 1992 年，Fannes、Nachtergaele 和 Werner~\cite{Fannes1990} 利用量子 Markov 链的思想引入了一维\emph{有限关联态}（finitely correlated states）类，推广了 AKLT 态的构造。\emph{有限关联态}这一名称源于以下事实：这些态已被证明具有指数衰减的连通关联函数，正如稍后在\cref{sec:NormalObs}中所展示的。他们还证明了所有这些态都是有能隙无阻挫哈密顿量的基态。由文献~\cite{Delgado2004}首次倡导的现代观点是：通过从近邻格点之间最大纠缠的\emph{虚} qudit 链出发，并通过线性映射将其投影到每个格点上的\emph{物理}自旋来构造这些态。这种线性映射通常被称为\emph{投影算符}（即使它不必是幂等线性映射），这也是\emph{投影纠缠对态}（projected entangled-pair states）名称的由来，尽管该名称现在通常用于其高维推广。这些投影算符包含作为该态\emph{变分}自由度的参数。该态类与（无限且平移不变的）均匀\emph{矩阵乘积态}（MPS）类完全一致，而 MPS 正是用来刻画它们的最常用名称。让我们对此做更明确的说明。MPS 的构造从考虑近邻格点 $\msf i,\msf i+1$（$\msf i\in\mbb Z$）之间的最大纠缠态出发：
+\begin{equation}
+    \ket{I}_\msf i = \sum_{\alpha=1}^\chi \ket{\alpha\alpha}_{\msf i, \msf i+1}
+\end{equation}
+整数 $\chi$ 称为\emph{键维}（bond dimension），正如我们将看到的，它直接控制变分参数的数量。随后我们在链的每个物理格点上考虑如下线性映射：
+\begin{equation}
+    A = \sum_{i,\alpha,\beta} A_{\alpha\beta}^i \ket{i}\otimes\bra{\alpha}\otimes\bra{\beta} \in \mbb C^{d\chi^2},
+\end{equation}
+并将其作用在纠缠对上，从而张量 $A$ 所对应的态由下式给出：
+\begin{equation}
+    \ket{\Psi[A]} = \big(\bigotimes_{\msf i\in\mbb Z} A\big) \cdot \big(\bigotimes_{\msf i\in\mbb Z} \ket{I}_{\msf i}\big).
+\end{equation}
+我们称 $A$ \emph{生成}（generate）了 MPS $\ket{\Psi[A]}$。展开此式中的乘积，便直接在热力学极限下得到了更为人熟知的\emph{均匀}（uniform）矩阵乘积态表达式：
+\begin{equation}\label{eq:MPS}
+    \ket{\Psi[A]} = \sum_{\{i_j\}} \big(\cdots A^{i_j}A^{i_{j+1}}\cdots \big) \ket{\dots, i_j,i_{j+1},\dots}.
+\end{equation}
+波函数的这一表达式解释了\emph{矩阵乘积}态的名称，因为波函数振幅正是作为矩阵序列 $\{A^i\}_i$ 的乘积计算出来的。在均匀情形下，变分参数的数量为 $d\chi^2$。然而请注意，均匀 MPS 张成的态流形的维度严格小于 $d\chi^2$，因为对于任意非奇异矩阵 $X$，如下形式的变换：
+\begin{equation}
+    A^i \mapsto XA^iX^{-1}, \quad \forall i=1,2,\dots,d,
+\end{equation}
+（称为 \emph{gauge 变换}）均使态 $\ket{\Psi[A]}$ 保持不变。对该流形更精确的刻画留待下一小节讨论。
+
+请注意，我们原本也可以在每个格点上选择不同的张量（投影算符），从而得到一般的非均匀 MPS，其键维可以在晶格的不同边上变化。通过这种方式，我们可以轻松处理具有开边界、周期性边界或扭曲边界条件的有限自旋链。需要指出的是，对于均匀情形，我们并未指定无穷远处的边界条件。对于具有\emph{单射性}（injective，下文定义）的一般矩阵乘积态，这些边界条件的选择是无关紧要的。在整个讲义中，我们几乎完全专注于热力学极限下满足该单射性性质的矩阵乘积态。为完整起见，我们在此给出有限自旋链上的一般 MPS。开链上的一般 MPS 可以写为：
+\begin{equation}\label{eq:OpenMPS}
+    \ket{\Psi[A]} = \sum_{\{i_j\}} \vec v_L^\dagger A^{i_1}[1]A^{i_2}[2]\cdots A^{i_N}[N]\vec v_R \ \ket{i_1,i_2,\dots,i_N}.
+\end{equation}
+其中向量 $\vec v_{L/R}$ 编码边界条件，方括号内的整数索引物理格点。另一方面，具有 $N$ 个格点的周期链上的平移不变态具有如下形式：
+\begin{equation}
+    \ket{\Psi[A]} = \sum_{\{i_j\}} {\rm Tr}\big(A^{i_1}A^{i_2}\cdots A^{i_N}\big) \ket{i_1,i_2,\dots,i_N}.
+\end{equation}
+
+\bigskip\noindent 按照处理张量网络时的惯例，我们将使用一种图形语言，其中单个 MPS 张量表示为：
+\begin{equation}
+    \inputtikz{MPSTensor} = \ A_{\alpha\beta}^i, \qquad \substack{i=1,2,\dots,d\\ \alpha,\beta=1,2,\dots,\chi}
+\end{equation}
+连接两个张量的腿表示对相应指标的收缩。遵循这些约定，我们可以将 MPS \eqref{eq:MPS} 表示为如下图形：
+\begin{equation}
+    \ket{\Psi[A]} = \inputtikz{MPS} \ .
+\end{equation}
+通常，在可以从上下文中推断出 MPS 张量时，我们不会在图中显式标出它们。
+
+\bigskip\noindent 既然已经引入了矩阵乘积态这一变分类，下面让我们论证为何这些态能够很好地近似局域有能隙哈密顿量的基态~\cite{Verstraete2006a}。从物理上看，这源于有能隙基态所满足的纠缠熵\emph{面积律}（area law）。在一般维度下，纠缠熵的面积律意味着区域 $\mc A$ 与其补区域 $\bar{\mc A}$ 之间的两分纠缠熵（定义为约化密度矩阵 $\rho_\mc A={\rm Tr}_{\bar{\mc A}}(\rho)$ 的冯·诺依曼熵，即 $S=-{\rm Tr}(\rho_\mc A\log(\rho_\mc A))$）并不随区域 $\mc A$ 的大小（即\emph{体积}，volume）标度，而是随其边界 $\partial\!\mc A$ 的大小（即\emph{面积}，area）标度。在一维情形下，链的连通子区域的边界只是一个常数，在此设定下面积律于 2007 年由 Hastings 证明~\cite{Hastings2007}。正如我们接下来将展示的，MPS 内在地满足面积律。
+
+为此，我们利用 MPS 的图形演算。在此演算中，让我们计算对均匀 MPS 迹化掉系统左半部分时的约化密度矩阵。这可以图示为
+\begin{equation}
+    \rho_R = {\rm Tr}_L\big(\ketbra{\Psi[A]}\big) = \inputtikz{MPSReducedDensity_1}\,\,,
+\end{equation}
+其中垂直虚线表示左（$L$）右（$R$）子系统之间的纠缠分割截面（entanglement cut）。在约化密度矩阵的计算中起着关键作用，并且也出现在如关联函数计算（见\cref{sec:NormalObs}）中的一个对象是\emph{转移矩阵}（transfer matrix）
+\begin{equation}
+    \mbb T_A = \sum_i A^i\otimes \bar A^i,
+\end{equation}
+我们在上图中也用虚线方框将其标出。让我们将其谱分解\footnote{更一般地，可能需要 Jordan 块，但这对接下来的讨论并不重要。}写为
+\begin{equation}\label{eq:TransferSpec}
+    \mbb T_A = \sum_{i=1}^{\chi^2} \lambda_i \ketbra{\rho_i}{\lambda_i},
+\end{equation}
+其中本征值按绝对值递减排列。这些本征向量显然是完全正线性映射 $\$_L(X)=\sum_i A^{i \dagger} X A^i$ 和 $\$_R(X)=\sum_i A^i X A^{i \dagger}$ 的不变子空间。若这些映射是遍历的（ergodic），量子 Perron-Frobenius 定理指出模最大的本征值将是唯一的、实且正的。此外，当重新排列为矩阵形式（具有 2 个指标）时，相应的左本征向量 $\ket{\rho_1}\equiv\ket{\rho}$ 与右本征向量 $\ket{\lambda_1}\equiv\ket{\Lambda}$ 是正定的。拥有唯一起主导作用的本征向量这一性质等价于上文提及的单射性概念。单射性的另一等价刻画如下：一个 MPS 是单射的，当且仅当存在一个有限的 $L$（称为\emph{单射长度}，injectivity length），使得矩阵集合 $\{A^{i_1}A^{i_2}\dots A^{i_L}\}$ 构成所有 $\chi\times\chi$ 矩阵的一组基。这恰恰也是保证该 MPS 是其有能隙 parent Hamiltonian 的\emph{唯一}基态所需的性质。对于一般 MPS，情况总是如此：非单射 MPS 构成的集合测度为零，因为这仅在矩阵 $A^i$ 拥有共同不变子空间时才可能发生。
+
+为确保态被正确归一化为 1，我们总是归一化 MPS 张量 $A$，使得相应本征值 $\lambda_1$ 等于 1（参见\cref{sec:NormalObs}）。根据这些考量，可知约化密度矩阵可以表示如下：
+\begin{equation}\label{eq:ReducedDensity}
+    \rho_R = \inputtikz{MPSReducedDensity_2}.
+\end{equation}
+由于 $\rho_R$ 是一个 $d^L\times\chi$ 矩阵与一个 $\chi\times d^L$ 矩阵的乘积（其中 $L$ 为右侧格点的总数），我们得出结论：约化密度矩阵 $\rho_R$ 的秩的上界为 $\chi$。因此纠缠熵满足上界 $S \leq \log \chi$，因为这是秩为 $\chi$ 的态的最大熵。文献~\cite{Verstraete2006a,Hastings2007}中的定理确保了其逆命题亦成立：只要一个态满足纠缠熵面积律，就存在一个能忠实近似该态的 MPS。在下一讲中，我们将更详细地研究一般矩阵乘积态的纠缠性质。
+\subsection{矩阵乘积算符}\label{sec:MPO}
+在整个讲义中，我们还将使用线性算符的张量网络表示。均匀\emph{矩阵乘积算符}（matrix product operator, MPO）~\cite{Verstraete2004c,Pirvu2010}写为
+\begin{equation}
+    \sum_{\{i_k,j_k\}} \big(\cdots M^{i_k,j_k}M^{i_{k+1},j_{k+1}}\cdots \big) \ketbra{\dots, i_k,i_{k+1},\dots}{\dots, j_k,j_{k+1},\dots},
+\end{equation}
+图形上表示为
+\begin{equation}
+    \inputtikz{MPO}\,\, .
+\end{equation}
+类比于 MPS，向开边界条件以及非均匀情形的推广是十分直接的。
+
+MPO 长期以来在统计物理领域得到了广泛应用，其中特定类型的 MPO 被称为转移矩阵（关于统一步骤的讨论见文献~\cite{Haegeman2016}）。与 MPS 的情况类似，当矩阵 $\{M^{ij}\}_{i,j}$ 没有公共不变子空间且张成整个矩阵代数时，我们称该 MPO 为单射的。
+
+然而，非单射 MPO 也被广泛使用，例如用于对量子自旋链的哈密顿量进行编码。例如，让我们考虑开边界条件下的横场 Ising 模型哈密顿量：
+\begin{equation}\label{eq:TFIM}
+    H = -\sum_{\msf i=1}^{L-1} \sigma^Z_{\msf i}\sigma^Z_{\msf i+1} - \lambda\sum_{\msf i=1}^L \sigma^X_{\msf i}.
+\end{equation}
+该哈密顿量可以表示为一个具有格点无关张量\footnote{在此记号中，矩阵元 $M_{\alpha\beta}$ 是作用在物理希尔伯特空间上的算符。} $M$ 且键维为 3 的 MPO：
+\begin{equation}
+    M_{\alpha\beta} = \begin{pmatrix}
+    \mbb 1 & -\sigma^Z & -\lambda\sigma ^X\\
+    0 & 0 & \sigma^Z\\
+    0 & 0 & \mbb 1
+    \end{pmatrix}_{\alpha\beta},
+\end{equation}
+以及边界向量
+\begin{equation}
+\vec{v}_L=\begin{pmatrix}1\\0\\0\end{pmatrix},\qquad
+\vec{v}_R=\begin{pmatrix}0\\0\\1\end{pmatrix}.
+\end{equation}
+
+注意到，由于我们在此处理的是非单射 MPO（存在不变子空间），因此必须定义边界向量。
+该 MPO 是 Onsager 代数的生成元之一。
+其指数形式 $\exp(itH)$ 无法再写成键维与系统尺寸无关的 MPO——除非 $\lambda=0$，此时（见习题）它可以写成一个 $\chi=2$ 的单射 MPO。
+
+\subsection{MPS 流形}\label{sec:MPSmanifold}
+既然我们已经通过纠缠对构造的视角引入了矩阵乘积态和算符，现在让我们更详细地研究均匀矩阵乘积态流形~\cite{Haegeman2013a,Haegeman2014b,Vanderstraeten2019}。为此，我们考虑具有固定键维 $\chi$ 的所有均匀 MPS $\ket{\Psi[A]}$。作为初步观察，注意到这些态并不张成整个希尔伯特空间的线性子空间，因为两个 MPS 的和通常不再是具有相同键维的 MPS。相反，它们位于一个曲面上，其局部坐标由该态的变分参数（即 $A^i_{\alpha\beta}$）给出。回顾上文，对于流形上的每一个点，我们都可以关联一个线性切空间。对于当前情形，切向量具有形式
+\begin{equation}
+    \ket{\Psi[B,A]} = \sum_I B^I\pdv{}{A^I}\ket{\Psi[A]},
+\end{equation}
+在此处及后文中，$I$ 统指 MPS 张量的物理指标与虚指标。
+在图形上，这样一个切向量归结为
+\begin{equation}\label{eq:TangentVector}
+    \ket{\Psi[B,A]} = \sum_\msf n \inputtikz{TangentVector} \,\, ,
+\end{equation}
+其中对 $\msf n$ 的求和是对 $B$ 张量在无限链中所有可能位置的求和。
+
+在这一流形上的任意给定点 $\ket{\Psi[A]}$ 处，两个切向量 $\ket{\Psi[B,A]}$ 与 $\ket{\Psi[B',A]}$ 的重叠通过下式给出一个度规或 \emph{Gram 矩阵} $G$：
+\begin{equation}
+    \braket{\Psi[\bar B',\bar A]}{\Psi[B,A]} = \sum_{I,J} \bar B'^I \underbrace{\braket{\pdv{}{\bar A^I}\Psi[\bar A]}{\pdv{}{A^J}\Psi[A]}{}}_{G(A,\bar A)_{I,J}} B^J.
+\end{equation}
+天真地看，人们可能会认为流形的维度等于张量 $B$ 中参数的数量，即 $d\chi^2$。但请注意，形式为 $B^i \rightarrow B^i + XA^i - A^iX$ 的 gauge 变换使态 $\ket{\Psi[B,A]}$ 保持不变，因此 $d\chi^2$ 过度估计了 MPS 流形的维度。文献~\cite{Vanderstraeten2019}中给出的更审慎论证表明，这些参数中只有 $(d-1)\chi^2$ 个可以被独立选取。假定 $A_L^i$ 处于所谓的\emph{左 canonical gauge}（参见\cref{sec:NormalObs}），则 $B$ 的忠实参数化形式为 $B^i=V^iX$，其中 $V^i$ 张成 $(A_L)_{\alpha\beta}^i$（解释为从 $\beta$ 到 $\alpha,i$ 的矩阵）的零空间，而 $X$ 编码 $B$ 的独立自由度。通过这种对 $B$ 的参数化，度规在局部是欧几里得的，即 Gram 矩阵等于单位阵。从计算的角度来看，该参数化非常有用，因为它极大地简化了算法的实现并提高了其数值稳定性。
+
+其中一个此类算法便是应用于 MPS 类的 TDVP。回顾\cref{sec:Illusion}，TDVP 旨在通过将方程右侧投影到切平面上来近似求解含时薛定谔方程
+\begin{equation}
+    i\pdv{t}\ket{\Psi[A]} = H \ket{\Psi[A]}
+\end{equation}
+即：
+\begin{equation}\label{eq:TDVP}
+    i\pdv{t}\ket{\Psi[A(t)]} = \mc P_{A(t)}H \ket{\Psi[A(t)]},
+\end{equation}
+其中 $\mc P_{A(t)}$ 为切平面上的投影算符。对 TDVP 方程 \cref{eq:TDVP} 的进一步运算揭示出：TDVP 等价于 MPS 流形上由 \emph{Poisson 括号}支配的一组（半）经典运动方程。著名的密度矩阵重整化群（DMRG）算法~\cite{White1992}（在\cref{sec:DMRG}中讨论）及其所有变体都可以理解为求解该微分方程的特定分裂方法~\cite{Haegeman2016b}。回想一下，Poisson 括号是相空间上的双线性、反对称函数，且满足 Jacobi 恒等式。若我们将依赖于 $A$ 和 $\bar A$ 的任意函数 $f$ 和 $g$ 的 Poisson 括号定义如下：
+\begin{equation}
+    \{f,g\} = - \frac{\partial f}{\partial A_I} (G^{-1})^{IJ} \frac{\partial g}{\partial \bar A_J} + \frac{\partial g}{\partial A_I} (G^{-1})^{IJ} \frac{\partial f}{\partial \bar A_J},
+\end{equation}
+并记 $f(A,\bar A)=\expval{F}{\Psi[A]}$，则可以证明期望值 $f$ 的时间演化由下式决定：
+\begin{equation}
+    \partial_t f = i\{f,h\}.
+\end{equation}
+这带来两个重要推论。一方面，由 $\{h,h\}=0$ 可知，能量期望值在时间演化下是严格保持守恒的。这正如上文所预期的，意味著该流形是辛流形。另一方面，对于任何与哈密顿量对易（从而构成对称性生成元）且与切空间投影算符 $\mc P_A$ 对易的算符 $K$，可以证明 $\{k,h\}=0$，因此 $\partial_t k=0$。特别地，对于作为局域在位幺正算符张量积的对称性生成元，情况正是如此。
+
+除 TDVP 之外，还值得一提的是，流形视角还为直接在热力学极限下进行基态优化提供了必要的框架，即所谓的\emph{变分均匀 MPS}（variational uniform MPS, VUMPS）算法，同时也为\emph{准粒子激发}（quasiparticle excitations）的构建奠定了基础。这些主题分别在\cref{sec:DMRG_VUMPS}和\cref{sec:Excitations}中讨论，但首先我们将更深入地探讨 MPS 的演算。
+\subsection{第一讲小结}
+第一讲的核心信息在于：完整的多体希尔伯特空间只是一种幻象；为了描述诸如量子自旋系统基态等相关的多体态，只需考虑一个捕捉了所有相关物理的低维态流形即可。对于有能隙量子自旋链这一特定情形，量子纠缠的单配性预示着纠缠熵面积律的存在。这意味著 MPS 流形与所有满足面积律的态之间存在一一对应关系。因此，我们不必聚焦于整个希尔伯特空间，而是可以遵循含时变分原理的指引将哈密顿量投影到该 MPS 流形上；所有张量网络算法都可以在这一框架下得到理解。

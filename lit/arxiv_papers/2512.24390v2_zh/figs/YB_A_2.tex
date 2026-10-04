@@ -1,0 +1,12 @@
+\begin{tikzpicture}[baseline={(current bounding box.center)}]
+	\def\l{.5};
+    \def\h{.5};
+    
+    \draw[obj2, rounded corners=6pt] (-\l,0) -- (0,0) -- (0,\h);
+    \draw[obj2, rounded corners=6pt] (\l,0) -- (0,0) -- (0,-\h);
+
+    \node[anchor=east] at (-\l,0) {$\sss\alpha$};
+    \node[anchor=west] at (\l,0) {$\sss\beta$};
+    \node[anchor=south] at (0,\h) {$\sss i$};
+    \node[anchor=north] at (0,-\h) {$\sss j$};
+\end{tikzpicture}

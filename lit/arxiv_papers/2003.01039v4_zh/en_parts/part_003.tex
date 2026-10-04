@@ -1,0 +1,24 @@
+\section{Uniform MPS}
+\label{sec:umps}
+
+In this work we utilize the \emph{uniform MPS}~(u-MPS) model, a recurrent tensor network obtained by choosing all cores of an MPS to be identical tensors $\mc{A}^{(j)} = \mc{A}$ with shape $(D, d, D)$. To obtain scalar tensor elements, $D$-dimensional vectors $\alpha$ and $\omega$ are used as ``boundary conditions'' to terminate the initial and final bond dimensions of the network. In contrast to fixed-length MPS, the recurrent nature of u-MPS allows the generation of $n$th order tensors $\mc{T}_n\in\R^{d^n}$ for any $n\in\mathbb{N}$, which in turn allows u-MPS to be applied in problems involving sequential data. 
+
+For discrete sequences over an alphabet $\Sigma$ of size $d$, a \mbox{u-MPS}\ (paired with a bijection $\varphi: \Sigma \to [d]$) can be used to map a sequence of arbitrary length-$n$ to the index of an $n$th order tensor $\mc{T}_n$, defining a scalar-valued function $f_{\mc{A}}$ over sequences. Using $\mc{A}(c) = \mc{A}_{:, \varphi(c), :} \in \R^{D\times D}$ to denote the matrix associated with the character $c\in\Sigma$, a u-MPS acts on a sequence $s = s_1s_2\cdots s_n \in \Sigma^n$ as
+%
+\begin{equation}
+\label{eq:mps_amp}
+f_{\mc{A}}(s) = \alpha^{T}\mc{A}(s_1)\mc{A}(s_2)\cdots \mc{A}(s_n)\omega = \alpha^{T}\mc{A}(s)\omega,
+\end{equation}
+%
+where we use $\mc{A}(s) := \mc{A}(s_1)\mc{A}(s_2)\cdots \mc{A}(s_n)$ to denote the matrix product appearing in \eqnref{eq:mps_amp}. The function $\mc{A}(s)$ can be seen as a matrix-valued representation of arbitrary sequences $s\in\Sigma^*$, and is \textit{compositional} in the sense that $st$ is represented by the product of representations $\mc{A}(s)$ and $\mc{A}(t)$.
+
+\begin{figure*}[t]
+\centering
+\centerline{\includegraphics[width=0.85\textwidth]{parallel.pdf}}
+\caption{\small Illustration of parallel and sequential evaluation of $f_{\mc{A}}(s)$ when $|s| = 4$, where $f_{\mc{A}}(s) = (\mathcal{T}_4)_{i_1, i_2, i_3, i_4}$, an element of the 4th order tensor defined by a u-MPS. After obtaining the matrix representations $\mc{A}(s_1),\ldots,\mc{A}(s_n)$ from $s$, parallel evaluation involves repeated batch multiplications of nearest-neighbor pairs of matrices, with the boundary vectors $\alpha$ and $\omega$ only incorporated after the matrix product $\mc{A}(s)$ has been obtained. Sequential evaluation instead uses iterated matrix-vector multiplications starting with a boundary vector to contract this product. Parallel and sequential evaluation have respective costs of $\bigO(n D^3)$ and $\bigO(n D^2)$, but the former can be carried out in $\bigO(\log n)$ parallel time. The mathematical equivalence of these evaluation strategies is a basic example of the associativity of tensor contractions, allowing an appropriate method to be chosen based on the size of the model, the problem at hand, and the availability of hardware acceleration.}
+\label{fig:parallel}
+% \vskip -0.2in
+\end{figure*}
+
+While u-MPS are clearly laid out as a sequential model, the evaluation of $f_{\mc{A}}(s)$ for $|s| = n$ can be parallelized by evaluating \eqnref{eq:mps_amp} using $\lceil \log_2(n) \rceil$ batched matrix-matrix multiplications on all nearest-neighbor pairs of matrices, as shown in Figure~\ref{fig:parallel}. This form of parallelization requires the absence of nonlinear activation functions in the evaluation, and can also be carried out in linear RNNs~\citep{martin2018}.
+

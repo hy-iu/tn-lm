@@ -1,0 +1,17 @@
+\begin{tikzpicture}[baseline={([yshift=-.5ex]current bounding box.center)}]
+	\def\l{1.8};
+    \def\h{1.3};
+
+    \draw[obj1, rounded corners=3pt] (0,0) -- (\l,0) -- (\l,\h) -- (0,\h) -- cycle;
+    \draw[obj1] (\l/2,0) -- (\l/2,\h);
+    \draw[obj1, shorten <= -3pt, shorten >= -3pt, dotted] (\l,0) -- (0,\h);
+
+    \node[matrix, inner sep=4pt] at (0,\h/2) {};
+    \node[matrix, inner sep=4pt] at (\l,\h/2) {};
+    \node[mpstensor, inner sep=4pt] at (\l/2,0) {};
+    \node[mpstensor, inner sep=4pt] at (\l/2,\h) {};
+    \node at (0,\h/2) {$\sss \bar X$};
+    \node at (\l,\h/2) {$\sss X$};
+    \node at (\l/2,0) {$\sss A$};
+    \node at (\l/2,\h) {$\sss \bar B$};
+\end{tikzpicture}

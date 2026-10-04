@@ -1,0 +1,40 @@
+\section{与量化基线的比较}
+\label{sec:ptq-comparison}
+
+第~\ref{sec:compression}~节与第~\ref{sec:theory}~节已经确立：张量分解作为独立的训练后压缩器面临着结构性障碍。为了把这些发现置于免训练压缩的更广阔图景之中，我们将第~\ref{sec:compression}~节中所有基于矩阵与张量的方法与一种标准的训练后量化进行基准比较：4 比特与 8 比特的最近舍入量化（\texttt{RTN}），施加于相同的 Transformer 层与模块 \citep{gholami2022survey}。图~\ref{fig:ptq-comparison} 报告了 GPT-J~6B 上由此得到的 C4 困惑度随节省比特数的变化，其中包含一个此前未曾考虑的新组合：MHA 上的 Tucker 与 FFN 上的 \texttt{LASER}（秩取 $512$ 和 $1024$）相搭配，用以探明由第~\ref{sec:compression}~节所综述的方法所能达到的最佳混合方案。跨不同模型与设置的更多实验见附录~\ref{app:quality_compression} 与~\ref{app:td_moe_gpt_oss}。
+
+\begin{wrapfigure}{r}{0.6\linewidth}
+\vspace{-4mm}
+\centering
+\includegraphics[width=0.98\linewidth]{emnlp/figs/gptj_all_modules_all_methods_c4_with_lens.pdf}
+\caption{GPT-J 6B 上所有选定模块与训练后量化的 C4 困惑度随节省比特数的变化。}
+\label{fig:ptq-comparison}
+\vspace{-6mm}
+\end{wrapfigure}
+
+
+
+根据图~\ref{fig:ptq-comparison}，\texttt{RTN} 主导着压缩-质量前沿。\texttt{RTN}-4-bit 与 \texttt{RTN}-8-bit 在整个测试范围内都紧贴稠密基线，在节省比特数高达 $\approx 18\%$ 时困惑度没有可感知的退化。在基于分解的方法中，只有 \texttt{HASSLE-free} 在低压缩区间内仍然具有真正的竞争力，其结构能够吸收那些会被纯低秩截断所扭曲的大幅值元素；\texttt{SoLA} 与 \texttt{Dobi-SVD} 紧随其后，与基线的差距略大一些。超出这一区间后，所有基于矩阵与张量的方法都会带来困惑度损失，而 \texttt{RTN} 在构造上就避免了这类损失。这证实：在具有部署意义的压缩率下，免训练分解并不能替代量化，至多只是一种互补工具。
+
+% \emph{Second, the relative ordering within decomposition methods provides an additional empirical test of the theory.}
+在中等区间（节省比特数 $\approx 15\text{--}20\%$）的相同压缩率下，混合的 Tucker(MHA)+\texttt{LASER}(FFN) 变体以相当大的优势胜过 Tucker(MHA)+TT(FFN) 与 TT(All)：在节省约 $\approx 17\%$ 比特时，秩为 $1024$ 的 Tucker(MHA)+\texttt{LASER}(FFN) 达到 $\mathrm{PPL}\approx 19$，而基于 TT 的组合则超过 $\mathrm{PPL}\approx 28$。综合来看，这些结果勾勒出张量分解在训练后 LLM 压缩中切实可行的角色。作为独立策略，它们无法与量化竞争；而在分解方法家族内部，由于 FFN 的重尾谱（如表~\ref{tab:alpha} 所示），它们也被矩阵层面的替代方法所压制。
+
+
+\section{结论}
+本研究表明，张量分解之所以无法作为独立的训练后 LLM 压缩方法，是因为它们优化的是错误的几何。Tucker 与 TT 保留了 Frobenius 范数意义下的质量，却扭曲了承载模型功能的谱（分别对应注意力头、神经元与专家的）子空间。这些扰动沿网络深度不断累积，最终表现为激活漂移与下游性能退化。
+
+\section{局限性}
+
+本工作的评测涵盖两种稠密架构（GPT-J~6B 与 LLaMA~2~7B）和两种 MoE 架构（Qwen3-30B-A3B 与 GPT-OSS-20B）。尽管它们覆盖了不同的规模与设计，但对于在注意力结构、归一化或专家路由上存在重大差异的架构（例如使用 Muon 或其他二阶优化器训练的模型，已知这类优化器会产生性质截然不同的权重谱），本文的结论未必能不加验证地直接迁移。
+
+理论分析给出的算子范数界与谱次优性界只是所观察到的失效的充分条件，而非紧的刻画。特别地，命题~\ref{prop:gap} 与推论~\ref{cor:spectral-gap} 描述的是 Frobenius 最优截断与算子最优截断之间的最坏情形分离；对具体架构而言，实际差距可能更小也可能更大，取决于各层奇异值的具体分布。表~\ref{tab:alpha} 中的幂律指数是对 MoE 专家张量拟合得到的，未必能推广到所有稠密层类型。
+
+LoRA 修复阶段被有意设计得十分轻量（秩~16、100 步
+优化器更新），其用意是给出可恢复性的一个下界，
+而非尽最大努力的微调基线。更强的事后
+适配有可能缩小本文所报告的质量差距；对于完全微调下恢复能力的极限，本文不作任何断言。
+
+本工作使用的所有模型与基准测试均公开可得，且仅按照其声明的预期用途，用于对压缩方法进行研究性评测。我们不再分发模型权重，也不在研究场景之外衍生任何产品。本文所研究的压缩技术不会引入超出被评测模型自身已有安全隐忧的新能力；特别地，我们只研究训练后权重压缩，不在敏感数据上微调模型，也不产出旨在部署的输出。
+
+
+\end{mainpart}

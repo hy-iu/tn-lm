@@ -1,0 +1,31 @@
+\section{Preliminaries}
+\label{sec:preliminaries}
+We briefly recapitulate basic notions and notations\footnote{Most of the notations here  follow the textbook \textit{Deep Learning}
+\cite{goodfellow2016deep}.}; full technical introductions can be found in standard textbooks \cite{BI20221, 10.5555/1643460}.
+
+% \textbf{Tensor} is a multidimensional array representing a multilinear relationship between certain objects in vectors spaces. First order tensors vectors denoted $\mathbf{v}$. Second order tensors are matrices, denoted $\mathbf{M}$. By $\mathcal{T}$, we denote tensors of order 3 or greater. For a third order $\mathcal{T}$, we denote its element $(i,j,k)$ as $\mathcal{T}_{ijk}$.
+
+\paragraph{Notation.} For the purposes of this paper, every \textit{tensor} $\tA$  is a multidimensional array of elements (called \emph{components}) of $\mathbb{R}$, each denoted by its integer coordinates in the array; e.g., for a two-dimensional array, the component at position $i,j \in \mathbb{N}$ is denoted $\etA_{ij}$.
+ The \emph{order} of a tensor is how many indices it has (e.g., a vector $\vv$ is a first-order tensor, a matrix $\mM$ is a second-order tensor, etc.). The \emph{dimension} of a tensor refers to the number of values that a particular index (or so-called \textit{mode}) can take, e.g., the dimension of $\tB \in \mathbb{R}^{I_1 \times I_2 \times I_3}$ is $I_1 \times I_2 \times I_3$. 
+
+\paragraph{Tensor Product \cite{cohen2016expressive}.} For two tensors $\tC \in \mathbb{R}^{I_1 \times \cdots \times I_j}$ (order $j$) and $\tD \in \mathbb{R}^{I_{j+1}, \times \cdots \times I_{j+k}}$ (order $k$), their \textit{tensor product} is denoted by $\otimes$ and return a tensor $\etE_{i_1 \cdots i_{j+k}} = \etC_{i_1...i_j} \cdot \etD_{i_{j+1} \cdots i_{j+k}}$ (order $j+k$).  Notice that in the case $j = k = 1$, the tensor product reduces to an outer product between vectors.
+
+\paragraph{Generalized Inner Product  \citep{kossaifi2020tensor}.}
+\label{Generalized inner product}
+For two tensor $\tX,\tY\in\mathbb{R}^{I_1\times I_2 \times \cdots \times I_N}$ of the same size, their \textit{inner product} is defined as $\langle \tX,\tY \rangle=\sum_{i_1=1}^{I_1}\sum_{i_2=1}^{I_2} \cdots \sum_{i_N=1}^{I_N} \etX_{i_1,i_2,...,i_N} \etY_{i_1,i_2,...,i_N}$. For two tensors $\tX \in \mathbb{R}^{I_1\times I_2 \times \cdots \times I_N \times I_x}$ and $\tY \in \mathbb{R}^{I_1\times I_2\times \cdots I_N \times I_y}$ sharing $N$ modes of the same size, the “generalized inner product” is calculated as
+%
+\begin{align} 
+    \langle \tX,\tY \rangle_N =\sum_{i_1=1}^{I_1}\sum_{i_2=1}^{I_2}\cdot\cdot\cdot\sum_{i_N=1}^{I_N} \etX_{i_1,i_2,...,i_N} \etY_{i_1,i_2,...,i_N} \nonumber
+\end{align}
+%
+with $\langle \tX,\tY \rangle_N \in \mathbb{R}^{I_x \times I_y}$.  
+
+
+
+\begin{figure*}[t]
+\centering
+% \vspace{-15pt}
+\includegraphics[scale=0.45]{figure/preliminary.pdf}
+\caption{A quick introduction to \textit{tensor diagram notation}. There are two rules of tensor diagrams: (1) tensors are notated by solid shapes with a number of 'legs'  corresponding to their indices; (2) connecting two index lines implies a \textit{contraction} or summation over the connected indices. In this paper, we augment our equations with these diagrams to make them easier to understand. }
+\label{fig: tensor_diagram}
+\end{figure*}

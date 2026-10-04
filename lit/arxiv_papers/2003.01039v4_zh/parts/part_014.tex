@@ -1,0 +1,116 @@
+\section{定理~\ref{thm:sample} 的证明}
+\label{sec:appendix_b}
+
+为了证明 定理~\ref{thm:sample}，
+我们首先证明一个更一般的 引理~\ref{lem:sample}，它刻画了 $\Sample(R, \QL, \QR)$ 对任意 $R$ 输出字符串的概率分布 $P_R(s, \QL, \QR)$。
+%
+\begin{lemma}
+\label{lem:sample}
+考虑一个核心张量为 $\mc{A}$ 的 u-MPS 模型，以及一个正则表达式（regex）$R$，使得由 Table~\ref{tab:regex_cp} 递归定义的广义右转移算子 $\ER_R$
+收敛。则对任意 PSD 矩阵 $\QL, \QR$，$\Sample(R, \QL, \QR)$ 输出字符串的概率分布为 $P_R(s, \QL, \QR) = \sR \Pt(s, \QL, \QR) / \mc{Z}_R(\QL, \QR)$，其中 $\Pt(s, \QL, \QR) = \Tr(\QL \ER_s(\QR))$，$\mc{Z}_R(\QL, \QR) = \Tr(\QL \ER_R(\QR))$，且 $\sR$ 计数字符串 $s$ 匹配正则表达式 $R$ 的次数。
+\end{lemma}
+
+\begin{proof}
+
+我们对 $R$ 的结构用归纳法证明 引理~\ref{lem:sample}，其中我们假设从 $R$ 的正则表达式子表达式 $R'$ 采样，使用任意边界矩阵 $\QL'$ 与 $\QR'$，产生的字符串服从分布 $P_{R'}(s, \QL', \QR')$。对于正则表达式构造的四种情形中的每一种，我们利用这一归纳假设证明从 $R$ 采样产生的字符串服从分布 $P_R(s, \QL, \QR)$。
+
+\paragraph{$\mathbf{R = c:}$} 由 算法~\ref{alg:sampling}，
+$\Sample(c, \QL, \QR)$ 将总是输出字符串 $s = c$。由于量 $|s|_c$ 在 $s = c$ 时为 1，否则为 0，采样分布可以写为
+%
+\begin{align*}
+    P_c(s, \QL, \QR) &= |s|_c = |s|_c \frac{\Tr(\QL \ER_s(\QR))}{\Tr(\QL \ER_c(\QR))} = |s|_c \frac{\Pt(s, \QL, \QR)}{\mc{Z}_c(\QL, \QR)}.
+\end{align*}
+
+\paragraph{$\mathbf{R = R_1 R_2:}$} 由 算法~\ref{alg:sampling}，
+$\Sample(R_1 R_2, \QL, \QR)$ 将首先从 $\Sample(R_1, \QL, \ER_{R_2}(\QR))$ 输出一个字符串 $s_1$，然后用 $s_1$ 从 $\Sample(R_2, \EL_{s_1}(\QL), \QR)$ 输出一个字符串 $s_2$。对 $R_1$ 与 $R_2$ 使用我们的归纳假设，对所有可能的前缀（prefix）与后缀（suffix）划分 $s_1 s_2 = s$，输出字符串 $s$ 被赋予的概率为
+%
+\begin{align*}
+    P_{R_1 R_2}(s, \QL, \QR) &= \sum_{s_1 s_2 = s} P_{R_1}(s_1, \QL, \ER_{R_2}(\QR)) \cdot P_{R_2}(s_2, \EL_{s_1}(\QL), \QR) \\
+    &= \sum_{s_1 s_2 = s} \left( \sRone \frac{\Tr(\QL \ER_{s_1}(\ER_{R_2}(\QR)))}{\Tr(\QL \ER_{R_1}(\ER_{R_2}(\QR)))} \right) \left( \sRtwo \frac{\Tr(\EL_{s_1}(\QL) \ER_{s_2}(\QR))}{\Tr(\EL_{s_1}(\QL) \ER_{R_2}(\QR))} \right) \\
+    &= \sum_{s_1 s_2 = s} \sRone \sRtwo \left(\frac{\Tr(\QL \ER_{s_1 R_2}(\QR))}{\Tr(\QL \ER_{R_1 R_2}(\QR))}\right) \left(\frac{\Tr(\QL \ER_{s_1 s_2}(\QR))}{\Tr(\QL \ER_{s_1 R_2}(\QR))}\right) \\
+    &= |s|_{R_1 R_2} \frac{\Tr(\QL \ER_{s}(\QR))}{\Tr(\QL \ER_{R_1 R_2}(\QR))} = |s|_{R_1 R_2} \frac{\Pt(s, \QL, \QR)}{\mc{Z}_{R_1 R_2}(\QL, \QR)}.
+\end{align*}
+%
+在上面的第三个等号中，我们使用了复合规则 $\ER_{s'}\ER_{R'} = \ER_{s' R'}$ 与伴随规则 $\Tr(\EL_{s'}(\QL') \QR') = \Tr(\QL' \ER_{s'}(\QR'))$，而在第四个等号中，我们使用了恒等式 $|s|_{R_1 R_2} = \sum_{s_1 s_2 = s} |s_1|_{R_1} |s_2|_{R_2}$。
+
+\paragraph{$\mathbf{R = R_1 | R_2:}$} 由 算法~\ref{alg:sampling}，
+$\Sample(R_1 | R_2, \QL, \QR)$ 将首先以概率 $p(i) = \mc{Z}_{R_i}(\QL, \QR) \ / \ \mc{Z}_{R_1 | R_2}(\QL, \QR)$ 随机选取一个指标 $i \in {1, 2}$，然后用它从 $\Sample(R_i, \QL, \QR)$ 输出一个字符串 $s$。使用我们的归纳假设，输出字符串 $s$ 被赋予的概率为
+%
+\begin{align*}
+    P_{R_1 | R_2}(s, \QL, \QR) &= \sum_{i \in \{1, 2\}} p(i) \cdot P_{R_i}(s_i, \QL, \QR) \\
+    &= \sum_{i \in \{1, 2\}} \left( \frac{\mc{Z}_{R_i}(\QL, \QR)}{\mc{Z}_{R_1 | R_2}(\QL, \QR)} \right) \left( |s|_{R_i} \frac{\Pt(s, \QL, \QR)}{\mc{Z}_{R_i}(\QL, \QR)} \right) \\
+    &= |s|_{R_1 | R_2} \frac{\Pt(s, \QL, \QR)}{\mc{Z}_{R_1 | R_2}(\QL, \QR)}.
+\end{align*}
+%
+在最后一个等号中，我们使用了恒等式 $|s|_{R_1 | R_2} = |s|_{R_1} + |s|_{R_2}$。
+
+\paragraph{$\mathbf{R = S^*:}$} 要从正则表达式 $R$ 采样，我们必须要求 Table~\ref{tab:regex_cp} 中定义 $\ER_R$ 的无穷级数
+收敛，这由 引理~\ref{lem:sample} 的假设所保证。在这一收敛性下，调用 $\Sample(S^*, \QL, \QR)$ 要么输出空字符串 $s = \varepsilon$，要么调用 $\Sample(SS^*, \QL, \QR)$。在后一种情形中，拼接规则会先采样某个 $s' \in S$，然后调用 $\Sample(S^*, \EL_{s'}(\QL), \QR)$ 采样随机数 $n \geq 0$ 次 $S$ 的出现。
+
+我们把与恰好出现 $n$ 次 $S$ 所产生的字符串相联系的未归一化概率集合记为 $P_{S^*}^{(n)}$，并用归纳证明来表明 $P_{S^*}^{(n)} = p(n) P_{S^n}$，其中 $p(n, \QL, \QR) = \mc{Z}_{S^n}(\QL, \QR) / \mc{Z}_{S^*}(\QL, \QR)$。换言之，我们针对 $S^*$ 的递归采样过程等价于先用 $p(n)$ 采样一个随机长度，然后调用相应的 $\Sample(S^n, \QL, \QR)$。
+
+\paragraph{\textbf{基础情形} $n = 0$: } 正则表达式 $S^0$ 只匹配空字符串 $s = \varepsilon$，且由 算法~\ref{alg:sampling}，
+其发生概率为
+%
+\begin{equation*}
+    P_{S^*}^{(0)}(s, \QL, \QR) = \frac{\Tr(\QL \QR)}{\mc{Z}_{S^*}(\QL, \QR)} = \frac{\mc{Z}_{S^0}(\QL, \QR)}{\mc{Z}_{S^*}(\QL, \QR)} = p(0) P_{S^0}(s, \QL, \QR),
+\end{equation*}
+%
+其中我们使用了恒等式 $\ER_{S^0} = \ER_\varepsilon = I$，以及事实 $P_{S^0}(s)$ 在 $s = \varepsilon$ 时为 1、否则为 0。
+
+\paragraph{\textbf{递推情形} $n + 1$: } 由 算法~\ref{alg:sampling}，
+采样得到字符串 $s = s_1 s_2$（其中 $s_1$ 匹配 $S$，$s_2$ 匹配 $S^{n}$）的概率为
+%
+\begin{align*}
+    P_{S^*}^{(n + 1)}\!(s, \QL, \QR) &= \sum_{s_1 s_2 = s} \left(1 - \frac{\Tr(\QL \QR)}{\mc{Z}_{S^*}(\QL, \QR)} \right) P_{S}(s_1, \QL, \ER_{S^*}(\QR)) P_{S^*}^{(n)}(s_2, \EL_{s_1}(\QL), \QR) \\
+    %
+    &= \sum_{s_1 s_2 = s} \left(\frac{\mc{Z}_{SS^*}(\QL, \QR)}{\mc{Z}_{S^*}(\QL, \QR)} \right) \left(|s_1|_{S} \frac{\Pt(s_1, \QL, \ER_{S^*}(\QR))}{\mc{Z}_S(\QL, \ER_{S^*}(\QR))}\right) P_{S^*}^{(n)}(s_2, \EL_{s_1}(\QL), \QR) \\
+    %
+    &= \sum_{s_1 s_2 = s} |s_1|_{S} \frac{\Pt(s_1, \QL, \ER_{S^*}(\QR))}{\mc{Z}_{S^*}(\QL, \QR)} \frac{\mc{Z}_{S^n}(\EL_{s_1}(\QL), \QR)}{\mc{Z}_{S^*}(\EL_{s_1}(\QL), \QR)} |s_2|_{S^n} \frac{\Pt(s_2, \EL_{s_1}(\QL), \QR)}{\mc{Z}_{S^n}(\EL_{s_1}(\QL), \QR)} \\
+    %
+    &= \sum_{s_1 s_2 = s} |s_1|_{S} |s_2|_{S^n} \frac{\Pt(s_2, \EL_{s_1}(\QL), \QR)}{\mc{Z}_{S^*}(\QL, \QR)} = \sum_{s_1 s_2 = s} |s_1|_{S} |s_2|_{S^n} \frac{\Pt(s, \QL, \QR)}{\mc{Z}_{S^*}(\QL, \QR)} \\
+    %
+    &= \frac{\mc{Z}_{S^{n+1}}(\QL, \QR)}{\mc{Z}_{S^*}(\QL, \QR)} |s|_{S^{n+1}} \frac{\Pt(s_1 s_2, \QL, \QR)}{\mc{Z}_{S^{n+1}}(\QL, \QR)} = p(n+1, \QL, \QR) P_{S^{n+1}}(s, \QL, \QR). \\
+\end{align*}
+%
+在上面我们使用了如下恒等式：$\mc{Z}_{S^*}(\QL, \QR) = \Tr(\QL \QR) + \mc{Z}_{SS^*}(\QL, \QR)$（第二个等号），$\mc{Z}_S(\QL, \ER_{S^*}(\QR)) = \mc{Z}_{SS^*}(\QL, \QR)$（第三个等号），$\Pt(s_1, \QL, \ER_{S^*}(\QR)) = \mc{Z}_{S^*}(\EL_{s_1}(\QL), \QR)$（第四个等号），$\Pt(s_2, \EL_{s_1}(\QL), \QR) = \Pt(s_1 s_2, \QL, \QR)$（第五个等号），以及 $|s|_{S^{n+1}} = \sum_{s_1 s_2 = s} |s_1|_{S} |s_2|_{S^n}$（第六个等号）。
+
+有了对未归一化分布 $P_{S^*}^{(n)}$ 的这一归纳刻画，我们最终可以证明
+%
+\begin{align*}
+    P_{S^*}(s, \QL, \QR) &= \sum_{n = 0}^\infty P_{S^*}^{(n)}(s, \QL, \QR) = \sum_{n = 0}^\infty \frac{\mc{Z}_{S^{n}}(\QL, \QR)}{\mc{Z}_{S^*}(\QL, \QR)} |s|_{S^{n}} \frac{\Pt(s, \QL, \QR)}{\mc{Z}_{S^{n}}(\QL, \QR)} \\
+    %
+    &= |s|_{S^*} \frac{\Pt(s, \QL, \QR)}{\mc{Z}_{S^*}(\QL, \QR)},
+\end{align*}
+
+其中我们在最后一个等号中使用了恒等式 $\sum_{n = 0}^\infty |s|_{S^{n}} = |s|_{S^*}$。
+
+\end{proof}
+
+在证明了 引理~\ref{lem:sample} 之后，我们现在可以将其作为一个简单推论来证明 定理~\ref{thm:sample}，
+为便于查阅，此处将其重述如下。
+
+\begin{theorem*}
+考虑一个核心张量为 $\mc{A}$、边界向量为 $\alpha$ 与 $\omega$ 的 u-MPS 模型，以及一个无歧义（unambiguous）正则表达式 $R$，其右转移算子 $\ER_R$ 收敛。设 $P_*$ 表示由该 u-MPS 定义的在任意字符串上的概率分布，使得 $\Sigma_{s\in\Sigma^*} P_*(s) = 1$。则调用 $\Sample(R, \alphamat, \omegamat)$ 会从条件 u-MPS 分布 $P_*(s | s \in R) = P_*(s) / P_*(R)$ 生成一个随机字符串 $s \in \Sigma^*$，其中 $P_*(R) := \sum_{s' \in R} P_*(s')$。
+\end{theorem*}
+
+\begin{proof}
+
+由 引理~\ref{lem:sample}，我们知道了 $\Sample(R, \alphamat, \omegamat)$ 输出字符串的概率分布，以及 $P_*(s) = \Sample(\Sigma^*, \alphamat, \omegamat)$。这一刻画让我们能够证明
+%
+\begin{align*}
+    P_R(s, \alphamat, \omegamat) &= \sR \frac{\Pt(s, \alphamat, \omegamat)}{\mc{Z}_R(\alphamat, \omegamat)} = \sR \frac{\Pt(s, \alphamat, \omegamat)}{\Tr(\alphamat \ER_R(\omegamat))} \\
+    &= \sR \left( \frac{\Pt(s, \alphamat, \omegamat)}{\mc{Z}_{\Sigma^*}(\alphamat, \omegamat)} \right) \left( \frac{\mc{Z}_{\Sigma^*}(\alphamat, \omegamat)}{\sum_{s' \in R} \Pt(s', \alphamat, \omegamat)} \right) \\
+    &= \sR \frac{P_{\Sigma^*}(s, \alphamat, \omegamat)}{\sum_{s' \in R} P_{\Sigma^*}(s', \alphamat, \omegamat)} =
+    \begin{cases}
+    P_*(s) / P_*(R), &\text{if } s \in R\\
+    0, &\text{otherwise}
+    \end{cases} \\
+    &= P_*(s | s \in R).
+\end{align*}
+
+在第三个等号中，我们使用了 定理~\ref{thm:transfer_op} 中的 \eqref{eq:gen_transfer_op}（对于无歧义的 $R$，它退化为 式~\eqref{eq:transfer_op}）
+把 $\ER_R$ 表示为 $\ER_R = \sum_{s \in R} \ER_s$，同时在分子与分母中引入一个与 $\Sigma^*$ 相联系的归一化因子。在最后一个等号中，我们使用了与 $s$ 匹配正则表达式 $R$ 相联系的条件概率分布的定义，并利用了如下事实：对无歧义正则表达式，$\sR$ 要么为 1 要么为 0。
+
+\end{proof}
+

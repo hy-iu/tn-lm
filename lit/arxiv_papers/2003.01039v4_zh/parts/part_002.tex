@@ -1,0 +1,30 @@
+\section{背景}
+
+我们考虑有限字母表 $\Sigma$ 上的序列，其中 $\Sigma^n$ 表示所有长度为 $n$ 的字符串的集合，$\Sigma^*$ 表示所有字符串的集合，$\varepsilon$ 表示空字符串。我们用 $\lVert v\rVert$ 表示向量、矩阵或更高阶张量 $v$ 的 2-范数，用 $\Tr(M)=\sum_{i=1}^D M_{ii}$ 表示方阵 $M\in\field{D\times D}$ 的迹。
+
+一个实值\footnote{限于实值张量对机器学习而言是自然的，但这与量子物理中使用复参数的标准做法不同。这里给出的结果可以推广到复数情形，只需将某些张量替换为其复共轭即可。}张量 $\mc{T} \in \R^{d_1\times d_2\times\cdots\times d_n}$ 称为具有形状 $(\seq{d}{n})$，它可以由带指标 的元素集合 $\mc{T}_{\seq{i}{n}} \in \R$ 来指定，其中每个指标 $i_k \in [d_k] := \{1, 2, \ldots, d_k\}$。具有 $n$ 个指标的张量称为 $n$ 阶（order）张量，$n$ 阶张量的集合构成一个维数为 $\Pi_{k=1}^n d_k$ 的向量空间。
+%
+\begin{figure}[tb]
+\vskip 0.1in
+\begin{center}
+\centerline{\includegraphics[width=\columnwidth]{contraction.pdf}}
+\caption{(a-b) 张量收缩的两个著名例子：向量内积与矩阵乘法。(c) 一个简单的张量网络（tensor network），其中 2 阶、3 阶与 4 阶张量被收缩为一个 3 阶张量。在数值库中，小的张量收缩可以用 \texttt{einsum} 函数计算，且输出 $\mc{X}$ 与收缩顺序无关。(d) u-MPS 模型，它使用形状为 $(D, d, D)$ 的核心张量 $\mc{A}$ 以及 $D$ 维向量 $\alpha$ 和 $\omega$ 来定义任意阶的张量。(e) 由 \eqnref{eq:partition_n} 定义的长度为 $n$ 的归一化因子 $\Z_n$，表示为张量收缩构成的网络。(f) 由 u-MPS 核心张量 $\mc{A}$ 的两个副本定义的 4 阶张量 $\E$。$\E$ 与左侧或右侧矩阵的收缩给出 u-MPS 的左、右\emph{转移算符}（transfer operator），它们是线性映射，可借助 \eqnref{eq:normalization} 高效计算 $\Z_n$。}
+\label{fig:contraction}
+\end{center}
+% \vskip -0.2in
+\end{figure}
+%
+矩阵、向量和标量（scalar）分别是最简单的 2 阶、1 阶和 0 阶张量的例子。张量收缩（contraction）是矩阵乘法和向量内积的共同推广，它沿一对维度相等的指标将两个张量相乘。若张量 $\mc{T}$ 与 $\mc{T'}$ 的形状分别为 $(d_1,\ldots,d_k,\ldots,d_n)$ 与 $(d'_1,\ldots,d'_{k'},\ldots,d'_{n'})$，且 $d_k = d'_{k'}$，则对第 $k$ 与 $k'$ 个指标作收缩得到乘积张量 $\mc{T''}$，其元素为
+%
+\begin{align}
+\label{eq:contraction}
+& T''_{i_1,\ldots,i_{k-1},i_{k+1},\ldots,i_{n},i'_1,\ldots,i'_{k'-1},i'_{k'+1},\ldots,i'_{n'}} = \nonumber\\
+&\hspace{2.5cm} \sum_{i_k=1}^{d_k}\mc{T}_{i_1,\ldots,i_k,\ldots,i_{n}} \mc{T}'_{i'_1,\ldots,i_{k},\ldots,i'_{n'}}.
+\end{align}
+%
+借助一种方便的图形记号~（见 Figure~\ref{fig:contraction}），收缩操作 \eqnref{eq:contraction} 更容易理解：每个张量对应无向图中的一个节点，边描述要执行的收缩。沿某个指标的收缩对应于合并两个相连的节点，产生一个新节点，其出边是被收缩的张量中各边的并集。张量收缩的一个重要性质是其广义结合律，因此一个张量网络可以按任意顺序收缩，最终的乘积张量在每种情形下都相同。
+
+$n$ 阶张量的一个自然例子是长度为 $n$ 的序列 $\Sigma^n$ 上的概率分布，其中与所有可能序列相关联的概率构成 $|\Sigma|^n$ 个独立的张量元素。这种元素数目的指数增长使得高阶张量的稠密表示不可行，但便利的张量分解常常允许高效地操作高阶张量，甚至可以处理阶数达数千的张量。
+
+定长矩阵乘积态~\citep{perez2007}~（MPS，也称为张量列（tensor train）~\citep{oseledets2011}）~模型将形状为 $(\seq{d}{n})$ 的 $n$ 阶张量 $\mc{T}$ 参数化为 $n$ 个独立的张量 ``core'' $\{\mc{A}^{(j)}\}_{j=1}^n$ 的顺序收缩，这些 core 构成模型的参数。每个 $\mc{A}^{(j)}$ 的形状为 $(D_{j-1}, d_j, D_j)$，其中 $D_0 = D_n = 1$。维度 $D_j$ 称为 MPS 的键维（bond dimension）（或秩），通过选取足够大的 $D_j$，可以精确表示任意 $n$ 阶张量。
+

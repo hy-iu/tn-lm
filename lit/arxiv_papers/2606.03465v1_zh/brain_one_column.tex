@@ -1,0 +1,1731 @@
+\documentclass[11pt]{article}
+
+% 中文支持：必须在 brainlab 之前加载（brainlab.sty 内部加载 hyperref，
+% ctex/xeCJK 需先于 hyperref 生效）
+\usepackage[fontset=macnew]{ctex}
+
+\usepackage[
+  % ----- 模式 -----
+  shownumpages,          % 显示页码
+  % ----- 参考文献 -----
+  citingstyle=numbers,     % 引用样式: numbers | authoryear | super
+  bibliostyle=plainnat,    % 文献样式: unsrtnat | plainnat | abbrvnat
+  bibfile=references,      % .bib 文件名（不含扩展名）
+]{brainlab}
+
+\usepackage{shortcuts}
+
+% 仅用于演示的 lipsum
+\usepackage{lipsum}
+
+% 字体修复（必须在 brainlab 之后）：
+% 1) 本机没有 macnew 预设的等宽中文字体 STFangsong，用宋体替代；
+%    放入 AtBeginDocument 以便在 ctex 的字体钩子之后生效；
+% 2) brainlab 加载的 newtxtext 会全局设置 \defaultfontfeatures{Extension=.otf,...}，
+%    污染其后的 fontspec 调用（按文件名而非字体名查找），需先清空再设 CJK 等宽字体。
+\AtBeginDocument{%
+  \defaultfontfeatures{}%
+  \setCJKmonofont{Songti SC}%
+}
+
+% brainlab.sty 加载 babel[english]，会在 \begin{document} 时把可见名称重置为
+% 英文，故在 AtBeginDocument 中（注册顺序靠后、执行靠后）重新断言为中文。
+\AtBeginDocument{%
+  \renewcommand{\figurename}{图}%
+  \renewcommand{\tablename}{表}%
+  \renewcommand{\refname}{参考文献}%
+  \renewcommand{\bibname}{参考文献}%
+  \renewcommand{\abstractname}{摘要}%
+  \renewcommand{\contentsname}{目录}%
+  \renewcommand{\appendixname}{附录}%
+  \renewcommand{\listfigurename}{插图清单}%
+  \renewcommand{\listtablename}{表格清单}%
+  \renewcommand{\proofname}{证明}%
+}
+
+\setbrainmeta{
+  title={重新思考张量分解\\在大语言模型训练后压缩中的作用},
+  authors={Artur Zagitov\equalcontrib, Alexander Miasnikov\equalcontrib, Maxim Krutikov, Vladimir Aletov, Gleb Molodtsov, Nail Bashirov, Artem Tsedenov, Aleksandr Beznosikov
+  },
+  affiliations={
+    BRAIn Lab, {\scriptsize{Moscow, Russia}} \\
+    % \textsuperscript{2}Institute for System Programming, RAS
+  },
+  abstract={
+    训练后压缩（post-training compression）对于在资源紧张条件下部署大语言模型（LLM）至关重要。张量分解已成为一个颇具前景的方向，其提供的紧凑参数化与 Transformer 权重结构高度契合。然而，已有研究仅在狭窄的设定下评估这些方法，张量化在大规模部署中是否有效仍不清楚。我们在稠密架构与专家混合（MoE）架构上系统评估了张量压缩，基于实证分析与理论分析确立了其性能权衡。我们发现，张量分解所假定的共享子空间与现代 LLM 学到的异构表示之间存在根本性错配，从而划定了这类方法的实际局限，并澄清了其在大规模部署中的可行角色。代码可在 \url{https://github.com/brain-lab-research/TT-LLM} 获取。
+  },
+  % additionallogos={innopolis.png,mipt.png,isp.png}
+}
+\begin{document}
+\begin{mainpart}
+
+\allowdisplaybreaks
+\vspace{-8mm}
+\section{引言}
+\label{sec:intro}
+
+近年来，大语言模型（LLM）的规模大幅增长，
+推高了存储与部署成本，也限制了其在资源受限场景下的
+适用性。因此，压缩技术被广泛用于在保持质量的同时提升效率。
+
+模型压缩的首要目标是减少冗余，同时保留模型的功能行为。
+标准方法包括：剪枝，即移除冗余组件以缩减模型规模 \citep{OBC_2022, LLM_pruner_2023, unreasonable_ineffectiveness_2024}；量化，即用更低精度的数据类型表示权重与激活 \citep{GPTQ_2022, QUIP_2023, AQLM_2024, AWQ_2024, harp}；以及知识蒸馏（KD），即训练一个紧凑的学生模型来逼近更大的教师模型的行为 \citep{HintonDistil_2015, GKD_2023}。
+然而，要借助这些技术达到最先进的性能，通常需要大量微调或数据驱动的校准。
+
+一种自然的替代方案是矩阵与张量分解，其成熟的理论背景颇具吸引力。
+此类方法将稠密层分解为若干较小因子的乘积，在近似保持原有层功能的同时实现参数缩减。
+对于权重矩阵 $W \in \mathbb{R}^{m \times n}$，奇异值分解（SVD）给出 $W = U\Sigma V^\top$；截断保留前 $r$ 个奇异值即得
+\begin{equation}
+\label{eq:svd}
+\vspace{-1mm}
+\widehat{W} = U_r\Sigma_r V_r^\top, 
+\end{equation}
+根据 Eckart--Young--Mirsky 定理~\citep{Eckart_Young_1936, Eckart_Young_Mirsky_1960}，该近似在任何酉不变范数下都是全局最优的。
+张量分解将这一思想推广到多头注意力（MHA）~\citep{Attention_Is_All_You_Need_2017} 与专家混合（MoE）~\citep{MoE_2022} 中的多维权重张量：Tucker 分解~\citep{tucker1966some, kolda2009tensor} 通过一个
+压缩的核心张量 $\mathcal{G} \in \mathbb{R}^{R_1 \times \cdots \times R_N}$
+以及各模的因子矩阵 $U^{(n)} \in \mathbb{R}^{I_n \times R_n}$ 来逼近张量
+$\mathcal{X} \in \mathbb{R}^{I_1 \times \cdots \times I_N}$：
+\begin{equation}
+    \label{eq:tucker}
+    \vspace{-2mm}
+    \mathcal{X} \approx \mathcal{G} \times_1 U^{(1)} \times_2 U^{(2)}
+    \cdots \times_N U^{(N)},
+\end{equation}
+其中 $(R_1,\ldots,R_N)$ 为 Tucker 秩。
+
+张量列（TT）~\citep{oseledets2011tensor} 将三维核心串接起来：
+\begin{equation}
+% \small
+    \label{eq:tt}
+    % \resizebox{0.89\linewidth}{!}
+    \vspace{-2mm}
+    \mathcal{X}_{i_1,\ldots,i_N} \approx \!\!\sum\nolimits_{r_1,\ldots,r_{N-1}}\!\! \mathcal{G}^{(1)}_{1,i_1,r_1}\mathcal{G}^{(2)}_{r_1,i_2,r_2} \cdots \mathcal{G}^{(N)}_{r_{N-1},i_N,1},
+\end{equation}
+其中 $\mathcal{G}^{(n)} \in \mathbb{R}^{R_{n-1} \times I_n \times R_n}$，$R_0 = R_N = 1$，$(R_1,\ldots,R_{N-1})$ 为 TT 秩。
+
+% However, the existing literature \citep{tensorllm2025,li2026lestd} leaves a significant discrepancy between the theoretical elegance of these methods and their actual utility. Although there have been positive reports of application of tensor decompositions, these outcomes often stem from evaluation protocols that may not adequately address the constraints associated with full-scale deployment. Therefore, the applicability of such methods raises serious questions. 
+
+% To address this gap, we conduct a systematic and rigorous study of decomposition methods in practical LLM compression scenarios. We provide implementations of decomposition methods across tensor-based layers in various real-world setups and analyze their end-to-end performance. In addition, we propose a theoretical justifications that partially explain why standard decomposition techniques fail to scale, offering a more grounded perspective on their limitations.
+尽管张量分解在理论上颇具吸引力，但现有的张量
+分解研究~\citep{tensorllm2025,li2026lestd} 报告积极结果时所依据的
+评估协议并未反映全规模部署的约束，
+使得这些方法在真实场景下的实用性仍不明朗。为此，我们作出如下贡献：
+
+$\bullet$ \textbf{对矩阵与张量分解的系统性实证验证与深入诊断。} 我们在真实部署条件下开展了首个关于训练后张量分解的大规模研究，涵盖稠密与 MoE 架构，以困惑度、下游准确率以及一个轻量级 LoRA 修复基线进行评估。在所有设置下，张量格式在相同压缩率下均未能胜过对应的矩阵方法。我们将此归因于一种一致的失效机制——该机制通过困惑度、各项指标与残差流几何得以识别——并进一步给出超级权重~\citep{superweight} 恢复对 Frobenius 最优截断敏感性的消融分析。
+
+$\bullet$ \textbf{部分理论解释。} 我们形式化了三重环环相扣的障碍，它们使得任何 Frobenius 最优的张量分解在不进行大量微调的情况下都无法成为 Transformer 权重的有效压缩器。
+
+\section{相关工作}
+
+\paragraph{低秩矩阵压缩。}
+% LASER~\citep{LASER_2024} shows that rank reduction of specific layers can sometimes improve reasoning, indicating that not all singular components are functionally important. Concretely, it replaces a selected Transformer weight matrix, from either attention or the MLP, with a truncated-SVD approximation chosen by searching over the layer, matrix type, and retained rank, without retraining. The reported gains are strongest for later MLP matrices and are interpreted as a denoising effect: removing smaller-singular-value components can suppress generic or competing answers and expose weakly learned facts, although language-modeling perplexity may slightly worsen. SliceGPT~\citep{slicegpt2024} exploits a computational invariance of RMSNorm-connected Transformers: orthogonal changes of basis can be absorbed into adjacent linear layers without changing the model output. It uses calibration activations to choose PCA bases for each block, then deletes low-variance principal directions by removing corresponding rows and columns, producing smaller dense matrices and a reduced embedding dimension that can yield real inference speedups without sparse kernels. Dobi-SVD~\citep{wang2025dobisvd} rethinks the SVD compression objective by arguing that the optimal truncation target is the activation, not the weight matrix itself. It makes the truncation position differentiable, optimising it on calibration data while keeping weights frozen, then reconstructs the compressed weights using IPCA and a remapping step that ensures lower ranks translate to actual memory savings. HASSLE-free
+% \citep{hasslefree2025} takes a complementary approach: it replaces each
+% dense weight with a sparse low-rank sum, optimised via alternating
+% minimisation to minimise the layer-wise reconstruction error on calibration
+% data.
+如第~\ref{sec:intro} 节所述，截断 SVD（式~\ref{eq:svd}）保证全局最优的低秩近似。
+
+% Low-rank compression of Transformer weight matrices is grounded in the
+% Eckart–Young–Mirsky theorem, which guarantees that truncated SVD yields
+% the globally optimal low-rank approximation in any unitarily invariant
+% norm~\citep{Eckart_Young_1936,Eckart_Young_Mirsky_1960}.
+
+LASER~\citep{LASER_2024} 直接对选定的
+权重矩阵施加截断 SVD，无需重新训练。
+% interpreting gains as a denoising
+% effect on low-salience singular directions.
+SliceGPT~\citep{slicegpt2024} 利用 RMSNorm 连接的
+Transformer 的旋转不变性，将 PCA 基吸收进相邻层。
+% removing low-variance directions and producing smaller dense matrices
+% with real inference speedups.
+SVD-LLM~\citep{svdllm2025} 通过截断感知的数据白化
+与逐层闭式更新来改进秩的选择。
+% that
+% compensates for truncation error.
+Dobi-SVD~\citep{wang2025dobisvd} 将截断位置设为
+可微，在校准数据上针对激活
+对其进行优化。
+% rather than the weight matrix.
+SoLA~\citep{huang2025sola} 以稠密形式保留一小部分激活范数较高的
+FFN 神经元，仅对
+其余部分施加低秩分解。
+% with rank allocation formulated as integer programming.
+FLAT-LLM~\citep{tian2025flatllm} 对注意力块采用逐头 PCA，
+对 MLP 块采用 Nystr\"{o}m 近似。
+HASSLE-free~\citep{hasslefree2025} 将每个权重分解为稀疏分量
+与低秩分量之和。COALA~\cite{parkina2026coala} 针对上下文感知低秩压缩固有的数值不稳定性，用稳定的基于 QR 的投影取代显式的 Gram 矩阵构造与求逆，从而避免了 SVD-LLM 等既有方法中出现的奇异性问题。
+% jointly minimised via alternating updates over
+% the layer-wise reconstruction objective.
+
+\paragraph{面向 LLM 的张量分解。}
+% TensorLLM~\citep{tensorllm2025} tensorizes the QKVO projections of multi-head attention by splitting them into heads and applies Tucker decomposition with shared factor matrices as a post-training attention denoising/compression method. LeSTD~\citep{li2026lestd} follows the same attention-centric Tucker setting, but learns a shared basis and sparsifies the Tucker core to improve high-ratio data-free post-training compression. TD-MoE~\citep{tdmoe2026} instead targets sparse expert models by stacking MoE expert feed-forward network (FFN) weights into a three-dimensional tensor and applying Tucker decomposition with whitening and rank allocation. TRAWL~\citep{luo2024trawl} uses a different cross-matrix tensorization: it stacks related QKVO or FC/FFN weights across layers, segments, or individual layers and applies tensor decomposition, mainly CP/Tucker-style rather than TT, as a training-free denoising intervention.
+TensorLLM~\citep{tensorllm2025} 与 LeSTD~\citep{li2026lestd} 将 Tucker
+分解应用于多头注意力投影，其中 LeSTD 还额外
+对 Tucker 核心进行稀疏化，以获得更高的压缩率。
+TD-MoE~\citep{tdmoe2026} 通过将专家权重堆叠为三维张量，
+把 Tucker 分解推广到稀疏 MoE 模型。
+TRAWL~\citep{luo2024trawl} 跨层堆叠相关的权重矩阵，
+并施加 CP/Tucker 式分解，作为一种免训练的
+去噪干预手段。
+另一条研究路线将 TT 用于参数高效微调
+而非训练后压缩：LoRETTA~\citep{yang2024loretta}
+提出基于 TT 的适配器，TT-LoRA~\citep{anjum2024ttlora} 用 TT 核心
+参数化适配更新，AdaZeta~\citep{yang2024adazeta}
+则将张量化适配器与零阶微调相结合。
+% A separate line of work uses Tensor Train for adaptation rather than direct post-training compression of pretrained weights. LoRETTA~\citep{yang2024loretta} introduces TT-based tensorized adapters and TT reparameterizations for PEFT; TT-LoRA~\citep{anjum2024ttlora} parameterizes low-rank adaptation updates with TT cores; and AdaZeta~\citep{yang2024adazeta} combines tensorized adapters with zeroth-order fine-tuning for memory-efficient adaptation.
+
+\begin{figure*}[!b] 
+  \centering
+  \vspace{-2mm}\includegraphics[width=0.9\textwidth]{emnlp/figs/pruning_c4_variant1.pdf}
+  \caption{剪枝下的困惑度（PPL）。图中显示对每一层单独剪枝后的最终 PPL。}
+  \label{fig:full_width_graph}
+  \vspace{-2mm}
+\end{figure*}
+\section{压缩策略}
+\label{sec:compression}
+
+\subsection{剪枝}
+
+剪枝去除对模型行为贡献最小的参数或组件，其做法是利用 LLM 中固有的高度非均匀的参数冗余。值得注意的是，已有研究 \citep{unreasonable_ineffectiveness_2024} 与我们自己的实验（图~\ref{fig:full_width_graph}）均表明，中间层对最终质量的影响相对较小，可以承受激进的剪枝。这一现象的成因在于，最前与最后的层不成比例地承担着形成词元表示、生成最终预测等关键任务，而中间层的作用相对较小。
+然而，剪枝虽然能有效去掉这些中间层的“尾部”，但由于参数主体仍原封未动，其可达到的最大压缩率受到限制。它并未对剩余结构做紧凑的重参数化，因而只是相对于结构上更先进的分解方法的一个朴素基线。
+
+
+
+% -------------------------------------------------------------
+
+%ссылки
+\subsection{矩阵分解}
+
+% Определение задачи низкорангового приближения, описать СВД 
+
+自然的下一步是矩阵分解，它通过低秩重参数化而非删除来压缩权重。对于包含模型大部分参数的前馈网络（FFN）\citep{FFNs_Are_Memory_2021}，我们按照附录~\ref{app:gptj_llama_tensor_protocol} 所述的协议，选取并评估了若干矩阵分解方法。
+
+
+% As introduced in Section~\ref{sec:intro}, truncated SVD yields the globally optimal low-rank approximation in any unitarily invariant norm~\citep{Eckart_Young_1936,Eckart_Young_Mirsky_1960}. LASER~\citep{LASER_2024} applies this directly to selected Transformer weight matrices without retraining, choosing layer, matrix type, and retained rank by grid search; the reported improvements are interpreted as a denoising effect that removes low-salience singular directions. More recent methods improve upon this baseline by making the rank selection data-driven: SVD-LLM~\citep{svdllm2025} introduces truncation-aware data whitening that aligns singular values with actual compression loss, and applies a layer-wise closed-form parameter update to compensate for truncation error. Dobi-SVD~\citep{wang2025dobisvd} makes the truncation position differentiable, learning it on calibration data via gradient-robust backpropagation and resolving rank into memory savings through a remapping step. SoLA~\citep{huang2025sola} instead identifies a minority of FFN neurons with high activation norms and keeps them dense, applying low-rank decomposition only to the remainder, combined with an adaptive rank-allocation strategy formulated as integer programming. FLAT-LLM~\citep{tian2025flatllm} uses head-wise PCA in the activation space to compute per-head truncation bases for attention blocks and Nystr\"{o}m approximation for MLP blocks, with a greedy importance-preserving rank-redistribution strategy across decoders. HASSLE- free~\citep{hasslefree2025} decomposes each weight matrix into a sparse component plus a low-rank component, jointly minimizing the full layer-wise reconstruction objective with alternating updates.
+
+% =============================================================
+%  Related Work
+% =============================================================
+% \section{Related Work}
+% \label{sec:related_work}
+
+% Low-rank compression of Transformer weight matrices is grounded in the
+% Eckart–Young–Mirsky theorem, which guarantees that truncated SVD yields
+% the globally optimal low-rank approximation in any unitarily invariant
+% norm~\citep{Eckart_Young_1936,Eckart_Young_Mirsky_1960}.
+% LASER~\citep{LASER_2024} applies truncated SVD directly to selected
+% weight matrices without retraining, interpreting gains as a denoising
+% effect on low-salience singular directions.
+% SliceGPT~\citep{slicegpt2024} exploits the rotational invariance of
+% RMSNorm-connected Transformers to absorb PCA bases into adjacent layers,
+% removing low-variance directions and producing smaller dense matrices
+% with real inference speedups.
+% SVD-LLM~\citep{svdllm2025} improves rank selection via
+% truncation-aware data whitening and a layer-wise closed-form update that
+% compensates for truncation error.
+% Dobi-SVD~\citep{wang2025dobisvd} makes the truncation position
+% differentiable, optimising it on calibration data with respect to the
+% activation rather than the weight matrix.
+% SoLA~\citep{huang2025sola} preserves a small set of high-activation-norm
+% FFN neurons in dense form and applies low-rank decomposition only to the
+% remainder, with rank allocation formulated as integer programming.
+% FLAT-LLM~\citep{tian2025flatllm} applies head-wise PCA for attention
+% blocks and Nystr\"{o}m approximation for MLP blocks, with greedy rank
+% redistribution across decoders.
+% HASSLE-free~\citep{hasslefree2025} decomposes each weight into a sparse
+% plus low-rank component, jointly minimised via alternating updates over
+% the layer-wise reconstruction objective.
+
+% \paragraph{LASER}
+% \label{subsec:laser}
+
+\texttt{LASER}~\citep{LASER_2024} 将
+式~\ref{eq:svd} 应用于单个 FFN 权重矩阵，无需重训练或校准数据，而是通过对下游任务准确率做网格搜索来选定层、矩阵类型与秩 $r$。降秩有时能提升推理（reasoning）任务的性能，这被解释为一种\emph{去噪}效应：据推测，低奇异值方向编码了相互竞争的回应，会压制学习不充分的事实。\texttt{LASER} 不对截断误差做任何修正，因而是一个自然的免训练基线。
+
+% -------------------------------------------------------------
+% \texttt{Dobi-SVD}~\citep{wang2025dobisvd} argues that minimizing the weight reconstruction error $\|W - \hat{W}_{r}\|$ is a poor proxy for the true goal of minimizing the activation error $\|Wx - \hat{W}_{r}x\|$ on calibration data $x$. It introduces a continuous relaxation of the truncation boundary and optimizes it end-to-end via gradient-robust backpropagation, keeping the original weights frozen. The resulting rank is then used to reconstruct compressed weights using IPCA, with a remapping step that ensures
+% lower ranks translate to actual memory savings.
+
+% -------------------------------------------------------------
+
+\texttt{HASSLE-free}~\citep{hasslefree2025} 方法将每个权重矩阵分解为
+稀疏与低秩两个部分，即
+\begin{equation}
+    W \approx S + AB^{\top},
+\end{equation}
+并通过交替最小化来最小化逐层激活重构误差 $\|Wx - (S + AB^{\top})x\|$：对残差 $W - AB^{\top}$ 做阈值化以更新 $S$，对 $W - S$ 求解最小二乘问题以更新 $AB^{\top}$。稀疏
+部分捕捉低秩因子难以逼近的孤立大幅值元素，而低秩部分则编码结构化信号。
+
+\begin{figure}[htbp]
+  \centering
+  \begin{minipage}[t]{0.48\textwidth}
+    \texttt{SoLA}~\citep{huang2025sola} 利用了更深层的矩阵结构划分：将激活范数最高的 top-$k$ 个神经元作为稠密子集保留为全精度，其余部分作为压缩子集施以截断奇异值分解（SVD）。这避免了对高范数神经元做低秩逼近时产生的不成比例的大误差。此外，\texttt{SoLA} 通过整数规划在各层之间分配秩，在全局参数预算约束下最小化总重构误差，将容量集中于截断误差
+最敏感之处。
+
+    \texttt{FLAT-LLM}~\citep{tian2025flatllm} 对注意力块应用逐头 PCA、对 MLP 块应用 Nystr\"{o}m 逼近，从校准激活中计算截断基。各解码器层的秩通过基于敏感度的贪心重分配策略进行分配，把全局秩预算分给截断造成重构误差最大的层。
+  \end{minipage}%
+  \hfill%
+  \begin{minipage}[t]{0.48\textwidth}
+    \vspace{0pt}
+    \centering
+    \includegraphics[width=\linewidth]{emnlp/figs/gptj_mlp_all_methods_c4_with_lens_noquant.pdf}
+    \captionof{figure}{GPT-J~6B 上的 FFN 压缩。所有方法压缩相同的
+    中后段块范围。}
+    \label{fig:matrix_decomps}
+  \end{minipage}
+  \vspace{-1em}
+\end{figure}
+
+图~\ref{fig:matrix_decomps} 揭示出一个明显趋势：采用某种形式微调
+或利用额外校准数据的方法（如
+\texttt{Dobi-SVD}、\texttt{HASSLE-free} 与 \texttt{SoLA}），相比仅依赖
+矩阵分解的方法（如 \texttt{LASER} 与
+\texttt{Flat-LLM}），其性能退化
+要小得多。
+
+尽管如此，最高的压缩率仍由 LASER 取得（$\approx 14\%$），但困惑度（PPL）增加了 $+8$。这引出了我们在第~\ref{sec:td-dense} 节中回答的自然问题：
+
+\begin{tcolorbox}
+    \textbf{Q1}：\textit{能否在不牺牲模型质量的前提下获得更高的压缩率？}
+\end{tcolorbox}
+
+% The fundamental problem of the low-rank matrix approximation is to find a matrix
+% $\widehat{X}$ of restricted rank $r$ that closely approximates a target
+% matrix $X$. Formally, this is expressed as the optimization problem:
+% \allowdisplaybreaks
+% \begin{equation} \label{eq:task}
+%     \min_{\operatorname{rank}(\widehat{X}) \le r}
+% \left\| X - \widehat{X} \right\|_{\alpha}.
+% \end{equation}
+% According to the Eckart-Young-Mirsky theorem
+% \citep{Eckart_Young_Mirsky_1960}, for any unitarily invariant norm $\|\!\cdot\!\|_{\alpha}$ (e.g., Frobenius or spectral) the global optimum to \eqref{eq:task} is given by the truncated SVD.
+
+% The SVD factorizes the original matrix into a product of three components:
+% $$
+% X = U \Sigma V^{\top},
+% $$
+% where $U$ and $V$ contain the left and right singular vectors,
+% respectively, and $\Sigma$ is a diagonal matrix of singular values.
+% Truncating this decomposition to the top $r$ singular values yields the
+% theoretically optimal compressed representation:
+% $$
+% \widehat{X} = U_r \Sigma_r V_r^{\top}.
+% $$
+% While generally effective, this approach can deteriorate in layers containing functionally critical superweights \citep{superweight}. These weights are not merely large-magnitude outliers: they participate in narrow computational pathways that can produce massive activations on specific low-semantic-content tokens \citep{SinksAndSpikes_2026}. Since truncated SVD optimizes a global, task-agnostic reconstruction objective, it prioritizes high-energy singular directions rather than task-sensitive directions or entries. Consequently, such layers may require higher ranks or targeted corrections that explicitly preserve functionally critical coordinates.
+
+
+
+
+\begin{figure*}[t!]
+  \centering
+  \includegraphics[width=0.85\textwidth]{emnlp/figs/pareto_no_rtn_c4_arrows_side_inner_short_emph_v4_diag_leaders.pdf}
+  \vspace{-2mm}
+  \caption{GPT-J 6B 与 LLaMA 2 7B 上、不计嵌入参数的 C4 困惑度与节省比特数的关系。每个点对应一次压缩运行，$L$ 表示连续压缩的 Transformer 块数。箭头将每种分解与其经低秩适配（LoRA）修复的变体相连，Pareto 前沿标出观测到的最佳折衷。}
+  \label{fig:c4_pareto}
+  \vspace{-1em}
+\end{figure*}
+
+\subsection{稠密架构的张量分解}
+\label{sec:td-dense}
+% Описать что такое ТТ, Такер и все такое
+
+众所周知，相对于维数而言，张量分解能够对稠密张量实现指数级压缩。TT-SVD~\citep{oseledets2011tensor} 与 HOSVD~\citep{hosvdopt} 等方法在 Frobenius 范数下达到准最优的逼近误差，分别以张量列（TT）与 Tucker 格式表示张量。借助这些算符格式的表示~\citep{tyrtyshnikov2003tensor, hackbusch2006low, oseledets2011tensor}，可以先将 FFN 权重矩阵重排为张量，再对其进行压缩。
+图~\ref{fig:matrix_decomps} 通过在 GPT-J~6B 上将 FFN 层的 TT 分解与基于矩阵的方法相比较，部分回答了 \textbf{Q1}。结果清楚表明，TT 分解在 PPL 上的表现比 \texttt{LASER} 更差，但取得了更大的压缩。
+% , further confirming that decomposition without additional fine-tuning leads to substantial degradation in model quality. 
+
+另一方面，正如 \texttt{TensorLLM}~\citep{tensorllm2025} 所展示的，多头注意力（MHA）层天然具有四维张量表示，能使其低维结构显式化，这使得 Tucker 分解成为该场景下结构上最合适的格式。而对于占模型参数大多数的 FFN 块，并不存在这样天然的张量结构；因此我们不得不采用 TT 分解，以匹配矩阵方法的压缩率并完整回答 \textbf{Q1}。为了最大化压缩，在所有 TT 分解实验中我们都把权重矩阵重排为 $12$ 个核，因为两个模型的最小维度均为 $4096 = 2^{12}$。然而，所得分解会引入不可忽略的困惑度退化；为了部分恢复质量，我们施加一个轻量级 LoRA 修复阶段（$r=16$，在 WikiText-2 上训练），作为矩阵压缩方法中所用校准感知权重分解~\citep{wang2025dobisvd,svdllm2025} 的一种参数高效对应物。我们按照附录~\ref{app:gptj_llama_tensor_protocol} 详述的协议，在四种压缩方案下评估 GPT-J~6B~\citep{gpt-j} 与 LLaMA~2~7B~\citep{touvron2023llama}：仅对注意力做 Tucker 分解（复现 \texttt{TensorLLM} 风格的因子化）、仅对 FFN 做 TT 分解、Tucker+TT 联合，以及对所有投影做 TT 分解，Tucker 秩上限为 $64$。此外，我们在附录~\ref{app:detailed_gptj_llama_results} 中报告了张量分解方法的更多组合。
+
+
+% Figure~\ref{fig:matrix_decomps} presents a comparison of FFN layer TT decomposition against matrix-based methods. The results clearly show that TT decomposition performs on par with \texttt{LASER} in terms of PPL, further confirming that decomposition without additional fine-tuning leads to substantial degradation in model quality.
+
+% Similarly to Figure~\ref{fig:matrix_decomps}, we compress contiguous middle blocks: starting at block $14$ for GPT-J 6B (range $14-20$) and block $16$ for LLaMA~2~7B (range $16-23$), and progressively extend the range to measure error accumulation.
+
+
+图~\ref{fig:c4_pareto} 总结了这些结果。仅压缩注意力能保持困惑度，但带来的体积缩减微乎其微；压缩 FFN 层能获得更高的压缩率，代价是质量急剧退化。LoRA 修复能部分恢复质量，却无法化解根本的折衷。尽管张量格式与 LLM 组件之间存在结构上的对齐，所有方法在实际压缩率下都表现出很差的压缩-质量折衷，这指向标准张量假设与 LLM 学到的表示之间更深层的错配。我们还在附录~\ref{app:quality_compression} 中给出了 WikiText-2 困惑度与 LM-Eval 宏平均准确率下降的折衷结果。
+
+% For FFN layers, where Tucker degenerates to standard matrix factorization, we additionally provide a direct comparison against LASER-style truncated SVD on LLaMA~2~7B. Figure~\ref{app:app_tt_vs_laser_ffn} shows that TT and matrix rank reduction follow nearly identical trend, with TT reaching marginally higher bits saved at the cost of the same monotonic quality drop. Appendix~\ref{app:single_layer_decomposition} further shows that decomposition sensitivity is layer-dependent, with early layers being the most fragile.
+
+% Activation analysis confirms reduced angular diversity and distorted norm distributions, indicating that TT compresses FFN representations into a restricted latent structure no more faithfully than its matrix counterpart. Even this flexible tensorization fails to escape the core trade-off between compression ratio and representation diversity (Figure~\ref{fig:activation_geometry}).
+
+% \begin{figure}[!htbp]
+%   \centering
+%   \includegraphics[width=0.8\linewidth]{emnlp/figs/llama2_tt_ffn_vs_laser_ffn_r512_r1024_c4.pdf}
+%   \caption{TT versus LASER for FFN compression on LLaMA 2 7B. Both methods compress the same middle-to-late block ranges. \textcolor{red}{Add here a revised version with different LLM decompositions, also add an ablation for different kernels amount}}
+%   \label{app:app_tt_vs_laser_ffn}
+%   % \vspace{-1em}
+% \end{figure}
+
+
+% In the context of this article, a tensor is an extension of a vector and a matrix to higher dimensions. The $N$-th order tensor is written as $\mathcal{X} \in \mathbb{R}^{I_1 \times I_2 \times \cdots \times I_N}$. 
+% As discussed above, tensor representations naturally arise in LLM components
+% such as MHA and MoE blocks, where heads and experts introduce explicit
+% structural dimensions. This motivates the use of tensor-based compression
+% methods, which approximate such objects with fewer parameters while preserving
+% their multi-dimensional organization.
+
+% Tucker decomposition represents a tensor using a smaller core tensor and one factor matrix for each mode:
+% $$
+% \mathcal{X}
+% \approx
+% \mathcal{G}
+% \times_1 U^{(1)}
+% \times_2 U^{(2)}
+% \cdots
+% \times_N U^{(N)},\text{ where}
+% $$
+% \begin{itemize}
+%     \item $\mathcal{G} \in \mathbb{R}^{R_1 \times \cdots \times R_N}$ -- the core tensor;
+%     \item $U^{(n)} \in \mathbb{R}^{I_n \times R_n}$ -- matrix factor for the $n$-th mode;
+%     \item $(R_1,\ldots,R_N)$ -- the Tucker ranks.
+% \end{itemize}
+% Tensor Train (TT) decomposition represents a high-order tensor as a chain of
+% small core tensors:
+% $$
+% \mathcal{X}_{i_1,\ldots,i_N}
+% \approx
+% \!\!\!\sum\limits_{r_1,\ldots,r_{N-1}}
+% \!\!\mathcal{G}^{(1)}_{1,i_1,r_1}
+% \mathcal{G}^{(2)}_{r_1,i_2,r_2}
+% \cdots
+% \mathcal{G}^{(N)}_{r_{N-1},i_N,1}, \text{ where}
+% $$
+% \begin{itemize}
+%     \item $\mathcal{G}^{(n)} \in \mathbb{R}^{R_{n-1} \times I_n \times R_n}$ -- the $n$-th TT core tensor;
+%     \item $R_0 = R_N = 1$ -- boundary ranks;
+%     \item $(R_1,\ldots,R_{N-1})$ -- the TT ranks.
+% \end{itemize}
+% Since MHA is equivalent to a structured convolution-like operator \citep{mhacnn2020}, it is naturally represented as a tensor with an explicit head dimension. This makes Tucker decomposition a natural choice for compressing attention while preserving head-wise structure.
+
+% Prior work has explored Tucker-style compression of attention projections, including LeSTD \citep{li2026lestd} and TensorLLM \citep{tensorllm2025}. In our experiments, ``Tucker'' refers to the TensorLLM-style Tucker factorization applied to the attention projections. We evaluate GPT-J 6B and LLaMA 2 7B with maximum rank 64, comparing four compression methods: Tucker on attention projections only, TT on feed-forward projections only, Tucker on attention together with TT on feed-forward projections, and TT applied to all selected attention and feed-forward projections.
+
+% We compress contiguous transformer blocks near the middle of the network and progressively extend the compressed range toward later layers. The starting blocks are chosen based on our layer-sensitivity experiments (see Figure~\ref{fig:full_width_graph}), which show that middle blocks tolerate modification better than the earliest or latest blocks. This observation is backed up by the recent works from other compression strategies such as post-training quantization \citep{wang2026sliderquant}. Expanding the range then lets us measure how approximation error accumulates as more transformer blocks are compressed. For GPT-J 6B, the range starts at block 14 and grows to blocks 14-20; for LLaMA 2 7B, it starts at block 16 and grows to blocks 16-23. We evaluate each decomposed model before and after a lightweight LoRA ($r = 16$) repair stage trained on WikiText-2, to test whether limited data-dependent adaptation can recover the quality lost by factorization. Compression is measured as bits saved over non-embedding model parameters.
+
+% Figure~\ref{fig:c4_pareto} summarizes the quality--compression trade-off. Attention-only compression preserves the perplexity better, but saves little of the full model size. Methods that compress feed-forward projections reach higher compression, but their perplexity increases sharply. LoRA recovery often helps, as shown by the arrows, but it does not remove the steep trade-off between useful compression and model quality. We also provide trade-offs for WikiText-2 perplexity and macro LM-Eval accuracy drop in Appendix~\ref{app:quality_compression}.
+
+% \textcolor{red}{Where are the experiments???} \changedinline{We also consider the same question in sparse expert architectures. MoE layers are a natural tensor target because the expert index provides an explicit tensor mode; accordingly, we evaluate TD-MoE as a complementary setting.}
+
+% Even this flexible tensorization fails to escape the core trade-off
+% between compression ratio and representation diversity (Fig.~\ref{fig:gptj_activation_geometry}).
+% This mirrors the LASER-style matrix baseline of Fig.~\ref{fig:matrix_decomps}:
+% flattening attention or FFN weights into a higher-order tensor does not
+% recover information that Frobenius-optimal matrix factorization already
+% discards. We next test whether architectures with an \emph{explicit}
+% tensor mode - mixture-of-experts layers - escape this trade-off.
+
+% \vspace{-0.5em}
+% \subsection{Tensor decompositions for Mixture-of-Experts}
+% \label{sec:td-moe}
+
+% % \textcolor{red}{We extend this evaluation to MoE architectures by applying TD-MoE~\citep{tdmoe2026} on Qwen3-30B-A3B and GPT-OSS-20B, tracking both perplexity and downstream accuracy (Appendices~\ref{app:td_moe},~\ref{app:td_moe_gpt_oss}).}
+ 
+% MoE layers are an a priori favourable target for tensorization: the
+% expert index supplies a natural third mode in addition to input and
+% output features, so stacking expert FFN weights into a three-dimensional tensor and applying Tucker decomposition (as in \texttt{TD-MoE}~\citep{tdmoe2026}) factors expert structure into the format itself. A complementary matrix-based approach is taken by \texttt{MoBE}~\citep{chen2025mobe}, which exploits cross-expert redundancy by factorizing each expert's up-/gate weight matrix as $W = AB$, where $A$ is expert-specific and $B$ is reparameterized as a linear combination of basis matrices $\{B_i\}$ shared across all experts within a layer, with the decomposition learned by minimizing the layer-wise reconstruction error. We test whether the structural alignment of tensor formats translates into better post-training compression on Qwen3-30B-A3B~\citep{qwen3technicalreport} (128 experts, 8 active) benchmarking \texttt{TD-MoE} against \texttt{MoBE} as a matrix-decomposition baseline. Additional experiments with GPT-OSS-20B~\citep{openai2025gptoss} can be find in Appendix~\ref{app:td_moe_gpt_oss}.
+ 
+% % \paragraph{Progressive layer compression.}
+% Following the protocol from Appendix~\ref{app:td_moe}, Figure~\ref{fig:moe_main} summarizes the comparison between \texttt{MoBE} and \texttt{TD-MoE}. Surprisingly, \texttt{TD-MoE} performs substantially worse than \texttt{MoBE}, despite both methods employing gradient-based optimization during compression. \texttt{MoBE} remains close to the original model across all tested compression ratios, whereas \texttt{TD-MoE} degrades significantly, suggesting that the structural alignment between the tensor format and the expert index does not by itself confer a compression advantage over matrix-based factorization with shared bases. Thus, Tucker decomposition for MoE yields substantially better results than for MHA, yet remains considerably weaker than the matrix-based method MoBE. This observation leads to the following question.
+
+% \begin{tcolorbox}
+%     \textbf{Q2}: \textit{What are the underlying reasons for such behaviour of tensor decompositions across the two considered architectures?}
+% \end{tcolorbox}
+
+
+% two per-layer compression ratios are tested,
+% $\rho \in \{0.2, 0.4\}$. Figure~\ref{fig:moe_main} (left) reports
+% WikiText-2 perplexity for Qwen3-30B-A3B. at $\rho = 0.2$ perplexity
+% remains within $\sim 1.1\times$ baseline for up to roughly 12
+% compressed layers and degrades gracefully; at $\rho = 0.4$ degradation
+% is steep throughout the schedule. The same pattern is even sharper on
+% GPT-OSS-20B, where the smaller expert pool offers less cross-expert
+% redundancy and downstream accuracy collapses much earlier
+% (Appendix~\ref{sec:td_moe_qwen}, Figs.~\ref{fig:td_moe_downstream},
+% \ref{fig:gpt_oss_downstream}). The progressive schedule deliberately
+% avoids the shallow super-expert layers
+% 1--3~\citep{su2025superexperts}; reaching those layers triggers an
+% abrupt quality collapse, in line with the
+% super-weight/super-activation phenomenon discussed in
+% \S\ref{sec:superweights}.
+
+
+\subsection{面向专家混合（MoE）的张量分解}
+\label{sec:td-moe}
+
+% \textcolor{red}{We extend this evaluation to MoE architectures by applying TD-MoE~\citep{tdmoe2026} on Qwen3-30B-A3B and GPT-OSS-20B, tracking both perplexity and downstream accuracy (Appendices~\ref{app:td_moe},~\ref{app:td_moe_gpt_oss}).}
+\begin{wrapfigure}{r}{0.52\textwidth}
+\vspace{-4mm}
+\centering
+\includegraphics[width=\linewidth]{emnlp/figs/moe_main_left_ppl_c4.pdf}
+\caption{\texttt{TD-MoE} 与 \texttt{MoBE} 在 Qwen3-30B-A3B 模型上的 C4 困惑度。}
+\label{fig:moe_main}
+\vspace{-6mm}
+\end{wrapfigure}
+MoE 层是张量化格外有吸引力的目标。自 Switch Transformers \citep{switch} 以来，MoE 模型始终在专家专精与负载均衡之间的权衡下训练，这往往导致各专家的表示彼此重叠。在分组式设计 \citep{moge,himoe} 中这一效应更为显著。因此，专家维度提供了一个自然的张量模，Tucker 分解可借以利用跨专家的冗余，这正是 \texttt{TD-MoE} \citep{tdmoe2026} 所提出的思路。与之互补的是一条基于矩阵的路线，即 \texttt{MoBE}~\citep{chen2025mobe}：它把每个专家的 up/gate 权重矩阵分解为 $W = AB$ 以利用跨专家冗余，其中 $A$ 为专家专有，而 $B$ 被重参数化为同一层内所有专家共享的基矩阵 $\{B_i\}$ 的线性组合，该分解通过最小化逐层重构误差学习得到。我们在 Qwen3-30B-A3B~\citep{qwen3technicalreport}（128 个专家、8 个激活）上检验张量格式的结构对齐能否转化为更好的训练后压缩效果，并以矩阵分解基线 \texttt{MoBE} 为参照对 \texttt{TD-MoE} 进行基准测试。关于 GPT-OSS-20B~\citep{openai2025gptoss} 的补充实验见附录~\ref{app:td_moe_gpt_oss}。
+ 
+% \paragraph{Progressive layer compression.}
+按照附录~\ref{app:td_moe} 中的协议，图~\ref{fig:moe_main} 汇总了 \texttt{MoBE} 与 \texttt{TD-MoE} 的对比结果。令人意外的是，尽管两种方法在压缩过程中都采用了基于梯度的优化，\texttt{TD-MoE} 的表现却明显逊于 \texttt{MoBE}。在所有测试的压缩率下，\texttt{MoBE} 都保持接近原始模型，而 \texttt{TD-MoE} 则显著退化，这说明张量格式与专家索引之间的结构对齐本身，并不足以带来相对于共享基矩阵分解方法的压缩优势。因此，Tucker 分解用于 MoE 时的结果明显优于用于 MHA 时的结果，却仍远弱于基于矩阵的方法 MoBE。这一观察引出如下问题。
+
+\begin{tcolorbox}
+    \textbf{Q2}：\textit{在所考察的这两类架构上，张量分解表现出上述行为的根本原因是什么？}
+\end{tcolorbox}
+
+\paragraph{专家模才是制约瓶颈。}
+在 GPT-OSS-20B 上以 $\rho = 0.4$ 进行的受控消融实验，比较了
+等存储量下的两种秩分配方案：
+\emph{preserve} 把专家模的秩固定为 $r_1 = K$（所有专家
+仍各自占据不同的潜方向），而 \emph{compress} 将其降至
+$r_1 < K$，并把省下的预算重新分配给特征模
+（附录~\ref{app:td_moe_gpt_oss}，图~\ref{fig:gpt_oss_preserve_vs_compress}）。
+在所有基准测试上，\emph{compress} 始终不及 \emph{preserve}，
+这证实了至少对该模型而言，各专家方向并不可互换，
+而 Tucker 分解所自然假定的``专家位于某个低秩
+子空间中''正是制约瓶颈。
+ 
+% \paragraph{Tensor vs.\ matrix decomposition.}
+% A natural counterfactual is to forgot the expert tensor mode entirely
+% and apply a matrix decomposition independently. We compare TD-MoE
+% against MoBE~\citep{chen2025mobe} at $\rho \in \{0.2, 0.4\}$ on
+% Qwen3-30B-A3B. Figure~\ref{fig:moe_main} (right) plots the
+% residual-stream activation geometry: at matched bits saved, TD-MoE
+% produces larger mean activation angles \emph{and} drives the
+% residual-stream norm ratio further from~1 than MoBE, and trails on
+% C4 perplexity. The structural
+% advantage of the explicit expert mode is therefore not realised in
+% practice --- tensor formats collapse expert heterogeneity that the
+% matrix baseline preserves.
+ 
+% \paragraph{Takeaway.}
+% Across both dense models (\S\ref{sec:tensor_decomp}) and MoE
+% architectures, tensor decompositions are no better than -- and often
+% worse than -- their matrix counterparts at the same compression
+% ratio, despite structural alignment. The next section makes this
+% mechanism precise via a unified activation-geometry diagnostic that
+% covers both regimes.
+% В экспах использовать НЕ LeSTD/TensorLLM, а ТТ/Tucker
+
+
+
+\begin{figure*}[t]
+  \centering
+  \begin{subfigure}[t]{0.60\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{emnlp/figs/activation_geometry_joint_separate_color.pdf}
+    \caption{GPT-J~6B 与 LLaMA~2~7B 稠密模型与压缩模型的激活几何对比。}
+    \label{fig:activation_geometry_dense}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{0.38\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{emnlp/figs/moe_main_right_geometry.pdf}
+    \caption{Qwen3-30B-A3B 上 \texttt{TD-MoE}
+    在 $\rho \in \{0.2, 0.4\}$ 下与 \texttt{MoBE} 的激活几何对比。}
+    \label{fig:activation_geometry_moe}
+  \end{subfigure}
+  \vspace{-0.5em}
+  \caption{\textbf{残差流激活几何。}
+  \textbf{(a)}~稠密模型的张量压缩。
+  \textbf{(b)}~MoE 的张量压缩与矩阵压缩对比。
+  每个点对应一次覆盖所测层范围的压缩运行。
+  颜色表示 C4 困惑度，标记形状表示分解族，
+  标记大小表示不计嵌入时节省的比特数。}
+  \label{fig:activation_geometry}
+\end{figure*}
+
+\subsection{LLM 中张量分解的结构性失配}
+\label{sec:mismatch}
+
+% подпись поменять, написать че происходит вообще 
+% к фигуре кепчур должен быть короткий и понятный, чтобы было понятно че происходит
+% В тексте подробно получить 
+
+为回答 \textbf{Q2}，我们设计了一项实验：对每一次压缩运行（无论是稠密模型还是 MoE），在最后一个被分解的模块之后比较原始模型与压缩模型的残差流激活。该诊断刻画的是达到目标压缩率之前所有被分解层的累积效应，而非单层的局部误差。我们用稠密激活向量与压缩激活向量之间的平均夹角及其范数比来量化这种偏离，并在评测词元上取平均。
+
+图~\ref{fig:activation_geometry} 显示所有模型都呈现同一模式。困惑度低的运行在方向与尺度上都贴近稠密模型的轨迹，而困惑度高的运行则表现出更大的角度漂移、范数收缩，或两者兼有。这表明张量化是通过逐步扭曲残差流的几何结构来损害质量的，而不只是增大了参数重构误差。因此，主要局限并不在于 Tucker 或 TT 分解的局部表达能力，而在于它们在不做额外训练的情况下无法保持 LLM 所诱导的异质表示几何。我们将在下一节对此作出解释。
+
+% 
+% \subsection{Tensor Train for Feed-Forward Layers}
+
+% \textcolor{red}{Where experimental references?}
+
+% For FFN layers, Tucker decomposition degenerates to standard matrix factorization, so we instead evaluate Tensor Train (TT), which tensorizes FFN weights into higher-order tensors and factorizes them into sequential cores.
+
+% However, TT exhibits similar failure modes. ... Output analysis shows reduced angular diversity and distorted norm distributions, indicating that TT also compresses representations into overly restricted latent structure.
+
+% Thus, even more flexible tensorizations fail to avoid the core trade-off between compression and representation diversity.
+
+\subsection{对激活恢复至关重要的权重}
+\label{sec:superweights}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.9\textwidth]{emnlp/figs/llama2_layer01_mlp_down_proj_combined_percent_restored.pdf}
+  \vspace{-2mm}
+  \caption{\textbf{(a)}~权重矩阵中内点（inlier）、已知超级权重、幅值最大的若干元素
+    以及按激活加权的 top-$k$ 坐标的位置。
+    \textbf{(b)}~被追踪元素的恢复比例随保留 SVD 秩的变化。
+    }
+  \label{fig:superweigths}
+  \vspace{-1em}
+\end{figure*}
+
+众所周知，LLM 中一小部分被称为超级权重（super-weight）与离群值（outlier）~\citep{superweight} 的参数对模型质量有着不成比例的关键作用：哪怕只删除其中一个标量，困惑度也可能上升数个数量级。这些参数在幅值上未必最大，而是占据某些特定坐标，主导特定的激活方向，其所携带的 Frobenius 质量却微乎其微。因此，以最小化全局 Frobenius 目标为标准低秩投影会系统性地把它们丢弃，恰恰在最关键的坐标上造成严重的谱失真。超级权重还会在各层间持续诱发大幅激活离群值~\citep{sun2024massive,SinksAndSpikes_2026}，在压缩之下进一步放大这一效应。
+
+为在实证上验证这一论断，我们首先观察到：在 LLaMA~2~7B 模型上（其超级权重位于第一个 MLP 下投影矩阵的坐标 $(2533,\,7890)$ 处~\citep{SinksAndSpikes_2026}），LoRA 微调能够以 $10^{-4}$ 的绝对误差恢复原始的超级权重标量。为进行更系统的考察，我们对该矩阵施加 \texttt{HASSLE-free}：其稀疏/低秩分解与基于 Hessian 的重要性打分相结合，可恢复原始未压缩激活幅值的 $95\%$，从而给出一组有原则依据的关键权重坐标参考集。随后我们对同一矩阵施加秩逐步增大的截断 SVD，以确定分别恢复超级权重、激活离群值以及 \texttt{HASSLE-free} 所选全部坐标所需的最小秩。我们还在附录~\ref{app:single_layer_decomposition} 中给出实验，表明对该层剪枝会使模型崩溃。
+
+结果见图~\ref{fig:superweigths}。如第一个子图所示，\texttt{HASSLE-free} 所选权重的列索引与已识别出的离群值及超级权重坐标高度吻合。此外，图~\ref{fig:superweigths} 的第二个子图揭示：仅恢复超级权重就需要至少 $1500$ 的秩，而要恢复 \texttt{HASSLE-free} 识别出的全部关键权重，所需秩已接近原始矩阵的秩。这一结果有直接的推论：仅保留主奇异分量的基于分解的方法，系统性地无法刻画 LLM 权重的细粒度结构，因为忠实重构需要 $r \gg \nicefrac{(\min \{m, n\})}{2}$，远超实践中所用的秩。为厘清超级权重所起的作用，我们在一个不含超级权重的层上重复了同样的实验，得到了定性一致的恢复结果（附录~\ref{app:no-superweights}）。这一对照实验尤其具有启发性：它表明超级权重的恢复虽是必要的，却不足以实现激活的恢复；对秩截断的病态敏感性反映的是 LLM 权重矩阵更深层的结构性性质，而非局部的离群现象。因此我们得出结论：朴素的秩截断对于压缩 LLM 权重而言是一种本质上不充分的策略。
+
+
+% \section{Partial Explanation Through Operator Norm}
+% \label{ref:theory}
+
+% % The representation collapse across tensor formats can be partially explained through operator norms. Reshaping a weight matrix $W$ into a tensor $\mathcal{T}$ preserves the ambient Euclidean geometry ($\|W\|_F = \|\mathcal{T}\|_F$), but fundamentally alters the operator isometry. 
+
+% % Standard tensor decompositions optimize the Frobenius error $\|\mathcal{T}-\hat{\mathcal{T}}\|_F$, effectively treating the parameters as a flat array. However, mathematically, a norm is a function from a vector space to the $\mathbb{R}_+$. Because neural network weights act as linear operators transforming activations between spaces, a natural operator-level quantity is the induced spectral norm, $\|W\|_2 = \sup_{\|x\|_2=1} \|Wx\|_2$. 
+
+% % Comparing these error functionals reveals a strict hierarchy between the tensor approximation and its matrix unraveling \citep{hackbusch2012tensor}:
+% % $$ \|\mathcal{T} - \hat{\mathcal{T}}\|_2 \leq \|W - \hat{W}\|_2 \leq \|\mathcal{T} - \hat{\mathcal{T}}\|_F. $$
+% % While the Frobenius error technically upper-bounds the operator error, this bound is loose in high dimensions. Since the gap between $\| \cdot \|_2$ and $\| \cdot \|_F$ scales with the rank, minimizing the global Frobenius mass does not tightly constrain the effective matrix operator error $\|W-\hat{W}\|_2$. Consequently, a seemingly accurate tensor approximation can easily conceal severe spectral distortions.
+
+% % In LLMs, non-uniform parameter distributions and outliers amplify this vulnerability: tensor truncation can discard components with little Frobenius mass but large spectral impact. As activations propagate, these perturbations accumulate, producing the representation collapse -- reduced angular diversity and distorted norms, as seen in Figure~\ref{fig:activation_geometry}.
+% % Добавить про различия в структуре после адама и муона?
+
+% % \section{Why Tensorization Fails as Post-Training Compression}
+% \label{sec:theory}
+
+% We formalize the failure of Frobenius-optimal tensor decompositions
+% (HOSVD, TT-SVD, Tucker-ALS) as post-training LLM compression through next
+% results: (i) tensorization is a Frobenius but not an operator isometry;
+% (ii) the gap between the two scales with $\sqrt{\min(m,n)}$ on heavy-tailed
+% % spectra; (iii) per-layer spectral errors compound multiplicatively across
+% % depth; and (iv) low-rank tensor formats impose a separable subspace
+% % structure that is incompatible with the head- and neuron-wise heterogeneity
+% % of trained Transformers.
+
+% % =====================================================================
+% %  Revised sections: Setup, Tensorization, Spectral Gap, Superweights
+% %
+% %  Fixes applied with respect to the previous draft:
+% %   1. Setup no longer claims HOSVD/TT-SVD are Frobenius-optimal;
+% %      it introduces them as quasi-optimal.
+% %   2. Notation unified: d = tensor order, N = ambient unfolding size.
+% %   3. Mode index renamed to \ell to avoid collision with truncation rank k.
+% %   4. The Frobenius bound is now stated as the standard HOSVD/TT-SVD
+% %      sum-of-tails bound across all modes, not (1+eps)^2 times one tail.
+% %   5. The empirical regime alpha in [1/2, 1] is acknowledged; the
+% %      strongest dimension-dependent blowup is presented as a worst-case
+% %      result, with the realistic boundary case alpha = 1/2 highlighted.
+% %   6. Logarithmic vs square-root-logarithmic factor corrected.
+% %   7. "Hitchcock-Banach" replaced by a definition-based justification
+% %      and NP-hardness cited correctly to Hillar & Lim (2013).
+% %   8. The "superweights" paragraph rewritten as a precise lemma with
+% %      a clean statement and a one-line proof sketch.
+% % =====================================================================
+
+% \paragraph{Notation}
+% Let $W \in \mathbb{R}^{m \times n}$ be a layer weight matrix and
+% $\varphi : \mathbb{R}^{m \times n} \to \mathbb{R}^{I_1 \times \cdots \times I_d}$
+% a reshape with $\prod_{\ell=1}^{d} I_\ell = mn$ and $d \geq 2$. Set
+% $\mathcal{T} = \varphi(W)$, and let $\widehat{\mathcal{T}}$ be a
+% \emph{quasi-optimal} low-rank approximation of $\mathcal{T}$ in a
+% low-rank manifold $\mathcal{M}_{\mathbf{r}}$, obtained by HOSVD
+% (Tucker rank $\mathbf{r} = (r_1, \ldots, r_d)$) or by TT-SVD
+% (TT rank $(r_1, \ldots, r_{d-1})$). We write
+% $\widehat{W} = \varphi^{-1}(\widehat{\mathcal{T}})$. The mode-$\ell$
+% unfolding of $\mathcal{T}$ is denoted $\mathcal{T}_{(\ell)}$ and has
+% singular values $\sigma_{\ell,1} \geq \cdots \geq \sigma_{\ell, N_\ell}$
+% with $N_\ell := \min(I_\ell,\, \prod_{j \neq \ell} I_j)$. When the mode
+% is clear from context we drop the first subscript and write $\sigma_i$.
+
+% \subsection{Tensorization preserves Frobenius but not operator geometry}
+% \label{sec:isometry}
+
+% Since $\varphi$ merely permutes entries,
+% \begin{equation}
+%     \|\varphi(A)\|_F = \|A\|_F, \qquad \forall A \in \mathbb{R}^{m \times n}.
+%     \label{eq:frob_iso}
+% \end{equation}
+% The tensor spectral (injective) norm is defined as
+% \begin{equation}
+%     \|\mathcal{T}\|_{\sigma}
+%     \;:=\; \sup_{\|u^{(\ell)}\|_2 = 1}
+%     \bigl\langle \mathcal{T},\, u^{(1)} \otimes \cdots \otimes u^{(d)} \bigr\rangle.
+%     \label{eq:tensor_spec}
+% \end{equation}
+% Because the supremum in~\eqref{eq:tensor_spec} ranges over rank-one
+% unit tensors --- a strictly smaller set than the unit ball of matrix
+% operator norm when $d \geq 3$ --- we have
+% $\|\varphi(W)\|_{\sigma} \leq \|W\|_2$, with equality only when
+% $\varphi(W)$ is rank-one. For $d \geq 3$, computing
+% $\|\mathcal{T}\|_{\sigma}$ is NP-hard~\citep{hillar2013most}, and the
+% ratio
+% \begin{equation}
+%     \frac{\|W\|_2}{\|\varphi(W)\|_{\sigma}}
+%     \;\in\; \bigl[\,1,\; \sqrt{\min(m,n)}\,\bigr]
+%     \label{eq:ratio}
+% \end{equation}
+% is generically bounded away from $1$~\citep{friedland2018nuclear}.
+% Hence $\varphi$ fails to be an isometry between
+% $(\mathbb{R}^{m \times n}, \|\cdot\|_2)$ and
+% $(\mathbb{R}^{I_1 \times \cdots \times I_d}, \|\cdot\|_{\sigma})$.
+
+% \subsection{Frobenius-optimal truncation is spectrally suboptimal
+% on heavy-tailed spectra}
+% \label{sec:spectral_gap}
+
+% Fix a target mode $\ell \in \{1, \ldots, d\}$, write
+% $W_\ell := \mathcal{T}_{(\ell)}$ for the corresponding unfolding, set
+% $N := N_\ell$, and let $\sigma_1 \geq \cdots \geq \sigma_N$ denote its
+% singular values. We compare two truncation strategies at a target
+% matrix rank $k$: the Eckart--Young~\citep{eckart1936approximation}
+% optimum $\widehat{W}_{\mathrm{EY}}$, and the unfolding
+% $\widehat{W} := (\widehat{\mathcal{T}})_{(\ell)}$ of the tensor
+% truncation $\widehat{\mathcal{T}}$.
+
+% \paragraph{Quasi-optimality of tensor truncation.}
+% HOSVD and TT-SVD do not minimise the Frobenius error over
+% $\mathcal{M}_{\mathbf{r}}$; they achieve the quasi-optimal bound
+% \begin{equation}
+% \begin{split}
+%     \|\mathcal{T} - \widehat{\mathcal{T}}\|_F
+%     \;&\leq\; (1 + \varepsilon)\,
+%     \min_{\mathcal{S} \in \mathcal{M}_{\mathbf{r}}}
+%     \|\mathcal{T} - \mathcal{S}\|_F, \\
+%     &\varepsilon \;\leq\; \sqrt{d} - 1,
+%     \label{eq:quasi_optimal}
+%     \end{split}
+% \end{equation}
+% with the analogous factor $\sqrt{d-1} - 1$ for
+% TT-SVD~\citep{de2000multilinear, oseledets2011tensor,
+% grasedyck2010hierarchical}. The standard upper bound on the
+% HOSVD error is the sum of mode-wise tails,
+% \begin{equation}
+%     \|\mathcal{T} - \widehat{\mathcal{T}}\|_F^{\,2}
+%     \;\leq\; \sum_{n=1}^{d} \sum_{i > r_n}
+%         \sigma_{n,i}^{\,2}
+%     \;\leq\; d \cdot \max_{n}
+%         \sum_{i > r_n} \sigma_{n,i}^{\,2}.
+%     \label{eq:hosvd_bound}
+% \end{equation}
+% Specialising to mode $\ell$ with $r_\ell = k$ and using
+% $\|W_\ell - \widehat{W}\|_F = \|\mathcal{T} - \widehat{\mathcal{T}}\|_F$
+% (reshape is an isometry in Frobenius), we obtain
+% \begin{equation}
+%     \|W_\ell - \widehat{W}\|_F^{\,2}
+%     \;\leq\;
+%     d \cdot \max_n \sum_{i > r_n} \sigma_{n,i}^{\,2}.
+%     \label{eq:loose_frob}
+% \end{equation}
+% Under the assumption that all mode unfoldings have comparable spectral
+% profiles, which we adopt henceforth for clarity, the right-hand side is
+% of order $d \sum_{i > k} \sigma_i^{\,2}$.
+
+% \paragraph{Spectral suboptimality.}
+% The Eckart--Young optimum in spectral norm is
+% $\|W_\ell - \widehat{W}_{\mathrm{EY}}\|_2 = \sigma_{k+1}$. Combining
+% $\|\cdot\|_2 \leq \|\cdot\|_F$ with~\eqref{eq:loose_frob} yields
+% \begin{equation}
+%     \frac{\|W_\ell - \widehat{W}\|_2}{\sigma_{k+1}}
+%     \;\leq\;
+%     \sqrt{d} \cdot
+%     \sqrt{\,1 + \sum_{i > k+1}
+%     \bigl(\sigma_i / \sigma_{k+1}\bigr)^{2}\,}.
+%     \label{eq:suboptimality}
+% \end{equation}
+% The first factor reflects the geometry of $\mathcal{M}_{\mathbf{r}}$;
+% the second depends only on the \emph{spectral profile} of $W_\ell$ and
+% is the quantity of interest below.
+
+% \paragraph{Power-law spectra.}
+% Empirical Transformer spectra are well modelled by a power law
+% $\sigma_i \asymp i^{-\alpha}$ over a wide range of
+% indices~\citep{martin2021implicit, superweight}.Under this model,
+% \begin{equation}
+%     \sum_{i = k+1}^{N} \sigma_i^{\,2}
+%     \;\asymp\;
+%     \begin{cases}
+%         N^{1 - 2\alpha},   & 0 \leq \alpha < 1/2, \\[2pt]
+%         \log(N / k),       & \alpha = 1/2, \\[2pt]
+%         k^{1 - 2\alpha},   & \alpha > 1/2.
+%     \end{cases}
+%     \label{eq:tail}
+% \end{equation}
+% The tail is dominated by the ambient dimension $N$ in the heavy-tailed
+% regime $\alpha < 1/2$, by a logarithmic factor at the boundary, and by
+% the cutoff $k$ in the light-tailed regime $\alpha > 1/2$.
+
+% % \paragraph{Scaling of the spectral gap.}
+% % Substituting $\sigma_{k+1} \asymp (k+1)^{-\alpha}$
+% % into~\eqref{eq:suboptimality} gives
+% % \begin{equation}
+% %     \sqrt{\,1 + \sum_{i > k+1} (\frac{\sigma_i} { \sigma_{k+1}})^{2}\,}
+% %     \;\asymp\;
+% %     \begin{cases}
+% %         k^{\alpha} \cdot N^{(1 - 2\alpha)/2}, & 0 \leq \alpha < 1/2, \\[2pt]
+% %         \sqrt{k \, \log(N/k)},                & \alpha = 1/2, \\[2pt]
+% %         \mathcal{O}(1),                       & \alpha > 1/2.
+% %     \end{cases}
+% %     \label{eq:gap_scaling}
+% % \end{equation}
+% As a consequence, for $\alpha < 1/2$ the spectral gap grows polynomially in $N$; at the
+% empirically relevant boundary $\alpha = 1/2$ it grows as
+% $\sqrt{k \log(N/k)}$; for $\alpha > 1/2$ it is bounded by a constant.
+
+% \begin{table}[t]
+% \centering
+% \caption{Fitted power-law exponents $\alpha_k$ ($\sigma_i \propto i^{-\alpha_k}$) of the three mode unfoldings on Qwen-30B-A3B. All values $< 1/2$: the heavy-tailed regime in which (6) is binding.}
+% \label{tab:power_law_exponents}
+% \centering
+% \begin{adjustbox}{max width=0.9\linewidth}
+% \begin{tabular}{lccc}
+% \toprule
+% Layer / projection & $\alpha_0$ (expert) & $\alpha_1$ (output) & $\alpha_2$ (input) \\
+% \midrule
+% Layer 0  / gate & 0.160 & 0.075 & 0.402 \\
+% Layer 0  / up   & 0.187 & 0.062 & 0.358 \\
+% Layer 12 / gate & 0.047 & 0.050 & 0.197 \\
+% Layer 12 / up   & 0.040 & 0.045 & 0.190 \\
+% Layer 24 / gate & 0.039 & 0.053 & 0.202 \\
+% Layer 24 / up   & 0.025 & 0.046 & 0.195 \\
+% Layer 47 / gate & 0.052 & 0.051 & 0.142 \\
+% Layer 47 / up   & 0.048 & 0.051 & 0.134 \\
+% \bottomrule
+% \end{tabular}%
+% \end{adjustbox}
+% \end{table}
+
+% % Even in the bounded regime, the multiplicative $\sqrt{d}$ overhead
+% % from~\eqref{eq:quasi_optimal} remains. Hence, on heavy- and
+% % boundary-tailed spectra, the spectral error of a Frobenius-optimal
+% % truncation can exceed the Eckart--Young optimum by a factor that
+% % depends on the unfolding dimension, the target rank, and the tensor
+% % order.
+
+% % \paragraph{Consequence for superweights.}
+% % We now make the activation-geometry implication precise. Decompose
+% % $W = W_{\mathrm{bulk}} + W_{\mathcal{S}}$, where
+% % $W_{\mathcal{S}}$ is supported on a small set
+% % $\mathcal{S} \subseteq [m] \times [n]$ of
+% % \emph{superweight}~\citep{yu2024super, sun2026spike} coordinates
+% % satisfying
+% % \begin{equation}
+% %     \|W_{\mathcal{S}}\|_F \;\ll\; \|W\|_F,
+% %     \qquad
+% %     \|W_{\mathcal{S}}\|_2 \;\asymp\; \|W\|_2.
+% %     \label{eq:superweight_def}
+% % \end{equation}
+% % That is, $W_{\mathcal{S}}$ carries a negligible fraction of the energy
+% % but a constant fraction of the operator norm.
+
+% % \begin{lemma}[Frobenius truncation cannot preserve superweight directions]
+% % \label{lem:superweight}
+% % Let $\widehat{W}$ be obtained by HOSVD/TT-SVD truncation of $W$ at any
+% % target multilinear rank $\mathbf{r}$ for which
+% % \begin{equation}
+% %     \|W_{\mathcal{S}}\|_F^{\,2}
+% %     \;\leq\;
+% %     d \cdot \sum_{i > k} \sigma_{\mathrm{bulk},\,i}^{\,2},
+% %     \label{eq:superweight_loss}
+% % \end{equation}
+% % where $\sigma_{\mathrm{bulk},\,i}$ are the singular values of
+% % $W_{\mathrm{bulk}}$ and $k$ the unfolding-mode rank. Then
+% % \begin{equation}
+% %     \bigl\| (W - \widehat{W})\, u \bigr\|_2
+% %     \;\gtrsim\; \|W\|_2
+% %     \label{eq:superweight_loss_2}
+% % \end{equation}
+% % for some unit vector $u$ aligned with the top singular direction of
+% % $W_{\mathcal{S}}$, i.e.\ a constant fraction of the operator norm of
+% % $W$ is lost along the superweight subspace.
+% % \end{lemma}
+
+% % \begin{proof}[Proof sketch]
+% % The Frobenius objective treats $W_{\mathcal{S}}$ and $W_{\mathrm{bulk}}$
+% % as additive contributions to total energy. Under~\eqref{eq:superweight_loss},
+% % allocating capacity to $W_{\mathcal{S}}$ is not Frobenius-justified, so
+% % the truncation prefers to fit $W_{\mathrm{bulk}}$. Since
+% % $\|W_{\mathcal{S}}\|_2 \asymp \|W\|_2$ by~\eqref{eq:superweight_def}, the
+% % omitted component contributes a constant fraction of $\|W\|_2$ along its
+% % top singular direction.
+% % \end{proof}
+
+% % The condition~\eqref{eq:superweight_loss} is precisely the regime in
+% % which $\|W_\mathcal{S}\|_F$ is small relative to the bulk Frobenius
+% % tail --- which, by~\eqref{eq:tail}, is large whenever
+% % $\alpha \leq 1/2$. This is the same regime in which the spectral gap
+% % of~\eqref{eq:gap_scaling} is dimension-dependent, and it produces the
+% % spectral mass loss documented in our activation-geometry diagnostics
+% % (Figs.~\ref{fig:activation_geometry},~\ref{fig:llama_activation_geometry}).
+
+
+
+\section{张量化为何失败：算子分析的视角}
+\label{sec:theory}
+
+诸如图~\ref{fig:matrix_decomps}）中 FFN 张量化下的急剧退化、残差流的几何漂移（图~\ref{fig:activation_geometry}）、对秩截断的病态敏感性（图~\ref{fig:superweigths}），以及 \textsc{TD-MoE} 与基于矩阵的 \textsc{MoBE} 之间一贯存在的差距（图~\ref{fig:moe_main}）之类的经验规律，指向的是一个\textit{结构性}而非方法论层面的原因。我们通过两个环环相扣的障碍将其形式化：Frobenius 最优的张量分解（HOSVD、TT-SVD、Tucker）(i)~所优化的范数与算子范数的保持并不一致；(ii)~在 Transformer 权重所呈现的重尾谱上，其谱误差超出矩阵最优误差一个随层宽多项式增长的因子。
+
+\paragraph{设定。}
+设 $W \in \mathbb{R}^{m \times n}$ 为某层的权重矩阵，$\varphi : \mathbb{R}^{m \times n} \to \mathbb{R}^{I_1 \times \cdots \times I_d}$ 为满足 $\prod \limits_{\ell = 1}^d I_\ell = mn$ 且 $d \geq 2$ 的重排。令 $\mathcal{T} = \varphi(W)$，并设 $\widehat{\mathcal{T}} \in \mathcal{M}_{\mathbf{r}}$（其中 $\mathcal{M}_{\mathbf{r}}$ 为固定的秩流形）是 Frobenius 最优的低秩逼近（经 HOSVD 得到 Tucker 秩 $\mathbf{r}=(r_1,\dots,r_d)$，或经 TT-SVD 得到 TT 秩 $(r_1,\dots,r_{d-1})$），且 $\widehat{W} = \varphi^{-1}(\widehat{\mathcal{T}})$。模-$\ell$ 展开 $\mathcal{T}_{(\ell)}$ 的奇异值为 $\sigma_{\ell,1} \geq \sigma_{\ell,2} \geq \dots$；在不会引起混淆时我们省略模下标。
+
+\paragraph{张量化保持 Frobenius 几何但不保持算子几何。} 由于 $\varphi$ 只是对元素进行置换，对一切 $A$ 有 $\|\varphi(A)\|_F = \|A\|_F$。张量谱（内射）范数
+\begin{equation}
+\|\mathcal{T}\|_\sigma \;:=\; \sup_{\|u^{(\ell)}\|_2 = 1} \bigl\langle \mathcal{T},\, u^{(1)} \otimes \cdots \otimes u^{(d)} \bigr\rangle,
+\label{eq:tensor-spectral}
+\end{equation}
+的上确界取遍秩一单位张量：当 $d \geq 3$ 时，这是算子范数单位球的一个真子集。因此 $\|\varphi(W)\|_\sigma \leq \|W\|_2$，且等号仅在 $\varphi(W)$ 为秩一时成立。当 $d \geq 3$ 时计算 $\|\mathcal{T}\|_\sigma$ 在计算上是困难的，且两种范数之间可以存在多项式量级的分离。
+
+\begin{proposition} [\citealp{friedland2018nuclear}]
+\label{prop:gap}
+对重排为阶数 $d \geq 3$ 的 $W \in \mathbb{R}^{m \times n}$，
+\begin{equation}
+\frac{\|W\|_2}{\|\varphi(W)\|_\sigma} \;\in\; \Bigl[\,1,\; \sqrt{\min(m,n)}\,\Bigr],
+\label{eq:gap-bound}
+\end{equation}
+且该上界在奇异向量非局域化的矩阵上通常是可达的。
+\end{proposition}
+
+因此，$\varphi$ 是 Frobenius 等距，但并不是 $(\mathbb{R}^{m \times n}, \|\cdot\|_2)$ 与 $(\mathbb{R}^{I_1 \times \cdots \times I_d}, \|\cdot\|_\sigma)$ 之间的等距。Eckart--Young--Mirsky 结果没有张量版本：Frobenius 最优与算子最优并不重合。
+
+\paragraph{重尾谱上的谱次优性。} 固定目标模 $\ell$ 与矩阵秩 $k$，记 $W_\ell := \mathcal{T}_{(\ell)}$。我们比较秩为 $k$ 的 Eckart--Young 最优解 $\widehat{W}^{\mathrm{EY}}$ 与张量截断的展开 $\widehat{W} := (\widehat{\mathcal{T}})_{(\ell)}$。HOSVD 与 TT-SVD 并不精确求解 $\mathcal{M}_\mathbf{r}$ 上的 Frobenius 问题，但满足准最优界 $\|\mathcal{T} - \widehat{\mathcal{T}}\|_F \leq (1 + \varepsilon)\, \min_{\mathcal{S} \in \mathcal{M}_\mathbf{r}} \|\mathcal{T} - \mathcal{S}\|_F$，其中 $\varepsilon \leq \sqrt{d-1} - 1$~\citep{oseledets2011tensor}。结合逐模尾部估计与重排的等距性，在各模谱相当这一工作假设下可得 $\|W_\ell - \widehat{W}\|_F^2 \leq d \sum_{i > k} \sigma_i^2$。
+
+\begin{corollary}[谱范数与 Frobenius 范数的差距]
+\label{cor:spectral-gap}
+将 $\|\cdot\|_2 \leq \|\cdot\|_F$ 与上述界结合，
+\begin{equation}
+\frac{\|W_\ell - \widehat{W}\|_2}{\sigma_{k+1}} \;\leq\; \sqrt{d} \cdot \sqrt{1 + \!\!\sum_{i > k+1}\! \bigl(\sigma_i / \sigma_{k+1}\bigr)^2}.
+\label{eq:spectral-suboptimality}
+\end{equation}
+流形几何只贡献因子 $\sqrt{d}$；起决定作用的是 $W_\ell$ 的谱轮廓。
+\end{corollary}
+
+\paragraph{幂律特例。}
+在很宽的指标范围内，权重矩阵的谱可以用 $\sigma_i \propto i^{-\alpha}$ 很好地建模~\citep{martin2021implicit}。对维数 $N$ 聚合求和，
+\begin{equation}
+\sum_{i = k+1}^{N} \sigma_i^2 \;\asymp\; \begin{cases}
+N^{1 - 2\alpha}, & \alpha < 1/2, \\
+\log(N/k), & \alpha = 1/2, \\
+k^{1 - 2\alpha}, & \alpha > 1/2.
+\end{cases}
+\label{eq:power-law-tail}
+\end{equation}
+代入式~\eqref{eq:spectral-suboptimality}可知：当 $\alpha < 1/2$ 时谱次优性以 $\Theta(N^{1/2 - \alpha})$ 增长，在边界情形以 $\Theta(\sqrt{\log(N/k)})$ 增长，而当 $\alpha > 1/2$ 时有常数上界。恰恰在重尾情形下，尾部由\emph{环境维数} $N$ 而非截断点 $k$ 主导。该界只有在 $\alpha < 1/2$ 时才有实质后果。为验证这正是实际所处的区域，我们对 Qwen3-30B-A3B 中堆叠专家 FFN 张量的各模展开拟合 $\sigma_i \propto i^{-\alpha_k}$（模 0：专家；模 1：输出；模 2：输入）。表~\ref{tab:alpha} 报告了若干代表性层上的指数：\emph{所有实测 $\alpha_k$ 都远低于 $1/2$}，其中专家模与输出模通常低于 $0.1$，输入模低于 $0.4$。因此，式~\eqref{eq:spectral-suboptimality} 的界并非渐近意义上的点缀，而是在实际使用的维数与秩下切实起约束作用的界。
+
+
+\begin{table}[t]
+\centering
+\small
+\caption{对 Qwen3-30B-A3B 专家张量的三个模展开拟合得到的幂律指数 $\alpha_k$（$\sigma_i \propto i^{-\alpha_k}$）。}
+\label{tab:alpha}
+\begin{tabular}{lccc}
+\toprule
+层 / 投影 & $\alpha_0$（专家） & $\alpha_1$（输出） & $\alpha_2$（输入） \\
+\midrule
+第 0 层 / gate  & 0.160 & 0.075 & 0.402 \\
+第 0 层 / up    & 0.187 & 0.062 & 0.358 \\
+第 12 层 / gate & 0.047 & 0.050 & 0.197 \\
+第 12 层 / up   & 0.040 & 0.045 & 0.190 \\
+第 24 层 / gate & 0.039 & 0.053 & 0.202 \\
+第 24 层 / up   & 0.025 & 0.046 & 0.195 \\
+第 47 层 / gate & 0.052 & 0.051 & 0.142 \\
+第 47 层 / up   & 0.048 & 0.051 & 0.134 \\
+\bottomrule
+\end{tabular}
+\vspace{-2mm}
+\end{table}
+
+\paragraph{与经验发现的对照。} 命题~\ref{prop:gap} 与推论~\ref{cor:spectral-gap} 共同表明：任何 Frobenius 最优的张量化虽然控制了 $\|W - \widehat{W}\|_F$，却容许算子残差 $\|W - \widehat{W}\|_2$ 达到矩阵最优值的至多 $\sqrt{\min(m,n)}$ 倍。由于残差流的传播受算子范数而非 Frobenius 范数支配，Frobenius 最优性与决定功能保持的那个量并不一致。
+
+这一解释调和了第~\ref{sec:compression}~节的发现。图~\ref{fig:activation_geometry} 中的角度漂移与范数收缩追踪的是算子误差，而图~\ref{fig:superweigths} 的恢复曲线则反映出：关键的奇异方向深藏于谱的尾部，恰是 Frobenius 截断最先丢弃的部分。图~\ref{fig:moe_main} 中 \textsc{TD-MoE} 与 \textsc{MoBE} 的差距是同一效应的放大：沿专家轴张量化引入了一个展开后重尾程度最严重的模（表~\ref{tab:alpha}，中间层处 $\alpha_0 \approx 0.03\text{--}0.05$），使本已严格的界再乘上一个因子。这些失败都无法通过重新加权 Frobenius 损失或重排模的顺序来缓解；它们要么需要一个算子感知的目标函数，要么需要比本文所用的轻量 LoRA 沉重得多的分解后修复。
+
+
+\section{与量化基线的比较}
+\label{sec:ptq-comparison}
+
+第~\ref{sec:compression}~节与第~\ref{sec:theory}~节已经确立：张量分解作为独立的训练后压缩器面临着结构性障碍。为了把这些发现置于免训练压缩的更广阔图景之中，我们将第~\ref{sec:compression}~节中所有基于矩阵与张量的方法与一种标准的训练后量化进行基准比较：4 比特与 8 比特的最近舍入量化（\texttt{RTN}），施加于相同的 Transformer 层与模块 \citep{gholami2022survey}。图~\ref{fig:ptq-comparison} 报告了 GPT-J~6B 上由此得到的 C4 困惑度随节省比特数的变化，其中包含一个此前未曾考虑的新组合：MHA 上的 Tucker 与 FFN 上的 \texttt{LASER}（秩取 $512$ 和 $1024$）相搭配，用以探明由第~\ref{sec:compression}~节所综述的方法所能达到的最佳混合方案。跨不同模型与设置的更多实验见附录~\ref{app:quality_compression} 与~\ref{app:td_moe_gpt_oss}。
+
+\begin{wrapfigure}{r}{0.6\linewidth}
+\vspace{-4mm}
+\centering
+\includegraphics[width=0.98\linewidth]{emnlp/figs/gptj_all_modules_all_methods_c4_with_lens.pdf}
+\caption{GPT-J 6B 上所有选定模块与训练后量化的 C4 困惑度随节省比特数的变化。}
+\label{fig:ptq-comparison}
+\vspace{-6mm}
+\end{wrapfigure}
+
+
+
+根据图~\ref{fig:ptq-comparison}，\texttt{RTN} 主导着压缩-质量前沿。\texttt{RTN}-4-bit 与 \texttt{RTN}-8-bit 在整个测试范围内都紧贴稠密基线，在节省比特数高达 $\approx 18\%$ 时困惑度没有可感知的退化。在基于分解的方法中，只有 \texttt{HASSLE-free} 在低压缩区间内仍然具有真正的竞争力，其结构能够吸收那些会被纯低秩截断所扭曲的大幅值元素；\texttt{SoLA} 与 \texttt{Dobi-SVD} 紧随其后，与基线的差距略大一些。超出这一区间后，所有基于矩阵与张量的方法都会带来困惑度损失，而 \texttt{RTN} 在构造上就避免了这类损失。这证实：在具有部署意义的压缩率下，免训练分解并不能替代量化，至多只是一种互补工具。
+
+% \emph{Second, the relative ordering within decomposition methods provides an additional empirical test of the theory.}
+在中等区间（节省比特数 $\approx 15\text{--}20\%$）的相同压缩率下，混合的 Tucker(MHA)+\texttt{LASER}(FFN) 变体以相当大的优势胜过 Tucker(MHA)+TT(FFN) 与 TT(All)：在节省约 $\approx 17\%$ 比特时，秩为 $1024$ 的 Tucker(MHA)+\texttt{LASER}(FFN) 达到 $\mathrm{PPL}\approx 19$，而基于 TT 的组合则超过 $\mathrm{PPL}\approx 28$。综合来看，这些结果勾勒出张量分解在训练后 LLM 压缩中切实可行的角色。作为独立策略，它们无法与量化竞争；而在分解方法家族内部，由于 FFN 的重尾谱（如表~\ref{tab:alpha} 所示），它们也被矩阵层面的替代方法所压制。
+
+
+\section{结论}
+本研究表明，张量分解之所以无法作为独立的训练后 LLM 压缩方法，是因为它们优化的是错误的几何。Tucker 与 TT 保留了 Frobenius 范数意义下的质量，却扭曲了承载模型功能的谱（分别对应注意力头、神经元与专家的）子空间。这些扰动沿网络深度不断累积，最终表现为激活漂移与下游性能退化。
+
+\section{局限性}
+
+本工作的评测涵盖两种稠密架构（GPT-J~6B 与 LLaMA~2~7B）和两种 MoE 架构（Qwen3-30B-A3B 与 GPT-OSS-20B）。尽管它们覆盖了不同的规模与设计，但对于在注意力结构、归一化或专家路由上存在重大差异的架构（例如使用 Muon 或其他二阶优化器训练的模型，已知这类优化器会产生性质截然不同的权重谱），本文的结论未必能不加验证地直接迁移。
+
+理论分析给出的算子范数界与谱次优性界只是所观察到的失效的充分条件，而非紧的刻画。特别地，命题~\ref{prop:gap} 与推论~\ref{cor:spectral-gap} 描述的是 Frobenius 最优截断与算子最优截断之间的最坏情形分离；对具体架构而言，实际差距可能更小也可能更大，取决于各层奇异值的具体分布。表~\ref{tab:alpha} 中的幂律指数是对 MoE 专家张量拟合得到的，未必能推广到所有稠密层类型。
+
+LoRA 修复阶段被有意设计得十分轻量（秩~16、100 步
+优化器更新），其用意是给出可恢复性的一个下界，
+而非尽最大努力的微调基线。更强的事后
+适配有可能缩小本文所报告的质量差距；对于完全微调下恢复能力的极限，本文不作任何断言。
+
+本工作使用的所有模型与基准测试均公开可得，且仅按照其声明的预期用途，用于对压缩方法进行研究性评测。我们不再分发模型权重，也不在研究场景之外衍生任何产品。本文所研究的压缩技术不会引入超出被评测模型自身已有安全隐忧的新能力；特别地，我们只研究训练后权重压缩，不在敏感数据上微调模型，也不产出旨在部署的输出。
+
+
+\end{mainpart}
+
+\newpage
+\begin{appendixpart}
+\vspace{-4mm}
+\tableofcontents
+\allowdisplaybreaks
+\newpage
+
+\section{记号}
+\label{app:notation}
+
+\paragraph{一般对象与约定。}
+标量用小写字母表示，如 $r$、$p$、$q$、$\rho$ 和 $L$。
+矩阵用大写字母表示，如 $X$、$\widehat{X}$、$A$、$W$、$\widehat{W}$、$U$、$V$ 和 $\Sigma$。张量用花体字母表示，如 $\mathcal{X}$、$\mathcal{G}$ 和 $\mathcal{T}$。记号 $\widehat{\cdot}$ 表示相应稠密对象的近似。符号 $\approx$ 表示近似分解或近似重构。
+
+
+\paragraph{压缩与评估变量。}
+$L$ 表示质量--压缩权衡实验中连续压缩的 Transformer 块的数目。LoRA 修复秩记为 $r=16$。TD-MoE 的逐层压缩率记为 $\rho$，实验中取 $\rho \in \{0.2,0.4\}$。在 GPT-OSS-20B 专家模式对比中，\textsc{preserve} 固定 $r_1=K$，而 \textsc{compress} 使用 $r_1<K$。所选 TD-MoE 秩的示例为：\textsc{preserve} 取 $(32,1720,2664)$，\textsc{compress} 取 $(20,2496,2880)$。
+
+\paragraph{方法缩写。}
+表~\ref{tab:method_abbreviations} 列出了全文使用的方法专属缩写。
+
+\begin{table}[htbp]
+\centering
+\caption{方法缩写。}
+\label{tab:method_abbreviations}
+\small
+\begin{tabular}{@{}p{\columnwidth}@{}}
+\toprule
+\textbf{缩写及其在本文中的含义 / 作用} \\
+\midrule
+\textbf{HOSVD} --- 高阶奇异值分解 \\
+\textbf{TT-SVD} --- 基于 SVD 构造张量列（TT）分解的算法 \\
+\textbf{TD-MoE} --- 专家混合（MoE）层的张量分解压缩 \\
+\textbf{LASER} --- 基于截断 SVD 的 FFN 压缩训练后压缩基线 \\
+\textbf{LeSTD} --- 已有的面向 Transformer 注意力投影的 Tucker 式张量压缩方法 \\
+\textbf{TensorLLM} --- 已有的面向 Transformer 注意力投影的 Tucker 式张量压缩方法 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% \newpage
+
+% \subsection{Tensor Train versus Matrix Factorization on FFN Layers}
+% \label{app:tt_vs_laser_ffn}
+
+% We compare Tensor Train factorization of FFN projections with a LASER-style truncated-SVD FFN baseline on LLaMA 2 7B. Both methods use the same middle-to-late expanding layer schedule. The TT runs use the twelve-mode tensorization described in Appendix~\ref{app:gptj_llama_tensor_protocol} with maximum internal rank 64, while LASER uses matrix ranks 512 and 1024. Figure~\ref{fig:app_tt_vs_laser_ffn} shows that the two methods follow a similar perplexity--compression trend on both WikiText-2 and C4 over the overlapping compression range. TT reaches higher bits saved at the largest compressed ranges, but this comes with the same monotonic increase in perplexity rather than a better frontier.
+
+% \begin{figure}[ht]
+%   \centering
+%   \includegraphics[width=0.6\linewidth]{emnlp/figs/llama2_tt_ffn_vs_laser_ffn_r512_r1024_c4.pdf}
+%   \caption{TT versus LASER for FFN compression on LLaMA 2 7B. Both methods compress the same expanding middle-to-late block ranges. TT uses rank 64 and reaches higher bits saved, while LASER uses rank 1024. Over the overlapping compression range, the WikiText-2 and C4 perplexity trends are similar.}
+%   \label{fig:app_tt_vs_laser_ffn}
+% \end{figure}
+
+\section{稠密模型的补充信息与实验}
+\subsection{GPT-J 与 LLaMA 2 张量分解协议}
+\label{app:gptj_llama_tensor_protocol}
+
+本节描述在 GPT-J 6B~\citep{gpt-j} 与 LLaMA 2 7B~\citep{touvron2023llama} 上开展、并在图~\ref{fig:c4_pareto} 中报告的训练后张量分解实验。我们采用渐进式块调度：GPT-J 6B 从第 14 块压缩到第 20 块，LLaMA 2 7B 从第 16 块压缩到第 23 块，每次增加一个连续的块。所有运行均以同一模型的固定稠密基线为参照进行评估。
+
+对于注意力压缩，我们对查询、键、值和输出投影采用 TensorLLM 式的 Tucker 分解。由于这些投影在两个模型中的形状一致，我们将它们堆叠成一个张量，其模分别为输入特征、头、头维度和投影类型。我们对输入特征、头维度和投影类型三个模施加部分 Tucker 分解，而将头模保持显式。输入特征的最大秩为 64，头维度秩为 4，投影类型秩为 2。
+
+对于 FFN 投影的 TT 压缩以及 TT-all 设置，每个线性权重矩阵被张量化为十二对输入--输出模。输入和输出维度被拆分为十二个近似均衡的因子，交错排列成输入--输出对，并以不超过 64 的 TT 秩进行压缩。偏置项（若存在）保持稠密。
+
+分解之后在冻结已分解模块的条件下施加 LoRA 修复。我们在 WikiText-2 上以 AdamW 训练秩为 16 的 LoRA 适配器，缩放因子为 32，学习率 $2 \times 10^{-4}$，100 个优化步，并在 8 个微批次上做梯度累积。该阶段旨在检验有限的数据相关适配能否恢复因分解而损失的质量，而非执行完整微调。
+
+\begin{figure*}[ht]
+  \centering
+  \includegraphics[width=0.95\linewidth]{emnlp/figs/llama2_single_layer_decomposition_wt2_c4_split.pdf}
+  \caption{LLaMA 2 7B 上的单层分解敏感性。每个点仅压缩一个 transformer 层。左、右两个面板分别报告 WikiText-2 和 C4 困惑度；由于早期各层的困惑度尖峰很大，故单独展示。}
+  \label{fig:app_single_layer_decomposition}
+\end{figure*}
+
+困惑度在 WikiText-2 和 C4 上评估，GPT-J 6B 使用序列长度 2048，LLaMA 2 7B 使用 4096。对于激活几何诊断，我们从稠密模型和压缩模型中采集 WikiText-2 序列，并比较最后一个被压缩块处的激活。我们报告相对稠密激活的平均角度偏差，以及压缩模型对稠密模型的激活范数比。存储量始终按压缩后的表示计算，不含嵌入；在基准测试中，压缩模块被重构为稠密线性层，从而使所报告的质量反映压缩后的权重，而非依赖具体实现的运行时算子内核。
+
+\subsection{LLaMA 2 7B 上的单层分解}
+\label{app:single_layer_decomposition}
+
+为了将局部的层敏感性与沿深度的误差累积区分开来，我们还在 LLaMA 2 7B 上评估了单层协议。在每次运行中，仅修改一个 transformer 层，其余所有层保持稠密。我们对全部 32 层逐一重复该过程，并评估 WikiText-2 和 C4 困惑度。对于注意力层，我们比较 LASER 式矩阵分解、TensorLLM 式 Tucker 分解以及一种逐头 TT 变体。对于 FFN 层，我们比较 LASER 式矩阵分解与 TT 分解。Tucker 一律指对注意力投影的 TensorLLM 式分解。
+
+图~\ref{fig:app_single_layer_decomposition} 表明，敏感性沿深度高度不均匀。最早的若干层尤其脆弱：分解第一个注意力层会使 Tucker 和逐头 TT 产生非常大的困惑度尖峰，而 FFN 上的 TT 在前两个 FFN 层最不稳定。离开这些早期层后，注意力分解通常与稠密基线接近得多，尽管它们节省的模型总规模很小。FFN 分解节省的参数更多，但其影响向最后的层递增，TT 尤其如此。这支持了主实验中所用的渐进式中后段压缩调度：中间各层局部敏感性较低，但一旦误差在多个被压缩块上累积，质量仍会退化。
+
+同样值得单独指出的是，早期各层的困惑度（PPL），
+尤其是靠近包含超级权重的那一层（第 1 层）的层，
+其退化程度远比剪枝策略下更为严重
+（见图~\ref{fig:full_width_graph}）。这进一步证实，仅保留占主导地位的
+奇异分量不足以恢复原始权重矩阵的
+结构。
+
+\begin{table}[ht]
+\centering
+\small
+\setlength{\tabcolsep}{3.5pt}
+\caption{LLaMA 2 7B 单层分解研究的存储核算。每次运行压缩一层。节省比特数在非嵌入模型参数上度量。}
+\label{tab:app_single_layer_storage}
+\begin{tabular}{@{}llccc@{}}
+\toprule
+\textbf{方法} & \textbf{目标} & \textbf{秩} & \textbf{局部压缩率} & \textbf{节省 (\%)} \\
+\midrule
+LASER  & MHA & 1024 & 2.00   & 0.51 \\
+Tucker & MHA & 64   & 240.49 & 1.01 \\
+TT/head& MHA & 64   & 1.98   & 0.50 \\
+LASER  & FFN & 1024 & 2.92   & 1.34 \\
+TT     & FFN & 64   & 398.63 & 2.04 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{无已知超级权重时的离群值恢复}
+\label{app:no-superweights}
+
+第~\ref{sec:superweights} 节中的主恢复实验聚焦于 LLaMA~2~7B 第 1 层的 MLP
+输出投影，该处存在一个已知的超级权重。为了检验所观察到的秩恢复壁垒是否
+仅特定于该单一坐标，我们在第~17 层相应的 MLP 输出投影上重复了同样的诊断。
+我们追踪随机内点、幅值最大的条目，以及按
+$|W_{ij}|\sqrt{\operatorname{diag}(X^\top X)_j}$ 选出的
+激活加权 top-$k$ 条目。
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.9\textwidth]{emnlp/figs/llama2_layer17_mlp_down_proj_combined_percent_restored.pdf}
+  \caption{
+    \textbf{(a)} 权重矩阵中随机内点、幅值最大的条目以及
+    激活加权 top-$k$ 条目的位置。标记大小
+    编码权重的绝对幅值。
+    \textbf{(b)} 被追踪条目的恢复比例随保留
+    SVD 秩的变化。
+  }
+  \label{fig:app_layer17_outlier_restoration}
+\end{figure*}
+
+图~\ref{fig:app_layer17_outlier_restoration} 表明，即使不存在
+超级权重，图~\ref{fig:superweigths} 中的定性模式依然成立。
+幅值最大的条目随秩增加而恢复得较为平滑，
+但激活加权条目在保留秩接近满矩阵秩之前，始终显著低于
+完全恢复的水平。
+\subsection{GPT-J 与 LLaMA 2 的详细结果}
+\label{app:detailed_gptj_llama_results}
+
+表~\ref{tab:app_main_tensor_results_full} 给出了 GPT-J 6B 与 LLaMA 2 7B 的张量分解实验结果。每个单元格以 \emph{直接 / +LoRA} 的形式给出，其中 +LoRA 表示在 WikiText-2 上训练的秩为 16 的轻量级 LoRA。最大 $L$ 表给出每个模型压缩程度最高的设置，完整表则报告所有中后段块区间。在激活几何方面，\emph{角度}（Angle）是最后一个被压缩块之后稠密激活与压缩激活在残差流上的平均夹角，\emph{范数}（Norm）是压缩相对稠密的激活范数比。角度越低、范数越接近 $1$ 越好。
+\subsection{质量--压缩权衡}
+\label{app:quality_compression}
+
+除 C4 困惑度外，我们还评估了 WikiText-2 困惑度（图~\ref{fig:app_wt2_pareto}）与零样本 LM-Eval 准确率。LM-Eval 得分在 ARC-Challenge、HellaSwag、OpenBookQA、PIQA 与 WinoGrande 上计算（图~\ref{fig:app_lmeval_pareto}）。对每个任务，我们以百分点度量相对稠密模型的准确率下降，并将各任务的无权平均作为宏 LM-Eval 准确率下降报告。本节所示全部指标均为数值越低越好。
+
+\begin{figure*}[ht]
+  \centering
+  \includegraphics[width=0.95\linewidth]{emnlp/figs/pareto_no_rtn_wt2_arrows_side_inner_short_emph_v4_diag_leaders.pdf}
+  \caption{GPT-J 6B 与 LLaMA 2 7B 的 WikiText-2 困惑度随节省比特数的变化。每个点代表一次压缩运行，$L$ 表示连续压缩的 Transformer 块数。箭头将每种分解与其 LoRA 修复变体相连；Pareto 前沿标出观测到的最佳权衡。}
+  \label{fig:app_wt2_pareto}
+\end{figure*}
+
+\begin{figure*}[ht]
+  \centering
+  \vspace{-4mm}\includegraphics[width=0.95\linewidth]{emnlp/figs/pareto_no_rtn_lmeval_arrows_side_inner_short_emph_v4_diag_leaders.pdf}
+  \caption{GPT-J 6B 与 LLaMA 2 7B 的宏 LM-Eval 准确率下降随节省比特数的变化。宏下降是 ARC-Challenge、HellaSwag、OpenBookQA、PIQA 与 WinoGrande 上准确率下降（以百分点计）的无权平均。越低越好。}
+  \label{fig:app_lmeval_pareto}
+\end{figure*}
+
+\subsection{带离群值保留的稠密-稀疏 TT}
+\label{app:dense_sparse_tt}
+
+我们还检验了显式保留少量大幅值或对激活重要的矩阵元能否缓解 TT 的性能退化。对目标权重矩阵 $W$，稠密-稀疏 TT 首先选出一个稀疏矩阵元集合 $\mathcal{S}$，精确存储这些矩阵元，并仅对剩余的内点矩阵施加 TT 分解：
+\[
+    W = W_{\mathcal{S}} + W_{\mathrm{in}},
+    \qquad
+    W_{\mathrm{in}} \approx \widehat{W}_{\mathrm{TT}} .
+\]
+因此，最终的压缩层实现为一个 TT 层加上一个稀疏修正。我们评估了两种稀疏矩阵元选择器。幅值选择版本按 $|W_{ij}|$ 选取幅值最大的比例 $f$ 的矩阵元；激活加权版本则按
+\[
+    \mathrm{score}_{ij}
+    =
+    |W_{ij}|
+    \sqrt{\operatorname{diag}(X^\top X)_j},
+\]
+对矩阵元进行排序，其中 $X$ 包含对应线性层的校准输入。该得分受 HASSLE-free 中激活感知稀疏选择的启发，但我们仅用它来挑选稀疏修正矩阵元；其余矩阵仍用同样的 TT 流程压缩。我们使用 64 条长度为 256 的校准序列收集激活统计量。
+
+图~\ref{fig:app_dense_sparse_tt_all} 表明，当所有选定模块都被压缩时，保留一个极小的稀疏修正可使 GPT-J 6B 相对普通 TT 得到显著改善。在最大压缩区间下，普通 TT 的 C4 困惑度高得多，而两种 Dense-Sparse 变体彼此接近且显著更低。但在 LLaMA 2 7B 上，Dense-Sparse 变体与 TT 几乎无法区分。总体而言，稀疏离群值保留在某些情形（尤其是 GPT-J）下有帮助，但并不能消除依模型而异的压缩--质量权衡。
+
+
+\clearpage
+\begingroup
+\tiny
+\setlength{\tabcolsep}{0.5pt}
+\begin{longtable}{@{}ccp{1.5cm}ccccccccccc@{}}
+\caption{GPT-J 6B 与 LLaMA 2 7B 张量分解的详细结果。压缩行按连续分解的块数 $L$ 分组，并以 \emph{直接/+LoRA} 形式报告。节省比特数在全部非嵌入模型参数上度量。粗体值是每个模型--$L$ 组内压缩运行中的最佳结果。}\label{tab:app_main_tensor_results_full}\\
+\toprule
+ & & & \multicolumn{1}{c}{\textbf{压缩} $\uparrow$} & \multicolumn{2}{c}{\textbf{困惑度} $\downarrow$} & \multicolumn{6}{c}{\textbf{LM-Eval 准确率 (\%)} $\uparrow$} & \multicolumn{2}{c}{\textbf{激活几何}} \\
+\cmidrule(lr){4-4}\cmidrule(lr){5-6}\cmidrule(lr){7-12}\cmidrule(lr){13-14}
+\textbf{$L$} & \textbf{块} & \textbf{方法} & \makecell{节省比特数\\(\%)} & \textbf{WT2} & \textbf{C4} & \textbf{宏平均} & \textbf{ARC-C} & \textbf{HSwag} & \textbf{OBQA} & \textbf{PIQA} & \textbf{WinoG} & \makecell{角度\\$\downarrow$} & \makecell{范数\\$\to 1$} \\
+\midrule
+\endfirsthead
+\caption[]{GPT-J 6B 与 LLaMA 2 7B 张量分解的详细结果（续）。}\\
+\toprule
+ & & & \multicolumn{1}{c}{\textbf{压缩} $\uparrow$} & \multicolumn{2}{c}{\textbf{困惑度} $\downarrow$} & \multicolumn{6}{c}{\textbf{LM-Eval 准确率 (\%)} $\uparrow$} & \multicolumn{2}{c}{\textbf{激活几何}} \\
+\cmidrule(lr){4-4}\cmidrule(lr){5-6}\cmidrule(lr){7-12}\cmidrule(lr){13-14}
+\textbf{$L$} & \textbf{块} & \textbf{方法} & \makecell{节省比特数\\(\%)} & \textbf{WT2} & \textbf{C4} & \textbf{宏平均} & \textbf{ARC-C} & \textbf{HSwag} & \textbf{OBQA} & \textbf{PIQA} & \textbf{WinoG} & \makecell{角度\\$\downarrow$} & \makecell{范数\\$\to 1$} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{14}{r}{\emph{接下页}}\\
+\endfoot
+\bottomrule
+\endlastfoot
+\multicolumn{3}{@{}l}{\makecell[l]{\textbf{GPT-J 6B}\\稠密基线}} & 0.0 & 8.86 & 11.71 & 50.5 & 33.9 & 49.5 & 29.0 & 75.5 & 64.4 & -- & -- \\
+\midrule
+\multirow{4}{*}{1} & \multirow{4}{*}{14} & Tucker MHA & 1.1/1.1 & 9.19/\textbf{8.65} & \textbf{12.01}/12.30 & \textbf{49.5}/49.4 & 32.6/\textbf{34.1} & 47.8/\textbf{49.2} & 28.0/25.8 & 74.6/\textbf{74.9} & \textbf{64.6}/63.1 & \textbf{9.3}/18.3 & \textbf{0.99}/1.04 \\
+ &  & TT FFN & 2.3/2.3 & 9.32/8.83 & 12.35/17.33 & 49.4/49.2 & 32.5/33.4 & 47.7/49.1 & 27.8/27.2 & 74.5/73.6 & 64.2/62.6 & 14.9/23.5 & 0.99/1.05 \\
+ &  & Tucker+TT & \textbf{3.4}/3.4 & 9.60/8.89 & 12.57/13.41 & 48.2/49.5 & 29.8/33.0 & 46.2/48.4 & 26.6/\textbf{29.4} & 74.3/73.9 & 64.1/62.6 & 16.9/24.6 & 0.98/1.03 \\
+ &  & TT all & 3.4/3.4 & 9.62/8.93 & 12.59/13.74 & 48.0/48.7 & 29.7/31.7 & 46.2/48.8 & 26.4/26.2 & 74.4/73.9 & 63.5/62.7 & 16.9/24.7 & 0.98/1.02 \\
+\specialrule{0.10pt}{1pt}{1pt}
+\multirow{4}{*}{2} & \multirow{4}{*}{14--15} & Tucker MHA & 2.3/2.3 & 9.93/\textbf{8.93} & \textbf{12.57}/12.71 & 47.9/48.8 & 30.2/32.8 & 46.5/\textbf{48.1} & 25.6/25.0 & 73.7/\textbf{74.1} & 63.5/\textbf{63.9} & \textbf{11.9}/20.3 & 0.98/1.04 \\
+ &  & TT FFN & 4.6/4.6 & 10.31/9.20 & 13.59/14.39 & 48.0/\textbf{49.0} & 31.1/\textbf{33.5} & 45.5/48.0 & \textbf{27.8}/27.6 & 73.2/73.5 & 62.3/62.3 & 18.5/23.3 & 0.97/1.01 \\
+ &  & Tucker+TT & \textbf{6.9}/6.8 & 12.13/9.50 & 15.20/13.91 & 44.4/48.1 & 26.3/31.7 & 41.7/47.0 & 23.0/26.0 & 71.3/73.8 & 59.8/62.0 & 20.5/26.2 & 0.97/\textbf{0.99} \\
+ &  & TT all & 6.9/6.8 & 12.41/9.50 & 15.50/13.82 & 44.1/48.0 & 25.6/32.6 & 41.5/46.7 & 23.0/24.2 & 70.8/73.7 & 59.4/63.0 & 20.5/25.9 & 0.97/0.99 \\
+\specialrule{0.10pt}{1pt}{1pt}
+\multirow{4}{*}{3} & \multirow{4}{*}{14--16} & Tucker MHA & 3.4/3.4 & 10.53/\textbf{9.26} & \textbf{13.28}/13.30 & 46.4/48.1 & 28.5/31.8 & 44.9/\textbf{47.2} & 24.4/25.4 & 72.6/\textbf{73.3} & 61.4/\textbf{62.6} & \textbf{13.7}/19.9 & 0.98/\textbf{1.01} \\
+ &  & TT FFN & 6.9/6.8 & 12.06/9.77 & 15.54/16.12 & 46.1/\textbf{48.5} & 28.4/\textbf{32.7} & 43.2/46.9 & 25.4/\textbf{28.4} & 72.9/73.2 & 60.7/61.4 & 21.5/24.7 & 0.94/0.97 \\
+ &  & Tucker+TT & \textbf{10.3}/10.2 & 15.30/10.27 & 18.41/15.01 & 42.1/46.7 & 23.3/30.4 & 39.3/45.5 & 20.0/25.0 & 69.4/72.1 & 58.6/60.5 & 23.4/27.0 & 0.94/0.95 \\
+ &  & TT all & 10.3/10.2 & 15.93/10.25 & 19.01/15.04 & 41.8/47.0 & 23.0/30.8 & 38.9/45.4 & 19.2/25.6 & 69.3/72.9 & 58.7/60.2 & 23.4/27.1 & 0.95/0.95 \\
+\specialrule{0.10pt}{1pt}{1pt}
+\multirow{4}{*}{4} & \multirow{4}{*}{14--17} & Tucker MHA & 4.6/4.5 & 12.01/\textbf{9.57} & 13.79/\textbf{13.61} & 46.5/\textbf{47.9} & 28.8/31.5 & 44.4/\textbf{47.0} & 24.8/25.2 & 72.9/\textbf{73.4} & 61.5/\textbf{62.5} & \textbf{15.2}/20.3 & 0.97/\textbf{1.00} \\
+ &  & TT FFN & 9.2/9.1 & 14.49/10.38 & 18.28/16.99 & 44.6/47.5 & 26.7/\textbf{32.3} & 41.4/46.0 & 22.6/\textbf{26.4} & 71.5/72.8 & 61.0/59.9 & 24.1/26.1 & 0.92/0.94 \\
+ &  & Tucker+TT & \textbf{13.7}/13.7 & 20.46/11.06 & 22.77/17.78 & 41.1/45.9 & 22.9/29.4 & 37.4/44.3 & 17.8/23.8 & 68.7/71.3 & 58.6/60.6 & 26.0/28.6 & 0.92/0.91 \\
+ &  & TT all & 13.7/13.7 & 21.80/11.12 & 24.01/18.05 & 40.8/45.7 & 23.0/29.4 & 37.1/44.1 & 17.6/23.2 & 68.3/71.9 & 58.1/60.1 & 26.0/29.2 & 0.93/0.92 \\
+\specialrule{0.10pt}{1pt}{1pt}
+\multirow{4}{*}{5} & \multirow{4}{*}{14--18} & Tucker MHA & 5.7/5.7 & 13.12/\textbf{9.91} & 14.92/\textbf{14.20} & 45.8/\textbf{47.3} & 27.6/30.1 & 43.1/\textbf{46.2} & 24.6/\textbf{25.6} & 72.1/\textbf{73.1} & \textbf{61.5}/\textbf{61.5} & \textbf{16.6}/21.6 & 0.98/\textbf{1.00} \\
+ &  & TT FFN & 11.5/11.4 & 17.73/11.03 & 21.46/18.36 & 43.5/46.6 & 27.0/\textbf{32.1} & 40.2/45.3 & 20.8/24.8 & 70.2/71.7 & 59.1/59.3 & 26.4/27.4 & 0.89/0.91 \\
+ &  & Tucker+TT & \textbf{17.2}/17.1 & 27.10/11.97 & 28.26/19.00 & 39.9/45.0 & 22.3/29.7 & 35.9/43.2 & 17.8/22.6 & 65.8/70.9 & 57.9/58.6 & 28.1/30.2 & 0.90/0.89 \\
+ &  & TT all & 17.2/17.1 & 29.39/12.16 & 30.22/20.33 & 39.7/45.2 & 22.1/29.4 & 35.6/43.1 & 17.4/23.4 & 65.7/71.0 & 57.6/59.0 & 28.2/31.2 & 0.91/0.89 \\
+\specialrule{0.10pt}{1pt}{1pt}
+\multirow{4}{*}{6} & \multirow{4}{*}{14--19} & Tucker MHA & 6.9/6.8 & 14.90/\textbf{10.48} & 16.04/\textbf{15.11} & 44.8/\textbf{46.7} & 26.8/\textbf{30.1} & 42.4/\textbf{45.9} & 22.4/23.2 & 71.2/\textbf{73.1} & \textbf{61.4}/61.3 & \textbf{17.9}/23.8 & 0.98/\textbf{0.99} \\
+ &  & TT FFN & 13.8/13.7 & 21.05/11.89 & 24.54/20.10 & 42.0/45.7 & 24.7/28.8 & 38.6/43.9 & 20.2/\textbf{24.6} & 68.3/71.4 & 58.0/60.0 & 28.5/28.9 & 0.86/0.88 \\
+ &  & Tucker+TT & \textbf{20.6}/20.5 & 34.27/13.62 & 34.16/22.35 & 39.3/43.7 & 21.6/26.8 & 34.6/41.3 & 18.0/21.0 & 64.4/69.9 & 58.0/59.4 & 30.1/33.3 & 0.87/0.86 \\
+ &  & TT all & 20.6/20.5 & 37.25/13.50 & 36.73/21.31 & 39.3/43.9 & 22.0/26.2 & 34.5/41.4 & 17.6/22.6 & 64.3/70.8 & 58.1/58.8 & 30.1/33.0 & 0.88/0.86 \\
+\specialrule{0.10pt}{1pt}{1pt}
+\multirow{4}{*}{7} & \multirow{4}{*}{14--20} & Tucker MHA & 8.0/7.9 & 17.33/\textbf{10.98} & 17.56/\textbf{15.99} & 44.1/\textbf{46.7} & 26.5/\textbf{30.3} & 41.3/\textbf{45.4} & 21.0/\textbf{24.2} & 70.0/\textbf{71.7} & \textbf{61.9}/\textbf{61.9} & \textbf{19.4}/24.2 & \textbf{0.98}/0.98 \\
+ &  & TT FFN & 16.0/16.0 & 26.31/12.86 & 28.28/20.00 & 40.7/45.4 & 24.1/29.2 & 37.3/43.4 & 17.8/23.8 & 66.2/71.1 & 57.9/59.3 & 30.5/30.3 & 0.83/0.87 \\
+ &  & Tucker+TT & \textbf{24.1}/23.9 & 51.26/15.34 & 48.09/21.51 & 38.5/42.6 & 21.8/24.5 & 33.3/40.6 & 16.8/20.4 & 62.8/68.8 & 57.5/58.8 & 31.8/35.1 & 0.85/0.85 \\
+ &  & TT all & 24.0/23.9 & 54.84/15.30 & 51.42/21.99 & 38.5/42.1 & 21.9/24.8 & 33.0/40.3 & 17.8/19.8 & 62.8/68.4 & 57.1/57.3 & 31.8/35.1 & 0.86/0.85 \\
+\midrule
+\multicolumn{3}{@{}l}{\makecell[l]{\textbf{LLaMA 2 7B}\\稠密基线}} & 0.0 & 5.12 & 6.63 & 56.2 & 43.0 & 57.1 & 33.4 & 78.1 & 69.4 & -- & -- \\
+\midrule
+\multirow{4}{*}{1} & \multirow{4}{*}{16} & Tucker MHA & 1.0/1.0 & 5.28/\textbf{5.06} & \textbf{6.87}/6.91 & 54.9/55.5 & 41.0/\textbf{42.7} & 55.3/\textbf{56.0} & 32.4/33.2 & 76.8/76.9 & 69.0/68.5 & \textbf{17.1}/22.5 & 0.91/0.99 \\
+ &  & TT FFN & 2.0/2.0 & 5.52/5.15 & 7.01/7.05 & 55.3/\textbf{55.5} & 41.9/42.2 & 55.9/55.9 & 31.4/32.4 & 77.6/\textbf{78.0} & \textbf{69.9}/69.0 & 22.3/26.3 & 0.93/\textbf{1.00} \\
+ &  & Tucker+TT & \textbf{3.1}/3.0 & 5.61/5.24 & 7.23/7.25 & 53.8/54.5 & 38.9/40.2 & 54.3/54.8 & 30.4/32.6 & 76.4/77.0 & 69.1/68.1 & 26.5/31.1 & 0.85/0.92 \\
+ &  & TT all & 3.1/3.0 & 5.61/5.23 & 7.23/7.26 & 53.9/54.8 & 39.1/40.7 & 54.4/54.8 & 30.4/\textbf{33.6} & 76.4/77.1 & 69.1/68.0 & 26.5/31.5 & 0.85/0.92 \\
+\specialrule{0.10pt}{1pt}{1pt}
+\multirow{4}{*}{2} & \multirow{4}{*}{16--17} & Tucker MHA & 2.0/2.0 & 5.52/\textbf{5.20} & \textbf{7.15}/7.18 & 54.0/\textbf{54.7} & 38.8/\textbf{40.1} & 54.1/\textbf{55.2} & 31.6/\textbf{32.8} & 76.6/\textbf{77.0} & \textbf{69.0}/68.6 & \textbf{19.7}/23.9 & 0.89/\textbf{0.96} \\
+ &  & TT FFN & 4.1/4.1 & 5.88/5.41 & 7.56/7.56 & 54.1/54.1 & 39.9/39.1 & 54.4/54.6 & 31.2/31.4 & 76.6/76.6 & 68.3/68.7 & 26.2/28.7 & 0.90/0.94 \\
+ &  & Tucker+TT & \textbf{6.1}/6.1 & 6.24/5.56 & 7.97/7.88 & 52.7/53.2 & 37.8/38.0 & 52.2/53.1 & 29.8/30.4 & 75.2/76.3 & 68.7/68.4 & 30.5/34.1 & 0.80/0.86 \\
+ &  & TT all & 6.1/6.1 & 6.24/5.56 & 7.97/7.90 & 52.8/53.5 & 38.0/38.7 & 52.2/53.2 & 29.8/31.4 & 75.2/76.3 & \textbf{69.0}/68.0 & 30.5/34.5 & 0.80/0.87 \\
+\specialrule{0.10pt}{1pt}{1pt}
+\multirow{4}{*}{3} & \multirow{4}{*}{16--18} & Tucker MHA & 3.0/3.0 & 5.76/\textbf{5.34} & 7.50/\textbf{7.45} & 53.3/\textbf{53.9} & 37.7/38.8 & 53.3/\textbf{54.6} & 30.8/\textbf{31.4} & 76.3/\textbf{76.6} & 68.4/68.0 & \textbf{21.7}/25.8 & 0.87/\textbf{0.96} \\
+ &  & TT FFN & 6.1/6.1 & 6.44/5.73 & 8.33/8.17 & 53.3/53.5 & \textbf{39.4}/38.9 & 52.8/53.3 & 29.6/\textbf{31.4} & 76.0/75.7 & \textbf{68.7}/68.3 & 29.1/31.8 & 0.87/0.90 \\
+ &  & Tucker+TT & \textbf{9.2}/9.1 & 6.98/6.03 & 8.95/8.66 & 51.9/52.3 & 35.5/36.5 & 50.5/51.4 & 30.8/30.0 & 74.7/76.0 & 67.9/67.5 & 33.5/36.7 & 0.76/0.81 \\
+ &  & TT all & 9.2/9.1 & 6.98/6.01 & 8.95/8.65 & 51.9/51.9 & 35.5/36.1 & 50.5/51.3 & 30.8/30.0 & 74.8/75.0 & 68.1/67.2 & 33.6/36.8 & 0.76/0.82 \\
+\specialrule{0.10pt}{1pt}{1pt}
+\multirow{4}{*}{4} & \multirow{4}{*}{16--19} & Tucker MHA & 4.0/4.0 & 6.03/\textbf{5.46} & 7.91/\textbf{7.68} & 52.7/\textbf{53.6} & 36.9/\textbf{38.1} & 52.6/\textbf{54.0} & 30.2/\textbf{32.0} & 76.0/\textbf{76.2} & \textbf{68.0}/67.6 & \textbf{23.5}/25.8 & 0.86/\textbf{0.94} \\
+ &  & TT FFN & 8.2/8.1 & 7.61/6.20 & 9.59/8.90 & 51.9/51.3 & 37.0/35.9 & 51.1/51.7 & 29.0/26.8 & 74.9/74.1 & 67.3/67.8 & 31.5/35.0 & 0.84/0.89 \\
+ &  & Tucker+TT & \textbf{12.2}/12.1 & 7.85/6.63 & 10.06/9.62 & 50.0/49.6 & 35.0/34.4 & 49.0/49.4 & 25.6/24.6 & 73.6/73.8 & 66.9/66.0 & 36.0/39.3 & 0.72/0.77 \\
+ &  & TT all & 12.2/12.1 & 7.86/6.63 & 10.06/9.65 & 50.0/49.8 & 34.9/34.1 & 49.0/49.5 & 25.2/25.6 & 73.6/73.6 & 67.0/66.4 & 36.0/38.9 & 0.72/0.78 \\
+\specialrule{0.10pt}{1pt}{1pt}
+\multirow{4}{*}{5} & \multirow{4}{*}{16--20} & Tucker MHA & 5.1/5.0 & 6.65/\textbf{5.77} & 8.64/\textbf{8.25} & 50.9/\textbf{51.9} & 34.5/36.4 & 51.0/\textbf{53.0} & 26.0/\textbf{27.6} & 74.1/\textbf{74.6} & \textbf{68.8}/68.0 & \textbf{25.3}/27.2 & 0.84/\textbf{0.92} \\
+ &  & TT FFN & 10.2/10.2 & 8.71/6.80 & 10.99/9.73 & 50.7/50.1 & \textbf{36.5}/33.9 & 49.2/50.4 & \textbf{27.6}/26.2 & 73.6/73.0 & 66.8/66.9 & 33.5/36.1 & 0.81/0.84 \\
+ &  & Tucker+TT & \textbf{15.3}/15.2 & 9.94/7.74 & 12.34/11.09 & 47.1/47.4 & 30.6/30.8 & 45.2/46.8 & 23.2/23.2 & 70.0/71.0 & 66.3/65.4 & 38.3/42.3 & 0.68/0.74 \\
+ &  & TT all & 15.3/15.2 & 9.94/7.72 & 12.35/11.11 & 46.9/48.0 & 30.5/31.1 & 45.2/46.8 & 22.8/24.0 & 70.0/70.9 & 66.2/67.1 & 38.4/41.5 & 0.68/0.74 \\
+\specialrule{0.10pt}{1pt}{1pt}
+\multirow{4}{*}{6} & \multirow{4}{*}{16--21} & Tucker MHA & 6.1/6.0 & 6.93/\textbf{5.94} & 9.07/\textbf{8.50} & 50.4/\textbf{51.9} & 34.4/\textbf{36.3} & 50.3/\textbf{52.2} & 25.8/\textbf{28.2} & 73.2/\textbf{74.1} & 68.5/\textbf{68.6} & \textbf{26.7}/28.1 & 0.83/\textbf{0.91} \\
+ &  & TT FFN & 12.3/12.2 & 10.26/7.52 & 12.51/10.98 & 49.4/49.1 & 35.6/32.3 & 47.2/48.8 & 26.2/25.6 & 71.3/72.0 & 66.9/66.9 & 35.2/38.3 & 0.79/0.81 \\
+ &  & Tucker+TT & \textbf{18.3}/18.2 & 12.45/8.81 & 14.96/12.77 & 45.7/46.4 & 29.8/28.7 & 43.0/45.2 & 23.0/24.4 & 67.6/68.6 & 65.3/65.2 & 40.4/44.5 & 0.64/0.71 \\
+ &  & TT all & 18.3/18.2 & 12.46/8.79 & 14.97/12.76 & 45.7/46.1 & 29.5/29.4 & 43.0/45.0 & 23.0/23.0 & 67.6/68.9 & 65.3/64.5 & 40.4/43.8 & 0.64/0.71 \\
+\specialrule{0.10pt}{1pt}{1pt}
+\multirow{4}{*}{7} & \multirow{4}{*}{16--22} & Tucker MHA & 7.1/7.0 & 7.45/\textbf{6.15} & 9.74/\textbf{8.97} & 49.3/\textbf{51.3} & 32.8/\textbf{35.6} & 49.8/\textbf{51.9} & 23.4/\textbf{27.2} & 72.0/\textbf{74.1} & \textbf{68.7}/67.8 & \textbf{28.1}/29.3 & 0.81/\textbf{0.91} \\
+ &  & TT FFN & 14.3/14.2 & 11.52/8.19 & 14.14/12.24 & 46.9/47.7 & 32.0/31.1 & 45.1/47.5 & 23.0/23.8 & 69.3/70.3 & 65.0/65.9 & 36.7/40.7 & 0.76/0.80 \\
+ &  & Tucker+TT & \textbf{21.4}/21.2 & 17.60/10.39 & 19.45/15.22 & 42.7/44.2 & 27.2/27.5 & 39.5/42.4 & 19.2/21.2 & 64.3/66.2 & 63.5/63.8 & 42.2/46.8 & 0.61/0.68 \\
+ &  & TT all & 21.4/21.2 & 17.60/10.23 & 19.44/14.90 & 42.9/44.6 & 27.6/28.1 & 39.5/42.3 & 19.2/22.0 & 64.4/66.3 & 63.6/64.2 & 42.2/45.4 & 0.61/0.70 \\
+\specialrule{0.10pt}{1pt}{1pt}
+\multirow{4}{*}{8} & \multirow{4}{*}{16--23} & Tucker MHA & 8.1/8.0 & 7.78/\textbf{6.30} & 10.14/\textbf{9.36} & 49.4/\textbf{51.2} & 33.0/\textbf{35.8} & 49.5/\textbf{52.0} & 24.8/\textbf{26.8} & 71.6/\textbf{73.7} & \textbf{68.0}/\textbf{68.0} & \textbf{29.4}/29.9 & 0.80/\textbf{0.90} \\
+ &  & TT FFN & 16.3/16.2 & 12.98/9.02 & 15.77/13.40 & 46.0/47.2 & 31.6/30.7 & 43.4/45.9 & 22.8/23.6 & 67.4/68.9 & 64.7/66.7 & 38.0/41.7 & 0.74/0.78 \\
+ &  & Tucker+TT & \textbf{24.4}/24.3 & 25.44/11.64 & 23.53/17.15 & 42.1/43.3 & 27.8/27.7 & 37.7/40.9 & 18.8/18.8 & 62.6/64.6 & 63.5/64.3 & 43.8/48.7 & 0.58/0.65 \\
+ &  & TT all & 24.4/24.3 & 25.61/11.35 & 23.59/16.61 & 42.0/43.8 & 27.7/27.8 & 37.7/41.1 & 18.4/20.6 & 62.6/64.5 & 63.5/65.2 & 43.9/47.1 & 0.58/0.68 \\
+\end{longtable}
+\endgroup
+
+
+\begin{figure*}[ht]
+  \centering
+  \includegraphics[width=0.9\linewidth]{emnlp/figs/joint_all_dense_sparse_tt_combined_c4.pdf}
+  \caption{
+    在 TT 与 Dense-Sparse TT 下压缩全部选定模块时的 C4 困惑度随节省比特数的变化。 
+    Dense-Sparse TT 精确存储一个小的稀疏修正，并对内点矩阵施加 TT。 
+    我们在 $f \in \{5{\times}10^{-7},10^{-6}\}$ 下比较按幅值选择的稀疏矩阵元与按激活加权的稀疏矩阵元。
+  }
+  \label{fig:app_dense_sparse_tt_all}
+\end{figure*}
+
+\section{TD-MoE 实验}
+\label{sec:td_moe_qwen}
+
+\subsection{Qwen3-30B-A3B 与 GPT-OSS-20B 的张量分解方案}
+\label{app:td_moe}
+
+本节描述在 Qwen3-30B-A3B~\citep{qwen3technicalreport} 与 GPT-OSS-20B~\citep{openai2025gptoss} 上开展、并于图~\ref{fig:moe_main} 中报告的训练后张量分解实验。我们采用渐进式块调度。Qwen3-30B-A3B 从中部即第 24 层开始压缩：先向后层方向将压缩集合扩展 12 个 MoE 层，约达模型 75\% 深度处，再向前层方向扩展 12 个 MoE 层，约达 25\% 深度处。最终设置因此共覆盖 24 个 MoE 层。
+GPT-OSS-20B 从中部即第 12 层开始压缩：先向后层方向将压缩集合扩展 6 个 MoE 层，约达模型 75\% 深度处，再向前层方向扩展 6 个 MoE 层，约达 25\% 深度处。最终设置因此共覆盖 12 个 MoE 层。我们使用两种逐层压缩率 $\rho \in \{0.2, 0.4\}$，其中
+$\rho$ 控制通过 Tucker 分解压缩各专家的激进程度
+（图~\ref{fig:qwen3_c4_ppl}）。所有运行均相对同一模型的固定稠密基线进行评估。
+
+TD-MoE 是一种为专家混合（Mixture-of-Experts）
+层设计的训练后压缩方法。它不对每个专家的权重矩阵单独分解，而是
+将一层内的所有专家沿专家、输入、输出三个模
+堆叠成一个三维张量，然后施加联合 Tucker 分解：
+\[
+\mathcal{X} \approx \mathcal{G} \times_1 U^{(1)} \times_2 U^{(2)} \times_3 U^{(3)} .
+\]
+其中 $U^{(1)} \in \mathbb{R}^{K \times r_1}$ 作用于专家模，
+表示 $r_1$ 个潜在元专家；$U^{(2)} \in \mathbb{R}^{d_{\mathrm{in}}
+\times r_2}$ 张成压缩后的输入特征子空间；
+$U^{(3)} \in \mathbb{R}^{d_{\mathrm{out}} \times r_3}$ 张成压缩后的
+输出特征子空间。核心张量 $\mathcal{G}$ 将这三个潜在模耦合在一起。
+
+图~\ref{fig:td_moe_downstream} 报告了相应的下游
+准确率曲线。对这种依模型而异的行为，一个合理的解释是：
+Qwen3-30B-A3B 是细粒度 MoE，拥有 128 个专家、每词元激活 8 个
+专家。近期工作在第 1--3 层识别出三个浅层
+\emph{超级专家}（super experts），剪除它们会使 WikiText-2 困惑度
+从 8.70 升至 59.86 并导致推理（reasoning）能力崩溃，而随机剪除非超级
+专家的影响可忽略不计~\citep{su2025superexperts}。我们的调度从中等深度开始，不触及那些浅层超级专家，因此
+适度的 TD-MoE 可能主要在不太关键的专家子空间中起去噪作用，
+这与先前的观察一致：选择性降秩有时能通过
+移除有害的高阶分量来提升 LLM 的准确率~\citep{LASER_2024}。
+GPT-OSS-20B 的 MoE 结构更小，为 24 层、32 个专家、每词元
+激活 4 个专家~\citep{openai2025gptoss}，因此同样的干预
+在破坏功能多样性之前可利用的专家模冗余更少
+（图~\ref{fig:gpt_oss_downstream}）。
+
+% \begin{table*}[t]
+% \centering
+% \scriptsize
+% \setlength{\tabcolsep}{2pt}
+% \caption{Maximum-$L$ GPT-J 6B and LLaMA 2 7B tensor-decomposition results. Compressed rows report \emph{direct / +LoRA}. Bits saved are measured over all non-embedding model parameters; bold values are best among compressed runs within each model group.}
+% \label{tab:app_main_tensor_results_maxL}
+% \begin{tabular}{@{}ccp{1.35cm}ccccccccccc@{}}
+% \toprule
+% & & & \multicolumn{1}{c}{\textbf{Compression} $\uparrow$} & \multicolumn{2}{c}{\textbf{Perplexity} $\downarrow$} & \multicolumn{6}{c}{\textbf{LM-Eval accuracy (\%)} $\uparrow$} & \multicolumn{2}{c}{\textbf{Activation geometry}} \\
+% \cmidrule(lr){4-4}\cmidrule(lr){5-6}\cmidrule(lr){7-12}\cmidrule(lr){13-14}
+% \textbf{$L$} & \textbf{Blocks} & \textbf{Method} & \makecell{Bits saved\\(\%)} & \textbf{WT2} & \textbf{C4} & \textbf{Macro} & \textbf{ARC-C} & \textbf{HSwag} & \textbf{OBQA} & \textbf{PIQA} & \textbf{WinoG} & \makecell{Angle\\$\downarrow$} & \makecell{Norm\\$\to 1$} \\
+% \midrule
+% \multicolumn{3}{@{}l}{\makecell[l]{\textbf{GPT-J 6B}\\Dense baseline}} & 0.0 & 8.86 & 11.71 & 50.5 & 33.9 & 49.5 & 29.0 & 75.5 & 64.4 & -- & -- \\
+% \midrule
+% \multirow{4}{*}{7} & \multirow{4}{*}{14--20} & Tucker MHA & 8.0 / 7.9 & 17.33 / \textbf{10.98} & 17.56 / \textbf{15.99} & 44.1 / \textbf{46.7} & 26.5 / \textbf{30.3} & 41.3 / \textbf{45.4} & 21.0 / \textbf{24.2} & 70.0 / \textbf{71.7} & \textbf{61.9} / \textbf{61.9} & \textbf{19.4} / 24.2 & \textbf{0.98} / 0.98 \\
+% & & TT FFN & 16.0 / 16.0 & 26.31 / 12.86 & 28.28 / 20.00 & 40.7 / 45.4 & 24.1 / 29.2 & 37.3 / 43.4 & 17.8 / 23.8 & 66.2 / 71.1 & 57.9 / 59.3 & 30.5 / 30.3 & 0.83 / 0.87 \\
+% & & Tucker+TT & \textbf{24.1} / 23.9 & 51.26 / 15.34 & 48.09 / 21.51 & 38.5 / 42.6 & 21.8 / 24.5 & 33.3 / 40.6 & 16.8 / 20.4 & 62.8 / 68.8 & 57.5 / 58.8 & 31.8 / 35.1 & 0.85 / 0.85 \\
+% & & TT all & 24.0 / 23.9 & 54.84 / 15.30 & 51.42 / 21.99 & 38.5 / 42.1 & 21.9 / 24.8 & 33.0 / 40.3 & 17.8 / 19.8 & 62.8 / 68.4 & 57.1 / 57.3 & 31.8 / 35.1 & 0.86 / 0.85 \\
+% \midrule
+% \multicolumn{3}{@{}l}{\makecell[l]{\textbf{LLaMA 2 7B}\\Dense baseline}} & 0.0 & 5.12 & 6.63 & 56.2 & 43.0 & 57.1 & 33.4 & 78.1 & 69.4 & -- & -- \\
+% \midrule
+% \multirow{4}{*}{8} & \multirow{4}{*}{16--23} & Tucker MHA & 8.1 / 8.0 & 7.78 / \textbf{6.30} & 10.14 / \textbf{9.36} & 49.4 / \textbf{51.2} & 33.0 / \textbf{35.8} & 49.5 / \textbf{52.0} & 24.8 / \textbf{26.8} & 71.6 / \textbf{73.7} & \textbf{68.0} / \textbf{68.0} & \textbf{29.4} / 29.9 & 0.80 / \textbf{0.90} \\
+% & & TT FFN & 16.3 / 16.2 & 12.98 / 9.02 & 15.77 / 13.40 & 46.0 / 47.2 & 31.6 / 30.7 & 43.4 / 45.9 & 22.8 / 23.6 & 67.4 / 68.9 & 64.7 / 66.7 & 38.0 / 41.7 & 0.74 / 0.78 \\
+% & & Tucker+TT & \textbf{24.4} / 24.3 & 25.44 / 11.64 & 23.53 / 17.15 & 42.1 / 43.3 & 27.8 / 27.7 & 37.7 / 40.9 & 18.8 / 18.8 & 62.6 / 64.6 & 63.5 / 64.3 & 43.8 / 48.7 & 0.58 / 0.65 \\
+% & & TT all & 24.4 / 24.3 & 25.61 / 11.35 & 23.59 / 16.61 & 42.0 / 43.8 & 27.7 / 27.8 & 37.7 / 41.1 & 18.4 / 20.6 & 62.6 / 64.5 & 63.5 / 65.2 & 43.9 / 47.1 & 0.58 / 0.68 \\
+% \bottomrule
+% \end{tabular}
+% \end{table*}
+
+
+
+% \section{Why Tensorization Fails as Post-Training Compression}
+% \label{sec:theory}
+
+% We formalize the failure of Frobenius-optimal tensor decompositions
+% (HOSVD, TT-SVD, Tucker-ALS) as post-training LLM compression through four
+% results: (i) tensorization is a Frobenius but not an operator isometry;
+% (ii) the gap between the two scales with $\sqrt{\min(m,n)}$ on heavy-tailed
+% spectra; (iii) per-layer spectral errors compound multiplicatively across
+% depth; and (iv) low-rank tensor formats impose a separable subspace
+% structure that is incompatible with the head- and neuron-wise heterogeneity
+% of trained Transformers.
+
+% \subsection{Setup}
+% \label{sec:setup}
+
+% Let $W \in \mathbb{R}^{m \times n}$ be a layer weight and
+% $\varphi : \mathbb{R}^{m \times n} \to \mathbb{R}^{I_1 \times \cdots \times I_N}$
+% a reshape with $\prod_k I_k = mn$. Set $\mathcal{T} = \varphi(W)$, and let
+% $\widehat{\mathcal{T}}$ be its Frobenius-optimal approximation in a low-rank
+% manifold $\mathcal{M}_{\mathbf{r}}$ (Tucker rank $\mathbf{r} = (r_1, \ldots, r_N)$
+% or TT rank $(r_1, \ldots, r_{N-1})$); $\widehat{W} = \varphi^{-1}(\widehat{\mathcal{T}})$.
+% Singular values of $W$ are $\sigma_1 \geq \cdots \geq \sigma_{\min(m,n)} \geq 0$.
+
+% \subsection{Tensorization preserves Frobenius but not operator geometry}
+% \label{sec:isometry}
+
+% Since $\varphi$ permutes entries,
+% \begin{equation}
+%     \|\varphi(A)\|_F = \|A\|_F, \qquad \forall A \in \mathbb{R}^{m \times n}.
+%     \label{eq:frob_iso}
+% \end{equation}
+% For the spectral norm, however, the Hitchcock–Banach
+% result~\citep{hillar2013most, friedland2018nuclear} gives
+% \begin{equation}
+%     \|\mathcal{T}\|_{\sigma}
+%     := \sup_{\|u^{(k)}\|_2 = 1}
+%     \langle \mathcal{T},\, u^{(1)} \otimes \cdots \otimes u^{(N)} \rangle
+%     \;\leq\; \|W\|_2,
+%     \label{eq:tensor_spec}
+% \end{equation}
+% with equality only when $\mathcal{T}$ is rank-one. For $N \geq 3$, computing
+% $\|\mathcal{T}\|_{\sigma}$ is difficult to calculate \citep{comptensornorm}, and the ratio
+% \begin{equation}
+%     \frac{\|W\|_2}{\|\varphi(W)\|_{\sigma}}
+%     \;\in\; \bigl[1,\; \sqrt{\min(m,n)}\bigr]
+%     \label{eq:ratio}
+% \end{equation}
+% is generically bounded away from $1$~\citep{friedland2018nuclear}. Hence
+% $\varphi$ fails to be an isometry between $(\mathbb{R}^{m \times n}, \|\cdot\|_2)$
+% and $(\mathbb{R}^{I_1 \times \cdots \times I_N}, \|\cdot\|_{\sigma})$.
+
+% \subsection{Frobenius-optimal truncation is spectrally suboptimal on
+% heavy-tailed spectra}
+% \label{sec:spectral_gap}
+
+% By Eq.~\eqref{eq:frob_iso}, HOSVD/TT-SVD solve
+% \begin{equation}
+%     \widehat{\mathcal{T}}
+%     \in \arg\min_{\mathcal{S} \in \mathcal{M}_{\mathbf{r}}}
+%     \|\mathcal{T} - \mathcal{S}\|_F
+%     \quad \Longleftrightarrow \quad
+%     \widehat{W}
+%     \in \arg\min_{\mathrm{tens.\ rank} \leq \mathbf{r}}
+%     \|W - \widehat{W}\|_F.
+%     \label{eq:frob_objective}
+% \end{equation}
+% The induced spectral guarantee is the loose bound
+% \begin{equation}
+%     \|W - \widehat{W}\|_2
+%     \;\leq\; \|W - \widehat{W}\|_F
+%     \;=\; \biggl(\sum_{i > k} \sigma_i^2\biggr)^{1/2} \cdot (1 + \varepsilon),
+%     \label{eq:loose_spectral}
+% \end{equation}
+% where $\varepsilon \in [0,\, \sqrt{N} - 1]$ is the HOSVD
+% quasi-optimality factor~\citep{de2000multilinear, grasedyck2010hierarchical}.
+% The Eckart–Young~\citep{eckart1936approximation} optimum for matrix rank-$k$
+% truncation is $\sigma_{k+1}$, so the spectral suboptimality of tensor
+% truncation is
+% \begin{equation}
+%     \frac{\|W - \widehat{W}\|_2}{\sigma_{k+1}}
+%     \;\leq\; (1 + \varepsilon) \cdot
+%     \sqrt{\,1 + \sum_{i > k+1} (\sigma_i / \sigma_{k+1})^2\,}.
+%     \label{eq:suboptimality}
+% \end{equation}
+% Empirical Transformer spectra follow a power law $\sigma_i \sim i^{-\alpha}$
+% with $\alpha \in [0.5,\, 1]$~\citep{martin2021implicit, yu2024super}, so
+% \begin{equation}
+%     \sum_{i > k} \sigma_i^2
+%     \;\asymp\;
+%     \begin{cases}
+%         k^{1 - 2\alpha}, & \alpha < 1/2, \\
+%         \log(\min(m,n) / k), & \alpha = 1/2, \\
+%         \mathrm{const}, & \alpha > 1/2,
+%     \end{cases}
+%     \label{eq:tail}
+% \end{equation}
+% and the spectral error of a Frobenius-optimal truncation can exceed the
+% Eckart–Young optimum by a factor scaling as $\sqrt{\min(m,n)}$ in the
+% heavy-tailed regime $\alpha < 1/2$.
+
+% \paragraph{Consequence for superweights.}
+% Let $\mathcal{S} \subseteq [m] \times [n]$ index the
+% \emph{superweight}~\citep{yu2024super, sun2026spike} coordinates with
+% $|\mathcal{S}| \ll mn$ and $\|W_{\mathcal{S}}\|_F \ll \|W\|_F$ but
+% $\|W e_j\|_2 \gg \|W\|_2 / \sqrt{n}$ for some $j$ supported on $\mathcal{S}$.
+% Frobenius-optimal truncation discards $\mathcal{S}$ whenever
+% \begin{equation}
+%     \|W_{\mathcal{S}}\|_F^2
+%     \;<\;
+%     \sum_{i > k} \sigma_i^2 \big|_{\text{non-superweight}},
+%     \label{eq:superweight_loss}
+% \end{equation}
+% yet the resulting layer satisfies $\|\widehat{W} e_j\|_2 \ll \|W e_j\|_2$
+% on the superweight directions, producing the spectral mass loss documented
+% in our activation-geometry diagnostics
+% (Figure~\ref{fig:activation_geometry}).
+
+% \subsection{Multiplicative error compounding across depth}
+% \label{sec:depth}
+
+% For a residual Transformer with blocks $f_\ell(x) = x + W_\ell \,\phi_\ell(x)$,
+% let $\Delta_\ell = W_\ell - \widehat{W}_\ell$ and $L_\ell$ the Lipschitz
+% constant of $\phi_\ell$ on the relevant activation manifold. A standard
+% discrete Grönwall argument~\citep{bartlett2017spectrally, neyshabur2017pac}
+% yields
+% \begin{equation}
+%     \|x_L - \widehat{x}_L\|_2
+%     \;\leq\;
+%     \sum_{\ell = 1}^{L}
+%     \|\Delta_\ell\|_2 \, L_\ell
+%     \prod_{k = \ell+1}^{L} \bigl(1 + \|\widehat{W}_k\|_2 \, L_k\bigr).
+%     \label{eq:gronwall}
+% \end{equation}
+% Substituting the spectral bound from Eq.~\eqref{eq:loose_spectral} and
+% assuming uniform per-layer Frobenius budget
+% $\|\Delta_\ell\|_F^2 \leq \delta^2$ and a typical block gain
+% $\kappa = (1 + \|\widehat{W}_k\|_2 L_k) > 1$,
+% \begin{equation}
+%     \|x_L - \widehat{x}_L\|_2
+%     \;\leq\;
+%     \delta \cdot (1 + \varepsilon) \cdot
+%     \frac{\kappa^{L} - 1}{\kappa - 1}
+%     \;=\; \mathcal{O}\bigl(\delta \cdot \kappa^{L}\bigr).
+%     \label{eq:compound}
+% \end{equation}
+% The end-to-end perturbation grows exponentially in the number of compressed
+% blocks $L$, with base $\kappa$ governed by the spectral -- not
+% Frobenius -- norms of the perturbed layers. This explains the rapid
+% collapse observed when extending the compressed range from $L = 1$ to $L = 8$
+% in Fig.~\ref{fig:c4_perplexity_vs_bits}.
+
+% \subsection{Subspace separability mismatch}
+% \label{sec:subspace}
+
+% Tucker and TT formats impose a \emph{separable} factorization: the column
+% space of every mode-$k$ unfolding $\widehat{W}_{(k)}$ lies in a fixed
+% $r_k$-dimensional subspace shared across all slices of the orthogonal modes.
+% Formally, with Tucker factors $\{U^{(k)}\}_{k=1}^{N}$,
+% \begin{equation}
+%     \mathrm{range}\bigl(\widehat{\mathcal{T}}_{(k)}\bigr)
+%     \;\subseteq\;
+%     \mathrm{range}\bigl(U^{(k)}\bigr),
+%     \qquad \dim = r_k,
+%     \label{eq:tucker_range}
+% \end{equation}
+% and analogously for TT cores. For multi-head attention with $H$ heads of
+% dimension $d_h$, denote the per-head projection $W_h \in \mathbb{R}^{d \times d_h}$.
+% The Tucker constraint of rank $r_1 < H$ on the head mode forces
+% \begin{equation}
+%     W_h \;=\; \sum_{j = 1}^{r_1} c_{h,j} \, B_j,
+%     \qquad B_j \in \mathbb{R}^{d \times d_h},
+%     \label{eq:head_collapse}
+% \end{equation}
+% collapsing $H$ functionally distinct heads into $r_1$ shared
+% templates~\citep{michel2019sixteen, voita2019analyzing} and contradicting
+% the empirical heterogeneity of attention
+% circuits~\citep{elhage2021framework}. Quantitatively, if the
+% \emph{true} per-mode subspaces $\{V_k^\star\}$ that capture
+% $1 - \eta$ of the spectral mass have effective dimension $r_k^\star$, the
+% Frobenius approximation error of any Tucker model with rank $r_k < r_k^\star$
+% is bounded below by~\citep{vannieuwenhoven2012new}
+% \begin{equation}
+%     \|\mathcal{T} - \widehat{\mathcal{T}}\|_F^2
+%     \;\geq\;
+%     \sum_{k = 1}^{N}
+%     \sum_{i > r_k} \sigma_i^2\bigl(\mathcal{T}_{(k)}\bigr),
+%     \label{eq:tucker_lower_bound}
+% \end{equation}
+% with the right-hand side decaying only as fast as the slowest mode-$k$
+% spectrum. Heterogeneous LLM weights produce slowly decaying mode spectra
+% on at least one mode (typically the head or expert mode), making
+% Eq.~\eqref{eq:tucker_lower_bound} the binding constraint and ruling out
+% high-fidelity compression at practical ranks.
+
+% \subsection{Composite no-go statement}
+% \label{sec:nogo}
+
+% Combining Eqs.~\eqref{eq:ratio}, \eqref{eq:suboptimality},
+% \eqref{eq:compound}, and~\eqref{eq:tucker_lower_bound}: for an $L$-layer
+% Transformer with mode-spectrum exponents $\alpha_k < 1/2$, target Frobenius
+% budget $\delta$, and block gain $\kappa > 1$, the end-to-end perturbation
+% of any Tucker- or TT-compressed model satisfies
+% \begin{equation*}
+%     \boxed{
+%     \|x_L - \widehat{x}_L\|_2
+%     \;=\;
+%     \Omega\bigl(
+%         \sqrt{\min(m,n)} \cdot \delta \cdot \kappa^{L}
+%     \bigr).
+%     }
+%     % \label{eq:nogo}
+% \end{equation*}
+% The bound is tight on heavy-tailed, head-heterogeneous spectra: the
+% $\sqrt{\min(m,n)}$ factor is the spectral-vs-Frobenius gap from
+% \S\ref{sec:spectral_gap}, $\delta$ is the per-layer Frobenius residual that
+% HOSVD/TT-SVD actually minimize, and $\kappa^{L}$ is the multiplicative
+% depth amplification from \S\ref{sec:depth}. No reweighting of the Frobenius
+% objective and no choice of mode order can simultaneously reduce all three
+% factors, which together rule out tensor decomposition as a stand-alone
+% post-training compression method at deployment scale.
+
+% We evaluate TD-MoE on Qwen3-30B-A3B by compressing MoE
+% layers one at a time, starting 
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.6\linewidth]{emnlp/figs/moe_main_left_ppl.pdf}
+  \caption{%
+    Qwen3-30B-A3B 上随 TD-MoE 压缩的 MoE 层数增加时的 WikiText-2 困惑度，
+    取 $\rho \in \{0.2, 0.4\}$。C4 困惑度见正文（图~\ref{fig:moe_main}）。
+  }
+  \label{fig:qwen3_c4_ppl}
+  \vspace{-8mm}
+\end{figure}
+
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\linewidth]{emnlp/figs/qwen3_30b_td_moe_downstream_vs_layers.pdf}
+  \caption{%
+    Qwen3-30B-A3B 上随 TD-MoE 压缩的 MoE 层数增加时的下游任务准确率（\%）。
+  }
+  \label{fig:td_moe_downstream}
+\end{figure*}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\linewidth]{emnlp/figs/gpt_oss_td_moe_downstream_vs_layers.pdf}
+  \vspace{-4mm}
+  \caption{%
+    GPT-OSS-20B 上随 TD-MoE 压缩的 MoE 层数增加时的下游任务准确率（\%），
+    取 $\rho \in \{0.2, 0.4\}$。
+  }
+  \label{fig:gpt_oss_downstream}
+\end{figure*}
+
+\begin{figure*}[h!]
+  \centering
+  \vspace{-4mm}\includegraphics[width=\linewidth]{emnlp/figs/gpt_oss_td_moe_downstream_preserve_vs_compress.pdf}
+  \caption{%
+    GPT-OSS-20B 上在 $\rho{=}0.4$ 时下游准确率（\%）随 TD-MoE 压缩层数的变化。
+    \textsc{preserve} 保持专家 Tucker 秩等于 $K$；
+    \textsc{compress} 还额外压缩专家维数。
+  }
+  \label{fig:gpt_oss_preserve_vs_compress}
+  \vspace{-4mm}
+\end{figure*}
+
+
+
+\paragraph{GPT-OSS-20B 上的困惑度。}
+与 Qwen3-30B-A3B 不同，GPT-OSS-20B 在原始文本上给出的困惑度异常偏高：
+未压缩模型在 WikiText-2 上为 $503.9$，在 C4 上为 $269.9$。
+这是一个已知的假象——GPT-OSS 围绕 \emph{harmony} 聊天格式构建，
+并不打算直接在原始语料上进行因果语言模型的困惑度评测，因此其绝对困惑度
+并非可靠的质量信号。与此一致，随着更多层被压缩，TD-MoE 压缩\emph{降低}了
+困惑度（图~\ref{fig:gpt_oss_ppl}）而非使其升高，因为这一干预把校准失当的
+基线推向了更通用的下一词元统计。因此，我们把下游准确率
+（图~\ref{fig:gpt_oss_downstream}）视为 GPT-OSS-20B 的可靠信号，
+报告困惑度仅为完整起见。
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \clearpage
+
+\subsection{GPT-OSS-20B 上的补充实验}
+\label{app:td_moe_gpt_oss}
+\subsubsection{专家模对比}
+我们在 OpenAI GPT-OSS-20B 上以逐层压缩率 $\rho{=}0.4$ 评测 TD-MoE，
+并改变\emph{专家模}的设置：\textsc{preserve} 将专家维数的 Tucker 秩固定为
+$r_1{=}K$（所有专家都保留为彼此不同的潜在方向），而 \textsc{compress}
+还同时压缩专家维数（$r_1 < K$）。在相同目标压缩率下，这会把专家模上省出的
+预算重新分配给特征模：在我们的 GPT-OSS-20B 实验中，\textsc{preserve}
+选取的秩为 $(32,1720,2664)$，而 \textsc{compress} 选取 $(20,2496,2880)$。
+因此，\textsc{compress} 用专家模容量换取更高秩的输入与输出因子，
+使分解能够利用跨专家的冗余，代价是专家多样性下降。
+
+图~\ref{fig:gpt_oss_preserve_vs_compress} 给出了随 TD-MoE 压缩的
+GPT-OSS-20B 层数增加时，\textsc{preserve} 与 \textsc{compress}
+对应的下游准确率曲线。
+
+\subsubsection{与 MoBE 的对比}
+\label{app:gpt_oss_mobe}
+
+我们把第~\ref{sec:td_moe_qwen}~节引入的 \texttt{MoBE} 基线扩展到 GPT-OSS-20B。GPT-OSS-20B 每层只有 32 个专家（Qwen3-30B-A3B 为 128 个），因此 MoBE 的基矩阵数目
+必须满足 $n_B < 32$ 才能产生任何压缩。我们评测 $n_B \in \{8, 16\}$，并按照 MoBE 已发表的惯例把截断 $T$ 固定在最小的单专家维数上。
+这两种设置在节省比特数上分别与 TD-MoE 的 $\rho{=}0.4$ 和 $\rho{=}0.2$ 相匹配，其余所有实验协议细节（渐进式由中间向外的块调度、评测数据集、激活几何探针）均遵循附录~\ref{app:td_moe}。
+
+\begin{figure}[!b]
+  \centering
+  \vspace{-8mm}\includegraphics[width=0.8\linewidth]{emnlp/figs/gpt_oss_td_moe_ppl_vs_layers.pdf}
+  \caption{%
+    GPT-OSS-20B 上随 TD-MoE 压缩的 MoE 层数增加时的 WikiText-2（左）
+    与 C4（右）困惑度，取 $\rho \in \{0.2, 0.4\}$。未压缩基线（虚线）
+    异常偏高，是因为 GPT-OSS 面向 harmony 聊天格式而非原始文本
+    语言建模；因此对该模型而言，困惑度不是可靠的
+    质量指标。
+  }
+  \label{fig:gpt_oss_ppl}
+  \vspace{-4mm}
+\end{figure}
+
+图~\ref{fig:gpt_oss_mobe_ppl} 报告了随更多 MoE 层被压缩时的 C4 困惑度。与仅用 TD-MoE 的实验（图~\ref{fig:gpt_oss_ppl}）一样，GPT-OSS-20B 上的绝对困惑度值
+不能孤立解读，因为未压缩基线在原始文本因果语言模型评测下校准失当。但相对排序仍有信息量：在相同节省比特数下，MoBE 对模型的扰动小于
+TD-MoE。我们依靠图~\ref{fig:gpt_oss_mobe_geometry} 中的激活几何诊断和下游准确率（图~\ref{fig:gpt_oss_downstream}）作为可靠的
+质量信号。
+
+图~\ref{fig:gpt_oss_mobe_geometry} 在残差流层面比较了各方法。每个标记对应一种块调度设置；标记形状编码分解族，标记面积表示相对稠密模型
+节省的比特比例，颜色编码 C4 困惑度。
+
+
+\section{计算代价}
+
+所有模型实验均在 NVIDIA H100 GPU 上运行。附录~\ref{app:gptj_llama_tensor_protocol} 中描述的 GPT-J~6B 与 LLaMA~2~7B 张量分解实验（包括渐进式
+中间层压缩网格、困惑度评测、激活几何诊断以及轻量级 LoRA 修复运行）总共耗费约 $100$ 个 H100 GPU 小时。附录~\ref{app:td_moe} 中描述的 Qwen3-30B-A3B 与 GPT-OSS-20B 张量分解实验（包括渐进式
+中间层压缩网格、困惑度评测、激活几何诊断以及 MoBE 对比）总共耗费约 $60$ 个 H100 GPU 小时。我们报告的 GPU 小时为实际运行时间乘以所用 GPU 数目。
+
+所有模型（GPT-J 6B、LLaMA 2 7B、Qwen3-30B-A3B、GPT-OSS-20B）与基准测试（WikiText-2、C4、ARC-Challenge、HellaSwag、OpenBookQA、PIQA、WinoGrande）均严格用于压缩方法的研究性评测，与其公开声明的研究用途一致。我们不再分发模型权重，也不在研究场景之外衍生产品。
+
+
+
+\begin{figure}[htbp]
+\centering
+\begin{minipage}[t]{0.46\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{emnlp/figs/gpt_oss_main_left_ppl.pdf}
+    \captionof{figure}{%
+        GPT-OSS-20B 上随压缩 MoE 层数增加时的 C4 困惑度，
+        对应 TD-MoE $\rho \in \{0.2, 0.4\}$ 与 MoBE
+        $n_B \in \{8, 16\}$。未压缩的 C4 基线（虚线）
+        异常偏高，是因为 GPT-OSS 面向 harmony 聊天格式
+        而非原始文本语言建模
+        （参见图~\ref{fig:gpt_oss_ppl}）；对该模型而言绝对困惑度不是
+        可靠的质量指标，但其相对排序——在相同节省比特数下
+        MoBE 对模型的扰动小于 TD-MoE——与
+        图~\ref{fig:gpt_oss_mobe_geometry} 中的激活几何诊断一致。%
+    }
+    \label{fig:gpt_oss_mobe_ppl}
+\end{minipage}\hfill%
+\begin{minipage}[t]{0.52\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{emnlp/figs/gpt_oss_main_right_geometry.pdf}
+    \captionof{figure}{%
+        GPT-OSS-20B 上 TD-MoE 与 MoBE 的残差流激活几何。
+        每个标记对应一种块调度设置；标记形状
+        表示分解族，标记面积为相对稠密模型
+        节省的比特比例，颜色编码 C4
+        困惑度。虚线标出无扰动参考
+        （范数比 $=1$）。在相同节省比特数下，MoBE 产生的
+        MoE 输出夹角更小、范数比更接近 1，
+        与 Qwen3-30B-A3B 上的发现（图~\ref{fig:moe_main}）相呼应。%
+    }
+    \label{fig:gpt_oss_mobe_geometry}
+\end{minipage}
+\end{figure}
+
+
+
+% \section*{Information About Use of AI Assistants}
+
+% During the preparation of this work, AI-based tools were consulted to refine the writing, assist in locating related work, and help arrange the final repository layout. The authors retained full control over the content and checked the resulting materials.
+
+\end{appendixpart}
+\end{document}

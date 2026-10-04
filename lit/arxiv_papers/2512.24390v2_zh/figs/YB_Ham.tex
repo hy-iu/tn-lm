@@ -1,0 +1,16 @@
+\begin{tikzpicture}[baseline=(current bounding box.center)]
+    \def\l{.9};
+    \def\h{.8};
+    
+    \foreach \i in {0,1,2,5,6,7} {
+        \draw[obj1] (\l*\i,-\h) --+ (0,2*\h);
+    }
+
+    \draw[obj1] (3*\l,-\h) to[out=90,in=-90,looseness=2] (4*\l,\h);
+    \node[circle,fill=white] at (3.5*\l,0) {};
+    \draw[obj1] (4*\l,-\h) to[out=90,in=-90,looseness=2] (3*\l,\h);
+
+    \node[anchor=north] at (3.5*\l,-\h) {$\sss\msf i$};
+    \node at (-\l/2,0) {$\dots$};
+    \node at (15/2*\l,0) {$\dots$};
+\end{tikzpicture}

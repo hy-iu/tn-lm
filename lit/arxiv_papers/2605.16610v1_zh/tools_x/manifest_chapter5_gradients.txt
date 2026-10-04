@@ -1,0 +1,3 @@
+parts/chapter5_gradients_000.tex	lines 1-292	(292)
+parts/chapter5_gradients_001.tex	lines 293-531	(239)
+parts/chapter5_gradients_002.tex	lines 532-838	(307)

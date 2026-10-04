@@ -1,0 +1,11 @@
+\begin{document}
+\maketitle
+
+\begin{abstract}
+大语言模型（large language model, LLM）由词元表示、权重、适配更新、缓存与激活等结构化的高维对象构建而成，而以矩阵为中心的传统视角尚未充分挖掘这些对象的多重线性结构。张量分解与张量网络为刻画这一结构提供了原理性的代数语言，然而现有文献往往仅将其视为孤立的压缩机制。本综述通过两个互补的视角来组织面向 LLM 的张量方法：其一是覆盖词元化、嵌入、预训练、适配、压缩、推理与可解释性的七阶段生命周期分类法；其二是覆盖嵌入、注意力与前馈网络（feed-forward network, FFN）的组件视角。我们给出统一的记号体系与理论基础，分析针对各个 Transformer 组件的张量化策略，并在生命周期的每个阶段对各类方法进行比较，同时明确指出评估协议与模型规模上的差异。我们进一步将张量方法与相邻的高效化技术以及概率张量网络联系起来。最后，我们总结了若干开放性挑战，并引入度量 $\rho_{\rm gap}$，用于刻画理论内存缩减量与实测系统级加速比之间的「压缩-实现鸿沟」。通过将张量化视为一条共同的结构原理，本综述为张量化语言模型提供了一个结构化的入门路径，并阐明参数节省在何种条件下能够切实转化为内存效率、计算效率或可解释性。本文专属的 GitHub 页面可通过 \href{https://github.com/ma-tt-a/awesome-tensor-methods-for-llms}{this https URL} 访问。
+
+
+% Language models are built from structured high-dimensional objects: token and subtoken embeddings, attention tensors, feed-forward memories, layer stacks, adaptation updates, activation streams, optimizer states, and key-value caches. Tensor decompositions and tensor networks provide a mathematical language for exploiting this structure, but the literature often treats them as isolated compression mechanisms. This survey draft organizes tensor methods for language models across the full model lifecycle, from token representations through training, adaptation, compression, ,inference, and interpretability. It reviews tensor preliminaries, identifies the main tensor objects inside Transformer-like language models, surveys tensorized components and lifecycle methods, compares tensor approaches with neighboring efficiency techniques, and develops open problems for tensor-native language models.
+\end{abstract}
+
+%\tableofcontents

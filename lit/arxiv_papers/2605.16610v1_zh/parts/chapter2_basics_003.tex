@@ -1,0 +1,188 @@
+下面的命题给出一个简洁的图示证明：外积的内积等于内积的乘积。
+\begin{proposition}
+    设 $\Xt,\Tt\in\RR^{d_1\times d_2\times\cdots\times d_N}$，其中 $\Xt = \ab_1\outprod\ab_2\outprod\cdots\outprod\ab_N$、$\Tt = \tb_1\outprod\tb_2\outprod\cdots\outprod\tb_N$，则 $\langle\Xt,\Tt\rangle = \prod_{n=1}^N\langle\ab_n,\tb_n\rangle$。
+\begin{proof}
+\begin{align*}
+\langle\Xt,\Tt\rangle
+&=
+\left\langle\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm}}
+    \def\y{0}
+     \def\x{0}
+\node[tensor,fill=blue!10!white] (a1) at (\x,\y){$\ab_1$};
+\node[tensor,fill=blue!10!white](a2) at (\x+1,\y){$\ab_2$};
+  \node[tensor,fill=blue!10!white](an) at (\x+3,\y){$\ab_N$};
+    \draw[edge] (a1) -- (\x,\y-0.7) node [midway, left] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (a2) -- (\x+1,\y-0.7) node [midway, left] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (an) -- (\x+3,\y-0.7)  node [midway, left] {\scalebox{0.7}{\dimcolor{$d_N$}}};
+    \node (eq) at (\x+2,\y) {$\cdots$};
+\end{tikzpicture} \ \scalebox{1.5}{,}
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm}}
+    \def\y{0}
+     \def\x{0}
+\node[tensor,fill=red!10!white] (t1) at (\x,\y){$\tb_1$};
+\node[tensor,fill=red!10!white](t2) at (\x+1,\y){$\tb_2$};
+  \node[tensor,fill=red!10!white](tn) at (\x+3,\y){$\tb_N$};
+    \draw[edge] (t1) -- (\x,\y-0.7) node [midway, left] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (t2) -- (\x+1,\y-0.7) node [midway, left] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (tn) -- (\x+3,\y-0.7)  node [midway, left] {\scalebox{0.7}{\dimcolor{$d_N$}}};
+    \node (eq) at (\x+2,\y) {$\cdots$};
+\end{tikzpicture} 
+\right\rangle\\
+&=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm}}
+    \def\y{0}
+     \def\x{0}
+\node[tensor,fill=blue!10!white] (a1) at (\x,\y+0.5){$\ab_1$};
+\node[tensor,fill=blue!10!white](a2) at (\x+1,\y+0.5){$\ab_2$};
+  \node[tensor,fill=blue!10!white](an) at (\x+3,\y+0.5){$\ab_N$};
+  \node[tensor,fill=red!10!white] (t1) at (\x,\y-0.5){$\tb_1$};
+\node[tensor,fill=red!10!white](t2) at (\x+1,\y-0.5){$\tb_2$};
+  \node[tensor,fill=red!10!white](tn) at (\x+3,\y-0.5){$\tb_N$};
+    \draw[edge] (a1) -- (t1) node [midway, left] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (a2) -- (t2) node [midway, left] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (an) -- (tn)  node [midway, left] {\scalebox{0.7}{\dimcolor{$d_N$}}};
+    \node (eq) at (\x+2,\y) {$\cdots$};
+\end{tikzpicture}
+=
+\prod_{n=1}^N\langle\ab_n,\tb_n\rangle.
+\end{align*}
+\end{proof}
+\end{proposition}
+\paragraph{维度为 1 的边等于没有边}
+需要注意，在张量网络图中，大小为 1 的边等价于没有这条边。
+例如在矩阵乘法中，若收缩边的大小为 1，它就等价于向量的外积：
+\begin{align*}
+    \Ab\in\RR^{p\times 1},\ \ \ \Bb\in\RR^{1\times q}, \ \ \ 
+(\Ab\Bb)_{ij} 
+&=
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (A) at (\x,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!50!white] (B) at (\x+1,\y){\scalebox{0.85}{$\Bb$}};
+    \draw[edge] (A) -- (B) node [above,midway] {\scalebox{0.7}{\dimcolor{$1$}}};
+    \draw[edge] (\x-0.25,\y) -- (\x-0.75,\y)  node [pos=1.3] {\scalebox{0.7}{\indcolor{$i$}}};
+    \draw[edge] (\x+1.25,\y) -- (\x+1.75,\y)  node [pos=1.3] {\scalebox{0.7}{\indcolor{$j$}}};
+\end{tikzpicture}\\
+&=
+\sum_{k=1}^{1}\Ab_{i1}\Bb_{1j}
+=
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (A) at (\x,\y){\scalebox{0.85}{$\ab$}};
+    \node[tensor,fill=blue!50!white] (B) at (\x+1,\y){\scalebox{0.85}{$\bb$}};
+    \draw[edge] (\x-0.25,\y) -- (\x-0.75,\y)  node[pos=1.3] {\scalebox{0.7}{\indcolor{$i$}}};
+    \draw[edge] (\x+1.25,\y) -- (\x+1.75,\y)  node [pos=1.3] {\scalebox{0.7}{\indcolor{$j$}}};
+\end{tikzpicture}\\
+&=
+(\ab\outprod\bb)_{ij},
+\end{align*}
+其中 $\ab$ 是 $\Ab$ 的唯一一列，$\bb$ 是 $\Bb$ 的唯一一行。
+\paragraph{迹} 迹运算是张量收缩作用于方阵时的特例。在张量网络中，迹自然地由一条连接矩阵两条腿的环路~（自环边）表示：
+\begin{align*}
+\Ab\in\RR^{d \times d},\hspace{0.5cm}
+\tr(\Ab) = \sum_{i=1}^d\Ab_{ii} = \hspace*{-0.5cm}
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (A) at (\x,\y){\scalebox{0.85}{$\Ab$}};
+    \draw[edge] (A) to [out=20,in=160, distance=1cm] (A);
+    \node[draw=none] () at (\x,\y+0.5) {\scalebox{0.7}{\dimcolor{$d$}}};
+    \end{tikzpicture}\hspace*{-0.5cm}.
+\end{align*}
+图中没有自由腿，这与迹是标量这一事实相吻合。张量网络图为迹在循环置换下的不变性提供了一个极为简单的证明。先从两个矩阵乘积的迹入手，设 $\Ab \in \RR^{d\times R}$、$\Bb \in \RR^{R\times d}$。  如前所述，画张量网络图时重要的只是图的结构。由此即可看出
+\begin{align*}
+\tr(\Ab\Bb)= 
+\hspace{-0.5cm}
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (A) at (\x,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!50!white] (B) at (\x+1,\y){\scalebox{0.85}{$\Bb$}};
+    \draw[edge] (A) -- (B) node [midway,above]{\scalebox{0.7}{\dimcolor{$R$}}};
+    \draw[edge] (A) to [out=155,in=25, distance=1cm] (B);
+    \node[draw=none] () at (\x+0.5,\y+0.65) {\scalebox{0.7}{\dimcolor{$d$}}};
+    \end{tikzpicture}
+\hspace{-0.5cm} = 
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (A) at (\x,\y-0.5){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!50!white] (B) at (\x,\y+0.5){\scalebox{0.85}{$\Bb$}};
+    \draw[edge] (A) to [out=180,in=180, distance=0.5cm] (B);
+    \draw[edge] (A) to [out=0,in=0, distance=0.5cm] (B);
+    \node[draw=none] () at (\x+0.8,\y) {\scalebox{0.7}{\dimcolor{$R$}}};
+    \node[draw=none] () at (\x-0.8,\y) {\scalebox{0.7}{\dimcolor{$d$}}};
+    \end{tikzpicture}
+ =\hspace{-0.5cm}
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=blue!50!white] (B) at (\x,\y){\scalebox{0.85}{$\Bb$}};
+    \node[tensor,fill=red!50!white] (A) at (\x+1,\y){\scalebox{0.85}{$\Ab$}};
+    \draw[edge] (A) -- (B)node [midway,above]{\scalebox{0.7}{\dimcolor{$R$}}};;
+    \draw[edge] (B) to [out=155,in=25, distance=1cm] (A);
+    \node[draw=none] () at (\x+0.5,\y+0.65) {\scalebox{0.7}{\dimcolor{$d$}}};
+    \end{tikzpicture}
+\hspace{-0.4cm} =
+\tr(\Bb\Ab),
+\end{align*}
+对三个矩阵 $\Ab\in\RR^{m\times n}, \Bb\in\RR^{n\times p},  \Cb\in\RR^{p\times m}$ 也有类似结论
+\begin{align*}
+\tr(\Ab\Bb\Cb) = 
+\hspace{-0.7cm}
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (A) at (\x,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!50!white] (B) at (\x+1,\y){\scalebox{0.85}{$\Bb$}};
+    \node[tensor,fill=red!30!white] (C) at (\x+2,\y){\scalebox{0.85}{$\Cb$}};
+    \draw[edge] (A) -- (B) node [midway,above]{\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge] (B) -- (C) node [midway,above]{\scalebox{0.7}{\dimcolor{$p$}}};;
+    \draw[edge] (A) to [out=155,in=25, distance=1cm] (C);
+    \node[draw=none] () at (\x+1,\y+0.65) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \end{tikzpicture}
+\hspace{-0.7cm}  = 
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (A) at (\x,\y+0.5){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!50!white] (B) at (\x-0.5,\y-0.3){\scalebox{0.85}{$\Bb$}};
+    \node[tensor,fill=red!30!white] (C) at (\x+0.5,\y-0.3){\scalebox{0.85}{$\Cb$}};
+    \draw[edge] (A) to [out=210,in=90] (B);
+    \draw[edge] (A) to [out=-30,in=90] (C);
+    \draw[edge] (B) to [out=300,in=240] (C);
+    \node[draw=none] () at (\x+0.55,\y+0.3) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \node[draw=none] () at (\x-0.55,\y+0.3) {\scalebox{0.7}{\dimcolor{$n$}}};
+    \node[draw=none] () at (\x,\y-0.85) {\scalebox{0.7}{\dimcolor{$p$}}};
+    \end{tikzpicture}
+= 
+\hspace{-0.7cm}
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!30!white] (C) at (\x,\y){\scalebox{0.85}{$\Cb$}};
+    \node[tensor,fill=red!50!white] (A) at (\x+1,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!50!white] (B) at (\x+2,\y){\scalebox{0.85}{$\Bb$}};
+    \draw[edge] (C) -- (A) node [midway,above]{\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge] (A) -- (B) node [midway,above]{\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge] (C) to [out=155,in=25, distance=1cm] (B);
+    \node[draw=none] () at (\x+1,\y+0.65) {\scalebox{0.7}{\dimcolor{$p$}}};
+    \end{tikzpicture}
+\hspace{-0.7cm} = \tr(\Cb\Ab\Bb).
+\end{align*}
+需要注意的是，张量网络图之间的这些等式是平凡的：我们只是挪动了节点的位置，而没有改变底层图的结构。因此，这只是对同一张图的两种解读，却得到了 $\tr(\Ab\Bb\Cb)$ 与 $\tr(\Cb\Ab\Bb)$ 之间并不那么平凡的等式。
+

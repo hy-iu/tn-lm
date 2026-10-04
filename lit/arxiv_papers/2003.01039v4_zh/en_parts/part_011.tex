@@ -1,0 +1,28 @@
+\subsection{Email Experiments}
+%
+\begin{table}[t]
+\caption{Training on emails and assessing the per-character perplexity (PPL) and accuracy of unconditional sampling using a u-MPS with bond dimension 50. Making use of a regularizer associated with a regex $R_e$, approximating the formatting of valid email addresses, leads to small gains in both the syntactic correctness of unconditionally sampled strings and overall perplexity. Note that the use of \emph{conditional} sampling relative to $R_e$ would guarantee the generation of syntactically valid strings (Theorem~\ref{thm:sample}), a fact we verify experimentally.}
+\label{tab:regularization}
+\renewcommand{\arraystretch}{1.1}
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{c|cc}
+           & u-MPS          & u-MPS   \\
+           & w/ regex reg.  & w/o regex reg. \\
+\hline
+Correct \% & \textbf{37.2}  & 35.4    \\
+Test PPL   & \textbf{7.3}   & 7.8     \\
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+
+To verify the correctness and relative benefits of regex sampling and regularization, we train on a dataset of approximately 4,000 email addresses taken from the CLAIR fraudulent emails dataset~\citep{radev2008}. Although the correctness of an email address generally depends on non-syntactic considerations (such as domain name resolution), we can approximate the format of valid email addresses using the regex $ R_{e} = \verb![\w-.]+@([\w-]+.)+[\w-][\w-]+! $ (a generalization of the pattern \texttt{name@site.tld}).
+
+We first train a u-MPS using gradient descent on this email address dataset and look at the perplexity of a held-out validation set and correctness of (unconditionally) sampled strings, both with and without the use of regularization associated with $R_e$. We find the use of regex regularization to yield small improvements to perplexity and correctness of sampled text, as shown in Table~\ref{tab:regularization}. 
+
+Although the correctness of conditional regex sampling is already guaranteed by Theorem~\ref{thm:sample}, we confirm this experimentally by using the regex $R_e$ to periodically produce conditional samples during training. We find that conditional sampling relative to $R_e$ does indeed always yield random strings matching the desired regex, but with the quality of generated text gradually improving during training. While conditional sampling of the randomly initialized u-MPS produces syntactically-valid but otherwise random strings, such as {\verb k90@4riuh2600xz1.wz }, training the model on the email address dataset leads to the production of more realistic-looking email addresses, such as {\verb sail203@yahoo.com }.
+

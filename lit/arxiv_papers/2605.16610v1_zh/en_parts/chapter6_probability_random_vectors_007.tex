@@ -1,0 +1,285 @@
+\end{proof}
+\item The next proposition is a useful special case of Theorem 3.3.15 item (iv) of~\citep{gupta2018matrix}.
+\begin{proposition}
+    Let $\Ab\in\RR^{m\times n}$ be a random matrix with i.i.d. standard normal entries, and let $\Xb\in\RR^{d\times m}$ be a constant matrix then 
+$$\EE(\tr(\Xb\Ab\Ab^\ts\Xb^\ts)^2) = n^2\norm{\Xb}_F^4 + 2n\tr((\Xb^\ts\Xb)^2).$$
+\begin{proof}
+    We prove this identity by using tensor network notations:
+\begin{align*}
+\EE(\tr(\Xb\Ab\Ab^\ts\Xb^\ts)^2) 
+&=
+\EE\left(\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.25}
+    \def\x{0}
+    \node[tensor,fill=red!40!white] (X1) at (\x,\y){\scalebox{0.85}{$\Xb$}};
+    \node[tensor,fill=blue!40!white] (A1) at (\x+1,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!40!white] (A2) at (\x+2,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=red!40!white] (X2) at (\x+3,\y){\scalebox{0.85}{$\Xb$}};
+    \draw[edge](X1) -- (A1)node [midway, above]{\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge](A1) -- (A2)node [midway, above]{\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge](A2) -- (X2)node [midway, above]{\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge](X1) to [out=-100,in=-80] (X2);
+    \node[tensor,fill=red!40!white](X_1) at (\x+4,\y){\scalebox{0.85}{$\Xb$}};
+    \node[tensor,fill=blue!40!white](A_1) at (\x+5,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!40!white] (A_2) at (\x+6,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=red!40!white] (X_2) at (\x+7,\y){\scalebox{0.85}{$\Xb$}};
+    \draw[edge](X_1) -- (A_1)node [midway, above]{\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge](A_1) -- (A_2)node [midway, above]{\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge](A_2) -- (X_2)node [midway, above]{\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge](X_1) to [out=-100,in=-80] (X_2);
+    \node[draw=none] () at (\x+1.5,\y-1) {\scalebox{0.7}{\dimcolor{$d$}}};
+    \node[draw=none] () at (\x+5.5,\y-1) {\scalebox{0.7}{\dimcolor{$d$}}};
+\end{tikzpicture}\right)\\
+&\textequal{Prop.~\ref{prop:inner-expectation}}\ \
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.25}
+    \def\x{0}
+    \node[tensor,fill=blue!40!white] (A1) at (\x,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!40!white] (A2) at (\x+1,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!40!white] (A_1) at (\x+2,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!40!white] (A_2) at (\x+3,\y){\scalebox{0.85}{$\Ab$}};
+    \draw[edge](A1)--(A2)node [midway, above]{\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge](A_1)--(A_2)node [midway, above]{\scalebox{0.7}{\dimcolor{$n$}}};
+    \node[tensor,fill=red!40!white] (X1) at (\x,\y-1){\scalebox{0.85}{$\Xb$}};
+    \node[tensor,fill=red!40!white] (X2) at (\x+1,\y-1){\scalebox{0.85}{$\Xb$}};
+    \node[tensor,fill=red!40!white] (X_1) at (\x+2,\y-1){\scalebox{0.85}{$\Xb$}};
+    \node[tensor,fill=red!40!white] (X_2) at (\x+3,\y-1){\scalebox{0.85}{$\Xb$}};
+    \draw[edge](X1)--(X2)node [midway, above]{\scalebox{0.7}{\dimcolor{$d$}}};
+    \draw[edge](X_1)--(X_2)node [midway, above]{\scalebox{0.7}{\dimcolor{$d$}}};
+    \node at (\x-0.65,\y) {$\EE\left( \vphantom{\rule{0pt}{0.5cm}} \right.$};
+    \node at (\x+3.45,\y) {$ \left.\vphantom{\rule{0pt}{0.5cm}} \right)$};
+    \node at (\x-0.65,\y-1){$\EE\left(\vphantom{\rule{0pt}{0.5cm}}\right.$};
+    \node at (\x+3.45,\y-1) {$ \left.\vphantom{\rule{0pt}{0.5cm}} \right)$};
+    \draw[edge, draw=red](A1)--(X1)node [midway, left]{\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge, draw=red](A2)--(X2)node [midway, right]{\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge, draw=red](A_1)--(X_1)node [midway, left=-0.05cm]{\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge, draw=red](A_2)--(X_2)node [midway, right=-0.05cm]{\scalebox{0.7}{\dimcolor{$m$}}};
+\end{tikzpicture}\\
+&=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.15}
+    \def\x{0}
+    \node[tensor,fill=blue!40!white] (A1) at (\x,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!40!white] (A2) at (\x+1,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!40!white] (A_1) at (\x+2,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!40!white] (A_2) at (\x+3,\y){\scalebox{0.85}{$\Ab$}};
+    \draw[edge](A1)--(A2)node [midway, above]{\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge](A_1)--(A_2)node [midway, above]{\scalebox{0.7}{\dimcolor{$n$}}};
+    \node[tensor,fill=red!40!white] (X1) at (\x,\y-1){\scalebox{0.85}{$\Xb$}};
+    \node[tensor,fill=red!40!white] (X2) at (\x+1,\y-1){\scalebox{0.85}{$\Xb$}};
+    \node[tensor,fill=red!40!white] (X_1) at (\x+2,\y-1){\scalebox{0.85}{$\Xb$}};
+    \node[tensor,fill=red!40!white] (X_2) at (\x+3,\y-1){\scalebox{0.85}{$\Xb$}};
+    \draw[edge](X1)--(X2)node [midway, above]{\scalebox{0.7}{\dimcolor{$d$}}};
+    \draw[edge](X_1)--(X_2)node [midway, above]{\scalebox{0.7}{\dimcolor{$d$}}};
+    \node at (\x-0.65,\y) {$\EE\left( \vphantom{\rule{0pt}{0.5cm}} \right.$};
+    \node at (\x+3.45,\y) {$ \left.\vphantom{\rule{0pt}{0.5cm}} \right)$};
+    \draw[edge, draw=red](A1)--(X1)node [midway, left]{\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge, draw=red](A2)--(X2)node [midway, right]{\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge, draw=red](A_1)--(X_1)node [midway, left]{\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge, draw=red](A_2)--(X_2)node [midway, right=-0.05cm]{\scalebox{0.7}{\dimcolor{$m$}}};
+\end{tikzpicture},
+\end{align*}
+The last equality follows from the fact that the matrix $\Xb$ is constant. By Proposition~\ref{prop:kronecker-exp} we know:
+\begin{align*}
+\EE(\Ab^\ts\Ab)^{\outprod 2}
+&=
+n^2\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \draw[edge] (\x+2,\y-0.1) to [out=100,in=80] (\x+3.65,\y-0.1);
+    \node[draw=none] () at (\x+1,\y+0.5) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \node[draw=none] () at (\x+2.85,\y+0.5) {\scalebox{0.7}{\dimcolor{$m$}}};
+\end{tikzpicture}
++n\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \draw[edge] (\x+1.45,\y-0.1) to [out=100,in=80] (\x+3,\y-0.1);
+    \node[draw=none] () at (\x+1,\y+0.5) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \node[draw=none] () at (\x+2.25,\y+0.5) {\scalebox{0.7}{\dimcolor{$m$}}};
+\end{tikzpicture}
++
+n\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x,\y-0.1) to [out=100,in=80] (\x+2,\y-0.1);
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \node[draw=none] () at (\x+1,\y+0.65) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \node[draw=none] () at (\x+1,\y+0.25) {\scalebox{0.7}{\dimcolor{$m$}}};
+\end{tikzpicture}.
+\end{align*}
+Therefore, 
+\begin{align*}
+    &\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.15}
+    \def\x{0}
+    \node[tensor,fill=blue!40!white] (A1) at (\x,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!40!white] (A2) at (\x+1,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!40!white] (A_1) at (\x+2,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=blue!40!white] (A_2) at (\x+3,\y){\scalebox{0.85}{$\Ab$}};
+    \draw[edge](A1)--(A2)node [midway, above]{\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge](A_1)--(A_2)node [midway, above]{\scalebox{0.7}{\dimcolor{$n$}}};
+    \node[tensor,fill=red!40!white] (X1) at (\x,\y-1){\scalebox{0.85}{$\Xb$}};
+    \node[tensor,fill=red!40!white] (X2) at (\x+1,\y-1){\scalebox{0.85}{$\Xb$}};
+    \node[tensor,fill=red!40!white] (X_1) at (\x+2,\y-1){\scalebox{0.85}{$\Xb$}};
+    \node[tensor,fill=red!40!white] (X_2) at (\x+3,\y-1){\scalebox{0.85}{$\Xb$}};
+    \draw[edge](X1)--(X2)node [midway, above]{\scalebox{0.7}{\dimcolor{$d$}}};
+    \draw[edge](X_1)--(X_2)node [midway, above]{\scalebox{0.7}{\dimcolor{$d$}}};
+    \node at (\x-0.65,\y) {$\EE\left( \vphantom{\rule{0pt}{0.5cm}} \right.$};
+    \node at (\x+3.45,\y) {$ \left.\vphantom{\rule{0pt}{0.5cm}} \right)$};
+    \draw[edge, draw=red](A1)--(X1)node [midway, left]{\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge, draw=red](A2)--(X2)node [midway, right]{\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge, draw=red](A_1)--(X_1)node [midway, left]{\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge, draw=red](A_2)--(X_2)node [midway, right]{\scalebox{0.7}{\dimcolor{$m$}}};
+\end{tikzpicture}\\
+&=
+\left(\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!40!white] (X1) at (\x,\y){\scalebox{0.85}{$\Xb$}};
+    \node[tensor,fill=red!40!white] (X2) at (\x+1,\y){\scalebox{0.85}{$\Xb$}};
+    \node[tensor,fill=red!40!white] (X_1) at (\x+2,\y){\scalebox{0.85}{$\Xb$}};
+    \node[tensor,fill=red!40!white] (X_2) at (\x+3,\y){\scalebox{0.85}{$\Xb$}};
+    \draw[edge](X1)--(X2)node [midway, above]{\scalebox{0.7}{\dimcolor{$d$}}};
+    \draw[edge](X_1)--(X_2)node [midway, above]{\scalebox{0.7}{\dimcolor{$d$}}};
+    \draw[edge,draw=red](X1) -- (\x,\y+0.85)node [midway, right]{\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge,draw=red](X2) -- (\x+1,\y+0.85)node [midway, right]{\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge,draw=red](X_1) -- (\x+2,\y+0.85)node [midway, right]{\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge,draw=red](X_2) -- (\x+3,\y+0.85)node [midway, right]{\scalebox{0.7}{\dimcolor{$m$}}};
+\end{tikzpicture}\right)\left(n^2\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \draw[edge] (\x+2,\y-0.1) to [out=100,in=80] (\x+3.65,\y-0.1);
+    \node[draw=none] () at (\x+1,\y+0.5) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \node[draw=none] () at (\x+2.85,\y+0.5) {\scalebox{0.7}{\dimcolor{$m$}}};
+\end{tikzpicture}
++n\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \draw[edge] (\x+1.45,\y-0.1) to [out=100,in=80] (\x+3,\y-0.1);
+    \node[draw=none] () at (\x+1,\y+0.5) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \node[draw=none] () at (\x+2.25,\y+0.5) {\scalebox{0.7}{\dimcolor{$m$}}};
+\end{tikzpicture}
++
+n\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x,\y-0.1) to [out=100,in=80] (\x+2,\y-0.1);
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \node[draw=none] () at (\x+1,\y+0.65) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \node[draw=none] () at (\x+1,\y+0.25) {\scalebox{0.7}{\dimcolor{$m$}}};
+\end{tikzpicture}\right)\\
+&=
+n^2\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x+0.15,\y-0.1) to [out=90,in=90] (\x+1.85,\y-0.1);
+    \draw[edge] (\x+2.5,\y-0.1) to [out=90,in=90] (\x+4.15,\y-0.1);
+    \node[draw=none] () at (\x+1,\y+0.5) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \node[draw=none] () at (\x+3.35,\y+0.5) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \node[tensor,fill=red!40!white] (X1) at (\x+0.15,\y-0.85){\scalebox{0.85}{$\Xb$}};
+    \node[tensor,fill=red!40!white] (X2) at (\x+1.85,\y-0.85){\scalebox{0.85}{$\Xb$}};
+    \draw[edge, draw=red](X1)--(\x+0.15,\y-0.1);
+    \draw[edge](X1)--(X2) node[midway,above]{\scalebox{0.7}{\dimcolor{$d$}}};
+    \draw[edge, draw=red](X2)--(\x+1.85,\y-0.1);
+    \node[tensor,fill=red!40!white] (X_1) at (\x+2.5,\y-0.85){\scalebox{0.85}{$\Xb$}};
+    \node[tensor,fill=red!40!white] (X_2) at (\x+4.15,\y-0.85){\scalebox{0.85}{$\Xb$}};
+    \draw[edge, draw=red](X_1)--(\x+2.5,\y-0.1);
+    \draw[edge](X_1)--(X_2) node[midway,above]{\scalebox{0.7}{\dimcolor{$d$}}};
+    \draw[edge, draw=red](X_2)--(\x+4.15,\y-0.1);
+\end{tikzpicture}
++n\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x+0.15,\y-0.1) to [out=60,in=120] (\x+2.5,\y-0.1);
+    \draw[edge] (\x+1.85,\y-0.1) to [out=60,in=120] (\x+4.15,\y-0.1);
+    \node[draw=none] () at (\x+1.15,\y+0.6) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \node[draw=none] () at (\x+3.25,\y+0.6) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \node[tensor,fill=red!40!white] (X1) at (\x+0.15,\y-0.85){\scalebox{0.85}{$\Xb$}};
+    \node[tensor,fill=red!40!white] (X2) at (\x+1.85,\y-0.85){\scalebox{0.85}{$\Xb$}};
+    \draw[edge, draw=red](X1)--(\x+0.15,\y-0.1);
+    \draw[edge](X1)--(X2) node[midway,above]{\scalebox{0.7}{\dimcolor{$d$}}};
+    \draw[edge, draw=red](X2)--(\x+1.85,\y-0.1);
+    \node[tensor,fill=red!40!white] (X_1) at (\x+2.5,\y-0.85){\scalebox{0.85}{$\Xb$}};
+    \node[tensor,fill=red!40!white] (X_2) at (\x+4.15,\y-0.85){\scalebox{0.85}{$\Xb$}};
+    \draw[edge, draw=red](X_1)--(\x+2.5,\y-0.1);
+    \draw[edge](X_1)--(X_2) node[midway,above]{\scalebox{0.7}{\dimcolor{$d$}}};
+    \draw[edge, draw=red](X_2)--(\x+4.15,\y-0.1);
+\end{tikzpicture}
++n \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x+0.15,\y-0.1) to [out=30,in=150] (\x+4.15,\y-0.1);
+    \draw[edge] (\x+1.85,\y-0.1) to [out=30,in=150] (\x+2.5,\y-0.1);
+    \node[draw=none] () at (\x+2.15,\y+0.6) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \node[draw=none] () at (\x+2.15,\y+0.15) {\scalebox{0.6}{\dimcolor{$m$}}};\node[tensor,fill=red!40!white] (X1) at (\x+0.15,\y-0.85){\scalebox{0.85}{$\Xb$}};
+    \node[tensor,fill=red!40!white] (X2) at (\x+1.85,\y-0.85){\scalebox{0.85}{$\Xb$}};
+    \draw[edge, draw=red](X1)--(\x+0.15,\y-0.1);
+    \draw[edge](X1)--(X2) node[midway,above]{\scalebox{0.7}{\dimcolor{$d$}}};
+    \draw[edge, draw=red](X2)--(\x+1.85,\y-0.1);
+    \node[tensor,fill=red!40!white] (X_1) at (\x+2.5,\y-0.85){\scalebox{0.85}{$\Xb$}};
+    \node[tensor,fill=red!40!white] (X_2) at (\x+4.15,\y-0.85){\scalebox{0.85}{$\Xb$}};
+    \draw[edge, draw=red](X_1)--(\x+2.5,\y-0.1);
+    \draw[edge](X_1)--(X_2) node[midway,above]{\scalebox{0.7}{\dimcolor{$d$}}};
+    \draw[edge, draw=red](X_2)--(\x+4.15,\y-0.1);
+\end{tikzpicture}\\
+&=
+n^2\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x+0.15,\y-0.1) to [out=100,in=80] (\x+1.85,\y-0.1);
+    \draw[edge] (\x+2.5,\y-0.1) to [out=100,in=80] (\x+4.15,\y-0.1);
+    \node[draw=none] () at (\x+1,\y+0.5) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \node[draw=none] () at (\x+3.35,\y+0.5) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \node[tensor,fill=red!40!white] (X1) at (\x+0.15,\y-0.85){\scalebox{0.85}{$\Xb$}};
+    \node[tensor,fill=red!40!white] (X2) at (\x+1.85,\y-0.85){\scalebox{0.85}{$\Xb$}};
+    \draw[edge](X1)--(\x+0.15,\y-0.1);
+    \draw[edge](X1)--(X2) node[midway,above]{\scalebox{0.7}{\dimcolor{$d$}}};
+    \draw[edge](X2)--(\x+1.85,\y-0.1);
+    \node[tensor,fill=red!40!white] (X_1) at (\x+2.5,\y-0.85){\scalebox{0.85}{$\Xb$}};
+    \node[tensor,fill=red!40!white] (X_2) at (\x+4.15,\y-0.85){\scalebox{0.85}{$\Xb$}};
+    \draw[edge](X_1)--(\x+2.5,\y-0.1);
+    \draw[edge](X_1)--(X_2) node[midway,above]{\scalebox{0.7}{\dimcolor{$d$}}};
+    \draw[edge](X_2)--(\x+4.15,\y-0.1);
+\end{tikzpicture}
++2n\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!40!white] (X1) at (\x,\y){\scalebox{0.85}{$\Xb$}};
+    \node[tensor,fill=red!40!white] (X2) at (\x+1,\y){\scalebox{0.85}{$\Xb$}};
+    \node[tensor,fill=red!40!white] (X_1) at (\x,\y-1){\scalebox{0.85}{$\Xb$}};
+    \node[tensor,fill=red!40!white] (X_2) at (\x+1,\y-1){\scalebox{0.85}{$\Xb$}};
+    \draw[edge](X_1) -- (X_2)node [midway, above]{\scalebox{0.7}{\dimcolor{$d$}}};
+    \draw[edge](X1) -- (X2)node [midway, above]{\scalebox{0.7}{\dimcolor{$d$}}};
+    \draw[edge](X1)--(X_1) node [midway, left]{\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge](X2)--(X_2) node [midway, right]{\scalebox{0.7}{\dimcolor{$m$}}};
+\end{tikzpicture}\\
+&= 
+n^2\norm{\Xb}_F^4+2n\tr((\Xb^\ts\Xb)^2).
+\end{align*}
+\end{proof}
+\end{proposition}
+\end{enumerate}
+
+The derivations we presented in this chapter demonstrate how manipulating tensor network expressions can help us derive non-trivial results in a very intuitive manner. 
+
+    

@@ -1,0 +1,15 @@
+\subsection{Sampling}
+
+We introduce a regex-parameterized sampling function $\Sample$ in Algorithm~\ref{alg:sampling}. $\Sample$ gives a recursive means of converting any regex $R$ into an efficient sampling procedure, whose random outputs are (for unambiguous $R$) unbiased samples from the conditional u-MPS distribution associated with the subset $R \subset \Sigma^*$. This is formalized in
+%
+\begin{theorem}
+\label{thm:sample}
+Consider a u-MPS model with core tensor $\mc{A}$ and boundary vectors $\alpha$ and $\omega$, along with an unambiguous regex $R$ whose right transfer operator $\ER_R$ converges. Let $P$ indicate the probability distribution over arbitrary strings defined by the u-MPS, so that $\Sigma_{s\in\Sigma^*} P(s) = 1$. Then calling $\Sample(R, \alphamat, \omegamat)$ samples a string $s \in \Sigma^*$ from the conditional u-MPS distribution $P(s | s \in R) = P(s) / P(R)$, with $s \in R$ and where $P(R) := \sum_{s' \in R} P(s')$.
+\end{theorem}
+%
+We prove Theorem~\ref{thm:sample} in Appendix~\ref{sec:appendix_b}, which also discusses the use of ambiguous regex $R$. For this latter case, Algorithm~\ref{alg:sampling} works identically, but weights strings $s$ by the number of times $s$ matches $R$.
+
+Although Algorithm~\ref{alg:sampling} is written in a recursive manner, it is useful to consider the simple example $R = \Sigma^n$, a concatenation of the single-character regex $\Sigma$ with itself $n$ times, to understand the overall control flow. In this case, Algorithm~\ref{alg:sampling} first attempts to sample the initial character in the string via a recursive call to $\Sample(\Sigma, \alphamat, \ER_{\Sigma^{n-1}}(\omegamat))$. This requires $n-1$ applications of the transfer operator $\ER$ to the initial right boundary matrix, and yields one new character before continuing to the right and repeating this process again.
+
+As is common with recursive algorithms, caching intermediate information permits the naive cost of $(n-1) + (n-2) + \cdots + 1 = \bigO(n^2)$ transfer operator applications to be reduced to $\bigO(n)$. This cached version is equivalent to a simple iterative algorithm, where a sequence of right boundary matrices is first generated and saved during a right-to-left sweep, before a left-to-right sweep is used to sample text and propagate conditional information using the left boundary matrices. Using this idea, we show in Appendix~\ref{sec:appendix_c} that for typical regex $R$, Algorithm~\ref{alg:sampling} can be run with average-case runtime $\bigO(L d D^3)$ and worst-case memory usage $\bigO(L D^2)$, for $L$ the number of characters in $R$, $d$ the size of $\Sigma$, and $D$ the bond dimension of the u-MPS.
+

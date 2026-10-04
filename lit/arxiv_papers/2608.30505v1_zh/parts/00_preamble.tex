@@ -1,0 +1,148 @@
+\documentclass[11pt]{article}
+
+\usepackage[a4paper,margin=1in]{geometry}
+
+% ---- 中文支持：必须在 hyperref 之前加载 ----
+\usepackage[fontset=macnew]{ctex}
+
+\usepackage{amsmath,amssymb,amsfonts,bm,mathtools}
+\usepackage{booktabs,multirow,array,tabularx,longtable,makecell}
+\usepackage{placeins}
+
+\usepackage[expansion=false]{microtype}
+
+\usepackage{graphicx}
+\PassOptionsToPackage{table}{xcolor}
+\usepackage{xcolor}
+\usepackage[table]{xcolor}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage[capitalize,noabbrev]{cleveref}
+\usepackage[backend=bibtex,sorting=none,maxbibnames=99]{biblatex}
+\DeclareFieldFormat{url}{{\small\url{#1}}}
+\addbibresource{references.bib}
+\usepackage{microtype}
+\usepackage{authblk}
+\usepackage{threeparttable}
+\usepackage{tabularray}
+\UseTblrLibrary{booktabs}
+\usepackage{leftindex}
+
+\usepackage{float}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, calc, backgrounds, positioning}
+\pgfdeclarelayer{foreground}
+\pgfsetlayers{background, main, foreground}
+
+\renewcommand{\topfraction}{0.92}
+\renewcommand{\textfraction}{0.05}
+\renewcommand{\floatpagefraction}{0.85}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!50!black,
+    citecolor=blue!50!black,
+    urlcolor=blue!50!black
+}
+
+% ---- cleveref 中文化（必须在 cleveref 加载之后设置） ----
+\crefname{section}{节}{节}
+\crefname{subsection}{节}{节}
+\crefname{subsubsection}{节}{节}
+\crefname{figure}{图}{图}
+\crefname{table}{表}{表}
+\crefname{equation}{式}{式}
+\crefname{algorithm}{算法}{算法}
+\crefname{theorem}{定理}{定理}
+\crefname{appendix}{附录}{附录}
+\crefname{listing}{清单}{清单}
+\crefname{definition}{定义}{定义}
+\crefname{lemma}{引理}{引理}
+\crefname{proposition}{命题}{命题}
+\crefname{corollary}{推论}{推论}
+\crefname{remark}{注记}{注记}
+\crefname{assumption}{假设}{假设}
+\Crefname{section}{节}{节}
+\Crefname{subsection}{节}{节}
+\Crefname{subsubsection}{节}{节}
+\Crefname{figure}{图}{图}
+\Crefname{table}{表}{表}
+\Crefname{equation}{式}{式}
+\Crefname{algorithm}{算法}{算法}
+\Crefname{theorem}{定理}{定理}
+\Crefname{appendix}{附录}{附录}
+\Crefname{listing}{清单}{清单}
+\Crefname{definition}{定义}{定义}
+\Crefname{lemma}{引理}{引理}
+\Crefname{proposition}{命题}{命题}
+\Crefname{corollary}{推论}{推论}
+\Crefname{remark}{注记}{注记}
+\Crefname{assumption}{假设}{假设}
+
+% ---- biblatex 参考文献标题中文化 ----
+\DefineBibliographyStrings{english}{%
+  bibliography = {参考文献},
+  references   = {参考文献},
+  andothers    = {等},
+  page         = {页},
+  pages        = {页},
+}
+
+% ---- 固定名称中文化（兜底，ctex 已设置大部分） ----
+\renewcommand{\figurename}{图}
+\renewcommand{\tablename}{表}
+\renewcommand{\contentsname}{目录}
+\renewcommand{\abstractname}{摘要}
+\renewcommand{\refname}{参考文献}
+\renewcommand{\appendixname}{附录}
+% 注：article 类无 \bibname，不重定义
+\AtBeginDocument{\renewcommand{\abstractname}{摘要}}
+
+% Custom commands for email in authblk
+\newcommand{\email}[1]{\texttt{#1}}
+\definecolor{revisionmagenta}{RGB}{190,70,145}
+\newcommand{\rev}[1]{\textcolor{revisionmagenta}{#1}}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\X}{\mathcal{X}}
+\newcommand{\Y}{\mathcal{Y}}
+\newcommand{\W}{\mathcal{W}}
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\T}{\mathcal{T}}
+\newcommand{\E}{\mathcal{E}}
+\newcommand{\G}{\mathcal{G}}
+\newcommand{\ten}[1]{\mathcal{#1}}
+\newcommand{\mat}[1]{\mathbf{#1}}
+\newcommand{\vecb}[1]{\mathbf{#1}}
+\newcommand{\rank}{\operatorname{rank}}
+\newcommand{\TTD}{\mathrm{TT}}
+\newcommand{\cp}{\mathrm{CP}}
+\newcommand{\bt}{\mathrm{BT}}
+\newcommand{\mps}{\mathrm{MPS}}
+\newcommand{\mha}{\mathrm{MHA}}
+\newcommand{\ffn}{\mathrm{FFN}}
+\newcommand{\kv}{\mathrm{KV}}
+\newcommand{\lora}{\mathrm{LoRA}}
+\newcommand{\peft}{\mathrm{PEFT}}
+\newcommand{\set}[1]{\mathrm{#1}}
+\newcommand{\llama}{\text{LLaMA-3-8B}}
+
+\title{面向语言模型的张量方法：从词元表示到训练、\\ 适配、压缩、推理与可解释性}
+
+%\author{}
+\date{}
+
+\author[1]{Matvei Tarasov}
+ \affil[1]{Innopolis University, Innopolis 420500, Russia\\ \email{m.tarasov@innopolis.university}}
+
+ \author[1]{Salman Ahmadi-Asl}
+ \affil[1]{Innopolis University, Innopolis 420500, Russia\\ \email{s.ahmadiasl@innopolis.ru}}
+
+ \author[2]{André L. F. de Almeida}
+ \affil[2]{Department of Teleinformatics Engineering, Federal University of Cear\'a, Fortaleza 60455-760, Brazil\\ \email{andre@gtel.ufc.br}}
+
+ \author[3]{Andrzej Cichocki}
+ \affil[3]{Systems Research Institute of Polish Academy of Science and Warsaw University of Technology, Poland\\ \email{cichockiand@gmail.com}}
+
+%\date{\today}

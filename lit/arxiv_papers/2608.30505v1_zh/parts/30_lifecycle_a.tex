@@ -1,0 +1,173 @@
+\section{生命周期总览}
+\label{sec:lifecycle-overview}
+
+本节介绍组织本综述的生命周期分类法。\Cref{subsec:taxonomy} 定义各阶段、阶段边界，以及对影响不止一个阶段的方法进行归类所采用的规则。\Cref{subsec:illustrative-examples} 随后以 LLaMA-3-8B 为基础给出具体示例，使该分类法落到实处。生命周期视角与 \cref{sec:components} 中的组件视角互为补充，后者关注哪些 Transformer 对象被张量化；\cref{sec:lifecycle-analysis} 则对各阶段的目标加以形式化并综述相应文献。
+
+\subsection{生命周期分类法}
+\label{subsec:taxonomy}
+
+我们按照语言模型的\emph{生命周期}来组织张量方法：词元化、嵌入、预训练、适配、压缩、推理与可解释性。适配阶段以参数高效微调（PEFT）为主要代表，但也包含为下游用途修改预训练模型的其他过程。\emph{生命周期}一词标识的是引入、利用或分析张量结构的时点；它并不意味着每个模型都遵循一条不可逆的线性序列。例如，适配与压缩可以重复进行或以任意先后次序施加，而可解释性分析可以在部署之前、之中或之后开展。
+
+我们用四个属性来区分各阶段：(i) 在模型生命周期中的\emph{干预时机}，(ii) 主要的\emph{张量对象}，(iii) 方法所优化的\emph{目标}，以及 (iv) \emph{评估准则}。词元化作用于离散的词表与切分规则；嵌入作用于连续的词元表示；预训练学习基座模型的参数；适配学习针对预训练模型的任务或领域特定更新；压缩变换已训练好的模型以降低其资源占用；推理作用于注意力因子、KV 缓存等运行时对象；可解释性则分析、重新表述或刻意施加多重线性结构，以揭示模型机制。这些边界至关重要，因为两个方法可能使用同一种分解，却在求解不同的优化问题，并需要不同的成功证据。
+
+因此，生命周期视角与组件视角是两套正交的分类法。一个方法可以同时由张量化\emph{何时}引入以及它作用于\emph{什么}来定位。例如，FFN 权重的 TTM 表示可以在预训练期间学习得到，可以为压缩而事后拟合，也可以仅用于适配更新。对于跨越多个阶段的方法，我们依据张量约束在何处引入以及优化的是哪个目标，来赋予其主要的生命周期标签；下游影响则作为跨阶段的后果予以记录。因此，一个完整的方法描述至少应说明生命周期阶段、组件或张量对象、张量化方案、分解族与秩、训练机制以及评估指标。\Cref{fig:lifecycle} 展示了该分类法及各阶段的代表性工作，而 \cref{sec:lifecycle-analysis} 的相应小节给出形式化的问题定义与更广泛的文献覆盖。
+% \textcolor{red}{here note, we place only the most relevant works in the figure, while the full list of works is in the corresponding subsections}
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  stage/.style={
+    draw=black!70, line width=1.1pt,
+    rounded corners=7pt,
+    fill=ColStage!55,
+    minimum width=3.0cm, minimum height=0.75cm,
+    font=\small\bfseries, align=center,
+    inner sep=3pt, outer sep=0pt
+  },
+  paperbox/.style={
+    draw=black!60, line width=0.75pt,
+    rounded corners=4pt,
+    fill=white,
+    text width=2.90cm,
+    font=\scriptsize,
+    align=left,
+    inner sep=5pt, outer sep=0pt
+  },
+  nowork/.style={
+    draw=black!40, line width=0.75pt,
+    rounded corners=4pt,
+    fill=ColNone!60,
+    text width=2.90cm,
+    font=\scriptsize,
+    align=left,
+    inner sep=5pt, outer sep=0pt
+  },
+  flow/.style={
+    -{Stealth[length=6pt,width=4pt]},
+    line width=1.0pt, black!70
+  },
+  drop/.style={
+    -{Stealth[length=4pt,width=3pt]},
+    line width=0.75pt, black!55
+  },
+  wrap/.style={
+    -{Stealth[length=6pt,width=4pt]},
+    line width=1.0pt, black!70,
+    rounded corners=11pt
+  },
+]
+\definecolor{ColStage}{RGB}{141,160,203}
+\definecolor{ColNone}{RGB}{220,220,220}
+\def\XS{3.8}
+\def\RY{-5.5}
+\def\Dg{0.50}
+%% ROW 1
+\node[stage] (tok)  at ({0.5*\XS}, 0) {词元化};
+\node[stage] (emb)  at ({1.5*\XS}, 0) {嵌入};
+\node[stage] (pre)  at ({2.5*\XS}, 0) {预训练};
+%% ROW 2
+\node[stage] (peft)  at ({0*\XS}, \RY) {适配};
+\node[stage] (compr)  at ({1*\XS}, \RY) {压缩};
+\node[stage] (infer)  at ({2*\XS}, \RY) {推理};
+\node[stage] (interp) at ({3*\XS}, \RY) {可解释性};
+%% Row-1 arrows
+\draw[flow] (tok.east)   -- (emb.west);
+\draw[flow] (emb.east)   -- (pre.west);
+%% Row-2 arrows
+\draw[flow] (peft.east)  -- (compr.west);
+\draw[flow] (compr.east) -- (infer.west);
+\draw[flow] (infer.east) -- (interp.west);
+%% Wrap arrow
+\draw[wrap]
+    (pre.east)
+    -- ++(0.80, 0)
+    -- ++(0, -4.50)
+    -- ({-2.2}, {-4.50})
+    -- ({-2.2}, {\RY})
+    -- (peft.west);
+%% PAPER BOXES
+\node[nowork, below=\Dg cm of tok] (tok_p) {%
+  \makebox[\linewidth][c]{\textbf{\S\ref{subsec:tokenization}}}\\[2pt]%
+  \rule{\linewidth}{0.4pt}\\[2pt]%
+  \makebox[\linewidth][c]{\textit{暂无已发表工作}}%
+};
+\draw[drop] (tok.south) -- (tok_p.north);
+\node[paperbox, below=\Dg cm of emb] (emb_p) {%
+  \makebox[\linewidth][c]{\textbf{\S\ref{subsec:embeddings}}}\\[2pt]%
+  \rule{\linewidth}{0.4pt}\\[2pt]%
+  TT-embeddings \cite{hrinchuk2020tensorized}, TensorGPT \cite{xu2023tensorgpt}, TN-gram \cite{zhou2026tensorizingengram}, 
+  MorphTE \cite{gan2022morphte}%
+};
+\draw[drop] (emb.south) -- (emb_p.north);
+\node[paperbox, below=\Dg cm of pre] (pre_p) {%
+  \makebox[\linewidth][c]{\textbf{\S\ref{subsec:pre-training}}}\\[2pt]%
+  \rule{\linewidth}{0.4pt}\\[2pt]%
+  Multi-Linear Attention \cite{ma2019tensorized}, GPT-TTM \cite{chekalina2023ttm}, 
+  Hypoformer \cite{li2022hypoformer}, Shapeshifter \cite{pahani2021shapeshifter},  CoMERA \cite{yang2024comera}%
+};
+\draw[drop] (pre.south) -- (pre_p.north);
+\node[paperbox, below=\Dg cm of peft] (peft_p) {%
+  \makebox[\linewidth][c]{\textbf{\S\ref{subsec:peft}}}\\[2pt]%
+  \rule{\linewidth}{0.4pt}\\[2pt]%
+  KronA \cite{edalati2022krona}, DoTA \cite{hu2024dota}, LoRETTA \cite{yang2024loretta},
+  LoRTA \cite{hounie2024lorta}, LoTR \cite{bershatsky2024lotr}, TT-LoRA \cite{anjum2024ttlora}, MetaTT \cite{lopezpiqueres2025metatt}, QuanTA \cite{chen2024quanta},
+  Quantum-PEFT \cite{koikeakino2025quantumpeft}, TeRA \cite{gu2026tera}%
+};
+\draw[drop] (peft.south) -- (peft_p.north);
+\node[paperbox, below=\Dg cm of compr] (compr_p) {%
+  \makebox[\linewidth][c]{\textbf{\S\ref{subsec:compression}}}\\[2pt]%
+  \rule{\linewidth}{0.4pt}\\[2pt]%
+  KnGPT \cite{edalati2021kroneckergpt}, TQCompressor \cite{abronin2024tqcompressor}, 
+  TensorLLM \cite{gu2025tensorllm}, LeSTD \cite{li2026lestd}, CompactifAI \cite{compactifai},
+  Saten \cite{solgi2025saten}, LatentLLM \cite{koikeakino2025latentllm}%
+};
+\draw[drop] (compr.south) -- (compr_p.north);
+\node[paperbox, below=\Dg cm of infer] (infer_p) {%
+  \makebox[\linewidth][c]{\textbf{\S\ref{subsec:inference}}}\\[2pt]%
+  \rule{\linewidth}{0.4pt}\\[2pt]%
+  TPA \cite{zhang2026tpa}, Tucker Attention \cite{klein2026tuckerattention}, DecoQuant \cite{liu2024decoquant}, EinSort \cite{koikeakino2026einsort}%
+};
+\draw[drop] (infer.south) -- (infer_p.north);
+\node[paperbox, below=\Dg cm of interp] (interp_p) {%
+  \makebox[\linewidth][c]{\textbf{\S\ref{subsec:interpretability}}}\\[2pt]%
+  \rule{\linewidth}{0.4pt}\\[2pt]%
+  Bilinear MLPs \cite{pearce2025bilinearmlp}, PolySAE \cite{koromilas2026polysae}, TensorLens \cite{atad2026tensorlens}%
+};
+\draw[drop] (interp.south) -- (interp_p.north);
+\end{tikzpicture}}
+\caption{七阶段生命周期分类法，及各阶段的代表性张量方法。箭头表示常见的模型开发与部署流程：各阶段可以被重新访问、重新排序或事后回溯分析。每个阶段对应 \cref{sec:lifecycle-analysis} 中的一个小节。}
+\label{fig:lifecycle}
+\end{figure}
+
+每个生命周期阶段都暴露出不同的结构化对象和不同的成功标准。\Cref{tab:lifecycle-stages} 总结了各阶段的主要张量化对象、预期收益与特征性风险。所列风险是阶段特定的；横贯各阶段的问题——包括秩的选择、对张量化形状的敏感性、优化稳定性、算子（kernel）支持，以及压缩-实现鸿沟（理论压缩与实际收益之间的差距）——在 \cref{subsec:gaps} 中讨论。
+
+\begin{table}[!htbp]
+\centering
+\caption{\footnotesize 张量方法的生命周期视角：各阶段的主要张量化对象、预期收益与特征性风险。}
+\label{tab:lifecycle-stages}
+\footnotesize
+\begin{tblr}{
+  width = \textwidth,
+  colspec = {Q[2.2cm,m,c]Q[3.4cm,m,c]Q[4.0cm,m,c]X[m,c]},
+  row{1} = {font=\bfseries},
+  rowsep = 3pt,
+  hline{1,9} = {1pt},
+  hline{2} = {0.6pt},
+  hline{3-8} = {0.6pt, gray7},
+}
+阶段 & 张量化对象 & 预期收益 & 主要风险或代价 \\
+词元化 & 词表、文本切分 & 按词元相关性组织词表结构 \emph{（暂无已发表工作）} & 离散且不可微的映射不提供可供因子分解的对象 \\
+嵌入 & 词元表示 & 紧凑的词表规模嵌入表 & 词元表示的表达能力下降 \\
+预训练 & 权重、优化器状态 & 降低权重与优化器状态的内存占用；引入结构先验 & 优化稳定性；未知的标度行为 \\
+适配（以 PEFT 为主） & 适配更新量 & 极致的参数高效微调 & 未合并的适配器使每次前向传播都增加缩并运算 \\
+压缩 & 预训练权重 & 无需完全重训练即可降低内存 & 质量损失与延迟增加 \\
+推理 & KV 缓存、注意力因子 & 长上下文下逐词元的缓存内存节省 & 压缩未能转化为解码加速 \\
+可解释性 & 激活、权重 & 显式的多重线性结构；回路的图示化表示 & 强加多重线性需要从头预训练 \\
+\end{tblr}
+\end{table}
+
+该分类法还阐明了为何仅凭分解名称不足以进行比较。例如，TT 与 TTM 出现在嵌入、预训练、适配和压缩等多个阶段，但其角色各不相同：它们可以定义可训练的基座模型参数化、约束一个更新量，或逼近一个固定的预训练权重。反过来，同一个生命周期阶段可以容纳多个分解族，它们具有不同的秩概念与缩并代价。跨阶段的依赖关系进一步使评估复杂化：预训练期间选定的秩可能约束后续适配的容量；训练后压缩会改变推理期间观察到的算子与内存流量；而可解释性分析既可以研究原始模型，也可以研究张量化后的模型。因此，比较应在共享的生命周期目标下进行，并同时报告阶段特定的质量与系统层面的后果。
+
+% \Cref{tab:draft-processing-chain} lists, for each lifecycle stage, the target tensor object, the expected benefit, and the primary tradeoff. It also illustrates that the same decomposition can carry very different meanings depending on context: a TT factorization of an embedding table reduces memory during inference, whereas the same structure applied to adapter updates controls gradient flow during fine-tuning. Conversely, a single stage can accommodate multiple decomposition families: adaptation can use CP, TT, Tucker, or MPO, and interpretability can apply CP or Tucker factor analysis. The table further exposes inter-stage dependencies: an embedding factorization may affect downstream softmax behavior, tensor ranks fixed during pre-training may constrain subsequent PEFT capacity, and cache tensorization may interact with other attention tensorization techniques.
+
+

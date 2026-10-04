@@ -1,0 +1,132 @@
+\section{Operations on Tensors}\label{chapter:operations}
+Recall that a tensor $\Tt \in \RR^{d_1 \times \cdots \times d_N}$ can be seen as a multi-dimensional array of order $N$: an $N$-th order or $N$-way tensor has $N$ modes, each mode corresponding to one dimension \citep{kolda2009tensor}.
+\paragraph{Tensor Fibers} For any mode-$i$ (where $i = 1, \dots, N$), tensor \textit{fibers} are obtained by keeping all indices fixed except the $i$-th one. For example, a matrix column corresponds to a mode-1 fiber, while a matrix row corresponds to a mode-2 fiber. In a third-order tensor $\Tt \in \RR^{d_1 \times d_2 \times d_3}$, we have $d_2d_3$ mode-1 fibers, which are vectors of size $d_1$, i.e., $\Tt_{:,i_2,i_3} \in \RR^{d_1}$ for $i_2 \in [d_2]$ and $i_3 \in [d_3]$. The colon indicates varying the first index, while $i_2$ and $i_3$ remain fixed. Fibers are vectors.
+\paragraph{Tensor Slices} Slices of a tensor are two-dimensional arrays (matrices) obtained by fixing all but two indices. For a third-order tensor $\Tt \in \RR^{d_1 \times d_2 \times d_3}$, there are horizontal, lateral, and frontal slices denoted by $\Tt_{i_1,:,:} \in \RR^{d_2 \times d_3}$, $\Tt_{:,i_2,:} \in \RR^{d_1 \times d_3}$, and $\Tt_{:,:,i_3} \in \RR^{d_1 \times d_2}$, respectively. Therefore, slices are matrices.
+\paragraph{Scalar Multiplication} 
+Let $\lambda \in \RR$ be a scalar. The scalar product $\lambda\Tt$ 
+ is a tensor of the same dimension $d_1 \times \cdots \times d_N$, defined element-wise by:
+$
+    (\lambda\Tt)_{i_1 \cdots i_N} = \lambda \cdot \Tt_{i_1 \cdots i_N}$
+for all admissible indices $i_k\in[d_k]$ and $k\in[N]$.
+\paragraph{Tensors Sum} Let $\St\in\RR^{d_1\times\cdots\times d_N}$. The sum of tensors $\Tt$ and $\St$ is a tensor of the same dimension, $\Tt+\St\in\RR^{d_1\times\cdots\times d_N}$, defined element-wise by: $(\Tt+\St)_{i_1,\cdots,i_N} = \Tt_{i_1,\cdots,i_N} + \St_{i_1,\cdots,i_N}$ for all admissible indices $i_k\in[d_k]$ and $k\in[N]$.
+\subsection{Permute and Reshape Tensors}
+Permutation and reshaping are two fundamental operations on tensors.
+\begin{itemize}
+    \item \textbf{Permutation} rearranges the indices of a tensor without changing its number of modes. A common example of a permutation is the transpose of a matrix.
+    \item  \textbf{Reshaping} combines multiple indices into larger ones or divides a large index into multiple smaller indices, reducing or increasing the total number of indices while preserving the overall size of the tensor.
+\end{itemize}
+We introduce matricization and vectorization, two common reshaping operations on tensors.
+\begin{definition}(Matricization)\label{matricizitation:def}
+Let $\Tt\in\RR^{d_1\times d_2\times \cdots\times d_N}$. The mode-$n$ matricization  $\Tt_{(n)}\in\RR^{d_n\times d_1d_2\cdots d_{n-1}d_{n+1}\cdots d_N}$, for $n\in[N]$, is obtained by unfolding $\Tt$ into a matrix by taking all mode-$n$ fibers and stacking them as columns. For example, the matricization of a tensor $\Tt\in\RR^{d_1\times d_2\times d_3}$ along mode-$1$, which is denoted by $\Tt_{(1)}$, is the $d_1\times d_2d_3$ matrix
+$$
+    \begin{bmatrix}
+    \vline & \vline & \vline  & \vline \\
+    \Tt_{:,1,1} & {\Tt}_{:,1,2}  & \dots  & {\Tt}_{:,d_2,d_3} \\
+    \vline & \vline & \vline  & \vline 
+    \end{bmatrix}
+\in\RR^{d_1\times d_2d_3}.
+$$
+
+The mode-2 and mode-3 matricizations $\Tt_{(2)}\in\RR^{d_2\times d_1d_3}$ and $\Tt_{(3)}\in\RR^{d_3\times d_1d_2}$ are defined similarly.
+\end{definition}
+
+Observe that in mode-1 matricization, the two indices corresponding to the second and third modes of $\Tt$ are grouped together to form a new index that ranges from 1 to $d_2d_3$. In the previous definition, we chose to order this new index using lexicographic ordering, e.g., $11,12,13,21,22,23,31,32,33$ if $d_2=d_3=3$. Different orderings of the columns for matricizations are sometimes used~(e.g., reverse lexicographic in \citep{kolda2009tensor}). In general, the specific ordering
+used is not important, but it must be consistent across related calculations~(see \citep{kolda2006multilinear} for further details).
+
+
+
+In tensor network diagrams, we represent such a grouping of indices by merging the corresponding legs together:
+$$\Tt_{(1)} = 
+\left(\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (T) at (\x,\y){\scalebox{0.85}{$\Tt$}};
+    \draw[edge] (T) -- (\x+0.7,\y) node [midway,above]{\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (T) -- (\x-0.7,\y) node [midway,above]{\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (T) -- (\x,\y-0.7) node [midway,left]{\scalebox{0.7}{\dimcolor{$d_3$}}}; 
+\end{tikzpicture}\right)_{(1)}
+=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (A) at (\x,\y){\scalebox{0.85}{$\Tt$}};
+    \draw[edge] (\x+0.2,\y+0.15) -- (\x+0.5,\y+0.15)-- (\x+0.5,\y+0.05) -- (\x+1,\y+0.05) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x+0.2,\y-0.15) -- (\x+0.5,\y-0.15)-- (\x+0.5,\y-0.05)-- (\x+1,\y-0.05) node [midway,below]
+    {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \draw[edge] (A) -- (\x-0.7,\y)node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$d_1$}}};
+\end{tikzpicture}
+=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (T) at (\x,\y){\scalebox{0.85}{$\Tt$}};
+    \draw[edge](T) -- (\x+1,\y) node [midway, above]{\scalebox{0.7}{\dimcolor{$d_2d_3$}}};
+    \draw[edge](T) -- (\x-1,\y) node [midway, above]{\scalebox{0.7}{\dimcolor{$d_1$}}};
+\end{tikzpicture}
+\in\RR^{d_1\times d_2d_3}.
+$$
+As we can see, the grouped legs of the shape
+$\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x+0.15,\y+0.2) -- (\x+0.5,\y+0.2) -- (\x+0.5,\y+0.1) -- (\x+1,\y+0.1) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x+0.15,\y-0.1) -- (\x+0.5,\y-0.1)-- (\x+0.5,\y)-- (\x+1,\y) 
+node [midway,below]
+    {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \end{tikzpicture}
+$
+represents an edge of size $d_2d_3$ in tensor network diagrams.
+
+
+In general, the notion of matricization can be extended to any subset $I\subset [N]$ of the modes of $\Tt$ which map  modes in $I$  to rows and the modes not in $I$ to columns, resulting in a matrix $\Tt_{(I)}$ of size $\prod_{i\in I} d_i \times \prod_{j\in [N]\setminus I} d_j$. For instance, for a sixth-order tensor $\Tt\in\RR^{d_1\times\dots\times d_6}$ we can group the indices as follows:
+\begin{align*}
+\Tt_{i_1,\dots,i_6} 
+&=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!20!blue!40!white] (T) at (\x,\y){\scalebox{0.85}{$\Tt$}};
+    \draw[edge] (T) -- (\x+0.85,\y) node [very near end,right]
+    {\scalebox{0.7}{\indcolor{$i_4$}}};
+    \draw[edge] (T) -- (\x,\y-0.85) node [very near end, below]
+    {\scalebox{0.7}{\indcolor{$i_6$}}};
+    \draw[edge] (T) -- (\x-0.85,\y)node [very near end,left]
+    {\scalebox{0.7}{\indcolor{$i_1$}}};
+    \draw[edge] (T) -- (\x,\y+0.85) node [very near end,above]
+    {\scalebox{0.7}{\indcolor{$i_3$}}};
+    \draw[edge] (T) -- (\x-0.75,\y+0.5) node [pos=1.3]
+    {\scalebox{0.7}{\indcolor{$i_2$}}};
+    \draw[edge] (T) -- (\x+0.75,\y-0.5) node [pos=1.3]
+    {\scalebox{0.7}{\indcolor{$i_5$}}};
+    \node[draw=none] at (\x+2,\y+0.2){$\underrightarrow{I=\{1,2,6\}}$};
+    \end{tikzpicture}
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!20!blue!40!white] (T) at (\x,\y){\scalebox{0.85}{$\Tt$}};
+    \draw[edge](T) -- (\x+0.85,\y)node [very near end, right]{\scalebox{0.7}{\indcolor{$i_5$}}};
+    \draw[edge](\x+0.16,\y+0.2) -- (\x+0.5,\y+0.2) -- (\x+0.5,\y+0.1) -- (\x+0.85,\y+0.1)node [very near end, above]{\scalebox{0.7}{\indcolor{$i_3$}}};
+    \draw[edge](\x+0.16,\y-0.2) -- (\x+0.5,\y-0.2) -- (\x+0.5,\y-0.1) -- (\x+0.85,\y-0.1)node [very near end, below]{\scalebox{0.7}{\indcolor{$i_4$}}};
+    \draw[edge](T) -- (\x-0.85,\y)node [very near end, left]{\scalebox{0.7}{\indcolor{$i_2$}}};
+    \draw[edge](\x-0.16,\y+0.2) -- (\x-0.5,\y+0.2) -- (\x-0.5,\y+0.1) -- (\x-0.85,\y+0.1)node [very near end, above]{\scalebox{0.7}{\indcolor{$i_6$}}};
+    \draw[edge](\x-0.16,\y-0.2) -- (\x-0.5,\y-0.2) -- (\x-0.5,\y-0.1) -- (\x-0.85,\y-0.1)node [very near end, below]{\scalebox{0.7}{\indcolor{$i_1$}}};
+\end{tikzpicture}\\
+&=
+(\Tt_{(\{1,2,6\})})_{i_1i_2i_6 , i_3i_4i_5}\in\RR^{d_1d_2d_6\times d_3d_4d_5}.
+\end{align*}
+While this concept is intuitive, it is clunky to write formally: the indices $i_{r_1},i_{r_2},\cdots, i_{r_{|I|}}$ in $I$ (decreasingly ordered) of a tensor are mapped to the row index $
+j = 1+\sum_{l=1}^{|I|}
+\left[(i_{r_l}-1)\prod_{m=1}^{l-1}I_{r_m}\right]
+$, while the remaining indices $i_{c_1},i_{c_2},\cdots, i_{c_{N-|I|}}$ (again decreasingly ordered) are mapped to the column index $k  = 1+\sum_{n=1}^{N - |I|}
+\left[(i_{c_n}-1)\prod_{s=1}^{n-1}I_{r_s}\right]$. Using tensor networks allows us to abstract away this clunkiness by simply representing such 
+reshaping operations by grouping legs together. 
+

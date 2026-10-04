@@ -1,0 +1,39 @@
+\section{正则表达式采样与 regularization}
+\label{sec:sampling}
+%
+\begin{algorithm}[tb]
+\caption{u-MPS 的正则表达式采样算法}
+\label{alg:sampling}
+\begin{algorithmic}
+\Function{\Sample}{$R, Q_\ell, Q_r$}
+  \If{$R = s$} \hspace{4.0em}
+    \MYCOMMENT{采样字符串字面量 $s \in \Sigma^*$}
+    \State\Return{$s$}
+  \ElsIf{$R = R_1 R_2$} \hspace{0.0em}
+    \MYCOMMENT{采样表达式序列}
+    \State $s_1 = \Sample(R_1, \QL, \ER_{R_2}(\QR))$
+    \State $s_2 = \Sample(R_2, \EL_{s_1}(\QL), \QR)$
+    \State\Return{$s_1 s_2$}
+  \ElsIf{$R = R_1 | R_2$} \hspace{-0.2em}
+    \MYCOMMENT{采样表达式的并集}
+    \State 以如下概率随机采样 $i \in \{1, 2\}$：
+    \State \hspace{0.7cm} $p(i) = \Z_{R_i}(\QL, \QR) \ / \ \Z_{R_1 | R_2}(\QL, \QR)$
+    \State $s_i = \Sample(e_i, \QL, \QR)$
+    \State\Return{$s_i$}
+  \ElsIf{$R = S^*$} \hspace{1.0em}
+    \MYCOMMENT{对正则表达式 $S$ 采样零次或多次}
+    \State 以如下概率随机采样 $i \in \{\textrm{HALT}, \textrm{GO}\}$：
+    \State \hspace{0.7cm} $p(\textrm{HALT}) = \Tr(\QL \QR) / \Z_{S^*}(\QL, \QR)$,
+    \State \hspace{0.7cm} $p(\textrm{GO}) = 1 - p(\textrm{HALT})$
+    \If{$i = \textrm{HALT}$} \hspace{0.0em} \MYCOMMENT{返回空字符串}
+      \State\Return{$\varepsilon$}
+    \Else \hspace{6.0em} \MYCOMMENT{采样一个或多个字符}
+      \State\Return{$\Sample(SS^*, \QL, \QR)$}
+    \EndIf
+  \EndIf
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+%
+上文建立的正则表达式（regular expression）句法操作与转移算符（transfer operator）线性代数操作之间的对应关系，赋予了 u-MPS 模型一些基于神经网络的概率模型所不具备的惊人能力。我们将讨论如何将这些技术应用于从匹配目标正则表达式的字符串的条件分布（conditional distribution）中进行采样（sampling），以及在训练过程中利用一种新颖的任务特定 regularization 形式。
+

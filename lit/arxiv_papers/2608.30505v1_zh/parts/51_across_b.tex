@@ -1,0 +1,188 @@
+\subsection{适配}
+\label{subsec:peft}
+
+\paragraph{问题定义。}
+
+张量化 PEFT 将 LoRA \cite{hu2022lora} 的思想加以推广，把更新参数化为一个低秩张量网络。张量化适配的一般优化问题为
+\begin{equation}
+\begin{aligned}
+& \min_{\Delta \ten{W} \in \mathfrak{TN}(\set{R})} \mathcal{L}_{\rm task}(\ten{W}_0 + \Delta \ten{W}; \ \mathcal{D}_{\rm task}), \\
+& {\rm s.t.} ~ m(\Delta \ten{W}) \leq M,\ c(\Delta \ten{W}) \leq C
+\end{aligned}
+\end{equation}
+其中 $\ten{W}_0$ 是冻结的预训练骨干网络，$\Delta \ten{W}$ 被约束在给定秩集合 $\set{R}$ 对应的张量族 $\mathfrak{TN}(\set{R})$ 中，$\mathcal{D}_{\rm task}$ 是特定任务的数据集。内存预算 $m(\cdot)$ 与 \cref{subsec:pre-training} 中的相同，只是作用于更新部分。计算预算 $c(\cdot)$ 取决于适配器的部署方式：若训练后将适配器合并进 $\ten{W}_0$，则推理代价不高于单独的骨干网络；若无法合并——例如多个适配器共享同一骨干网络的多任务服务场景——则其缩并会在每次前向传播中执行，必须计入代价。
+
+$\Delta \ten{W}$ 的张量化可取两种形式之一。在\emph{局部}（local）方式中，每个更新分别被重排并参数化为一个张量；在\emph{全局}（global）方式中，所有矩阵的更新被聚合成单个张量——类似于式 \eqref{eq:WQKV} 与 \eqref{eq:SGUD} 中的张量——再联合参数化。
+
+\paragraph{文献概览。}
+
+第一类工作遵循局部张量化路线，即每个更新矩阵独立张量化。KronA \cite{edalati2022krona} 用 Kronecker 秩-1 分解取代低秩矩阵分解；如 \cref{subsec:illustrative-examples} 所讨论的，由此得到的更新矩阵可以是满秩的。DoTA \cite{hu2024dota} 用 MPO 表示每个更新矩阵，其初始化来自预训练权重 $\mat{W}_0 \in \R^{I \times J}$ 的 MPO 分解，同时保持残差矩阵 $\mat{W}_{\rm res} = \mat{W}_0 - \operatorname{MPO}(\mat{W}_0)$ 冻结。此外，与 QLoRA \cite{dettmers2023qlora} 类似，文献提出了 QDoTA \cite{hu2024dota}：以 bFloat16 训练更新部分，而将冻结部分转换为 NormalFloat4 \cite{dettmers2023qlora}。LoRETTA \cite{yang2024loretta} 给出两种使用矩阵 TT 参数化的变体：$\text{LoRETTA}_{\text{adp}}$ 在每个注意力块和 FFN 块之后插入一个受 Houlsby 启发 \cite{houlsby2019adapters}、经 TT 参数化的适配器；$\text{LoRETTA}_{\text{rep}}$ 则做类 LoRA 的低秩分解增量更新 $\Delta \mat{W} = \mat{B}\mat{A}$，其中矩阵 $\mat{B} \in \R^{I \times R}$ 与 $\mat{A} \in \R^{R \times J}$ 经 TT 参数化。TT-LoRA \cite{anjum2024ttlora} 延续这条 TT 参数化路线，但不再分别参数化 $\mat{B}$ 与 $\mat{A}$，而是直接以 TT 形式参数化 $\Delta \mat{W}$。总体而言，上述方法都是独立地适配每个权重矩阵。
+
+还有一小簇工作受量子张量网络文献启发。QuanTA \cite{chen2024quanta} 先将更新矩阵重排，再将其参数化为由一组小「门」（gate，即只连接两个轴的张量）构造的量子电路张量网络。其主要优势在于 QuanTA 的张量网络表示不受低秩限制，因为这类更新可以是高秩的 \cite{chen2024quanta}。与之相关但结构不同的方法 Quantum-PEFT \cite{koikeakino2025quantumpeft} 则沿用 AdaLoRA \cite{zhang2023adalora} 的类 SVD 更新参数化：$\Delta \mat{W} = \mat{U} \bm{\Lambda} \mat{V}^\top$，其中 $\mat{U} \in \R^{I \times R}$、$\bm{\Lambda} \in \R^{R \times R}$、$\mat{V} \in \R^{J \times R}$。但与 AdaLoRA 通过正则项以不严格的方式施加正交性不同，Quantum-PEFT 借助 Pauli 参数化在构造上使 $\mat{U}$ 与 $\mat{V}$ 正交。其参数量随矩阵维度按对数增长，而非如 LoRA 那样线性增长，对角因子则贡献 $R$ 个参数。这使得它在显著更小的参数预算下取得相当的下游性能。
+
+
+第二类工作遵循全局路线，把所有更新权重聚合成单个张量，再用某种分解对其参数化。LoRTA \cite{hounie2024lorta} 对所有权重采用 CP 参数化，将其组成一个 5 阶张量 $\Delta \ten{W} \in \R^{d\times d_h\times H\times L\times M}$，各模分别表示模型维度与头维度、头的数量、层索引以及投影类型（查询、键、值、输出）。LoTR \cite{bershatsky2024lotr} 则提议将所有更新矩阵沿第三个模逐一堆叠，组成三阶张量 $\Delta \ten{W} \in \R^{d \times d \times N}$，再对该张量施加 Tucker-2 参数化：
+$\Delta \ten{W} = \ten{G} \times_1 \mat{A} \times_2 \mat{B}$，
+其中因子 $\mat{A}$ 与 $\mat{B}$ 在所有堆叠的投影更新之间共享，有助于使微调更加参数高效。TeRA \cite{gu2026tera} 经由不同路径达到同一全局原则：先将每个更新矩阵单独重排并作为 N 阶张量做 Tucker 分解，然后约束所得核心张量与因子在所有更新矩阵之间共享。共享的核心张量与因子随机初始化并保持冻结，只训练每个更新各自的对角附加因子。尽管以逐矩阵方式起步，正是冻结的共享核心张量与因子使 TeRA 归入这一簇而非局部一簇。MetaTT \cite{lopezpiqueres2025metatt} 构造 4 阶更新张量 $\Delta \ten{W} \in \R^{d\times L\times M\times d_h}$，其中 $d$ 与 $d_h$ 为模型维度与头维度，$L$ 为层数，$M$ 为投影类型，随后对该张量采用 TT 参数化。此外，该方法还提出了一种自适应秩优化策略 \cite{lopezpiqueres2025metatt}。
+
+
+% One work slightly changes the optimization goal from single downstream task adaptation to multi-task learning, meaning adapting to several downstream tasks simultaneously. TT-LoRA MoE \cite{kunwar2025ttloramoe} combines the idea of TT-LoRA and the sparse-MoE architecture \cite{shazeer2017moe} to address this issue. The learning process comprises two stages: (1) training $N$ different TT-LoRA adapters independently, one for each task, and (2) training a small expert router to select the needed adapter. This architecture makes TT-LoRA MoE an efficient solution for multi-task deployment.
+
+\paragraph{比较。}
+
+\Cref{tab:peft-methods} 比较了上文讨论的各张量化 PEFT 方法。对每种方法，表中首先给出其所基于的分解，以及它遵循前文介绍的局部还是全局张量化原则；随后给出原始论文中针对一个或多个模型发表的参数量与精度结果。这些数字虽能提供总体印象，但在方法之间仍不完全可比：所用模型大体相近却并不总相同，而所报告的相对精度本身是各论文在其自有基准测试套件上计算的均值，不同方法的基准测试套件有时并不一致。
+
+\begin{table}[!htbp]
+\centering
+\caption{\footnotesize 张量化 PEFT 方法比较。参数量百分比 $\% \rm Params = \frac{\text{parameters}_{\rm method}}{\text{parameters}_{\rm baseline}} \times 100$，相对性能 Rel. Perf. = $\frac{\text{score}_{\rm method}}{\text{score}_{\rm baseline}} \times 100$，其中基线（baseline）为全量微调。$\text{score}_{\rm method}$ 与 $\text{score}_{\rm baseline}$ 为相应论文中报告的跨基准测试平均指标。若报告了多个秩，R 表示分解的秩。$\uparrow$ 表示数值越高越好。}
+\label{tab:peft-methods}
+\footnotesize
+\begin{tblr}{
+  width = \textwidth,
+  colspec = {Q[3.0cm,m,c]Q[2.0cm,m,c]Q[1.5cm,m,c]Q[2.7cm,m,c]Q[2.0cm,m,c]X[m,c]},
+  row{1} = {font=\bfseries},
+  cell{3}{1} = {r=2}{},
+  cell{3}{2} = {r=2}{},
+  cell{3}{3} = {r=2}{},
+  cell{8}{1} = {r=3}{},
+  cell{8}{2} = {r=3}{},
+  cell{8}{3} = {r=3}{},
+  % cell{12}{1} = {r=2}{},
+  cell{12}{2} = {r=2}{},
+  cell{12}{3} = {r=2}{},
+  cell{14}{1} = {r=2}{},
+  cell{14}{2} = {r=2}{},
+  cell{14}{3} = {r=2}{},
+  cell{16}{1} = {r=2}{},
+  cell{16}{2} = {r=2}{},
+  cell{16}{3} = {r=2}{},
+  % cell{18}{1} = {r=3}{},
+  cell{18}{2} = {r=3}{},
+  cell{18}{3} = {r=3}{},
+  rowsep = 3pt,
+  hline{1,21} = {1pt},
+  hline{2,12} = {0.6pt},
+  hline{3,5,6,8,11,14,16,18} = {0.6pt, gray7},
+}
+方法 & 分解 & 类型 & 模型 & $\%$ 参数量 & 相对性能（$\uparrow$） \\
+KronA \cite{edalati2022krona} & Kronecker & 局部 & T5 \cite{raffel2023t5} & 0.07 & 100.57 \\
+DoTA \cite{hu2024dota} & MPO & 局部 & LLaMA-2-7B \cite{touvron2023llama2} & 0.15 & 100.49 \\
+ & & & LLaMA-3-8B \cite{grattafiori2024llama3} & 0.06 & 99.43 \\
+$\text{LoRETTA}_{\rm rep}$ \cite{yang2024loretta} & TT & 局部 &  LLaMA-2-7B \textsuperscript{\textsection}  \cite{touvron2023llama2}  & 0.0076 & 92.31 \\
+TT-LoRA \cite{anjum2024ttlora} & TT & 局部 & LLaMA-2-7B \cite{touvron2023llama2}  & 0.0015 & 106.87 \\
+ & & & LLaMA3-8B \cite{grattafiori2024llama3}  & 0.0025 & 107.56\textsuperscript{*} \\
+QuanTA \cite{chen2024quanta} & 量子电路 & 局部 & LLaMA-2-7B \cite{touvron2023llama2} & 0.041 & 100.49 \\
+ & & & LLaMA-3-8B \cite{touvron2023llama2} & 0.035 & 106.19\textsuperscript{*} \\
+ & & & $\text{DeBERTaV3}_{\rm base}$\textsuperscript{\textdagger} \cite{he2023debertav3} & 0.051 & 99.56 \\
+Quantum-PEFT \cite{koikeakino2025quantumpeft} & 类 SVD & 局部 &  $\text{DeBERTaV3}_{\rm base}$ \cite{he2023debertav3} & 0.007 & 100.57 \\
+LoRTA(R=8) \cite{hounie2024lorta} & CP & 全局 & LLaMA-2-7B \cite{touvron2023llama2}  & 0.00043 & 99.22 \\
+LoRTA(R=16) \cite{hounie2024lorta} & & & $\text{RoBERTa}_{\rm base}$ \cite{liu2019roberta} & 0.012  & 102.15\textsuperscript{*} \\
+LoTR \cite{bershatsky2024lotr} & Tucker & 全局 & $\text{RoBERTa}_{\rm base}$ \cite{liu2019roberta} & 0.26 & 91.44 \\
+ & & & $\text{RoBERTa}_{\rm large}$ \cite{liu2019roberta} & 0.092 & 93.36 \\
+TeRA \cite{gu2026tera} & Tucker & 全局 & LLaMA-2-7B \cite{touvron2023llama2}  & 0.0039 & 94.13 \\
+ & & & LLaMA-3-8B \cite{grattafiori2024llama3} & 0.0033 & 98.46 \\
+MetaTT(R=16) \cite{lopezpiqueres2025metatt} & TT & 全局 & LLaMA-2-7B \cite{touvron2023llama2}  & 0.0021 & 96.86\textsuperscript{*} \\
+MetaTT(R=64) \cite{lopezpiqueres2025metatt} & & & LLaMA-2-7B \cite{touvron2023llama2}  & 0.098 & 98.86\textsuperscript{*} \\
+MetaTT(R=64) \cite{lopezpiqueres2025metatt} & & & $\text{RoBERTa}_{\rm base}$ \cite{liu2019roberta} & 0.125 & 93.35 \\
+\end{tblr}
+\vspace{2pt}
+\begin{flushleft}
+\footnotesize
+\textsuperscript{\textsection} 这些结果取自 \cite{anjum2024ttlora} \\
+\textsuperscript{*} 相对于最佳 LoRA 得分计算，而非全量微调 \\
+\textsuperscript{\textdagger} 这些结果取自 \cite{koikeakino2025quantumpeft}
+\end{flushleft}
+\end{table}
+
+\subsection{压缩}
+\label{subsec:compression}
+
+\paragraph{问题定义。}
+
+训练后压缩可以视为一个两阶段过程。第一阶段最小化原始权重与分解后权重之间的重构误差
+\begin{equation}
+\label{eq:compression}
+\ten{Z}^* =\arg\min_{\ten{Z}\in\mathfrak{TN}(\set{R})}\|\ten{W}-\ten{Z}\|_F^2,
+\end{equation}
+其中 $\ten{W}$ 汇集待压缩的预训练权重，$\ten{Z}$ 是其张量化近似，$\mathfrak{TN}(\set{R})$ 是承认给定分解、秩集合为 $\set{R}$ 的张量集合；最小化解 $\ten{Z}^*$ 即为压缩后的模型。
+其后是一个可选的第二阶段（以下称为\emph{修复}，healing），以式 \eqref{eq:compression} 得到的分解权重 $\ten{Z}^*$ 为初始，在修复数据集上重新训练分解后的模型
+\begin{equation}
+\label{eq:healing}
+\min_{\ten{Z} \in \mathfrak{TN}(\set{R})} \mathcal{L}_{\rm heal}(\ten{Z}; \ \mathcal{D}_{\rm heal}), \quad \ten{Z}^{(0)} = \ten{Z}^*.
+\end{equation}
+修复可以从在某个数据集上的短时重训练 \cite{compactifai} 到轻量级知识蒸馏方法 \cite{tahaei2021kroneckerbert} 不等，因此修复损失 $\mathcal{L}_{\rm heal}$ 不限于预训练的语言建模损失。
+修复阶段并非表面性的补救：Zagitov 等人 \cite{zagitov2026rethinking} 从理论与经验上证明，式 \eqref{eq:compression} 的重构目标与功能保持并不一致。因此，在 Frobenius 范数意义下最优的 $\ten{Z}^*$ 未必是算子意义下的好解。在他们的实验中，即便轻量的 LoRA 式修补也只能恢复部分损失的质量，这提示修复应当成为一个完整的压缩后训练阶段。
+    
+
+另一种做法是，第一阶段在校准数据集上最小化激活误差 \cite{koikeakino2025latentllm}
+\begin{equation}
+\label{eq:compression-activation}
+\ten{Z}^* = \arg\min_{\ten{Z} \in \mathfrak{TN}(\set{R})}
+  \sum_{i \in \set{I}} \lambda_i \,
+  \mathbb{E}_{x \sim \mathcal{D}_{\rm cal}}
+  \bigl\| (\mat{W}_i - \mat{Z}_i)\, \vecb{x}_i \bigr\|_2^2 .
+\end{equation}
+其中 $\set{I}$ 为被压缩组件的索引，既包括单个投影，也包括某方法联合分解的投影组；$\mat{W}_i$、$\mat{Z}_i$ 是 $\ten{W}$ 与 $\ten{Z}$ 的相应切片。激活 $\vecb{x}_i$ 是未压缩模型中校准样本 $x \sim \mathcal{D}_{\rm cal}$ 在组件 $i$ 处诱导的输入，$\mathcal{D}_{\rm cal}$ 为校准数据集。权重 $\lambda_i > 0$ 用于使各项成比例，因为各组件的输出维度与激活尺度可能不同，不加权的求和会让其中最大者占主导。
+
+
+
+\paragraph{文献概览。} 
+
+一类工作使用 Kronecker 分解，它能在保持分解后矩阵高秩的同时获得高压缩率。
+% Initially, such an approach, with a Kronecker rank-1 decomposition of each projection, was applied to the BERT model \cite{devlin2019bert} and followed by a KD healing stage \cite{tahaei2021kroneckerbert}. 
+最初，Tahaei 等人 \cite{tahaei2021kroneckerbert} 对 BERT 模型 \cite{devlin2019bert} 的每个投影施加 Kronecker 秩-1 分解，随后接一个知识蒸馏（KD）修复阶段。
+沿此方向，KnGPT \cite{edalati2021kroneckergpt} 用同样的方法压缩 GPT-2 模型 \cite{radford2019language}，取得与 DistilGPT2 \cite{sanh2019distilbert} 相同的压缩率，且困惑度更优、训练时间大幅缩短。TQCompressor \cite{abronin2024tqcompressor} 随后在 Kronecker 参数化中加入列与行置换，在基准测试上质量相当的同时提升了压缩率。
+
+另有多项工作探索用 Tucker 分解进行模型压缩。TRAWL \cite{luo2025trawl} 是最早对由投影矩阵聚合而成的张量施加张量分解的工作之一，其动机不仅是压缩，还有降噪。TRAWL 探索了将由投影矩阵逐一堆叠而成的三阶张量分别做 CP 分解与 Tucker 分解。
+沿此路线，TensorLLM \cite{gu2025tensorllm} 提议在分离出头维度的四阶张量上操作：对该张量施加 Tucker 分解，头所在的模保持不压缩；这可以视为逐头的完整 Tucker 分解，因子共享而三阶核心张量各异。在 GPT-J \cite{wang2021gpt_j} 与 LLaMA2 \cite{touvron2023llama2} 上，这带来了高压缩率，精度甚至优于未压缩模型。然而，精确的分解需要较高的 Tucker 秩，稠密核心张量随之成为新的内存瓶颈。为缓解该问题，LeSTD \cite{li2026lestd} 提出两阶段方案：(1) 按 TensorLLM 的方式求核心张量与共享因子；(2) 通过剪去不重要的值对四阶核心张量做稀疏化。作者还提出了一种无需重构即可推理的算法，它带来更好的精度，且吞吐量与 TensorLLM 及非张量方法相当或更高。
+
+其他分解也得到了探索。CompactifAI \cite{compactifai} 对 LLaMA2-7B \cite{touvron2023llama2} 的预训练权重施加 MPO 分解，然后在若干数据集上进行不足一个 epoch 的修复训练。作者系统地将该方法与量化技术进行对比与组合。Saten \cite{solgi2025saten} 同样利用稀疏性，但方式与 LeSTD \cite{li2026lestd} 不同：Saten 先用基于误差的 TT-SVD \cite{oseledets2011tensor} 分解权重矩阵，再对残差 $\mat{W} - \mat{W}_{\rm TT}$ 构造可加的稀疏修正。LatentLLM \cite{koikeakino2025latentllm} 遵循式 \eqref{eq:compression-activation} 的激活感知优化目标，通过对三个投影组——查询与键、值与输出、up 与 down——的联合预条件分解来构建压缩。在 OPT \cite{zhang2022opt} 全部规模上的验证表明，LatentLLM 优于激活感知的非张量方法。
+
+
+\paragraph{比较。} 
+
+\Cref{tab:compression} 对上文的压缩方法进行了比较与汇总。「模型」列给出原始论文中用于验证的模型；若某方法在多个模型上报告结果，我们选取最接近 6-7B 规模的一个，若未报告该规模的模型，则采用论文提供的任何模型。若表中同一方法占两行，则一行对应较激进的压缩（小），另一行对应最温和的压缩（大）。此表旨在给出总体图景，其中涉及不同的基准测试集：有的无需训练，有的带修复阶段，有的逐任务微调。因此，从该表得出的结论确有局限，阅读时应牢记这些差异。
+
+
+\begin{table}[!htbp]
+\centering
+\caption{\footnotesize 张量化压缩方法比较。模型——压缩目标，修复——用于修复或校准的数据集（「-」表示无修复），CR——压缩率，$\rm CR = \frac{\text{\# parameters}_{\rm uncompressed}}{\text{\# parameters}_{\rm compressed}}$。对于单一数据集/基准测试：$\Delta \rm PPL = \frac{\text{perplexity}_{\rm compressed} - \text{perplexity}_{\rm uncompressed}}{\text{perplexity}_{\rm uncompressed}} \times 100$，$\text{Rel. Perf.} = \frac{\text{score}_{\rm compressed}}{\text{score}_{\rm uncompressed}} \times 100$。当列出多个数据集/基准测试时，相应指标按平均计算。$\downarrow$、$\uparrow$ 分别表示数值越低或越高越好。}
+\label{tab:compression}
+\footnotesize
+\begin{tblr}{
+  width = \textwidth,
+  colspec = {Q[2.6cm,m,c]Q[2.25cm,m,c]Q[2.1cm,m,c]Q[3.25cm,m,c]Q[1.0cm,m,c]X[m,c]},
+  row{1} = {font=\bfseries},
+  cell{5}{2} = {r=2}{},
+  cell{5}{3} = {r=2}{},
+  cell{8}{2} = {r=2}{},
+  cell{8}{3} = {r=2}{},
+  cell{10}{2} = {r=2}{},
+  cell{10}{3} = {r=2}{},
+  rowsep = 3pt,
+  hline{1,12} = {1pt},
+  hline{2} = {0.6pt},
+  hline{3,4,5,7,8,10} = {0.6pt, gray7},
+}
+方法 & 模型 & 修复 & PPL 数据集 / \newline 基准测试 & CR & $\Delta$ PPL（$\downarrow$）/\newline 相对性能（$\uparrow$） \\
+KnGPT \cite{edalati2021kroneckergpt} & $\text{GPT-2}_{\rm small}$ \cite{radford2019language} & OpenWebText  & WikiText-103\textsuperscript{\textdagger} / \newline GLUE & $1.5$ & 9.04 / 99.82 \\
+TQ- \newline -Compressor \cite{abronin2024tqcompressor} & $\text{GPT-2}_{\rm small}$ \cite{radford2019language} & OpenWebText & WikiText-103,\newline WikiText-2, Lambada / \newline - & $1.5$ & 37.31 / -  \\
+TensorLLM \cite{gu2025tensorllm} & LLaMA2-7B \cite{touvron2023llama2} & - & - / \newline HotPotQA,  FEVER, \newline Bios Profession, \newline BigBenchWikidataQA & $3.54$ - \newline - $5.81$\textsuperscript{*} & - / 106.92 \\
+LeSTD \cite{li2026lestd} \newline （大） & GPT-J \cite{wang2021gpt_j} & - & WikiText-2 / \newline MathQA, GSM8K, \newline TruthfulQA & 1.25  & 0.68 / 88.30 \\
+LeSTD \cite{li2026lestd} \newline （小） & & & WikiText-2 / \newline MathQA, GSM8K, \newline TruthfulQA & 2.5 & 459.37 / 43.78 \\
+CompactifAI \cite{compactifai} & LLaMA2-7B \newline (float-16) \cite{touvron2023llama2} & Ultrachat, \newline Alpaca, \newline OpenHermess & - / \newline MMLU, \newline HellaSwag, BoolQ, \newline TriviaQ, GSM8K & 3.34\textsuperscript{\textsection} & - / 97.25 \\
+Saten(2:4) \cite{solgi2025saten} & LLaMA3.2-1B \newline \cite{metaai2024llama321b} & 逐任务\newline 微调 & - / \newline BoolQ, CB, WSC, \newline COPA  & 1.59 & - / 101.33 \\
+Saten(u) \cite{solgi2025saten} & & & - / \newline BoolQ, CB, WSC, \newline COPA  & 3.26 & - / 88.34 \\
+LatentLLM \cite{koikeakino2025latentllm} \newline （大） & OPT-6.7B \cite{zhang2022opt} & C4（用于\newline 校准） & WikiText-2, \newline PTB, C4 / \newline - & 1.11 & 0.81 / - \\
+LatentLLM \cite{koikeakino2025latentllm} \newline （小） & & & WikiText-2, \newline PTB, C4 / \newline - & 1.67 & 54.39 / - \\
+\end{tblr}
+
+\vspace{2pt}
+\begin{flushleft}
+\footnotesize
+\textsuperscript{\textdagger} 所报告的困惑度在 WikiText-103 测试集上计算，但模型是在 WikiText-103 训练集上微调的 \cite{edalati2021kroneckergpt}。 \\
+\textsuperscript{*} 压缩率仅针对 MHA 参数报告，而非整个模型 \cite{gu2025tensorllm}。 \\
+\textsuperscript{\textsection} 注意该压缩率仅计入参数量，未计入内存占用，后者还受量化影响 \cite{compactifai}。
+\end{flushleft}
+\end{table}
+

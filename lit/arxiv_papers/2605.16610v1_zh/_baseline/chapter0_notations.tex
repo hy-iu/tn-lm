@@ -1,0 +1,239 @@
+\section*{Notations}
+
+
+    \begin{tabular}{ll}
+        $\At$ & General tensor containing $n \geq 0$ modes \\
+        $\At\in \RR^{d_1 \times d_2 \times d_3}$ & A third-order tensor $\At$ with shape $(d_1, d_2, d_3)$ \\
+        $\At_{i,j,k}$ & The $(i,j,k)$'th element of a third-order tensor $\At$ \\
+        $\At_{i,:,k}$ & Mode-2 fiber of a third-order tensor $\ten{A}$, equivalent to a vector $\vb\in \RR^{d_2}$ \\
+        $\At_{(2)}$ & Mode-2 flattening of a (third-order) tensor $\At$, equivalent to a matrix $\Mb\in \RR^{d_2 \times d_1 d_3}$ \\
+        $\vectorize(\At)$ & A vector obtained by concatenating mode-$N$ fibers of $\At$, equivalent to a vector $\ab\in\RR^{d_1d_2d_3}$\\
+        $\At\outprod \Bt$ & The tensor product (equiv. outer product) of tensors $\At$ and $\Bt$ \\
+         $\inner{\At}{\Bt}$ & Inner product between tensors $\At$ and $\Bt$\\
+         $\norm{\At}_F$  &  Frobenius norm of the tensor $\At$\\
+         $\At\kron\Bt$ & The Kronecker product of tensors $\At$ and $\Bt$\\
+         \\
+         $\Ab$ & A matrix; equivalently, a rank-2 tensor or tensor of order 2\\
+         $\Ab_{ij}$ & The $ij$-th element of the matrix $\Ab$\\
+         $\Ab^{-1}$ & The inverse matrix of matrix $\Ab$\\
+         $\Ab^\ts$ & The transposed matrix of matrix $\Ab$\\
+         $\Ib$ & The identity matrix\\
+         \\
+         $\Ab\krao\Bb$ & The Khatri-Rao product of matrices $\Ab$ and $\Bb$\\
+         $\Ab\hadam\Bb$ & The Hadamard product of matrices $\Ab$ and $\Bb$ \\ 
+         \\
+         $\ab$ & Column vector; A rank-1 tensor\\
+         $\ab_{i}$ & The $i$-th element of vector $\ab$ \\
+         $a$ & Scalar; A rank-0 tensor\\
+         
+         
+\end{tabular}
+ \newpage
+\section*{Tensor Network Notations} 
+    \begin{table}[H]
+    \begin{tabular}{ll}
+       $N$-th order tensor $\At$ &
+    $
+    \begin{tikzpicture}[baseline=-0.5ex]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{6}
+    \node[tensor,fill=green!50!red!50!white] (T) at (\x,0) {$\At$};
+    \draw[edge] (T) -- (\x-0.6,0)  node [midway,above] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (T) -- (\x+0.6,0) node [midway,above] {\scalebox{0.7}{\dimcolor{$d_N$}}};
+    \draw[edge] (T) -- (\x-0.5,-0.3) node [midway,below] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[dotted] (T) -- (\x,-0.6);
+    \draw[dotted] (T) -- (\x,-0.6);
+    \draw[dotted] (T) -- (\x+0.5,-0.5);
+    \draw[dotted] (T) -- (\x+0.3,-0.6);
+    \end{tikzpicture}\in \RR^{d_1\times \cdots \times d_N} $\\
+    third-order tensor $\At $ & $  
+    \begin{tikzpicture}[baseline=-0.5ex]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=green!50!red!50!white] (A) at (\x,\y){\scalebox{0.85}{$\At$}};
+    \draw[edge] (\x+0.25,\y) -- (\x+0.6,\y)  node [midway,above] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x-0.25,\y) -- (\x-0.6,\y)  node [midway,above] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (\x,\y-0.25) -- (\x,\y-0.7)  node [midway,left] {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \end{tikzpicture}\in \RR^{d_1 \times d_2 \times d_3}$\\
+    Tensor element $\At_{i_1,i_2,i_3}$ &
+    $\begin{tikzpicture}[baseline=-0.5ex]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=green!50!red!50!white] (A) at (\x,\y){\scalebox{0.85}{$\At$}};
+    \draw[edge] (\x+0.25,\y) -- (\x+0.6,\y)  node [very near end, right] {\scalebox{0.7}{\indcolor{$i_2$}}};
+    \draw[edge] (\x-0.25,\y) -- (\x-0.6,\y)  node [very near end, left] {\scalebox{0.7}{\indcolor{$i_1$}}};
+    \draw[edge] (\x,\y-0.25) -- (\x,\y-0.7)  node [very near end, below] {\scalebox{0.7}{\indcolor{$i_3$}}};
+    \end{tikzpicture}\in \RR$ \\
+    Mode-2 matricization of $\At\in\RR^{d_1\times d_2 \times d_3}$ & $ \Ab_{(2)}=\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=green!50!red!50!white] (A) at (\x,\y){\scalebox{0.85}{$\At$}};
+    \draw[edge] (\x+0.2,\y+0.15) -- (\x+0.5,\y+0.15)-- (\x+0.5,\y+0.05) -- (\x+1,\y+0.05) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (\x+0.2,\y-0.15) -- (\x+0.5,\y-0.15)-- (\x+0.5,\y-0.05)-- (\x+1,\y-0.05) node [midway,below]
+    {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \draw[edge] (A) -- (\x-0.7,\y)node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \end{tikzpicture} \in \RR^{d_2\times d_1d_3}$ \\ Vectorization of $\At\in\RR^{d_1\times d_2\times d_3}$ & $\vectorize(\At)=
+    \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=green!50!red!50!white] (A) at (\x,\y){\scalebox{0.85}{$\At$}};
+    \draw[edge] (\x+0.15,\y+0.2) -- (\x+0.5,\y+0.2) -- (\x+0.5,\y+0.1) -- (\x+1,\y+0.1) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$d_1$}}};
+     \draw[edge] (A) -- (\x+1,\y)node [right]
+    {\scalebox{0.7}{\dimcolor{$d_2$}}};
+
+    \draw[edge] (\x+0.15,\y-0.2) -- (\x+0.5,\y-0.2)-- (\x+0.5,\y-0.1)-- (\x+1,\y-0.1) node [midway,below]
+    {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \end{tikzpicture}\in\RR^{d_1d_2d_3}$\\
+    Outer product of two tensors & $ \At \outprod \Bb =  \begin{tikzpicture}[baseline=-0.5ex]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{6}
+    \def\y{0}
+    \node[tensor,fill=green!50!red!50!white] (A) at (\x,\y) {$\At$};
+    \draw[edge] (A) -- (\x-0.6,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (A) -- (\x+0.6,\y) node [midway,above] {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \draw[edge] (A) -- (\x,\y-0.6) node [midway,left] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \end{tikzpicture}
+    \hspace{0.3cm}
+    \begin{tikzpicture}[baseline=-0.5ex]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{6}
+    \def\y{0}
+    \node[tensor,fill=green!70!red!20!white] (B) at (\x+1,\y) {$\Bb$};
+    \draw[edge] (B) -- (\x+0.3,0) node [midway,above] {\scalebox{0.7}{\dimcolor{$d_4$}}};
+    \draw[edge] (B) -- (\x+1.6,0)node [midway,above] {\scalebox{0.7}{\dimcolor{$d_5$}}};
+    \end{tikzpicture} \in \RR^{d_1\times d_2 \times d_3 \times d_4\times d_5}$ \\
+    \\
+    Inner product of two tensors &$\inner{\At}{\Bt} = \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=green!50!red!50!white] (St) at (\x,\y){\scalebox{0.85}{$\At$}};
+    \node[tensor,fill=green!50!red!50!white] (Tt) at (\x+1,\y){\scalebox{0.85}{$\Bt$}};
+    \draw[edge] (St) -- (Tt);
+    \draw[edge] (St) to [out=45,in=135] (Tt);
+    \draw[edge] (St) to [out=-45,in=-135] (Tt);
+    \node[draw=none] () at (\x+0.5,\y+0.5) {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \node[draw=none] () at (\x+0.5,\y+0.15) {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \node[draw=none] () at (\x+0.5,\y-0.5) {\scalebox{0.7}{\dimcolor{$d_3$}}};
+\end{tikzpicture} \in\RR $\\
+    \\
+    Frobenius norm of a tensor & $\norm{\At}_F^2 = \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=green!50!red!50!white] (St) at (\x,\y){\scalebox{0.85}{$\At$}};
+    \node[tensor,fill=green!50!red!50!white] (Tt) at (\x+1,\y){\scalebox{0.85}{$\At$}};
+    \draw[edge] (St) -- (Tt);
+    \draw[edge] (St) to [out=45,in=135] (Tt);
+    \draw[edge] (St) to [out=-45,in=-135] (Tt);
+    \node[draw=none] () at (\x+0.5,\y+0.5) {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \node[draw=none] () at (\x+0.5,\y+0.15) {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \node[draw=none] () at (\x+0.5,\y-0.5) {\scalebox{0.7}{\dimcolor{$d_3$}}};
+\end{tikzpicture}\in\RR$\\
+    \\
+    Kronecker product of two tensors & $\At\kron\Bt=   \begin{tikzpicture}[baseline=-0.5ex]
+    \tikzset{tensor/.style = {minimum width = 2.2cm,minimum height = 0.5cm,shape = rounded rectangle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{0.5}
+    \def\y{0.25}
+    \draw[edge] (\x-0.85,\y-0.3) -- (\x-0.85,\y-0.6) -- (\x-0.65,\y-0.6) -- (\x-0.65,\y-0.8);
+    \draw[edge] (\x-0.35,\y-0.3) -- (\x-0.35,\y-0.6) -- (\x-0.55,\y-0.6) -- (\x-0.55,\y-0.8)node[below]{\scalebox{0.7}{\dimcolor{$d_1d_4$}}};
+    \draw[edge] (\x+0.85,\y-0.3) -- (\x+0.85,\y-0.6) -- (\x+0.65,\y-0.6) -- (\x+0.65,\y-0.8);
+    \draw[edge] (\x+0.35,\y-0.3) -- (\x+0.35,\y-0.6) -- (\x+0.55,\y-0.6) -- (\x+0.55,\y-0.8)node[below]{\scalebox{0.7}{\dimcolor{$d_3d_6$}}};
+    \draw[edge](\x-0.25,\y-0.3)--(\x-0.25,\y-0.6)-- (\x-0.05,\y-0.6)--(\x-0.05,\y-0.8);
+    \draw[edge](\x+0.25,\y-0.3)--(\x+0.25,\y-0.6)-- (\x+0.05,\y-0.6)--(\x+0.05,\y-0.8)node[below]{\scalebox{0.7}{\dimcolor{$d_2d_5$}}};
+    \node[tensor,fill=green!30!white] (At) at (\x,\y-0.2){$\At\kron\Bt$};
+    \end{tikzpicture}\in\RR^{d_1d_4\times d_2d_5\times d_3d_6}$\\
+
+    Second-order tensor~(matrix) $\Ab$ & $\begin{tikzpicture}[baseline=-0.5ex]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{0}
+    \def\y{0}
+    \node[tensor,fill=red!50!white] (A) at (\x+1,\y){\scalebox{0.85}{$\Ab$}};
+    \draw[edge] (\x+1.25,\y) -- (\x+1.6,\y)  node [midway,above] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x+0.75,\y) -- (\x+0.4,\y)  node [midway,above] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \end{tikzpicture}\in\RR^{d_1\times d_2}$\\
+    \\
+    Identity matrix &$\Ib_d =  \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge](\x,\y)--(\x+1.5,\y);
+    \node[draw=none] () at (\x+0.75,\y+0.15) {\scalebox{0.7}{\dimcolor{$d$}}};
+    \end{tikzpicture}\in\RR^{d\times d}$\\  
+    \\
+    Kronecker delta &     $\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m) at (\x,\y) {};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m) at (\x,\y) {};
+    \draw[edge] (m) -- (\x-0.6,0) node [very near end,left] {\scalebox{0.7}{\indcolor{$i$}}};
+    \draw[edge] (m) -- (\x+0.6,0) node [very near end,right]
+    {\scalebox{0.7}{\indcolor{$j$}}};
+    \node[draw=none] at (\x+1,\y) {\scalebox{1}{\textcolor{black}{$=$}}};;
+    \draw[edge] (\x+1.3,\y) -- (\x+2.5,\y) node [very near start,left=0.05cm] {\scalebox{0.7}{\indcolor{$i$}}} node [very near end,right=0.05cm] {\scalebox{0.7}{\indcolor{$j$}}};
+    \end{tikzpicture} = \delta_{ij} = \begin{cases}
+      1 & \text{if } i=j\\
+      0 & \text{otherwise},
+    \end{cases}
+    =
+    \Ib_{ij}$\\
+    
+    Khatri-Rao product  &  
+    $\Ab\krao\Bb=  \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (A) at (\x,\y){$\Ab$};
+    \node[tensor,fill=blue!50!white] (B) at (\x+1,\y){$\Bb$};
+    \draw[edge] (\x,\y+0.25) -- (\x,\y+0.5) -- (\x+0.5,\y+0.7);
+    \draw[edge] (\x+1,\y+0.25) -- (\x+1,\y+0.5) -- (\x+0.5,\y+0.7);
+    \draw[edge] (\x+0.5,\y+0.7) -- (\x+0.5,\y+1.2)node [midway,right] {\scalebox{0.7}{\dimcolor{$R$}}};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m) at (\x+0.5,\y+0.7) {};
+    \draw[edge] (\x,\y-0.25) -- (\x,\y-0.7);
+    \draw[edge] (\x+1,\y-0.25) -- (\x+1,\y-0.7);
+    \draw[edge] (\x+1,\y-0.7) -- (\x+0.5,\y-0.7) -- (\x+0.5,\y-1)node [below] {\scalebox{0.7}{\dimcolor{$d_1d_2$}}};
+    \draw[edge] (\x+1,\y-0.25) -- (\x+1,\y-0.7);
+    \draw[edge] (\x,\y-0.7) -- (\x+0.4,\y-0.7) -- (\x+0.4,\y-1);
+    \end{tikzpicture}\in\RR^{d_1d_2\times R}$\\
+    Hadamard Product & $\Ab\hadam\Bb =  \begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (A) at (\x,\y){$\Ab$};
+    \node[tensor,fill=blue!50!white] (B) at (\x+1,\y){$\Bb$};
+    \draw[edge] (\x,\y+0.25) -- (\x,\y+0.5) -- (\x+0.5,\y+0.7);
+    \draw[edge] (\x+1,\y+0.25) -- (\x+1,\y+0.5) -- (\x+0.5,\y+0.7);
+    \draw[edge] (\x+0.5,\y+0.7) -- (\x+0.5,\y+1)node [midway,right] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m) at (\x+0.5,\y+0.7) {};
+    \draw[edge] (\x,\y-0.25) -- (\x,\y-0.5) -- (\x+0.5,\y-0.7);
+    \draw[edge] (\x+1,\y-0.25) -- (\x+1,\y-0.5) -- (\x+0.5,\y-0.7);
+    \draw[edge] (\x+0.5,\y-0.7) -- (\x+0.5,\y-1)node [midway,right] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw  node[fill = black,circle,inner sep=0pt,minimum size=4pt] (m) at (\x+0.5,\y-0.7) {};
+    \end{tikzpicture}\in\RR^{d_1\times d_2}$ \\ 
+    First-order tensor~(vector) $\ab$
+    &     $\begin{tikzpicture}[baseline=-0.5ex]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=blue!40!red!60!white] (a) at (\x,\y){\scalebox{0.85}{$\ab$}};
+    \draw[edge] (\x+0.25,\y) -- (\x+0.6,\y)  node [midway,above] {\scalebox{0.7}{\dimcolor{$d$}}};
+\end{tikzpicture}\in\RR^d$\\
+\\
+    Zero-order tensor~(scalar) $a$ &
+    $\begin{tikzpicture}[baseline=-0.5ex]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=blue!20!white] (a) at (\x,\y){\scalebox{0.85}{$a$}};
+    \end{tikzpicture}\in\RR$
+    
+    \end{tabular}
+ \end{table}

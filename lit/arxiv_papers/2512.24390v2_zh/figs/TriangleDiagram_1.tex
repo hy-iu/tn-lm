@@ -1,0 +1,20 @@
+\begin{tikzpicture}[baseline={([yshift=-.55ex]current bounding box.center)}]
+	\def\l{3.3};
+	\def\h{3};
+	
+	\begin{scope}[every node/.style={align=center,font=\footnotesize}]
+		\node (a) at (0,0) {Global\\ symmetry};
+		\node (b) at (2*\l,0) {Dual global \\ symmetry};
+		\node (c) at (\l,\h) {Algebra local \\ symmetric operators};
+		\node[BlueViolet] (ac) at (\l/2,\h/2) {Degrees of \\ freedom};
+        \node[BlueViolet] (ab) at (\l,0) {Duality\\operators};
+		\node[BlueViolet] (bc) at (1.5*\l,\h/2) {Dual degrees \\ of freedom};
+	\end{scope}
+	
+	\draw[Triangle-] (a) -- (ac);
+	\draw[-Triangle] (ac) -- (c);
+	\draw[Triangle-] (c) -- (bc);
+	\draw[-Triangle] (bc) -- (b);
+    \draw[Triangle-] (a) -- (ab);
+    \draw[-Triangle] (ab) -- (b);
+\end{tikzpicture}

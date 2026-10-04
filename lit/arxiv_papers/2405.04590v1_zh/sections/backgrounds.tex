@@ -1,0 +1,206 @@
+\section{Preliminaries}
+\label{sec:tensor}
+
+% % The uncertainty is one of the key foundations in the QT. The \emph{superposition} implies the uncertainty for a single particle while uncertainty for an ensemble system with multiple particles is described in a mixed system with measurement operations.
+
+% \subsubsection{Superposition}
+%  Algebraically, a particle in microscope world (e.g. atoms or photons) is described by vectors a multi-dimensional space. In a 2-dimensional case, in which two basis vectors are named as $\ket{0}$ and $\ket{1}$, \emph{Superposition} can be implemented as a linear combination of the basis vectors with complex-valued weights.  
+% \begin{equation}   
+% \ket{\phi} = \alpha_0 \ket{0} + \alpha_1 \ket{1}, 
+% \end{equation} 
+% where $0 \leq |\alpha_0|^2 \leq 1 $, $0 \leq |\alpha_1|^2 \leq 1 $  and $ |\alpha_0|^2 + |\alpha_1|^2 = 1$.  $\alpha$'s are complex scalars and $\ket{0}$ and $\ket{1}$ are vectors in complex vector space.   
+% %The state $\ket{\phi}$ is said to be a superposition of the states $\ket{0}$ and $\ket{1}$, and the scalars $\alpha_0$ and $\alpha_1$ denote the amplitudes of the superposition. 
+% %When either $|\alpha_0|^2$ or $|\alpha_1|^2$ is $1$, the particle corresponds to a classical bit; when $|\alpha_0|^2 = 1$, then $|\alpha_1|^2 = 0$ and $\ket{\phi} = \ket{0}$, and vice versa. It can be shown that the general particle state vector is normalized. 
+
+% \subsubsection{Mixed system and Measurements}
+% An ensemble system with multiple particles is called a \emph{mixed system}, in which the probability distribution is encapsulated by  a  positive semi-definite with unitary trace i.e. density matrix  
+% \begin{equation} 
+% \rho = \alpha_i \ket{\phi_i} \bra{\phi_i} 
+% \end{equation} 
+% In order to infer the possible state of this mixed system, Gleason's theorem \cite{gleason1957measures,hughes1992structure} is used  to calculate probability in quantum physics through measurements $\ket{M}$, i.e.
+% \begin{equation} 
+% \label{trace_measurement}
+% P_M(\rho) =  \bra{M} \rho \ket{M} =tr(\rho \ket{M} \bra{M} ) 
+% \end{equation}
+% Although the off-diagonal elements pf $\rho$ is complex-valued, the $P_M(\rho)$  is guaranteed to be real-valued, since both  $\rho$ and $\ket{M} \bra{M}$ are Hermitian.
+
+% \subsection{Semantic Hilbert Space}
+% \label{semantic_hilbert_space}
+% Here we introduce the Semantic Hilbert Space $\mathcal{H}$ defined on a complex vector space $\mathcal{C}^n$, and three different linguistic units, namely sememes, words and word combinations on the space. The concept of semantic measurement is introduced at last.
+
+% % For convenience purposes, we follow the Dirac notations, which are widely used in quantum probability. Basically, a unit vector $\vec{\mu}$ and its transpose $\vec{\mu}^T$ are denoted as a ket $\vert u \rangle$ and a bra $\langle u \vert$ respectively. 
+
+% % \subsubsection{Sememe}
+
+% \textbf{Sememes.} 
+% We assume $\mathcal{H}$ is spanned by the set of orthogonal basis states $\{\ket{e_j}\}_{i=1}^n$ for \textit{sememes}, which are the minimum semantic units of word meanings in language universals~\cite{goddard1994semantic}. Semantic units with larger granularities are based on the set of sememe basis.
+
+% % \subsubsection{Word}
+% % \label{sec:word}
+% \textbf{Words.} 
+% Words are  composed of sememes in superposition. Each word $w$ is a superposition over all sememes $\{\ket{e_j}\}_{i=1}^n$, or equivalently a unit-length vector on $\mathcal{H}$:
+% \begin{equation}
+% \label{superposition}
+% \vert w \rangle =  \sum_{j=1}^n r_j e^{i\phi_j} \vert e_j \rangle
+% \end{equation}
+% In the expression above, $\{r_j\}_{j=1}^n$ are non-negative real-valued amplitudes satisfying $\sum_{j=1}^n {r_j}^2$ =1 and $\phi_j \in [-\pi,\pi]$ are the corresponding complex phases. 
+
+% % We could also transfer the complex number in a complex plane as $re^{i\phi} = \cos\phi + i\sin\phi $.
+
+% % We assume there are $n$ semantic concepts $\{C_i\}_{i=1}^{n}$ in the text collection, which could be considered as a limited The Hilbert Space $\mathcal{H}$ is then an n-dimensional finite space, where the concepts form a set of pure orthonormal states of the space, denoted as $\{\vert e_i \rangle\}_{i=1}^n$. 
+
+% % \subsubsection{Semantic Composition}
+% % \label{sentence_rep}
+% \textbf{Semantic Composition.} 
+% We view a combination of words (e.g. phrase, $n$-gram, sentence or document) as a mixed system composed of individual words, and its representation is computed as follows:
+% \begin{equation}
+% \label{mixture_old}
+% \rho = \sum^m_j { \frac{1}{m} \ket{w_j} \bra{w_j}},
+% \end{equation}
+% where $m$ is the number of words and $\ket{w_j}$ is word superposition state in Eq.~\ref{superposition}, allowing multiple occurrences. Eq.~\label{mixture_old} produces a density matrix $\rho$ for semantic composition between words.
+% %It describes a non-classical distribution over the set of sememes:  the complex-valued off--diagonal elements describes the correlations between sememes, while the diagonal entries (guaranteed to be real by its original property) correspond to a standard probability distribution. The off--diagonal elements provide our framework some potentials to model the possible interactions between the basic sememe basis, which was usually considered mutually independent with each other.
+
+% %, which may give rise to emerging meanings when words are combined. 
+
+% % \subsubsection{Semantic Measurement}
+% \textbf{Semantic Measurement.} 
+% The high-level features of a sequence of words are extracted through
+% measurements on its mixed state. Given a density matrix $\rho$ of a mixed state, a rank-one projector $P$, which is the outer product of a unit complex vector, i.e. $P_{M_i}=\ket{M_i}\bra{M_i}$, is applied as a measurement projector. It is worth mentioning that $\ket{M_i}$ could be any state in this Hilbert space (not only limited to a specific word $w$).
+% The measured probability is computed by Gleason`s Theorem ( Eq.~\ref{trace_measurement}), namely $P_{M_i}(\rho) =  \bra{M_i} \rho \ket{M_i} =tr(\rho \ket{M_i} \bra{M_i}$  . The measurement directions i.e. $\{\ket{M_i}\}_{i=0}^{n}$ are mutually orthogonal with each other, therefore we can get a normalized  multinomial probability distribution $\sum_{i=0}^{n}(P_{M_i}(\rho)) =1$.
+
+
+
+
+
+% The advantages of the above Semantic Hilbert Space are threefold. First,  similarly to capsules \cite{sabour2017dynamic} and quaternions RNN \cite{parcollet2018quaternion}, Semantic Hilbert Space (SHS) can code internal dependencies by composing and processing multidimensional
+% features as single entities, namely unitary states.
+% Second, the measurements can be treated as general feature extractor based on some general pre-trained language model \cite{devlin2018bert}, which can provide some potential to transfer the learned measurements from a dataset to a new dataset. Finally, the words and measurements are embedded in a single Hilbert Space, making this framework easy to be understood by humans. Thus the model can be more robust and possible to be managed by manual adjustment.
+
+
+\subsection{Tensors and the Tensor Product}
+
+A \emph{tensor} is a natural way to describe certain objects that have a central role in modern quantum physics and beyond.  
+% Compared to matrices and vectors, tensor is not very common-used in machine learning communities. However, tensors are everywhere and  it is getting more and more attentions.
+A tensor is, roughly, a multi-dimensional array with certain composition properties. For example, A first-order tensor over the space
+$\mathbb{R}^m$ is a vector ${\bf{v}} \in \mathbb{R}^{m}$ \footnote{In the rest of this paper, we also regard a matrix as a kind of tensor, namely  a 2-order tensor.}, and a second-order tensor is a matrix.  There are typical ways to build tensors through a set of matrices or vectors, namely \textit{stacking} and \textit{tensor product}.
+
+\textbf{Stacking.} 
+Stacking a series of $n$-order tensors could result in $n+1$-order tensors, namely, let $\tG_{1},\tG_{2} \cdots,\tG _{r_{n+1}} \in \mathbb{R}^{r_1 r_2 \cdots r_n}$,
+\begin{equation}
+[\tG_{1};\tG_{2} \cdots;\tG _{r_{n+1}} ] \in \mathbb{R}^{r_1 r_2 \cdots r_n r_{n+1}}
+\end{equation}
+In detail, the typical basic feature arrays  are  pixels of images in computer vision and  words of textual documents in natural language processing. It is commonly-used to stack the pixels with vertical and horizontal directions, resulting $\textrm{width} \times \textrm{height}$ 2-order matrices. Similarly, words, which are usually represented as distributed vectors, can be stacked as matrices while they are sequentially occurring in a document.
+High-order arrays i.e. tensors are usually built by stacking with more than 2 dimensions. The extra orders \footnote{It is worthy mentioned that  data/features in a \textit{batch} can be stacked in deep learning approaches, resulting in a new order related to \textit{batch}; therefore, this is one of the reasons why Google named its deep learning framework as Tensorflow, that is a \textit{data flow with tensors}.} can be 1) \textbf{timestamp}: data which involves time, like google books and Arxiv paper collections; 2)  \textbf{modality}: data with multiple modality e.g. image, text and sound; 3) \textbf{domain}: data with multiple domains, like news in sport, economy and politics. 4)  \textbf{positional order}: data with a sequential order, for example, language;
+
+
+
+
+\textbf{Tensor Product.} 
+%The \textbf{order} of a tensor is defined to the number of indexing entries in the array, which are referred to as modes. The dimension of a tensor in particular mode is defined as the number of values that may be taken by the index in the mode. 
+%A tensor $\mathcal{T} \in \mathbb{R}^{m_1 \times \ldots \times m_n}$ means that it is a $n$-order tensor with $m_i$ in each mode. 
+\textit{Tensor product}, denoted by $ \otimes $, is typically as an operation on (pairs of) ordered set of objects, for example, sequential data like zig-zag pixels in images and tokens/words in text. Let $\tA \in \mathbb{R}^{m_{1}\times\cdots\times m_{I}}$ and $\tB \in \mathbb{R}^{m_{I+1}\times\cdots\times m_{J}}$ be tensors of orders $I$ and $J$, respectively. Then, $\tA \otimes \tB \in \mathbb{R}^{m_{1}\times\cdots\times m_{I+J}}$ is a tensor of order ${I+J}$.
+The dimension of the tensor product between two tensors is  the product of the dimensions thereof, which is especially for sequential data like zig-zag pixels in images and tokens/words in text. 
+The below is the example of the tensor product between two 2-order tensors (namely matrices):
+\begin{equation}
+\begin{aligned}
+\begin{bmatrix}
+ a_{1,1} & a_{1,2} \\
+ a_{2,1} & a_{2,2} \\
+ \end{bmatrix}
+\otimes
+ \begin{bmatrix}
+ b_{1,1} & b_{1,2} \\
+ b_{2,1} & b_{2,2} \\
+ \end{bmatrix}
+&=
+ \begin{bmatrix}
+ a_{1,1} \begin{bmatrix}
+ b_{1,1} & b_{1,2} \\
+ b_{2,1} & b_{2,2} \\
+ \end{bmatrix} & a_{1,2} \begin{bmatrix}
+ b_{1,1} & b_{1,2} \\
+ b_{2,1} & b_{2,2} \\
+ \end{bmatrix} \\
+ & \\
+ a_{2,1} \begin{bmatrix}
+ b_{1,1} & b_{1,2} \\
+ b_{2,1} & b_{2,2} \\
+ \end{bmatrix} & a_{2,2} \begin{bmatrix}
+ b_{1,1} & b_{1,2} \\
+ b_{2,1} & b_{2,2} \\
+ \end{bmatrix} \\
+ \end{bmatrix} \\
+&=
+ \begin{bmatrix}
+  \begin{bmatrix}
+ a_{1,1} b_{1,1} & a_{1,1} b_{1,2} & \\ a_{1,2} b_{1,1} & a_{1,2} b_{1,2} \\
+  \end{bmatrix}
+  \begin{bmatrix}
+ a_{1,1} b_{2,1} & a_{1,1} b_{2,2} & \\ a_{1,2} b_{2,1} & a_{1,2} b_{2,2} \\
+  \end{bmatrix} \\
+  \begin{bmatrix}
+ a_{2,1} b_{1,1} & a_{2,1} b_{1,2} & \\ a_{2,2} b_{1,1} & a_{2,2} b_{1,2} \\
+  \end{bmatrix}
+  \begin{bmatrix}
+ a_{2,1} b_{2,1} & a_{2,1} b_{2,2} & \\ a_{2,2} b_{2,1} & a_{2,2} b_{2,2} \\
+ \end{bmatrix}
+ \end{bmatrix}.
+\end{aligned}
+\end{equation}
+%We use
+%<\cdot, \cdot>$ for the inner product between two tensors in same space, i.e., the sum of element-wise multiplication of two tensors.
+% $\mathbb{R}^{m_{1}\times\cdots\times m_{I}}$
+Let $\tT_{h_1,\cdots,h_n}  \in \mathbb{R}$ be a specific entry in a tensor. 
+%$\tT$ will be referenced with subscripts, e.g. $\{h_1,\cdots,h_n\}$. 
+The inner product of two same-sized tensors in $\mathbb{R}^{m_{1}\times\cdots\times m_{I}}$ is defined as 
+\begin{equation}
+    <\tA, \tB> = \sum_{ \{h^{(1)}, h^{(2)}, \cdots h^{(n)}\} \in \mathbb{I}} \mathcal{\tA}_{h_1,\cdots,h_n} \mathcal{\tB}_{h_1,\cdots,h_n}
+\end{equation}
+where $\mathbb{I}$ is the index set of with dimension ${m_{1}\times\cdots\times m_{I}}$.
+
+% A special $n$-order tensor $\delta \in \mathbb{R}^{k \times\ldots \times k }$, is as follows~\cite{2017arXiv170401552L,2015arXiv150905009C}:
+% \begin{equation}
+% \label{eq:function}
+% {\delta _{{h_1}\ldots{h_n}}} = \left\{ \begin{array}{l}
+% 1,\begin{array}{*{20}{c}}
+% {}&{{h_1} = \dots = {h_n}}
+% \end{array}\\
+% 0,\begin{array}{*{20}{c}}
+% {}&{otherwise}
+% \end{array}
+% \end{array} \right.
+% \end{equation}
+% with ${h_i} \in \left[ k \right]$. It means that it's $1$ for diagonal elements, $0$ for non-diagonal elements. It is mainly to construct the decomposition equivalent to Tensor Network (TN).
+
+
+\subsection{Tensor  Decomposition}
+\label{sec:ttd}
+
+In practical applications, tensors usually involve operations on high-dimensional spaces, whence tensor decomposition is adopted to reduce the computing time. CP (CANDECOMP/Parafac) Decomposition and Tucker Decomposition (also called Multilinear SVD or M-mode SVD) are most typical ways.
+CP decomposition fits the given tensor with a linear combination of some rank-1 tensors, whereas Tucker decomposition computes the orthonormal mode matrices of the tensor. However, the expressive power of  CP decomposition  is limited due to that it is a sum of only some rank-one tensors, and Tucker Decomposition has exponential in d number of parameters i.e., $\mathcal{O}(dnr+r^d)$, leading it to be only widely used for relatively-lower dimension especially three-dimensional tensor~ \cite{oseledets2011tensor}. 
+
+For high-order tensors, Tensor Train Decomposition~ \cite{oseledets2011tensor} 
+is an alternative way to approximate a high-order tensor with a collection of 3-order tensors~\footnote{The first and last tensors have order 2, but we can generally treat them as 3-order tensors with a extra dummy order of length one. }, which increases only linearly to the dimension (order) of the tensor.
+
+For a given tensor $\tA \in \mathbb{R}^{m_1\times m_2 \times \cdots \times m_n}$, one wishes to find tensors $\mG_1, \tG_2, \ldots,\tG_{n-1} , \mG_n$ such that:
+\begin{equation}
+\begin{aligned}
+&\mG_1 \in \mathbb{R}^{m_1 \times r_1} \\
+&\tG_2 \in \mathbb{R}^{r_1 \times m_2 \times r_2}\\
+&\vdots \\
+&\tG_i \in \mathbb{R}^{r_{i-1} \times m_i \times r_i}\\
+&\vdots \\
+&\mG_n \in \mathbb{R}^{r_{n-1} \times m_n }
+\end{aligned}
+\end{equation}
+such that
+\begin{equation}
+\label{eq:ttdecomposition}
+\tA = \mG_1  \tG_2  ... \tG_{n-1}  \mG_n \in \mathbb{R}^{m_1\times m_2 \times \cdots \times m_n}
+\end{equation}
+
+
+where $*$ is the matrix multiplication operation and will be omitted in the following part of this paper. Observe that Eq.~\ref{eq:ttdecomposition} only involves the multiplications of 3-order tensors, resulting in efficient space and time cost \cite{oseledets2011tensor}. 
+
+
+

@@ -1,0 +1,473 @@
+{
+   "sources" : [
+      {
+         "usage" : "toplevel",
+         "filename" : "main.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "SciPost_bibstyle.bst"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/AKLT.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/AKLT_proj.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/DMRG_H.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/DMRG_Heff1.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/DMRG_Heff2.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/DMRG_norm.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/Duality_excit.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/FundTh_1.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/FundTh_2.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/FundTh_3.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/GroupMPOIntertwiner_1.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/GroupMPOIntertwiner_2.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/GroupMPOMPS.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/GroupMPOPentagon_1.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/GroupMPOPentagon_2.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/GroupMPS.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/GroupMPSIntertwinerRecoupling_1.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/GroupMPSIntertwinerRecoupling_2.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/GroupMPSIntertwiner_1.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/GroupMPSIntertwiner_2.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/KT_MPO.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/KW_MPO_bc.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/KW_MPO_per.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/KW_tensor_1_a.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/KW_tensor_1_b.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/KW_tensor_1_c.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/KW_tensor_1_d.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/KW_tensor_1_e.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/KW_tensor_2.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPO.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPOGroupRegular.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPOGroupStacked.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPOGroupg.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPOGroupgh.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPOIntertwiner_1.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPOIntertwiner_2.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPOIntertwiner_3.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPOIntertwiner_4.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPOLocalHamSU2.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPOLocalOp.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPOLocalOp_1.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPOLocalOp_2.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPOLocalOp_3.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPOPentagon_1.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPOPentagon_2.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPOSingle.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPO_single_labels.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPO_single_labels_mod.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPO_triple.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPO_triple_mod.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPOc.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPOsStacked.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPOsStackedVertical_1.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPOsStackedVertical_2.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPS.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPSCorrelator_1.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPSCorrelator_2.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPSExpVal.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPSLeftCanonical.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPSLeftIdentity.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPSMixedTransfer.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPSMixedgauge.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPSNorm.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPSReducedDensity_1.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPSReducedDensity_2.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPSRightCanonical.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPSRightIdentity.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/MPSTensor.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/PEPS.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/PEPSPullingThrough_1.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/PEPSPullingThrough_2.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/PEPSPullingThrough_3.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/PEPSPullingThrough_4.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/PEPSTensor.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/PEPS_CZX_1.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/PEPS_CZX_2.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/PEPS_C_single_labels.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/PEPS_C_single_labels_mod.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/PEPS_C_triple.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/PEPS_C_triple_mod.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/PEPS_D_single_labels.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/PEPS_D_triple.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/PEPS_G_1.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/PEPS_G_Tube.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/PEPS_G_idempotent_1.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/PEPS_G_idempotent_2.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/PEPS_TopoPulling_1.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/PEPS_TopoPulling_2.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/PEPS_open.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/PhaseDiagram.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/RVB.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/SCFib_1.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/SCFib_2.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/SC_1.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/SC_2.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/String-net_PEPS.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/TangentPlane.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/TangentVector.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/TriangleDiagram_1.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/TriangleDiagram_2.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/VUMPS_EffectiveEnvironment.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/VUMPS_EffectiveHamiltonian.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/VUMPS_TransferMatrixHamiltonianLeft.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/VUMPS_TransferMatrixHamiltonianRight.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/YB_1.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/YB_2.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/YB_ABA.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/YB_A_1.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/YB_A_2.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/YB_Ham.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/YB_intertwiner_1.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "figs/YB_intertwiner_2.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "refs.bbl"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "refs.bib"
+      }
+   ],
+   "spec_version" : 1,
+   "texlive_version" : "2025",
+   "process" : {
+      "compiler" : "pdflatex"
+   }
+}

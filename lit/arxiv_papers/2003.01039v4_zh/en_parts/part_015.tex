@@ -1,0 +1,66 @@
+\section{Runtime Analysis}
+\label{sec:appendix_c}
+
+Algorithm~\ref{alg:sampling} 
+\ is written as a recursive procedure, which makes its runtime analysis nontrivial. We show here that this sampling procedure can in most cases be carried out using compute and storage costs which scale linearly with the length $L_R$ of the defining regex $R$. As a technical assumption, we require the star height of $R$ to be bounded, where the star height $h_*(R)$ is defined recursively as $h_*(c) = 0$, $h_*(R_1 R_2) = h_*(R_1 | R_2) = \max(h_*(R_1), h_*(R_2))$, and $h_*(S^*) = 1 + h_*(S)$. In practice this assumption is very mild.
+
+\begin{theorem}
+\label{thm:runtime}
+
+Consider a core tensor $\mc{A}$ and regex $R$ of length $L_R$ with bounded star height, for which the associated right transfer operator $\ER_R$ converges. Then calling $\Sample(R, \QL, \QR)$ will return a random string of mean length $\langle n \rangle = \bigO(L_R)$, with average-case compute cost of $C_R = \bigO(L_R d D^3)$ and worst-case memory cost of $M_R = \bigO(L_R D^2)$.
+
+\end{theorem}
+
+\begin{proof}
+
+We again utilize a proof by induction, with the additional assumption that $C_R$ is also an upper bound on the expected cost of applying the transfer operator $\ER_R$. For the regex length $L_R$, we consider the characters $|$, $($, $)$, $^*$, and $c$ (for $c \in \Sigma$) as having length 1, along with the single-character regex $\Sigma$. This definition of length is closer to that of real-world regex, where the metacharacter ``\texttt{.}'' corresponds to our $\Sigma$.
+
+In order to utilize caching in Algorithm~\ref{alg:sampling}, 
+we replace the simple recursive case of binary regex concatenation $R = R_1 R_2$ with a maximal concatenation of smaller regex $R = R_1 R_2 \cdots R_K$, where each $R_i$ is either a single character, a union of regex, or a Kleene closure. Such concatenations are the only place where caching is utilized, allowing us to bound the memory usage in terms of the regex length $L_R$, rather than the random string length $n_R$. We don't include the non-cache memory usage required to hold our u-MPS parameters and intermediate variables, which is in every case $\bigO(d D^2)$.
+
+Given that the length $n_R$ of an output sample is typically a random variable, we first show that the mean length is bounded as $\langle n_R \rangle = \bigO(L_R)$. It is apparent that for any regex $R$ constructed without Kleene closures, we have the stronger bound $n_R \leq L_R$. We therefore start our inductive proof with this last remaining case of Kleene closures, showing that $\langle n_R \rangle = \bigO(L_R)$ for all regex $R$ with bounded star height. We then use this result to characterize the compute and memory requirements of Algorithm~\ref{alg:sampling}.
+
+\paragraph{$\mathbf{R = S^*:}$} In order for $\ER_{S^*}$ to converge, we must have the spectral radius of $\ER_S$ be $\lambda_S := \rho(\ER_S) < 1$. Noting that this implies $\Tr(\QL \ER_S(\QR)) \leq \lambda_S \Tr(\QL \QR)$ for any boundary matrices $\QL, \QR$, we find that the probability of obtaining $m$ occurrences of $S$ is upper bounded as
+%
+\begin{equation*}
+p(m) = \Tr(\QL (\ER_S)^{\circ m}(\QR)) / \mc{Z}_R(\QL, \QR) \leq \lambda_S^m \Tr(\QL \QR) / \mc{Z}_R(\QL, \QR) = \lambda_S^m\, p(0).
+\end{equation*}
+%
+Given this exponentially decaying upper bound, the output of $\Sample(S^*)$ on average will consist of $\langle m \rangle = \bigO(\chi_S)$ calls to $\Sample(S)$, where $\chi_S := \lambda_S^{-1}$. Assuming we can obtain a boundary-independent upper bound on the expected length of $\Sample(S)$, then this proves that $\langle n_{S^*} \rangle = \bigO(\chi_S \langle n_S \rangle)$.
+
+If $S$ itself contains expressions with deeply nested Kleene closures then this task becomes difficult, with the above bound translating to $\langle n_R \rangle = \bigO(\chi^{h_*(R)} L_R)$, for $h_*(R)$ the star height of $R$ and $\chi$ the maximum $\chi_{S_i}$ among all nested subexpressions $(S_i)^*$ within $R$. However, if we assume $R$ has bounded star height, then this reduces to $\langle n_R \rangle = \bigO(\chi^{h_*(R)} L_R) = \bigO(L_R)$, our desired bound.
+
+Moving on to a consideration of the resource costs of $\Sample(S^*)$, we make the inductive assumption that a single call to $\Sample(S)$ has average-case runtime of $\bigO(L_S d D^3)$ and worst-case memory usage of $\bigO(L_S D^2)$. Algorithm~\ref{alg:sampling} 
+in this case will $m$ samples from $S$, using the same right boundary condition $\QR^*$ each time. This leads to regex length, runtime, and memory usage of
+%
+\begin{align*}
+    L_R &= L_S + 1 = \bigO(L_S), \qquad C_R = \bigO(\langle m \rangle C_S) = \bigO(\chi_S L_S d D^3) = \bigO(L_R d D^3), \\
+    M_R &= M_S = \bigO(L_S D^2) = \bigO(L_R D^2),
+\end{align*}
+%
+where the last equality of $C_R$ uses the bounded star height of $R$. We finally note that the above bound on $C_R$ also applies to the transfer operator $\ER_{S^*}$, whose action on $\QR$ can be approximated to arbitrary precision $\epsilon = \exp(\bigO(-m / \chi_S))$ using $m$ applications of $\ER_S$.
+
+\paragraph{$\mathbf{R = \sigma}$\textbf{, for }$\mathbf{\sigma=c}$\textbf{ or }$\mathbf{\Sigma:}$} For the case of $R = c$, no resources are required for sampling. For $R = \Sigma$, the sampling procedure costs $C_\Sigma = \bigO(d D^3)$, which also gives an upper bound on the cost of applying the transfer operator $\ER_\sigma$. The regex and output string lengths are both 1 here and no caching is involved, so
+%
+\begin{equation*}
+    L_\sigma = 1, \qquad C_\sigma = \bigO(d D^3) = \bigO(L_\sigma d D^3), \qquad M_\sigma = 0 = \bigO(L_\sigma D^2).
+\end{equation*}
+%
+\paragraph{$\mathbf{R = R_1 R_2 \cdots R_K:}$} When evaluating $\Sample(R_1 \cdots R_K, \QL, \QR)$, we first compute and cache the $K$ right boundary matrices $\QR^{(1)}, \QR^{(2)}, \ldots, \QR^{(K)}$ in a right-to-left sweep, via the rules $\QR^{(K)} = \QR$ and $\QR^{(i-1)} = \ER_{R_i}(\QR^{(i)})$. This has a memory cost of $M_R = \bigO(K D^2)$. With these right boundary matrices in hand, we then use a left-to-right sweep to obtain strings $s_1, s_2, \ldots, s_K$ via repeated calls to $\Sample(R_i, \QL^{(i)}, \QR^{(i)})$, where the left boundary matrices are defined as $\QL^{(1)} = \QL$ and $\QL^{(i+1)} = \EL_{s_i}(\QL^{(i)})$. No caching of the $\QL^{(i)}$ is required, and each call to $\Sample(R_i, \QL^{(i)}, \QR^{(i)})$ generally involves some additional memory usage, which is freed immediately afterwards. 
+
+Applying our inductive assumption about the runtime and memory usage of each of the transfer operators and $\Sample$ calls for the subexpressions $R_1, \ldots, R_K$, we get
+%
+\begin{align*}
+    L_R &= \sum_{i=1}^K L_{R_i}, \qquad C_R = \bigO\!\left(\sum_{i=1}^K C_{R_i}\right) = \bigO\!\left(\sum_{i=1}^K L_{R_i} d D^3\right) = \bigO(L_R d D^3), \\
+    M_R &= \bigO(K D^2) + \max_{i}(M_{R_i}) = \bigO(K D^2) + \bigO(\max_i(L_{R_i})D^2) = \bigO(L_R D^2).
+\end{align*}
+%
+\paragraph{$\mathbf{R = R_1 | R_2 | \cdots | R_K:}$} To evaluate $\Sample(R_1 | \cdots | R_K, \QL, \QR)$, we must first sample a random $i$ from the distribution $p(i) = \mc{Z}_{R_i}(\QL, \QR) / \mc{Z}_R(\QL, \QR)$, then call $\Sample(R_i, \QL, \QR)$. This gives the following characterization of the overall runtime and memory usage
+%
+\begin{align*}
+    L_R &= \bigO\left(\sum_{i=1}^K L_{R_i}\right), \qquad C_R = \bigO\!\left(\sum_{i=1}^K C_{R_i}\right) = \bigO\!\left(\sum_{i=1}^K L_{R_i} d D^3\right) = \bigO(L_R d D^3), \\
+    M_R &= \max_i(M_{R_i}) = \bigO(\max_i(L_{R_i}) D^2) = \bigO(L_R D^2).
+\end{align*}
+
+\end{proof}
+

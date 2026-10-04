@@ -1,0 +1,17 @@
+\subsection{Regularization}
+
+The normalization function $\Z_{R}$ defined by a regex $R$ gives the unnormalized probability assigned to all strings matching $R$. We first show that for the case of unambiguous $R$, this probability can be properly normalized.
+%
+\begin{theorem}
+\label{thm:regularization}
+Consider a u-MPS model and an unambiguous regex $R$ satisfying identical conditions as in Theorem \ref{thm:sample}. Then the probability $P(R) = \sum_{s \in R} P(s)$ assigned by the u-MPS to the set of strings matching $R$ can be exactly calculated as $P(R) = \Z_R / \Z_*$.
+\end{theorem}
+%
+The practical importance of Theorem~\ref{thm:regularization} lies in the ability to compute any $\Z_R = \Tr(\alphamat \ER_R(\omegamat))$ inside of an automatic differentiation library, possibly with the aid of techniques described in~\citep{liao2019}. By making $P(R)$ directly computable as a function of the u-MPS parameters $\mc{A}$, $\alpha$, and $\omega$, this probability can be incorporated as a regularizer (i.e. a differentiable loss term) during training.
+
+Although it is not immediately clear how to think about such ``regex regularizers'', we provide three examples which can be used during gradient-based training of a u-MPS model. First, $P(R)$ can be directly added to the loss, encouraging gradient updates of the model to minimize the probability of strings belonging to $R$. In the context of language models, this could be used to avoid learning offensive phrases seen in training data, for example by choosing $R = \Sigma^* S \Sigma^*$ with $S$ a union of strings extracted from a dataset of abusive language.
+
+A related loss is $\mc{L} = |P(R_1) - P(R_2)|$, which penalizes differences in the probabilities assigned to regex $R_1$ and $R_2$. Such regularization would be most effective when the regex $R_1$ and $R_2$ are similarly constructed, with the loss enforcing an indifference between these two options. This could be applied for the mitigation of gender bias in language models, for example by choosing each $R_i$ to be $R_i = \Sigma^* s_i \Sigma^*$, for $s_1$ and $s_2$ a pair of identical but oppositely gendered phrases (e.g. ``his career'' vs. ``her career'' or ``he cooks'' vs. ``she cooks''). 
+
+Finally, using a loss $\mc{L} = -\log(P(R))$ encourages maximizing the probability of strings belonging to $R$. This type of regularization is natural when all strings produced by the model should belong to some regular language, for example when choosing a syntactically valid variable name in a code completion task. The extension of Theorem~\ref{thm:sample} and \ref{thm:regularization} to \emph{context-free} languages would greatly broaden the range of applications for these methods in language modeling, given the fundamental role played by context-free grammars in structuring natural language.
+

@@ -1,0 +1,116 @@
+\section{Proof of Theorem~\ref{thm:sample}}
+\label{sec:appendix_b}
+
+In order to prove Theorem~\ref{thm:sample}, 
+we first prove a more general Lemma~\ref{lem:sample}, which characterizes the probability distribution $P_R(s, \QL, \QR)$ of strings output by $\Sample(R, \QL, \QR)$ for arbitrary $R$.
+%
+\begin{lemma}
+\label{lem:sample}
+Consider a u-MPS model with core tensor $\mc{A}$ and a regex $R$ for which the generalized right transfer operator $\ER_R$ defined recursively by Table~\ref{tab:regex_cp} 
+converges. Then for any PSD matrices $\QL, \QR$, the probability distribution of strings output by $\Sample(R, \QL, \QR)$ is $P_R(s, \QL, \QR) = \sR \Pt(s, \QL, \QR) / \mc{Z}_R(\QL, \QR)$, where $\Pt(s, \QL, \QR) = \Tr(\QL \ER_s(\QR))$, $\mc{Z}_R(\QL, \QR) = \Tr(\QL \ER_R(\QR))$, and $\sR$ counts the number of times the string $s$ matches the regex $R$.
+\end{lemma}
+
+\begin{proof}
+
+We prove Lemma~\ref{lem:sample} by induction over the structure of $R$, where we assume that sampling from a regex subexpression $R'$ of $R$ with any boundary matrices $\QL'$ and $\QR'$ produces strings from the distribution $P_{R'}(s, \QL', \QR')$. For each of the four cases of regex formation, we use this inductive assumption to show that sampling from $R$ produces strings from the distribution $P_R(s, \QL, \QR)$.
+
+\paragraph{$\mathbf{R = c:}$} From Algorithm~\ref{alg:sampling},
+$\Sample(c, \QL, \QR)$ will always output the string $s = c$. Because the quantity $|s|_c$ is 1 when $s = c$ and 0 otherwise, the sampling distribution can be written as
+%
+\begin{align*}
+    P_c(s, \QL, \QR) &= |s|_c = |s|_c \frac{\Tr(\QL \ER_s(\QR))}{\Tr(\QL \ER_c(\QR))} = |s|_c \frac{\Pt(s, \QL, \QR)}{\mc{Z}_c(\QL, \QR)}.
+\end{align*}
+   
+\paragraph{$\mathbf{R = R_1 R_2:}$} From Algorithm~\ref{alg:sampling},
+$\Sample(R_1 R_2, \QL, \QR)$ will first output a string $s_1$ from $\Sample(R_1, \QL, \ER_{R_2}(\QR))$, then use $s_1$ to output a string $s_2$ from $\Sample(R_2, \EL_{s_1}(\QL), \QR)$. Using our inductive assumption for $R_1$ and $R_2$, the probability assigned to the output string $s$ from all possible partitions into a prefix and suffix as $s_1 s_2 = s$ is
+%
+\begin{align*}
+    P_{R_1 R_2}(s, \QL, \QR) &= \sum_{s_1 s_2 = s} P_{R_1}(s_1, \QL, \ER_{R_2}(\QR)) \cdot P_{R_2}(s_2, \EL_{s_1}(\QL), \QR) \\
+    &= \sum_{s_1 s_2 = s} \left( \sRone \frac{\Tr(\QL \ER_{s_1}(\ER_{R_2}(\QR)))}{\Tr(\QL \ER_{R_1}(\ER_{R_2}(\QR)))} \right) \left( \sRtwo \frac{\Tr(\EL_{s_1}(\QL) \ER_{s_2}(\QR))}{\Tr(\EL_{s_1}(\QL) \ER_{R_2}(\QR))} \right) \\
+    &= \sum_{s_1 s_2 = s} \sRone \sRtwo \left(\frac{\Tr(\QL \ER_{s_1 R_2}(\QR))}{\Tr(\QL \ER_{R_1 R_2}(\QR))}\right) \left(\frac{\Tr(\QL \ER_{s_1 s_2}(\QR))}{\Tr(\QL \ER_{s_1 R_2}(\QR))}\right) \\
+    &= |s|_{R_1 R_2} \frac{\Tr(\QL \ER_{s}(\QR))}{\Tr(\QL \ER_{R_1 R_2}(\QR))} = |s|_{R_1 R_2} \frac{\Pt(s, \QL, \QR)}{\mc{Z}_{R_1 R_2}(\QL, \QR)}.
+\end{align*}
+%
+In the third equality above, we use the composition rule $\ER_{s'}\ER_{R'} = \ER_{s' R'}$ and the adjunction rule $\Tr(\EL_{s'}(\QL') \QR') = \Tr(\QL' \ER_{s'}(\QR'))$, while in the fourth equality, we use the identity $|s|_{R_1 R_2} = \sum_{s_1 s_2 = s} |s_1|_{R_1} |s_2|_{R_2}$.
+
+\paragraph{$\mathbf{R = R_1 | R_2:}$} From Algorithm~\ref{alg:sampling},
+$\Sample(R_1 | R_2, \QL, \QR)$ will first pick a random index $i \in {1, 2}$ with probability $p(i) = \mc{Z}_{R_i}(\QL, \QR) \ / \ \mc{Z}_{R_1 | R_2}(\QL, \QR)$, and then use this to output a string $s$ from $\Sample(R_i, \QL, \QR)$. Using our inductive assumption, the probability assigned to the output string $s$ is
+%
+\begin{align*}
+    P_{R_1 | R_2}(s, \QL, \QR) &= \sum_{i \in \{1, 2\}} p(i) \cdot P_{R_i}(s_i, \QL, \QR) \\
+    &= \sum_{i \in \{1, 2\}} \left( \frac{\mc{Z}_{R_i}(\QL, \QR)}{\mc{Z}_{R_1 | R_2}(\QL, \QR)} \right) \left( |s|_{R_i} \frac{\Pt(s, \QL, \QR)}{\mc{Z}_{R_i}(\QL, \QR)} \right) \\
+    &= |s|_{R_1 | R_2} \frac{\Pt(s, \QL, \QR)}{\mc{Z}_{R_1 | R_2}(\QL, \QR)}.
+\end{align*}
+%
+In the final equality, we have used the identity $|s|_{R_1 | R_2} = |s|_{R_1} + |s|_{R_2}$.
+
+\paragraph{$\mathbf{R = S^*:}$} To sample from the regex $R$ we must have the infinite sum defining $\ER_R$ in Table~\ref{tab:regex_cp} 
+converge, which is guaranteed by the assumptions of Lemma~\ref{lem:sample}. Given this convergence, calling $\Sample(S^*, \QL, \QR)$ will either output the empty string $s = \varepsilon$, or else call $\Sample(SS^*, \QL, \QR)$. In the latter case, the concatenation rule will then sample some $s' \in S$ before calling $\Sample(S^*, \EL_{s'}(\QL), \QR)$ to sample some random number $n \geq 0$ occurrences of $S$.
+
+We denote the unnormalized collection of probabilities associated with strings produced from exactly $n$ occurrences of $S$ as $P_{S^*}^{(n)}$, and we use an inductive proof to show that $P_{S^*}^{(n)} = p(n) P_{S^n}$, for $p(n, \QL, \QR) = \mc{Z}_{S^n}(\QL, \QR) / \mc{Z}_{S^*}(\QL, \QR)$. In other words, our recursive sampling procedure for $S^*$ is equivalent to first sampling a random length using $p(n)$, then calling the corresponding $\Sample(S^n, \QL, \QR)$.
+
+\paragraph{\textbf{Base case} $n = 0$: } The regex $S^0$ matches only the empty string $s = \varepsilon$, and from Algorithm~\ref{alg:sampling},
+this occurs with probability
+%
+\begin{equation*}
+    P_{S^*}^{(0)}(s, \QL, \QR) = \frac{\Tr(\QL \QR)}{\mc{Z}_{S^*}(\QL, \QR)} = \frac{\mc{Z}_{S^0}(\QL, \QR)}{\mc{Z}_{S^*}(\QL, \QR)} = p(0) P_{S^0}(s, \QL, \QR),
+\end{equation*}
+%
+where we have used the identity $\ER_{S^0} = \ER_\varepsilon = I$, and the fact that $P_{S^0}(s)$ is 1 for $s = \varepsilon$ and 0 otherwise. 
+
+\paragraph{\textbf{Step case} $n + 1$: } From Algorithm~\ref{alg:sampling}, 
+the probability of sampling a string $s = s_1 s_2$ with $s_1$ matching $S$ and $s_2$ matching $S^{n}$ is
+%
+\begin{align*}
+    P_{S^*}^{(n + 1)}\!(s, \QL, \QR) &= \sum_{s_1 s_2 = s} \left(1 - \frac{\Tr(\QL \QR)}{\mc{Z}_{S^*}(\QL, \QR)} \right) P_{S}(s_1, \QL, \ER_{S^*}(\QR)) P_{S^*}^{(n)}(s_2, \EL_{s_1}(\QL), \QR) \\ 
+    %
+    &= \sum_{s_1 s_2 = s} \left(\frac{\mc{Z}_{SS^*}(\QL, \QR)}{\mc{Z}_{S^*}(\QL, \QR)} \right) \left(|s_1|_{S} \frac{\Pt(s_1, \QL, \ER_{S^*}(\QR))}{\mc{Z}_S(\QL, \ER_{S^*}(\QR))}\right) P_{S^*}^{(n)}(s_2, \EL_{s_1}(\QL), \QR) \\
+    %
+    &= \sum_{s_1 s_2 = s} |s_1|_{S} \frac{\Pt(s_1, \QL, \ER_{S^*}(\QR))}{\mc{Z}_{S^*}(\QL, \QR)} \frac{\mc{Z}_{S^n}(\EL_{s_1}(\QL), \QR)}{\mc{Z}_{S^*}(\EL_{s_1}(\QL), \QR)} |s_2|_{S^n} \frac{\Pt(s_2, \EL_{s_1}(\QL), \QR)}{\mc{Z}_{S^n}(\EL_{s_1}(\QL), \QR)} \\
+    %
+    &= \sum_{s_1 s_2 = s} |s_1|_{S} |s_2|_{S^n} \frac{\Pt(s_2, \EL_{s_1}(\QL), \QR)}{\mc{Z}_{S^*}(\QL, \QR)} = \sum_{s_1 s_2 = s} |s_1|_{S} |s_2|_{S^n} \frac{\Pt(s, \QL, \QR)}{\mc{Z}_{S^*}(\QL, \QR)} \\
+    %
+    &= \frac{\mc{Z}_{S^{n+1}}(\QL, \QR)}{\mc{Z}_{S^*}(\QL, \QR)} |s|_{S^{n+1}} \frac{\Pt(s_1 s_2, \QL, \QR)}{\mc{Z}_{S^{n+1}}(\QL, \QR)} = p(n+1, \QL, \QR) P_{S^{n+1}}(s, \QL, \QR). \\
+\end{align*}
+%
+In the above we used the following identities: $\mc{Z}_{S^*}(\QL, \QR) = \Tr(\QL \QR) + \mc{Z}_{SS^*}(\QL, \QR)$ (second equality), $\mc{Z}_S(\QL, \ER_{S^*}(\QR)) = \mc{Z}_{SS^*}(\QL, \QR)$ (third equality), $\Pt(s_1, \QL, \ER_{S^*}(\QR)) = \mc{Z}_{S^*}(\EL_{s_1}(\QL), \QR)$ (fourth equality), $\Pt(s_2, \EL_{s_1}(\QL), \QR) = \Pt(s_1 s_2, \QL, \QR)$ (fifth equality), and $|s|_{S^{n+1}} = \sum_{s_1 s_2 = s} |s_1|_{S} |s_2|_{S^n}$ (sixth equality).
+
+With this inductive characterization of the unnormalized distributions $P_{S^*}^{(n)}$, we can finally show
+%
+\begin{align*}
+    P_{S^*}(s, \QL, \QR) &= \sum_{n = 0}^\infty P_{S^*}^{(n)}(s, \QL, \QR) = \sum_{n = 0}^\infty \frac{\mc{Z}_{S^{n}}(\QL, \QR)}{\mc{Z}_{S^*}(\QL, \QR)} |s|_{S^{n}} \frac{\Pt(s, \QL, \QR)}{\mc{Z}_{S^{n}}(\QL, \QR)} \\
+    %
+    &= |s|_{S^*} \frac{\Pt(s, \QL, \QR)}{\mc{Z}_{S^*}(\QL, \QR)},
+\end{align*}
+
+where we have used the identity $\sum_{n = 0}^\infty |s|_{S^{n}} = |s|_{S^*}$ in the last equality.
+
+\end{proof}
+
+Having proved Lemma~\ref{lem:sample}, we can now prove Theorem~\ref{thm:sample} 
+as a simple corollary, which is restated here for ease of reference.
+
+\begin{theorem*}
+Consider a u-MPS model with core tensor $\mc{A}$ and boundary vectors $\alpha$ and $\omega$, along with an unambiguous regex $R$ whose right transfer operator $\ER_R$ converges. Let $P_*$ indicate the probability distribution over arbitrary strings defined by the u-MPS, so that $\Sigma_{s\in\Sigma^*} P_*(s) = 1$. Then calling $\Sample(R, \alphamat, \omegamat)$ generates a random string $s \in \Sigma^*$ from the conditional u-MPS distribution $P_*(s | s \in R) = P_*(s) / P_*(R)$, where $P_*(R) := \sum_{s' \in R} P_*(s')$.
+\end{theorem*}
+
+\begin{proof}
+
+From Lemma~\ref{lem:sample}, we know the probability distribution of strings output by $\Sample(R, \alphamat, \omegamat)$, as well as $P_*(s) = \Sample(\Sigma^*, \alphamat, \omegamat)$. This characterization lets us show
+%
+\begin{align*}
+    P_R(s, \alphamat, \omegamat) &= \sR \frac{\Pt(s, \alphamat, \omegamat)}{\mc{Z}_R(\alphamat, \omegamat)} = \sR \frac{\Pt(s, \alphamat, \omegamat)}{\Tr(\alphamat \ER_R(\omegamat))} \\
+    &= \sR \left( \frac{\Pt(s, \alphamat, \omegamat)}{\mc{Z}_{\Sigma^*}(\alphamat, \omegamat)} \right) \left( \frac{\mc{Z}_{\Sigma^*}(\alphamat, \omegamat)}{\sum_{s' \in R} \Pt(s', \alphamat, \omegamat)} \right) \\
+    &= \sR \frac{P_{\Sigma^*}(s, \alphamat, \omegamat)}{\sum_{s' \in R} P_{\Sigma^*}(s', \alphamat, \omegamat)} = 
+    \begin{cases}
+    P_*(s) / P_*(R), &\text{if } s \in R\\
+    0, &\text{otherwise}
+    \end{cases} \\
+    &= P_*(s | s \in R).
+\end{align*}
+
+In the third equality we used \eqref{eq:gen_transfer_op} in Theorem~\ref{thm:transfer_op} (which reduces to Equation~\eqref{eq:transfer_op} 
+for an unambiguous $R$) to express $\ER_R$ as $\ER_R = \sum_{s \in R} \ER_s$, while also introducing a normalization factor associated with $\Sigma^*$ to the numerator and denominator. In the last equality we have used the definition of the conditional probability distribution associated with $s$ matching the regex $R$, and have also utilized the fact that $\sR$ is either 1 or 0 for unambiguous regex.
+
+\end{proof}
+

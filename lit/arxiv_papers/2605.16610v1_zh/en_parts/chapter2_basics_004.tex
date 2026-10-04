@@ -1,0 +1,149 @@
+\paragraph{Partial traces} The \emph{partial trace} is a common operation used in particular in the context of modeling many-body quantum systems, where density matrices of a part of a system are obtained by performing a partial trace of the density matrix of the whole system. Without delving into the specifics of quantum systems, consider a square matrix  of dimension $d_1d_2\times d_1d_2$ which we interpret as a fourth-order tensor \begin{tikzpicture}[baseline=-0.5ex]
+    \tikzset{tensor/.style = {minimum width = 0.8cm,minimum height = 0.4cm,shape = rounded rectangle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{0}
+    \def\y{0}
+    \draw[edge] (\x-0.2,\y-0.15) -- (\x-0.2,\y-0.5)node [midway,left=-0.05cm] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (\x+0.2,\y-0.15) -- (\x+0.2,\y-0.5)node [midway,right=-0.05cm] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x-0.2,\y+0.15) -- (\x-0.2,\y+0.5)node [midway,left=-0.05cm] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (\x+0.2,\y+0.15) -- (\x+0.2,\y+0.5)node [midway,right=-0.05cm] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \node[tensor,fill=yellow] (Bt) at (\x,\y){$\Tt$};
+    \end{tikzpicture}.
+The partial trace of $\Tt$ over the subspace $\mathbb R^{d_1}$ is the $d_2\times d_2$ matrix obtained by ``tracing out'' the $d_1$ dimension by connecting the corresponding legs: \begin{tikzpicture}[baseline=-0.5ex]
+    \tikzset{tensor/.style = {minimum width = 0.6cm,minimum height = 0.4cm,shape = rounded rectangle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{0}
+    \def\y{0}
+    \draw[edge] (\x-0.2,\y-0.15) -- (\x-0.2,\y-0.4);
+    \draw[edge] (\x+0.2,\y-0.15) -- (\x+0.2,\y-0.5)node [midway,right=-0.05cm] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x-0.2,\y+0.15) -- (\x-0.2,\y+0.4);
+    \draw[edge] (\x+0.2,\y+0.15) -- (\x+0.2,\y+0.5)node [midway,right=-0.05cm] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x-0.2,\y-0.39) to [out=200,in=160] (\x-0.2,\y+0.39) node [midway,left=0.35cm] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \node[tensor,fill=yellow] (Bt) at (\x,\y){$\Tt$};
+    \end{tikzpicture}. Similarly, the partial trace of $\Tt$ over the subspace $\mathbb R^{d_2}$ is the $d_1\times d_1$ matrix 
+\begin{tikzpicture}[baseline=-0.5ex]
+    \tikzset{tensor/.style = {minimum width = 0.6cm,minimum height = 0.4cm,shape = rounded rectangle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{0}
+    \def\y{0}
+    \draw[edge] (\x-0.2,\y-0.15) -- (\x-0.2,\y-0.5)node [midway,left=-0.05cm] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (\x+0.2,\y-0.15) -- (\x+0.2,\y-0.4);
+    \draw[edge] (\x-0.2,\y+0.15) -- (\x-0.2,\y+0.5)node [midway,left=-0.05cm] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (\x+0.2,\y+0.15) -- (\x+0.2,\y+0.4);
+    \draw[edge] (\x+0.2,\y-0.39) to [out=330,in=30] (\x+0.2,\y+0.39) node [midway,right=0.3cm] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \node[tensor,fill=yellow] (Bt) at (\x,\y){$\Tt$};
+\end{tikzpicture}.
+
+\paragraph{Tensor Frobenius Norm} The Frobenius norm of a tensor $\At\in\RR^{d_1\times\cdots\times d_N}$ is the square root of the sum of its
+squared elements~(i.e., the square root of the inner product with itself). In tensor networks, the norm of a third-order tensor $\At\in\RR^{d_1\times d_2\times d_3}$ is represented as
+\begin{align*}
+\norm{\At}_F^2 = \langle\At,\At\rangle = 
+\sum_{i_1=1}^{d_1}\sum_{i_2=1}^{d_2}\sum_{i_3=1}^{d_3}\At_{i_1i_2i_3}^2
+=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=green!50!red!50!white] (At) at (\x,\y){\scalebox{0.85}{$\At$}};
+    \node[tensor,fill=green!50!red!50!white] (At1) at (\x+1,\y){\scalebox{0.85}{$\At$}};
+    \draw[edge] (At) -- (At1);
+    \draw[edge] (At) to [out=45,in=135] (At1);
+    \draw[edge] (At) to [out=-45,in=-135] (At1);
+    \node[draw=none] () at (\x+0.5,\y+0.6) {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \node[draw=none] () at (\x+0.5,\y+0.15) {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \node[draw=none] () at (\x+0.5,\y-0.5) {\scalebox{0.7}{\dimcolor{$d_3$}}};
+\end{tikzpicture} .
+\end{align*}
+It is a direct and natural generalization of the matrix Frobenius norm: 
+\begin{align*}
+ \norm{\Ab}_F^2 = \tr(\Ab\Ab^\ts) = \tr(\Ab^\ts\Ab) =  \hspace*{-0.5cm}
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (A) at (\x,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=red!50!white] (B) at (\x+1,\y){\scalebox{0.85}{$\Ab$}};
+    \draw[edge] (A) -- (B) node [midway,above]{\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge] (A) to [out=155,in=25, distance=1cm] (B);
+    \node[draw=none] () at (\x+0.5,\y+0.65) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \end{tikzpicture} \hspace*{-0.5cm}.
+\end{align*}
+
+
+\paragraph{Frobenius norm of outer products} Using tensor networks, it is almost trivial to show that the Frobenius norm of an outer product is equal to the product of the Frobenius norms. E.g., for $\Ab\in\RR^{m\times n}$ and $\Tt\in\RR^{d_1\times d_2\times d_3}$, we have 
+$$ \begin{tikzpicture}[baseline=-0.5ex]
+    \tikzset{tensor/.style = {minimum width = 1.8cm,minimum height = 0.4cm,shape = rounded rectangle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{0}
+    \def\y{0}
+    \draw[edge] (\x-0.7,\y-0.15) -- (\x-0.7,\y-0.5)node [midway,left=-0.05cm] {\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge] (\x-0.35,\y-0.15) -- (\x-0.35,\y-0.5)node [midway,left=-0.05cm] {\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge] (\x,\y-0.15) -- (\x,\y-0.5)node [midway,left=-0.1cm] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (\x+0.35,\y-0.15) -- (\x+0.35,\y-0.5)node [midway,left=-0.1cm] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x+0.7,\y-0.15) -- (\x+0.7,\y-0.5)node [midway,left=-0.1cm] {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \node[tensor,fill=yellow] (Bt) at (\x,\y){$\Ab \outprod \Tt$};
+    \end{tikzpicture}
+    = 
+    \begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum width = 0.8cm,minimum height = 0.4cm,shape = rounded rectangle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x+0.2,\y-0.15) -- (\x+0.2,\y-0.5) node [midway,left=-0.05cm]{\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge] (\x-0.2,\y-0.15) -- (\x-0.2,\y-0.5) node [midway,left=-0.05cm]{\scalebox{0.7}{\dimcolor{$m$}}};
+    \node[tensor,fill=red!50!white] (A) at (\x,\y){{$\Ab$}};
+
+   
+    \def\y{0}
+    \def\x{1}
+    \draw[edge] (\x-0.3,\y-0.15) -- (\x-0.3,\y-0.5) node [midway,left=-0.1cm]{\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (\x+0.05,\y-0.15) -- (\x+0.05,\y-0.5) node [midway,left=-0.1cm]{\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x+0.3,\y-0.15) -- (\x+0.3,\y-0.5) node [midway,right=-0.05cm]{\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \node[tensor,fill=red!30!blue!20!white] (T) at (\x,\y){{$\Tt$}};
+\end{tikzpicture}
+    $$
+and thus
+\begin{align*}
+\norm{\Ab\outprod\Tt}_F^2
+=
+\norm{
+\begin{tikzpicture}[baseline=\baseline]
+\tikzset{tensor/.style = {minimum width = 1.8cm,minimum height = 0.4cm,shape = rounded rectangle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{0}
+    \def\y{0}
+    \draw[edge] (\x-0.7,\y-0.15) -- (\x-0.7,\y-0.5)node [midway,left=-0.05cm] {\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge] (\x-0.35,\y-0.15) -- (\x-0.35,\y-0.5)node [midway,left=-0.05cm] {\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge] (\x,\y-0.15) -- (\x,\y-0.5)node [midway,left=-0.1cm] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (\x+0.35,\y-0.15) -- (\x+0.35,\y-0.5)node [midway,left=-0.1cm] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x+0.7,\y-0.15) -- (\x+0.7,\y-0.5)node [midway,left=-0.1cm] {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \node[tensor,fill=yellow] (Bt) at (\x,\y){$\Ab \outprod \Tt$};
+\end{tikzpicture}
+}_F^2
+=
+\begin{tikzpicture}[baseline=\baseline]
+\tikzset{tensor/.style = {minimum width = 1.8cm,minimum height = 0.4cm,shape = rounded rectangle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\x{0}
+    \def\y{0.35}
+    \draw[edge] (\x-0.7,\y-0.15) -- (\x-0.7,\y-0.5)node [midway,left=-0.05cm] {\scalebox{0.7}{\dimcolor{$m$}}};
+    \draw[edge] (\x-0.35,\y-0.15) -- (\x-0.35,\y-0.5)node [midway,left=-0.05cm] {\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge] (\x,\y-0.15) -- (\x,\y-0.5)node [midway,left=-0.1cm] {\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (\x+0.35,\y-0.15) -- (\x+0.35,\y-0.5)node [midway,left=-0.1cm] {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x+0.7,\y-0.15) -- (\x+0.7,\y-0.5)node [midway,left=-0.1cm] {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \node[tensor,fill=yellow] (Bt) at (\x,\y){$\Ab \outprod \Tt$};
+    \node[tensor,fill=yellow] (Bt) at (\x,\y-0.7){$\Ab \outprod \Tt$};
+\end{tikzpicture}
+=
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum width = 0.9cm,minimum height = 0.4cm,shape = rounded rectangle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0.35}
+    \def\x{0}
+    \draw[edge] (\x+0.2,\y-0.15) -- (\x+0.2,\y-0.5) node [midway,left=-0.05cm]{\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge] (\x-0.2,\y-0.15) -- (\x-0.2,\y-0.5) node [midway,left=-0.05cm]{\scalebox{0.7}{\dimcolor{$m$}}};
+    \node[tensor,fill=red!50!white] (A) at (\x,\y){{$\Ab$}};
+    \node[tensor,fill=red!50!white] (A) at (\x,\y-0.7){{$\Ab$}};
+    \def\x{1}
+    \draw[edge] (\x-0.3,\y-0.15) -- (\x-0.3,\y-0.5) node [midway,left=-0.1cm]{\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (\x+0.05,\y-0.15) -- (\x+0.05,\y-0.5) node [midway,left=-0.1cm]{\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x+0.3,\y-0.15) -- (\x+0.3,\y-0.5) node [midway,right=-0.1cm]{\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \node[tensor,fill=red!30!blue!20!white] (T) at (\x,\y){{$\Tt$}};
+    \node[tensor,fill=red!30!blue!20!white] (T) at (\x,\y-0.7){{$\Tt$}};
+\end{tikzpicture}
+=\norm{\Ab}_F^2 \norm{\Tt}_F^2
+.
+\end{align*}
+

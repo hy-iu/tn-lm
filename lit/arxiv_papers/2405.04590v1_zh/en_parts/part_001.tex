@@ -1,0 +1,31 @@
+\section{Introduction}
+
+% A \textit{language model} assigns probabilities of sequences of words from the vocabulary $V$; the number of distinct sentences increases exponentially w.r.t to their length $N$. Hence the domain of a language model is, by definition, the exponential space $V^N$.  However, due to the vanilla exponential space being intractable, existing work tends to use recurrent architectures to generate conditional probabilities based on the context (typically encapsulated as a fixed-length dense vector). This indeed simplifies the calculation.
+
+% Human languages, like many biological systems including families of proteins, genomes, and neurons in the brain, have significant long-range correlations that decay with a power law \citep{tagliazucchi2012criticality, mora2011biological}. However,  $n$-gram models have long-range correlations that decay exponentially which belie the essential critical behavior inherent in language \citep{pestun2017language}. Even 
+% current network models like LSTM \cite{hochreiter1997long} are still hard to match long-range and higher-order statistics of natural languages \citep{lin2016critical}.
+
+Human languages, like many biological systems, including families of proteins, genomes, and neurons in the brain, have significant long-range correlations that decay with a power law \citep{tagliazucchi2012criticality, mora2011biological}.  
+Current network models like LSTMs \cite{hochreiter1997long} are hard to match long-range and higher-order statistics of natural languages \citep{lin2016critical}. 
+
+
+Recently, researchers have turned to tensor network language modeling,  which contains models that exhibit correlation functions that decay with the power law \citep{pestun2017tensor,pestun2017language,miller2021tensor}. Tensor networks are, roughly, decompositions of large tensors into sets of smaller tensors and have been employed in physics, mathematics, and machine learning \citep{cohen2016expressive}. However, the so-called `tensor network language model' is either a concept that needs to be proved practically \cite{pestun2017tensor} or unsuitable in real-world language modeling tasks \citep{miller2021tensor} due to their way of modeling probabilities.  Towards making tensor network language modeling practical, we make the first step to applying it to real language modeling datasets.
+
+As proof-of-concept work, we derive a Tensor Train Language Model (TTLM) (the simplest tensor network).  Technically, we represent a sentence based on the exponential semantic space constructed by the tensor product of word representations. The probability of the sentence is defined by the inner product of two high-dimensional tensors: the input $\Phi(X)$ and the global 
+coefficients $\mathcal{A}$, and decomposed into conditional probabilities.  
+
+Under the framework of TTLM,  we propose two variants:  TTLM-Tiny and TTLM-Large. Also, we clarify the relationship between the proposed TTLM and a series of Recurrent Neural Networks (RNNs) (i.e., Second-order RNNs \citep{goudreau1994first},  Recurrent Arithmetic Circuits (RACs) \citep{levine2018benefits}, and Multiplicative Integration RNNs (MI-RNNs) \citep{wu_multiplicative_2016}). These connections open a new eye to understanding RNNs and give some natural implementations for TTLM.
+
+
+We benchmark these TTLM variants and analyze the difference in their working mechanism and behaviors. Experimental results on the language modeling task show that our TTLM variants could outperform than Vanilla-RNNs under the same training setting. These demonstrate the feasibility of TTLM.
+ 
+ 
+The main contributions of our work can be summarized as follows:
+\begin{itemize}
+    % \item We propose a novel Tensor Train Language Model, as a first attempt to apply tensor networks on real-world language modeling tasks.
+    \item We propose a novel Tensor Train Language Model, as an illustration of how tensor networks can be applied to real-world language modeling datasets. 
+    \item We propose two novel TTLM variants, TTLM-Large and TTLM-Tiny, and theoretically demonstrate the relationship between  TTLM and a series of existing RNNs.
+    \item Compared to Vanilla-RNNs on WikiText-2 and PTB datasets, TTLM-Large reduces perplexity by 14.3 and 16.0, respectively, and TTLM-Tiny reduces perplexity by 1.7 and 8.5, respectively.
+\end{itemize}
+
+

@@ -1,0 +1,65 @@
+\section{TTLM 中各 TT 核心张量之间的关系}
+\label{sec: relationship}
+
+为帮助读者理解 TTLM 中各 TT 核心张量（core）的作用，我们在此给出 TTLM 计算文本 $X = [x^{(1)}, x^{(2)}, \cdots ,x^{(N)}]$ 概率的详细过程。注意，所有中间 TT 核心张量彼此相等：$\tG = \tG^{(2)},...,\tG^{(N-1)}$，且 $\tG^{(1)} = \tG^{(N)}$。
+
+$\vy^{(t)}$（即在时刻 $t$ 给定 $x^{(1:t-1)}$ 时 $x^{(t)}$ 的条件概率）的计算可分为三步。作为第 I 步，假设 $\vf(x^{(1)})$ 是满足 $f(x^{(1)})_1 = 1$ 的 one-hot 向量。TTLM 中 $\tG^{(1)}\vf(x^{(1})$ 的计算如下：
+
+\begin{align}
+\tG^{(1)}\vf(x^{(1}) &=
+\left[\begin{array}{c}
+f\left(x^{(1)}\right)_1 \\
+f\left(x^{(1)}\right)_2 \\
+\ldots \\
+f\left(x^{(1)}\right)_{|V|}
+\end{array}\right] \left[\begin{array}{cccc}
+\tG_{11}^{(1)} & \tG_{12}^{(1)} & \ldots & \tG_{1 R}^{(1)} \\
+\tG_{21}^{(1)} & \tG_{22}^{(1)} & \ldots & \tG_{2 R}^{(1)} \\
+\ldots & \ldots & \ldots & \ldots \\
+\tG_{|V| 1}^{(1)} & \tG_{|V| 2}^{(1)} & \ldots & \tG_{|V| R}^{(1)}
+\end{array}\right] \nonumber \\
+&=\left[\tG_{11}^{(1)}, \tG_{12}^{(1)}, \cdots, \tG_{1R}^{(1)}\right]^T \nonumber \\
+&=\vh_{\textrm{TTLM}}^{(1)} \nonumber
+\end{align}
+
+% \begin{wrapfigure}[13]{r}{0.42\textwidth}
+% \small
+% \vspace{-18mm}
+% \begin{center}
+% \includegraphics[scale=0.35]{figure/G_LA.png}
+% \vspace{-4mm}
+% \label{fig: probability_ttlm}
+% \vspace{-8mm}
+% \end{center}
+% \end{wrapfigure}
+
+作为第 II 步，TTLM 将计算
+$\vf(x^{(i)})\tG\vh^{(i-1)}_{\textrm{TTLM}}$，其中 $i \in \{2,3,\cdots,t-1\}$。例如，$\vh_{\textrm{TTLM}}^{(2)}$ 在时刻 $t= 2$ 按式 \ref{eq: ttlm cell full} 计算如下：
+\begin{align}
+    \vh_{\textrm{TTLM}}^{(2)} = \vf(x^{(2)})^T\tG  \vh^{(1)}_{\textrm{TTLM}} \nonumber
+\end{align}
+
+作为第 III 步，TTLM 将输出 $\vy^{(t)}$，如下：
+
+\begin{align}
+\tG^{(t)}\vh^{(t-1)}_{\textrm{TTLM}} &=
+\left[\begin{array}{cccc}
+\tG_{11}^{(t)} & \tG_{12}^{(t)} & \ldots & \tG_{1 R}^{(t)} \\
+\tG_{21}^{(t)} & \tG_{22}^{(t)} & \ldots & \tG_{2 R}^{(t)} \\
+\ldots & \ldots & \ldots & \ldots \\
+\tG_{|V| 1}^{(t)} & \tG_{|V| 2}^{(t)} & \ldots & \tG_{|V| R}^{(t)}
+\end{array}\right] \left[\begin{array}{c}
+h^{(t-1)}_{{\textrm{TTLM}}_1} \\
+h^{(t-1)}_{{\textrm{TTLM}}_2} \\
+\ldots \\
+h^{(t-1)}_{{\textrm{TTLM}}_R}
+\end{array}\right] \nonumber \\
+&= \left[\begin{array}{c}
+\sum_{i=1}^{R}\tG_{1i}^{(t)} h^{(t-1)}_{{\textrm{TTLM}}_1}  \\
+\sum_{i=1}^{R}\tG_{2i}^{(t)} h^{(t-1)}_{{\textrm{TTLM}}_2} \\
+\ldots \\
+\sum_{i=1}^{R}\tG_{Ri}^{(t)} h^{(t-1)}_{{\textrm{TTLM}}_R}
+\end{array}\right] \nonumber
+\end{align}
+
+由上述计算可以观察到，$\tG^{(1)}$、$\tG$ 与 $\tG^{(t)}$ 在理论上没有共享参数（尽管为简单起见我们令 $\tG^{(1)} = \tG^{(t)}$）。此外，它们在 TTLM 中扮演的角色各不相同：$\tG^{(1)}$ 可视为词嵌入矩阵；$\tG$ 处理两种来源的信息，即隐藏状态与输入词；$\tG^{(t)}$ 则提取 $\vh^{(t-1)}_{\textrm{TTLM}}$ 中所提供的证据，并在词表上生成一组分数。

@@ -1,0 +1,31 @@
+\section{预备知识}
+\label{sec:preliminaries}
+我们在此简要回顾一些基本概念与记号\footnote{此处的大部分记号沿用教材 \textit{Deep Learning}
+\cite{goodfellow2016deep}。}；完整的技术性介绍可参阅标准教科书 \cite{BI20221, 10.5555/1643460}。
+
+% \textbf{Tensor} is a multidimensional array representing a multilinear relationship between certain objects in vectors spaces. First order tensors vectors denoted $\mathbf{v}$. Second order tensors are matrices, denoted $\mathbf{M}$. By $\mathcal{T}$, we denote tensors of order 3 or greater. For a third order $\mathcal{T}$, we denote its element $(i,j,k)$ as $\mathcal{T}_{ijk}$.
+
+\paragraph{记号。}在本文中，每个\textit{张量（tensor）} $\tA$ 都是元素（称为\emph{分量（component）}）取自 $\mathbb{R}$ 的多维数组（multi-dimensional array），每个元素由其在数组中的整数坐标标记；例如，对于二维数组，位于 $i,j \in \mathbb{N}$ 处的分量记作 $\etA_{ij}$。
+ 张量的\emph{阶（order）}指它具有多少个指标（例如，向量 $\vv$ 是一阶张量，矩阵 $\mM$ 是二阶张量，等等）。张量的\emph{维数（dimension）}指某个特定指标（即所谓的\textit{模态（mode）}）可取值的数目，例如，$\tB \in \mathbb{R}^{I_1 \times I_2 \times I_3}$ 的维数为 $I_1 \times I_2 \times I_3$。
+
+\paragraph{张量积 \cite{cohen2016expressive}。}对于两个张量 $\tC \in \mathbb{R}^{I_1 \times \cdots \times I_j}$（$j$ 阶）与 $\tD \in \mathbb{R}^{I_{j+1}, \times \cdots \times I_{j+k}}$（$k$ 阶），它们的\textit{张量积（tensor product）}记作 $\otimes$，返回一个张量 $\etE_{i_1 \cdots i_{j+k}} = \etC_{i_1...i_j} \cdot \etD_{i_{j+1} \cdots i_{j+k}}$（$j+k$ 阶）。注意，当 $j = k = 1$ 时，张量积退化为向量之间的外积（outer product）。
+
+\paragraph{广义内积 \citep{kossaifi2020tensor}。}
+\label{Generalized inner product}
+对于尺寸相同的两个张量 $\tX,\tY\in\mathbb{R}^{I_1\times I_2 \times \cdots \times I_N}$，它们的\textit{内积（inner product）}定义为 $\langle \tX,\tY \rangle=\sum_{i_1=1}^{I_1}\sum_{i_2=1}^{I_2} \cdots \sum_{i_N=1}^{I_N} \etX_{i_1,i_2,...,i_N} \etY_{i_1,i_2,...,i_N}$。对于共享 $N$ 个同尺寸模态（mode）的两个张量 $\tX \in \mathbb{R}^{I_1\times I_2 \times \cdots \times I_N \times I_x}$ 与 $\tY \in \mathbb{R}^{I_1\times I_2\times \cdots I_N \times I_y}$，“广义内积（generalized inner product）”计算为
+%
+\begin{align}
+    \langle \tX,\tY \rangle_N =\sum_{i_1=1}^{I_1}\sum_{i_2=1}^{I_2}\cdot\cdot\cdot\sum_{i_N=1}^{I_N} \etX_{i_1,i_2,...,i_N} \etY_{i_1,i_2,...,i_N} \nonumber
+\end{align}
+%
+且 $\langle \tX,\tY \rangle_N \in \mathbb{R}^{I_x \times I_y}$。
+
+
+
+\begin{figure*}[t]
+\centering
+% \vspace{-15pt}
+\includegraphics[scale=0.45]{figure/preliminary.pdf}
+\caption{\textit{张量图示记法（tensor diagram notation）}简介。张量图有两条规则：(1) 张量用实心图形表示，图形所带“腿”的数目对应其指标的数目；(2) 连接两条指标线意味着对所连指标进行\textit{收缩（contraction）}或求和。在本文中，我们在公式旁附上这些图示，以便于理解。 }
+\label{fig: tensor_diagram}
+\end{figure*}

@@ -1,0 +1,29 @@
+\begin{tikzpicture}[x={(-.98,0.17)},y={(55:.7cm)},z={(90:1cm)},baseline=(current bounding box.center)]
+    
+    \draw[obj1, looseness=.6] (2.5,-2.5,-1) node[below left] {$\mc M$}
+    to[bend left] coordinate (m1) (2.5,2.5,-1)
+    to[bend left] coordinate (m2) (-2.5,2.5,-1)
+    to[bend right] coordinate (m4) (-2.5,-2.5,-1)
+    to[bend right] coordinate (m3) (2.5,-2.5,-1) -- cycle;
+    \draw[obj1] (2.5,-2.5,0) node[below left] {$T_\vec z\mc M$} -- (2.5,2.5,0) -- (-2.5,2.5,0) -- (-2.5,-2.5,0) -- cycle;
+    \node[fill=white,left,yshift=2pt,local bounding box=hidden] at (1,0,0) {$\mc P_{T_\vec z}H\ket{\Psi(\vec z)}$};
+    
+    \fill[black, fill opacity=.08, looseness=.6] (2.5,-2.5,-1)
+    to[bend left] coordinate (m1) (2.5,2.5,-1)
+    to[bend left] coordinate (m2) (-2.5,2.5,-1)
+    to[bend right] coordinate (m4) (-2.5,-2.5,-1)
+    to[bend right] coordinate (m3) (2.5,-2.5,-1) -- cycle;
+    
+    \draw[obj1,dashed,looseness=.5] (m3) to[bend left] (0,0,0) to[bend left] (m2);
+    \draw[obj1,dashed,looseness=.5] (m1) to[bend left] (0,0,0) to[bend left] (m4);
+    \path[looseness=.2] (m3) to[bend left] (0,0,0);
+    \node[above] at (1,0,2){$H\ket{\Psi(\vec z)}$};
+    \fill[BlueViolet, fill opacity=0.10] (2.5,-2.5,0) -- (2.5,2.5,0) -- (-2.5,2.5,0) -- (-2.5,-2.5,0) -- cycle;
+
+    \draw[obj1, dotted] (1,0,2) -- (1,0,0);
+    \draw[obj1, -Latex] (0,0,0) -- (1,0,0);
+    
+    \draw[obj1, -Latex] (0,0,0) -- coordinate[pos=.3] (psi) (1,0,2);
+    \node[fill=black, circle, inner sep=1.5pt] at (0,0,0) {};
+    \node[anchor=north west] at (0,0,0) {$\vec z$};
+\end{tikzpicture}

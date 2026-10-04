@@ -1,0 +1,71 @@
+Assuming $\Ab$ has the SVD represented in the previous diagram, we can give a short proof in tensor networks of the identity $\tr(\Ab^\ts\Ab) = \sum_{i}\sigma_i^2$, where $\sigma_i$ are the singular values of the matrix $\Ab\in\RR^
+{m\times n}$:
+$$
+\tr(\Ab^\ts\Ab) 
+\begin{tikzpicture}[baseline=\baseline]
+   \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[draw=none] () at (\x-0.7,\y) {\scalebox{1}{$=$}};
+    \node[tensor,fill=red!50!white] (A) at (\x,\y){\scalebox{0.85}{$\Ab$}};
+    \node[tensor,fill=red!50!white] (B) at (\x+1,\y){\scalebox{0.85}{$\Ab$}};
+    \draw[edge] (A) -- (B) node [midway,above]{\scalebox{0.7}{\dimcolor{$n$}}};
+    \draw[edge] (A) to [out=155,in=25, distance=1cm] (B);
+    \node[draw=none] () at (\x+0.5,\y+0.65) {\scalebox{0.6}{\dimcolor{$m$}}};
+    \node[draw=none] () at (\x+1.7,\y) {\scalebox{1}{$=$}};
+    \end{tikzpicture}
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style   = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+   
+    \node[tensor, path picture={
+    \fill[fill=red!30!white](path picture bounding box.south east)
+    -- 
+    (path picture bounding box.north west) --
+    (path picture bounding box.north east) -- cycle;
+    }, shift={(\x,\y+0.5)}] (U) {$\Ub$};
+    \node[tensor,fill=blue!20!red!40!white] (sigma) at (\x+1,\y+0.5){\scalebox{0.85}{}};
+    \node[tensor, path picture={
+    \fill[fill=red!30!white](path picture bounding box.south west)
+        -- 
+    (path picture bounding box.north west) --
+    (path picture bounding box.north east) -- cycle;
+    }, shift={(\x+2,\y+0.5)}] (V) {$\Vb$};
+    \draw[edge=0.5] (sigma.south west) -- (sigma.north        east);
+    \draw[edge] (U) -- (sigma) node [midway,above] {\scalebox{0.7}{\dimcolor{$R$}}};
+    \draw[edge] (sigma) -- (V)node [midway,above] {\scalebox{0.7}{\dimcolor{$R$}}};
+    
+    \node[tensor, path picture={
+    \fill[fill=red!30!white](path picture bounding box.south east)
+    -- 
+    (path picture bounding box.north west) --
+    (path picture bounding box.north east) -- cycle;
+    }, shift={(\x,\y-0.5)}] (U1) {$\Ub$};
+    \node[tensor,fill=blue!20!red!40!white] (sigma1) at (\x+1,\y-0.5){\scalebox{0.85}{}};
+    \node[tensor, path picture={
+    \fill[fill=red!30!white](path picture bounding box.south west)
+        -- 
+    (path picture bounding box.north west) --
+    (path picture bounding box.north east) -- cycle;
+    }, shift={(\x+2,\y-0.5)}] (V1) {$\Vb$};
+    \draw[edge=0.5] (sigma1.south west) -- (sigma1.north        east);
+    \draw[edge] (U1) -- (sigma1) node [midway,above] {\scalebox{0.7}{\dimcolor{$R$}}};
+    \draw[edge] (sigma1) -- (V1) node [midway,above] {\scalebox{0.7}{\dimcolor{$R$}}};
+    \draw[edge] (U) to [out=-150,in=160, distance=0.5cm] (U1);
+    \draw[edge] (V) to [out=-30,in=20, distance=0.5cm] (V1);
+    \node[draw=none] () at (\x-0.8,\y) {\scalebox{0.7}{\dimcolor{$m$}}};
+    \node[draw=none] () at (\x+2.8,\y) {\scalebox{0.7}{\dimcolor{$n$}}};
+    \node[draw=none] () at (\x+3.5,\y) {\scalebox{1}{$=$}};
+    \node[tensor,fill=blue!20!red!40!white] (sigma2) at (\x+4.5,\y-0.5){\scalebox{0.85}{}};
+    \node[tensor,fill=blue!20!red!40!white] (sigma3) at (\x+4.5,\y+0.5){\scalebox{0.85}{}};
+    \draw[edge=0.5] (sigma2.south west) -- (sigma2.north        east);
+    \draw[edge=0.5] (sigma3.south west) -- (sigma3.north        east);
+    \draw[edge] (sigma2) to [out=-150,in=160, distance=0.5cm] (sigma3);
+    \draw[edge] (sigma2) to [out=-30,in=20, distance=0.5cm] (sigma3);
+    \node[draw=none] () at (\x+4.2,\y) {\scalebox{0.7}{\dimcolor{$R$}}};
+    \node[draw=none] () at (\x+4.9,\y) {\scalebox{0.7}{\dimcolor{$R$}}};
+\end{tikzpicture}
+= \tr(\Sigmab^2) = \sum_{i}\sigma_i^2,
+$$
+where we use the left and right orthogonal property of  $\Ub$ and $\Vb$.

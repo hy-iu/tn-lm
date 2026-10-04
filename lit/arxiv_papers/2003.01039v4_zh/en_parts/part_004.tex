@@ -1,0 +1,30 @@
+\subsection{Born Machines}
+
+While \eqnref{eq:mps_amp} is identical to the evaluation rule for WFA, and well-suited for regression tasks, we are interested in using u-MPS as probabilistic models. This requires the interpretation of $f_{\mc{A}}(s)$ as a non-negative probability $P(s)$, and deciding if a general WFA outputs negative values is  undecidable~\citep{denis2008}. This issue can be circumvented by requiring all entries of $\mc{A}$, $\alpha$, and $\omega$ to be non-negative real numbers, but such models can be seen as largely equivalent to hidden Markov models~\citep{denis2008}.
+
+We instead follow the approach introduced in~\citep{pestun2017a} (see also~\citep{han2018}), which is inspired by the typical usage of MPS in quantum mechanics. For the case of u-MPS, this \emph{Born machine} approach converts a scalar value $f_{\mc{A}}(s)$ to an unnormalized probability $\Pt(s) := \left|f_{\mc{A}}(s)\right|^2$. This can be converted into a properly normalized distribution over sequence of fixed length $n$ by choosing $P_n(s) = \Pt(s) / \Z_n$, where the normalization function $\Z_n$ is given by
+%
+\begin{align}
+\label{eq:partition_n}
+\Z_n &= \sum_{s \in \Sigma_n} \Pt(s) = \sum_{i_1\in[d]} \sum_{i_2\in[d]} \cdots \sum_{i_n\in[d]} \left| (T_n)_{i_1,i_2,\ldots,i_d} \right|^2 \nonumber\\ 
+&= \left\lVert\mc{T}_n\right\rVert^2,
+\end{align}
+%
+and with $\mc{T}_n$ the $n$th order tensor defined by the u-MPS. This quadratic evaluation rule is equivalent to the Born rule of quantum mechanics~\citep{born1926}, which gives a formal interpretation of such models as wavefunctions over $n$ quantum spins. However this probabilistic correspondence is richer in the case of u-MPS, since distributions over sequences of different lengths can be easily defined. The distribution $P(s) = \Pt(s) / \Z_*$ in particular gives a probability distribution over strings of arbitrary length, where the normalization factor $\Z_*$ is identical to that given in \eqnref{eq:partition_n}, but with the sum over $\Sigma^n$ replaced by one over $\Sigma^*$. We show in Section~\ref{sec:regex} how normalization functions of this form can be generalized further to incorporate sums over all strings matching an arbitrary regular expression $R$.
+
+Normalization functions like $\Z_n$ occur frequently in many-body physics, and can be efficiently computed via a simple reordering of tensor contractions. By \eqnref{eq:partition_n}, $\Z_n$ equals the 2-norm of $\mc{T}_n$, which is represented diagrammatically as Figure~\ref{fig:contraction}e. The naive method of evaluating $\Z_n$ involves first generating all elements of $\mc{T}_n$ via contraction along the horizontal $D$-dimensional indices of the u-MPS, but the generalized associativity of tensor contraction lets us evaluate this expression more efficiently.
+
+By first contracting two copies of $\mc{A}$ along a vertical $d$-dimensional index (see~\eqnref{fig:contraction}f) we obtain a 4th order tensor $\E$, which can be interpreted as a linear map on a space of matrices in two main ways, by contracting either its left or its right indices with an input. These linear maps, known as \emph{transfer operators}, are examples of completely positive (CP) maps, a generalization of stochastic matrices which find frequent application in the context of quantum information theory (see Appendix~\ref{sec:appendix_a} for more details). These maps admit the Kraus representations $\ER(\QR) = \sum_{c\in\Sigma} \mc{A}(c) \QR \mc{A}(c)^T$ and $\EL(\QL) = \sum_{c\in\Sigma} \mc{A}(c)^T \QL \mc{A}(c)$, which are connected by the adjoint identity $\Tr(\QL \ER(\QR)) = \Tr(\EL(\QL) \QR)$.\footnote{In general, CP maps are linear operators $\mc{F}$ acting on square matrices by the rule $\mc{F}(Q) = \sum_{i=1}^K A_i Q A_i^T$. CP maps are guaranteed to send positive semidefinite (PSD) to other PSD matrices, allowing us to assume in the following that all $\QL$ and $\QR$ are PSD.}
+
+The normalization $\Z_n$ can be equivalently computed in terms of left or right transfer operators, with the latter option yielding
+%
+\begin{align}
+\label{eq:normalization}
+\Z_n &= \alpha^T \ER(\ER(\cdots\ER(\omegamat))\cdots) \alpha \nonumber\\
+         &= \Tr\left( \QL^\alpha\ (\ER)^{\circ n}(\QR^\omega) \right),
+\end{align}
+%
+where $\QL^\alpha = \alphamat$ and $\QR^\omega = \omegamat$ are rank-1 matrices constituting boundary conditions for the normalization term. We use $(\ER)^{\circ n}$ to denote the composition of $\ER$ with itself $n$ times, and define $(\ER)^{\circ 0}$ to be the identity map acting on square matrices. For an MPS of bond dimension $D$ over an alphabet of size $d$, a single transfer operator application requires time $\bigO(dD^3)$, giving a sequential runtime of $\bigO(ndD^3)$ for computing $\Z_n$. By representing transfer operators as $D^2 \times D^2$ matrices, this computation can be parallelized in a similar manner as described in Section~\ref{sec:umps}, but at the price of increasing the total computational cost to $\bigO(nD^6)$.
+
+The distribution $P(s) = \Pt(s) / \Z_*$ over all strings $s\in\Sigma^*$ plays an important role in the following, but to employ this we must ensure the infinite summation $\Z_* = \sum_{s\in\Sigma^*} \Pt(s)$ does in fact converge. This convergence can be guaranteed by rescaling the core tensor to a new $\mc{A}' = \gamma \mc{A}$, for any scalar $\gamma$ satisfying $0 < |\gamma| < \sqrt{\rho(\ER)}$, where $\rho(\ER)$ is the spectral radius of $\ER$. Such rescaling leaves all fixed-length distributions $P_n(s)$ invariant, while introducing a bias towards shorter ($|\gamma| < 1$) or longer ($|\gamma| > 1$) strings in $P(s)$. 
+

@@ -1,0 +1,43 @@
+\documentclass{article}
+
+
+\usepackage{tikz,siunitx}
+\usetikzlibrary{decorations.pathreplacing}
+\usetikzlibrary{shapes,arrows}
+\usepackage{natbib}
+\renewcommand{\bibname}{References}
+\bibliographystyle{plainnat}
+\date{}
+\input{macros.tex}
+\title{Tensor Cookbook: Mastering Tensors through Diagrams}
+
+
+\newcommand\Mark[1]{\textsuperscript{#1}}
+
+\author{Beheshteh T. Rakhshan\Mark{$^{1,2}$}, Guillaume Rabusseau\Mark{$^{1,2,3}$}\\
+\Mark{1}Mila \& DIRO, \Mark{2} Université de Montréal, \Mark{3}CIFAR AI Chair}
+
+
+
+\def\baseline{-0.5ex}
+
+
+
+\begin{document}
+\maketitle
+% \def\thefootnote{*}\footnotetext{We thank the anonymous reviewers for their careful reading and helpful corrections.}
+\newpage
+\tableofcontents
+\clearpage
+\newpage
+\input{chapter0_notations}
+\input{chapter1_intro}
+\input{chapter2_basics}
+\input{chapter3_operations}
+\input{chapter4_decompositions}
+\input{chapter5_gradients}
+\input{chapter6_probability_random_vectors}
+\input{chapter7_conclusion}
+\newpage
+\bibliography{biblio}
+\end{document}

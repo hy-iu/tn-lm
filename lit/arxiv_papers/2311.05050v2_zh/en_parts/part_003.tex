@@ -1,0 +1,52 @@
+\section{Marginalization and Generative sampling}
+
+After training, the Born machine enables autoregressive generation according to \eqnref{eq: P}, while in contrast, the energy-based model typically requires Markov chain Monte Carlo (MCMC) to sample from $p(\vect{x})=\frac{1}{Z}e^{-E(\vect{x})}$. The Born machine's autoregressive sampling procedure runs bit by bit, relying on its capability of conditional/marginalized probabilities evaluation. Importantly, the sampling direction is not restricted from the beginning or in any direction due to the fact that tensor contraction operation is commutative. Therefore the sites with given tokens can be conditioned by inserting the corresponding POVMs and then traced out, while the stand-by sites can be marginalized by directly tracing out the corresponding physical legs of MPS, benefiting from the normalized property in \eqnref{eq: emb}. The generation of a whole sequence is completed by iteratively implementing the same procedure to fill in all the vacant sites.
+
+For example, let $K\subseteq\{1,2,...,n\}$ be a subset of sites, and $\vect{x}_{K}=\{x_i\}_{i\in K}$ be the tokens within the region $K$. After training, suppose we want to evaluate the conditional distribution $p_{\theta,\gamma}(\vect{x}_K|\vect{x}_{\bar{K}})$, given the remaining tokens $\vect{x}_{\bar{K}}$ in the complement region $\bar{K}$. It can be evaluated as
+\begin{equation}\label{eq: single site}
+    p_{\theta,\gamma}(\vect{x}_K|\vect{x}_{\bar{K}})=\bra{\Psi_\theta(\vect{x}_{\bar{K}})}M_{\gamma}(\vect{x}_K)\ket{\Psi_\theta(\vect{x}_{\bar{K}})},
+\end{equation}
+where $M_{\gamma}(\vect{x}_K)=\bigotimes_{i\in K}M_{\gamma}(x_i)$ is the measurement operator within region $K$, and $\ket{\Psi_\theta(\vect{x}_{\bar{K}})}$ denotes the collapsed quantum state according to the measurement outcomes $\vect{x}_{\bar{K}}$ in the region $\bar{K}$, defined as
+\begin{equation}
+\ket{\Psi_\theta(\vect{x}_{\bar{K}})}=\frac{1}{Z}\bigotimes_{i\in\bar{K}}Q_{\gamma}(x_i)\ket{\Psi_{\theta}},
+\end{equation}
+with $Z=\bra{\Psi_\theta}M(\vect{x}_{\bar{K}})\ket{\Psi_\theta}$ being the state normalization constant.
+Unlike conventional autoregressive models, which only allow the conditional probability distribution to be evaluated following the causal order, the Born machine here enables the evaluation of the probability distribution of tokens in any subset $K$ conditioned on those in the complement set $\bar{K}$. 
+% Based on this, the stand-by site has the single site probability of each token
+% \begin{equation}\label{eq: single site}
+%     p_{\theta,\gamma}(x_i|\vect{x}_0)=\bra{\Psi_\theta(\vect{x}_0)}M_{\gamma}(x_i)\ket{\Psi_\theta(\vect{x}_0)},
+% \end{equation}
+% where $\ket{\Psi(\vect{x}_0)}$ is obtained by acting the conditional POVMs onto the backbone quantum state with arbitrary order. \yzy{What is the mathematical definition of $\Psi(x_0)$? Unlike autoregressive models, which are greedy, token sampling must be performed following a causal order. Born machine, each measurement collapses the wave function globally, and token sampling can be performed in any order.} \hwd{I think $\Psi(x_0)$ is given by collapsing the original wave function according to measurement outcomes, $\ket{\Psi_\theta(\vect{x}_0)}=\mathcal{P}(\vect{x}_0)\ket{\Psi_\theta}=\mathcal{P}(x_{v_1,i_1}, x_{v_2,i_2},\dots, x_{v_m,i_m})\ket{\Psi_\theta}$ where $v, i$ label the vocabulary index/site index, and $m$ is the number of measured sites. Since each of the measure collapse the wave function globally, the projection procedure can be performed in arbitrary order for each site. In our case, the conditional environment of a projected site is calculated by inserting a POVM between the wave functions and the conjugate of itself, therefore the explicit form of our projection operator should be the matrix square-root of POVMs $\mathcal{P}(x_{v_1,i_1}, x_{v_2,i_2},\dots, x_{v_m,i_m})=\sqrt{M(x_{v_1,i_1})}\sqrt{M(x_{v_2,i_2})}\cdots\sqrt{M(x_{v_m,i_m})}$. For masked sampling task\eqref{eq: single site}, $\ket{\Psi_\theta(\vect{x}_0)}$ is further normalized; for joint probability evaluation procedure\eqref{eq: P}, the half-collapsed wave function in the intermediate is not normalized because the result value represents model $p_{\theta}(\vect{x}) \in (0,1)$.} 
+
+\begin{algorithm}[H]
+\caption{Generative Sampling with Conditional Dependencies}
+\label{alg:gen}
+\begin{algorithmic}
+\REQUIRE Trained parameters $\theta$, $\gamma$, sequence length $n$, optional initial sequence $x_{\text{init}}$
+\IF{$x_{\text{init}}$ is not provided}
+    \STATE Initialize sequence $x = [ \text{empty} ]$ of length $n$
+\ELSE
+    \STATE Use $x_{\text{init}}$ as the starting sequence, where elements can be empty or predefined tokens
+\ENDIF
+\STATE Define set $K$ as indices of known tokens and $\bar{K}$ as indices of tokens to be sampled
+\WHILE{$\bar{K}$ is not empty}
+    \FOR{each index $i$ in $\bar{K}$}
+        \IF{$x[i]$ is empty}
+            \STATE Compute conditional probabilities for token $x_i$ given the known tokens using \eqnref{eq: single site}:
+            \STATE $p(x_i|x_{K}) = \langle \Psi_{\theta}(x_{K}) | M_{\gamma}(x_i) | \Psi_{\theta}(x_{K}) \rangle$
+            \STATE Sample $x_i$ from $p(x_i|x_{K})$
+            \STATE Update $x[i]$ with sampled token $x_i$
+            \STATE Add $i$ to set $K$ and remove $i$ from $\bar{K}$
+        \ENDIF
+    \ENDFOR
+\ENDWHILE
+\ENSURE Generated sequence $x$
+\end{algorithmic}
+\end{algorithm}
+
+Since the Born machine enables autoregressive generation in arbitrary order, one can leverage this feature to do direct masked sampling or anomaly detection by evaluating the single site probabilities \eqnref{eq: single site} or joint probabilities of multiple sites. Moreover, one can compare the marginalized probabilities learned by the model with the statistical frequencies from the training dataset to evaluate the performance of trained models, which will be further discussed in \secref{Empirical result}. The detailed implementation of this process is outlined in Algorithm~\ref{alg:gen}.
+
+
+
+
+

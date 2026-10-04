@@ -1,0 +1,80 @@
+\section{TTLM 与若干 RNN 的关系}
+\label{sec: TTLM generalization}
+
+本节展示 TTLM 与二阶 RNN（Second-order RNN）、递归算术电路（Recurrent Arithmetic Circuits, RAC）以及乘性积分 RNN（Multiplicative Integration RNN, MI-RNN）之间的关系。
+
+为了避免在表示不同 RNN 时符号混乱，我们约定如下记号：$\mW^{hx} \in \mathbb{R}^{R \times |V|}$ 表示输入到隐藏层的矩阵，$\mW^{hh} \in \mathbb{R}^{R \times R}$ 表示隐藏层到隐藏层的矩阵，$\phi(\cdot)$ 是逐元素的非线性激活函数。此外，不同的隐藏状态分别记为：二阶 RNN（$\vh^{(t)}_\textrm{2nd}$）、RAC（$\vh^{(t)}_\textrm{RAC}$）和 MI-RNN（$\vh^{(t)}_\textrm{MI}$）。
+
+
+\subsection{与二阶 RNN 的关系}
+\label{appendix: seecond}
+
+与具有\textit{加性}结构的 Vanilla-RNN \citep{mikolov2012context} 不同，二阶 RNN 以\textit{乘性}形式实现隐藏状态与输入数据之间的交互。这是通过一个三阶张量 $\tT$ 实现的，隐藏状态 $\vh^{(t)}_\textrm{2nd}$ 的第 $i$ 个分量定义为 \citep{hochreiter1997long, maupome-meurs-2020-language}：
+%
+\begin{equation} \small
+\label{eq: second-order-rnn}
+h^{(t)}_{\textrm{2nd}_i}  = \phi(\vf(x^{(t)})^T \tT_{i, :, :}\vh^{(t-1)}_\textrm{2nd} + \vb)
+\end{equation}
+%
+
+其中 $\tT_{i, :, :} \in\mathbb{R}^{M \times R}$ 是张量 $\tT\in\mathbb{R}^{M\times R \times R}$ 的第 $i$ 个切片，$\vb$ 是偏置向量。为简单起见，对于 RNN 的其他变体，我们将忽略 $\vb$，因为 $\vb$ 可以看作 $\vf (x^{(t)})$ 中取值为 1 的第 $0$ 个分量。\cite{rabusseau2019connecting} 已经证明张量列（TT）可以推广线性二阶 RNN。我们在此从 TTLM 递归性质的角度给出一个基础证明。
+
+\begin{claim}
+\label{cm: G and T}
+二阶 RNN 中的三阶张量 $\tT$ 等于 TTLM 中的 TT 核心张量。存在一个非线性激活 $\phi$，使得当二者均配备 $\phi$ 时，二阶 RNN 的隐藏状态与 TTLM 的隐藏状态完全一致。
+\end{claim}
+
+\begin{proof} 该证明基于如下观察：我们递归地展开式 \ref{eq: ttlm_general} 中 TTLM 的计算：
+
+\begin{equation} \small
+\begin{aligned}
+\label{eq: TTLM_unfold}
+p(X) &= \sum_{{i_ = 1}}^{|V|} f(x^{(1)})_{i_1}\etG^{(1)}_{i_1\alpha_{1}}  \cdots \\
+&= \sum_{{i_1,i_2 = 1}}^{|V|} \sum_{\alpha_1 = 1}^R   f(x^{(1)})_{i_1}\etG^{(1)}_{i_1\alpha_{1}} f(x^{(2)})_{i_2} \etG_{\alpha_{1}i_2\alpha_{2}} \cdots  \\
+&  \quad\quad\vdots \\
+&= \sum_{i_1, \cdots, i_N = 1}^{|V|}
+    \sum_{\alpha_1, \cdots ,\alpha_{N-1} =1}^{R}  f(x^{(1)})_{i_1}\etG^{(1)}_{i_1\alpha_1}
+    f(x^{(2)})_{i_2}\etG_{\alpha_1i_2\alpha_2} \cdots f(x^{(N)})_{i_N}\etG^{(N)}_{\alpha_{N-1}i_N}   \\
+\end{aligned}
+\end{equation}
+%
+可以观察到，在上述展开式中，在每个时间步上，$\tG$ 都有两个``输入''来源：来自上一次递归展开的信息（\textit{例如}，在第二行中，第一行就是上一次的信息），以及输入数据 $\vf(x^{(t)})$。从这个角度看，$\tG$ 充当一个双线性映射 $\tG: \mathbb{R}^{|V|} \times \mathbb{R}^R \rightarrow \mathbb{R}^R $，而我们可以把上一行中的信息视为隐藏状态 $\vh^{(t)}_\text{TTLM}$，由下式给出：
+%
+\begin{equation} \small
+\begin{split}
+    \label{eq: ttlm cell}
+    h^{(t)}_{\textrm{TTLM}_{\alpha_{t}}}
+    & = \sum_{{i_t = 1}}^{|V|} \sum_{{\alpha_t = 1}}^{R} f(x^{(t)})_{i_t}\etG_{i_t\alpha_{t}\alpha_{t-1}}  h^{(t-1)}_{\textrm{TTLM}_{\alpha_{t-1}}} \\
+\end{split}
+\end{equation}
+%
+其中我们将 $\etG_{\alpha_{t-1}i_t\alpha_{t}}$ 的指标置换为 $\etG_{i_t\alpha_{t}\alpha_{t-1}}$（注意这并不改变指标的个数）。
+
+我们还可以按逐分量的方式表示式 \ref{eq: second-order-rnn} 所示的二阶 RNN 的隐藏状态：
+%
+\begin{equation} \small
+\begin{split}
+    \label{eq: second_element}
+    h^{(t)}_{\textrm{2nd}_i}
+    &= \phi(\vf(x^{(t)})^T \tT_{i, :, :}\vh^{(t-1)}_\textrm{2nd}) \\
+    &= \phi\left(\sum^{|V|}_{j=1}\sum^{R}_{k=1} f(x^{(t)})_j\etT_{jik} h^{(t-1)}_{\textrm{2nd}_{k}}\right) \\
+\end{split}
+\end{equation}
+%
+其中 $j,k$ 是与 $i_t, \alpha_{t}$ 类似的哑指标；$i$ 指定 $\vh^{(t)}_{2nd}$ 的分量，正如 $\alpha_t$ 对 $\vh^{(t)}_\text{TTLM}$ 的作用一样。因此，$\tT$ 与 $\tG$ 是同样大小的可训练双线性映射。
+
+在证明了二阶 RNN 中的三阶张量 $\tT$ 等于 TT 核心张量 $\tG$ 之后，式 \ref{eq: second_element} 与式 \ref{eq: ttlm cell} 中的隐藏状态之间唯一的区别就是 $\phi$。如果我们为 $\vh^{(t)}_\text{TTLM}$ 加上 $\phi$，那么二阶 RNN 与 TTLM 的隐藏状态就完全一致，如图 \ref{fig:rnns}a 所示。
+
+
+\end{proof}
+
+\begin{comment}
+
+\begin{figure}[t]
+    \centering
+    \vspace{-15pt}
+    \includegraphics[width=3in]{figure/T and G.png}
+    \caption{式 \ref{eq: second-order-rnn} 中的 $\tT[i]$ 与式 \ref{eq: ttlm_general} 中的 $\tG[w_t]$ 是同一个大小的三阶张量沿不同方向的切片。}
+    \label{fig:t_and_g}
+\end{figure}
+\end{comment}

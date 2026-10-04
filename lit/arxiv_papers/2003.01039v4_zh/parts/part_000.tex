@@ -1,0 +1,112 @@
+\documentclass[twoside]{article}
+\usepackage{xeCJK}
+\setCJKmainfont{SimSun}[ItalicFont=KaiTi, BoldFont=SimHei]
+\setCJKsansfont{SimHei}
+\setCJKmonofont{SimSun}
+\renewcommand{\figurename}{图}
+\renewcommand{\tablename}{表}
+\renewcommand{\refname}{参考文献}
+
+% \usepackage{aistats2021}
+% If your paper is accepted, change the options for the package
+% aistats2021 as follows:
+%
+\usepackage[accepted]{aistats2021}
+%
+% This option will print headings for the title of your paper and
+% headings for the authors names, plus a copyright note at the end of
+% the first column of the first page.
+
+% If you set papersize explicitly, activate the following three lines:
+\special{papersize = 8.5in, 11in}
+\setlength{\pdfpageheight}{11in}
+\setlength{\pdfpagewidth}{8.5in}
+
+% If you use natbib package, activate the following three lines:
+\usepackage[round]{natbib}
+% \renewcommand{\bibname}{References}
+% \renewcommand{\bibsection}{\subsubsection*{\bibname}}
+
+% If you use BibTeX in apalike style, activate the following line:
+\bibliographystyle{apalike}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+% \usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{graphicx}
+\usepackage{multirow}       % multirow cells for tables
+\usepackage{bm}             % bold math
+\usepackage{bbm}            % blackboard bold math
+\usepackage{algorithm}
+% \usepackage{algorithmicx}
+\usepackage[noend]{algpseudocode}
+\usepackage{amsthm}
+\renewcommand{\proofname}{证明}
+\usepackage{amsmath}
+
+\graphicspath{ {./figures/} }
+
+\newtheorem{lemma}{引理}
+\newtheorem{theorem}{定理}
+\newtheorem*{theorem*}{定理}
+
+% Better comment layout
+\newcommand{\MYCOMMENT}[1]{\State \textit{\# #1}}
+% \newcommand{\MYCOMMENT}[1]{\hspace{1em} \textit{// #1}}
+\newcommand{\eqnref}[1]{式~\ref{#1}}
+
+% Mathematical shorthands
+\newcommand{\Sample}{\textsc{\small REGSAMP}}
+\DeclareMathOperator{\Tr}{Tr}
+\DeclareMathOperator{\argmax}{argmax}
+\DeclareMathOperator{\Lang}{Lang}
+\newcommand{\uMPS}{\mbox{u-MPS}}
+\newcommand{\bigO}{\mc{O}}
+\newcommand{\Z}{\mc{Z}}
+\newcommand{\E}{\mc{E}}
+\newcommand{\EL}{\mc{E}^{\scriptstyle \ell}}
+\newcommand{\ER}{\mc{E}^{\scriptstyle r}}
+\newcommand{\QL}{Q_{\ell}}
+\newcommand{\QR}{Q_{r}}
+\newcommand{\sR}{|s|_R}
+\newcommand{\sRone}{|s_1|_{R_1}}
+\newcommand{\sRtwo}{|s_2|_{R_2}}
+\newcommand{\Pt}{\tilde{P}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\starchar}{0}
+\newcommand{\alphamat}{\alpha\alpha^T}
+\newcommand{\omegamat}{\omega\omega^T}
+\newcommand{\ntrain}{N_{\mathrm{train}}}
+\newcommand{\field}[1]{\R^{#1}}
+\newcommand{\mc}[1]{\mathcal{#1}}
+\newcommand{\seq}[2]{{#1}_{1}, {#1}_{2}, \ldots, {#1}_{#2}}
+
+\begin{document}
+\runningtitle{Tensor Networks for Probabilistic Sequence Modeling}
+
+\twocolumn[
+
+\aistatstitle{概率序列建模的张量网络\\（Tensor Networks for Probabilistic Sequence Modeling）}
+
+\aistatsauthor{Jacob Miller \And Guillaume Rabusseau \And John Terilla}
+\aistatsaddress{Mila and DIRO \\
+Université de Montréal \\
+\href{mailto:jmjacobmiller@gmail.com}{\texttt{jmjacobmiller@gmail.com}} \And
+CCAI chair - Mila and DIRO \\
+Université de Montréal \\
+\href{mailto:grabus@iro.umontreal.ca}{\texttt{grabus@iro.umontreal.ca}} \And
+CUNY and Tunnel \\
+City University of New York \\
+\href{mailto:jterilla@gc.cuny.edu}{\texttt{jterilla@gc.cuny.edu}} } ]
+
+\begin{abstract}
+
+张量网络（tensor network）是为计算多体物理发展起来的一种强大建模框架，近年来才开始被应用于机器学习。本文利用均匀矩阵乘积态（uniform matrix product state, u-MPS）模型对序列数据进行概率建模。我们首先证明 u-MPS 支持序列级并行，长度为 $n$ 的序列可以以 $O(\log n)$ 的深度完成求值。随后我们提出一种新颖的生成式算法，使训练好的 u-MPS 能够从多种多样的条件分布中高效采样，其中每个分布都由一个正则表达式（regular expression）定义。该算法的特例对应自回归采样与填空采样，而更复杂的正则表达式则能以神经生成模型中没有直接对应物的方式生成结构丰富的数据。在合成与真实文本数据上的序列建模实验表明，u-MPS 优于多种基线模型，并在数据有限的情况下有效泛化其预测。
+
+\end{abstract}
+

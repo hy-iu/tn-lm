@@ -1,0 +1,15 @@
+\begin{tikzpicture}[baseline={([yshift=-.5ex]current bounding box.center)}]
+	\def\l{1.6};
+    \def\h{.7};
+
+    \draw[obj2] (-1/2*\l,\h) -- (5/2*\l,\h);
+	\draw[obj2] (-1/2*\l,0) -- (5/2*\l,0);
+	
+	\foreach \x in {0,1,2}{
+		\draw[obj1] (\x*\l,-\h) -- (\x*\l,2*\h);
+		\node[mpotensor] at (\x*\l,0) {};
+		\node[mpotensor] at (\x*\l,\h) {};
+	}
+	\node[above] at (1.5*\l,0) {${\sss h}$};
+	\node[above] at (1.5*\l,\h) {${\sss g}$};
+\end{tikzpicture}

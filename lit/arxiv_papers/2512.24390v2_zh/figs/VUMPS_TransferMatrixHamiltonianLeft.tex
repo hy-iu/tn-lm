@@ -1,0 +1,17 @@
+\begin{tikzpicture}[baseline=(current bounding box.center)]
+	\def\l{1.4};
+    \def\h{1.3};
+    
+    \draw[obj1] (-\l/2,0) --+ (\l,0);
+    \draw[obj1] (-\l/2,-\h) --+ (\l,0);
+    \draw[obj1] (0,0) --+ (0,-\h);
+
+    \draw[obj2] (-\l/2,-\h/2) --+ (\l,0);    
+    
+    \node[mpstensor, inner sep=4.4pt] at (0,0) {};
+    \node[mpstensor, inner sep=4.4pt] at (0,-\h) {};
+    \node at (0,0) {$\sss \bar A_L$};
+    \node at (0,-\h) {$\sss A_L$};
+    \node[mpotensor, inner sep=6pt] at (0,-\h/2) {};
+    \node at (0,-\h/2) {$\sss H$};
+\end{tikzpicture}

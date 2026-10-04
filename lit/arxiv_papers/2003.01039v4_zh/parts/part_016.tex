@@ -1,0 +1,41 @@
+\section{实验细节}
+\label{sec:appendix_d}
+
+\begin{table}[h]
+\caption{\citep{bengio1994} 中给出的 Tomita 文法 3--7 的定义，其中陈述了字符串属于每个文法的充要条件。Tomita 文法 1 和 2 分别对应字符串族 $1^n$ 和 $(01)^*$，由于其规模小、结构简单而未被使用。}
+\label{tab:tomita_def}
+\begin{center}
+\begin{small}
+\begin{tabular}{c|lllll}
+    \textbf{Tomita \#} & 3 & 4 & 5 & 6 & 7 \\
+    \midrule
+    \multirow{3}{*}{\textbf{描述}} & 不包含                 & 不包含               & 包含偶数个      & 0 的个数           & 具有形式 \\
+                                  & $1^{2n+1}0^{2m+1}$ 作为 & $000$ 作为子串       & 0 和 1        & 减去 1 的个数        & $0^*1^*0^*1^*$ \\
+                                  & 子串                   &                      &               & 是 3 的倍数          &
+\end{tabular}
+\end{small}
+\end{center}
+\end{table}
+
+我们使用的 u-MPS 模型是用 JAX~\citep{jax2018} 从零构建的，而基线模型则使用了 PyTorch~\citep{paszke2017} 中的 LSTM 和 Transformer 模块。实验代码可在 \url{https://github.com/jemisjoky/umps_code} 获取。
+这些 LSTM 是单层模型，具有 20 或 50 个隐藏单元（对双向 LSTM 而言每个方向为 20 或 50 个），并使用线性解码器和 softmax 输出层来获得字符概率。u-MPS 的键维（bond dimension）类似地选为 20 或 50，对于这两类模型，每个隐藏状态数目均进行五次独立试验，并使用验证误差最低的模型来产生第~\ref{sec:experiments} 节中报告的采样统计量。
+
+对于每个文法，模型分别在 1,000 或 10,000 个随机选取的字符串上进行训练，并使用 1,000 个字符串作为留出验证集。表~\ref{tab:tomita} 的采样百分比
+以及表~\ref{tab:motzkin} 的采样任务
+是通过从相应模型采样 1,000 个随机字符串得到的，而表~\ref{tab:motzkin} 的补全任务
+则使用了来自留出参考集的 1,000 个随机字符串，其中模型在将其余所有字符用作双向上下文的情况下推断每个字符串中的每个字符。
+
+在所有实验中，模型均相对于负对数似然（NLL）损失，使用梯度下降和 Adam 优化器~\citep{kingma2015} 进行训练。初始学习率为 $10^{-2}$，每当验证损失连续 5 个 epoch 未获改善时，学习率就降低为原来的十分之一。以这种方式，使用了 $10^{-2}$、$10^{-3}$ 和 $10^{-4}$ 的分段常数学习率，学习率的下一次下降标志着训练结束。
+
+u-MPS、HMM 和 Transformer 在所有实验中均以相同方式训练，单向 LSTM 也以同样方式训练。双向 LSTM 则专门针对字符串补全任务进行训练，其损失取为训练字符串每个位置上正确字符的 NLL 之和，条件是已知所有其他位置上的字符。对于表~\ref{tab:motzkin} 中的每一对采样与补全任务，
+均使用同一个训练好的 u-MPS 模型来产生这两种统计量。
+
+对于真实文本实验中使用的电子邮件地址数据集，我们提取了 CLAIR 欺诈邮件数据集~\citep{radev2008} 中包含的所有发件人和收件人地址，共得到约 4,000 个不同的地址。训练以与合成数据实验类似的方式进行，其中使用正则表达式 $R_{e} = \verb![\w-.]+@([\w-]+.)+[\w-][\w-]+!$ 来判断无条件采样字符串的正确性。
+
+我们的 regex 采样器和 regex regularizer 分别是算法~\ref{alg:sampling} 与表~\ref{tab:regex_cp} 中对应关系的直接递归实现。尽管这些朴素的实现相比针对 $R_e$ 专门化的实现通常会导致显著的额外开销，但 JAX 中即时（just-in-time, JIT）编译的使用显著降低了这一开销。在这种情形下采用 JIT 实际上具有充分的历史依据，因为 JIT 编译最早的应用之一正是识别匹配正则表达式的文本~\citep{thompson1968}。
+
+% \bibliographystyle{plain}
+% \bibliographystyle{apastyle}
+\bibliography{bib_file}
+
+\end{document}

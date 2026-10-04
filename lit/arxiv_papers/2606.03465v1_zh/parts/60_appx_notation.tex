@@ -1,0 +1,137 @@
+
+\newpage
+\begin{appendixpart}
+\vspace{-4mm}
+\tableofcontents
+\allowdisplaybreaks
+\newpage
+
+\section{记号}
+\label{app:notation}
+
+\paragraph{一般对象与约定。}
+标量用小写字母表示，如 $r$、$p$、$q$、$\rho$ 和 $L$。
+矩阵用大写字母表示，如 $X$、$\widehat{X}$、$A$、$W$、$\widehat{W}$、$U$、$V$ 和 $\Sigma$。张量用花体字母表示，如 $\mathcal{X}$、$\mathcal{G}$ 和 $\mathcal{T}$。记号 $\widehat{\cdot}$ 表示相应稠密对象的近似。符号 $\approx$ 表示近似分解或近似重构。
+
+
+\paragraph{压缩与评估变量。}
+$L$ 表示质量--压缩权衡实验中连续压缩的 Transformer 块的数目。LoRA 修复秩记为 $r=16$。TD-MoE 的逐层压缩率记为 $\rho$，实验中取 $\rho \in \{0.2,0.4\}$。在 GPT-OSS-20B 专家模式对比中，\textsc{preserve} 固定 $r_1=K$，而 \textsc{compress} 使用 $r_1<K$。所选 TD-MoE 秩的示例为：\textsc{preserve} 取 $(32,1720,2664)$，\textsc{compress} 取 $(20,2496,2880)$。
+
+\paragraph{方法缩写。}
+表~\ref{tab:method_abbreviations} 列出了全文使用的方法专属缩写。
+
+\begin{table}[htbp]
+\centering
+\caption{方法缩写。}
+\label{tab:method_abbreviations}
+\small
+\begin{tabular}{@{}p{\columnwidth}@{}}
+\toprule
+\textbf{缩写及其在本文中的含义 / 作用} \\
+\midrule
+\textbf{HOSVD} --- 高阶奇异值分解 \\
+\textbf{TT-SVD} --- 基于 SVD 构造张量列（TT）分解的算法 \\
+\textbf{TD-MoE} --- 专家混合（MoE）层的张量分解压缩 \\
+\textbf{LASER} --- 基于截断 SVD 的 FFN 压缩训练后压缩基线 \\
+\textbf{LeSTD} --- 已有的面向 Transformer 注意力投影的 Tucker 式张量压缩方法 \\
+\textbf{TensorLLM} --- 已有的面向 Transformer 注意力投影的 Tucker 式张量压缩方法 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% \newpage
+
+% \subsection{Tensor Train versus Matrix Factorization on FFN Layers}
+% \label{app:tt_vs_laser_ffn}
+
+% We compare Tensor Train factorization of FFN projections with a LASER-style truncated-SVD FFN baseline on LLaMA 2 7B. Both methods use the same middle-to-late expanding layer schedule. The TT runs use the twelve-mode tensorization described in Appendix~\ref{app:gptj_llama_tensor_protocol} with maximum internal rank 64, while LASER uses matrix ranks 512 and 1024. Figure~\ref{fig:app_tt_vs_laser_ffn} shows that the two methods follow a similar perplexity--compression trend on both WikiText-2 and C4 over the overlapping compression range. TT reaches higher bits saved at the largest compressed ranges, but this comes with the same monotonic increase in perplexity rather than a better frontier.
+
+% \begin{figure}[ht]
+%   \centering
+%   \includegraphics[width=0.6\linewidth]{emnlp/figs/llama2_tt_ffn_vs_laser_ffn_r512_r1024_c4.pdf}
+%   \caption{TT versus LASER for FFN compression on LLaMA 2 7B. Both methods compress the same expanding middle-to-late block ranges. TT uses rank 64 and reaches higher bits saved, while LASER uses rank 1024. Over the overlapping compression range, the WikiText-2 and C4 perplexity trends are similar.}
+%   \label{fig:app_tt_vs_laser_ffn}
+% \end{figure}
+
+\section{稠密模型的补充信息与实验}
+\subsection{GPT-J 与 LLaMA 2 张量分解协议}
+\label{app:gptj_llama_tensor_protocol}
+
+本节描述在 GPT-J 6B~\citep{gpt-j} 与 LLaMA 2 7B~\citep{touvron2023llama} 上开展、并在图~\ref{fig:c4_pareto} 中报告的训练后张量分解实验。我们采用渐进式块调度：GPT-J 6B 从第 14 块压缩到第 20 块，LLaMA 2 7B 从第 16 块压缩到第 23 块，每次增加一个连续的块。所有运行均以同一模型的固定稠密基线为参照进行评估。
+
+对于注意力压缩，我们对查询、键、值和输出投影采用 TensorLLM 式的 Tucker 分解。由于这些投影在两个模型中的形状一致，我们将它们堆叠成一个张量，其模分别为输入特征、头、头维度和投影类型。我们对输入特征、头维度和投影类型三个模施加部分 Tucker 分解，而将头模保持显式。输入特征的最大秩为 64，头维度秩为 4，投影类型秩为 2。
+
+对于 FFN 投影的 TT 压缩以及 TT-all 设置，每个线性权重矩阵被张量化为十二对输入--输出模。输入和输出维度被拆分为十二个近似均衡的因子，交错排列成输入--输出对，并以不超过 64 的 TT 秩进行压缩。偏置项（若存在）保持稠密。
+
+分解之后在冻结已分解模块的条件下施加 LoRA 修复。我们在 WikiText-2 上以 AdamW 训练秩为 16 的 LoRA 适配器，缩放因子为 32，学习率 $2 \times 10^{-4}$，100 个优化步，并在 8 个微批次上做梯度累积。该阶段旨在检验有限的数据相关适配能否恢复因分解而损失的质量，而非执行完整微调。
+
+\begin{figure*}[ht]
+  \centering
+  \includegraphics[width=0.95\linewidth]{emnlp/figs/llama2_single_layer_decomposition_wt2_c4_split.pdf}
+  \caption{LLaMA 2 7B 上的单层分解敏感性。每个点仅压缩一个 transformer 层。左、右两个面板分别报告 WikiText-2 和 C4 困惑度；由于早期各层的困惑度尖峰很大，故单独展示。}
+  \label{fig:app_single_layer_decomposition}
+\end{figure*}
+
+困惑度在 WikiText-2 和 C4 上评估，GPT-J 6B 使用序列长度 2048，LLaMA 2 7B 使用 4096。对于激活几何诊断，我们从稠密模型和压缩模型中采集 WikiText-2 序列，并比较最后一个被压缩块处的激活。我们报告相对稠密激活的平均角度偏差，以及压缩模型对稠密模型的激活范数比。存储量始终按压缩后的表示计算，不含嵌入；在基准测试中，压缩模块被重构为稠密线性层，从而使所报告的质量反映压缩后的权重，而非依赖具体实现的运行时算子内核。
+
+\subsection{LLaMA 2 7B 上的单层分解}
+\label{app:single_layer_decomposition}
+
+为了将局部的层敏感性与沿深度的误差累积区分开来，我们还在 LLaMA 2 7B 上评估了单层协议。在每次运行中，仅修改一个 transformer 层，其余所有层保持稠密。我们对全部 32 层逐一重复该过程，并评估 WikiText-2 和 C4 困惑度。对于注意力层，我们比较 LASER 式矩阵分解、TensorLLM 式 Tucker 分解以及一种逐头 TT 变体。对于 FFN 层，我们比较 LASER 式矩阵分解与 TT 分解。Tucker 一律指对注意力投影的 TensorLLM 式分解。
+
+图~\ref{fig:app_single_layer_decomposition} 表明，敏感性沿深度高度不均匀。最早的若干层尤其脆弱：分解第一个注意力层会使 Tucker 和逐头 TT 产生非常大的困惑度尖峰，而 FFN 上的 TT 在前两个 FFN 层最不稳定。离开这些早期层后，注意力分解通常与稠密基线接近得多，尽管它们节省的模型总规模很小。FFN 分解节省的参数更多，但其影响向最后的层递增，TT 尤其如此。这支持了主实验中所用的渐进式中后段压缩调度：中间各层局部敏感性较低，但一旦误差在多个被压缩块上累积，质量仍会退化。
+
+同样值得单独指出的是，早期各层的困惑度（PPL），
+尤其是靠近包含超级权重的那一层（第 1 层）的层，
+其退化程度远比剪枝策略下更为严重
+（见图~\ref{fig:full_width_graph}）。这进一步证实，仅保留占主导地位的
+奇异分量不足以恢复原始权重矩阵的
+结构。
+
+\begin{table}[ht]
+\centering
+\small
+\setlength{\tabcolsep}{3.5pt}
+\caption{LLaMA 2 7B 单层分解研究的存储核算。每次运行压缩一层。节省比特数在非嵌入模型参数上度量。}
+\label{tab:app_single_layer_storage}
+\begin{tabular}{@{}llccc@{}}
+\toprule
+\textbf{方法} & \textbf{目标} & \textbf{秩} & \textbf{局部压缩率} & \textbf{节省 (\%)} \\
+\midrule
+LASER  & MHA & 1024 & 2.00   & 0.51 \\
+Tucker & MHA & 64   & 240.49 & 1.01 \\
+TT/head& MHA & 64   & 1.98   & 0.50 \\
+LASER  & FFN & 1024 & 2.92   & 1.34 \\
+TT     & FFN & 64   & 398.63 & 2.04 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{无已知超级权重时的离群值恢复}
+\label{app:no-superweights}
+
+第~\ref{sec:superweights} 节中的主恢复实验聚焦于 LLaMA~2~7B 第 1 层的 MLP
+输出投影，该处存在一个已知的超级权重。为了检验所观察到的秩恢复壁垒是否
+仅特定于该单一坐标，我们在第~17 层相应的 MLP 输出投影上重复了同样的诊断。
+我们追踪随机内点、幅值最大的条目，以及按
+$|W_{ij}|\sqrt{\operatorname{diag}(X^\top X)_j}$ 选出的
+激活加权 top-$k$ 条目。
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.9\textwidth]{emnlp/figs/llama2_layer17_mlp_down_proj_combined_percent_restored.pdf}
+  \caption{
+    \textbf{(a)} 权重矩阵中随机内点、幅值最大的条目以及
+    激活加权 top-$k$ 条目的位置。标记大小
+    编码权重的绝对幅值。
+    \textbf{(b)} 被追踪条目的恢复比例随保留
+    SVD 秩的变化。
+  }
+  \label{fig:app_layer17_outlier_restoration}
+\end{figure*}
+
+图~\ref{fig:app_layer17_outlier_restoration} 表明，即使不存在
+超级权重，图~\ref{fig:superweigths} 中的定性模式依然成立。
+幅值最大的条目随秩增加而恢复得较为平滑，
+但激活加权条目在保留秩接近满矩阵秩之前，始终显著低于
+完全恢复的水平。

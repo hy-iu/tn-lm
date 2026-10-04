@@ -1,0 +1,15 @@
+\subsection{采样}
+
+我们在算法~\ref{alg:sampling} 中引入了一个以正则表达式为参数的采样函数 $\Sample$。$\Sample$ 提供了一种将任意正则表达式 $R$ 转换为高效采样过程的递归方法，其随机输出（对于无歧义的 $R$）是与子集 $R \subset \Sigma^*$ 相关联的条件 u-MPS 分布的无偏样本。这可形式化为如下定理。
+%
+\begin{theorem}
+\label{thm:sample}
+考虑一个具有 core 张量 $\mc{A}$ 与边界向量 $\alpha$ 和 $\omega$ 的 u-MPS 模型，以及一个右转移算符 $\ER_R$ 收敛的无歧义正则表达式 $R$。设 $P$ 表示由该 u-MPS 定义的、任意字符串上的概率分布，使得 $\Sigma_{s\in\Sigma^*} P(s) = 1$。那么调用 $\Sample(R, \alphamat, \omegamat)$ 将从条件 u-MPS 分布 $P(s | s \in R) = P(s) / P(R)$ 中采样出一个字符串 $s \in \Sigma^*$，其中 $s \in R$，且 $P(R) := \sum_{s' \in R} P(s')$。
+\end{theorem}
+%
+我们在附录~\ref{sec:appendix_b} 中证明定理~\ref{thm:sample}，该附录还讨论了有歧义正则表达式 $R$ 的情形。对于后一种情况，算法~\ref{alg:sampling} 的工作方式完全相同，只是按照字符串 $s$ 匹配 $R$ 的次数对 $s$ 加权。
+
+尽管算法~\ref{alg:sampling} 是以递归方式写出的，但考虑一个简单的例子 $R = \Sigma^n$，即单字符正则表达式 $\Sigma$ 与其自身拼接 $n$ 次所得的正则表达式，有助于理解整体控制流。在这种情况下，算法~\ref{alg:sampling} 首先尝试通过递归调用 $\Sample(\Sigma, \alphamat, \ER_{\Sigma^{n-1}}(\omegamat))$ 来采样字符串中的初始字符。这需要对初始右边界矩阵施加 $n-1$ 次转移算符 $\ER$，并在继续向右、重复这一过程之前产生一个新字符。
+
+与常见的递归算法一样，缓存中间信息可以将 $(n-1) + (n-2) + \cdots + 1 = \bigO(n^2)$ 次转移算符施加的朴素代价降低到 $\bigO(n)$。这一缓存版本等价于一个简单的迭代算法：先在从右到左的扫描中生成并保存一列右边界矩阵，然后在从左到右的扫描中采样文本，并利用左边界矩阵传播条件信息。利用这一想法，我们在附录~\ref{sec:appendix_c} 中证明，对于典型的正则表达式 $R$，算法~\ref{alg:sampling} 可以以平均情形运行时间 $\bigO(L d D^3)$ 和最坏情形内存占用 $\bigO(L D^2)$ 运行，其中 $L$ 是 $R$ 中的字符数，$d$ 是 $\Sigma$ 的大小，$D$ 是 u-MPS 的键维。
+

@@ -1,0 +1,62 @@
+\usepackage[T1]{fontenc}
+\usepackage{newunicodechar}
+\newunicodechar{ž}{\v{z}}
+\newunicodechar{Ž}{\v{Z}}
+\newunicodechar{ñ}{\~n}
+\newunicodechar{ö}{\"o}
+\newunicodechar{–}{--}
+
+\emergencystretch=2em
+\tolerance=1000
+
+\usepackage{float}
+\usepackage{cleveref}
+\usepackage[dvipsnames,table]{xcolor}
+\usepackage[linesnumbered,ruled,vlined]{algorithm2e}
+
+% \usepackage{showlabels}
+
+% Math %
+%%%%%%%%
+
+\usepackage{physics}
+\usepackage{bm}
+
+\newcommand{\mc}{\mathcal}
+\newcommand{\mbb}{\mathbb}
+\newcommand{\msf}{\mathsf}
+\newcommand{\sss}{\scriptstyle}
+\newcommand{\ssss}{\scriptscriptstyle}
+\newcommand{\rU}{{\rm U}}
+\newcommand{\Vect}{\mathsf{Vec}}
+\newcommand{\Rep}{\mathsf{Rep}}
+\newcommand{\Fib}{\mathsf{Fib}}
+\newcommand{\Fun}{\mathsf{Fun}}
+\newcommand{\cat}{\lhd}
+\newcommand{\act}{\rhd}
+\newcommand{\mF}{{}^{\act\!} F}
+\newcommand{\nF}{{}^{\cat\!} F}
+\newcommand{\dF}{{}^{\circ\!} F}
+\newcommand{\rF}{{}^{\bowtie\!} F}
+\newcommand{\upup}[1]{\raisebox{0.5pt}[0pt]{$\sss{#1}$}}
+\newcommand{\dodo}[1]{\raisebox{-1.2pt}[0pt]{$\sss{#1}$}}
+\newcommand{\CC}[6]{\Big[{}^{\upup{#1}}_{\dodo{#4}}\, {}^{\upup{#2}}_{\dodo{#5}} \big| {}^{\upup{#3}}_{\dodo{#6}}\Big]}
+
+\newcommand{\RCR}[3]{{\textcolor{BlueViolet}{#1}\textcolor{BrickRed}{#2}\textcolor{BlueViolet}{#3}}}
+\newcommand{\RDR}[3]{{\textcolor{BlueViolet}{#1}\textcolor{black}{#2}\textcolor{BlueViolet}{#3}}}
+
+\newcommand{\ZtZt}{\mbb Z_2\times\mbb Z_2}
+
+\renewcommand{\vec}[1]{{\bf #1}}
+
+% Figures %
+%%%%%%%%%%%
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric,arrows,matrix,calc,scopes,decorations.markings,intersections,arrows.meta,decorations.pathreplacing,angles,quotes,patterns,decorations.pathmorphing}
+\AddToHook{env/tikzpicture/begin}{\tracinglostchars=0}
+
+\newcommand{\inputtikz}[1]{%
+  	% \tikzsetnextfilename{#1}%
+	\input{figs/#1.tex}%
+}

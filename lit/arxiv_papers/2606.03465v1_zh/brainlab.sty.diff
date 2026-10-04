@@ -1,0 +1,63 @@
+--- 2606.03465v1/brainlab.sty	2026-06-02 18:39:40
++++ zh/2606.03465v1/brainlab.sty	2026-09-25 00:44:01
+@@ -90,8 +90,11 @@
+ \newcommand{\highlightcell}{\cellcolor{highlightcolor}}
+ 
+ % Основные пакеты
+-\RequirePackage{inputenc}
+-\RequirePackage[T1]{fontenc}
++\RequirePackage{iftex}
++\ifpdftex
++  \RequirePackage{inputenc}
++  \RequirePackage[T1]{fontenc}
++\fi
+ \RequirePackage[english]{babel}
+ \RequirePackage[top=0.8in, bottom=0.8in, left=0.8in, right=0.8in]{geometry}
+ \RequirePackage{multicol}
+@@ -246,7 +249,7 @@
+   \noindent\textbf{\brainauthors}
+   \\[0.5em]
+   \noindent\affils
+-  \ifequalcontrib {\small $^*$Equal contribution} \fi
++  \ifequalcontrib {\small $^*$同等贡献} \fi
+ 
+   \vspace{0.8em}
+   \abstracttext
+@@ -410,9 +413,9 @@
+ \ExplSyntaxOff
+ 
+ 
+-\DeclareBrainTcbTheorem{theorem}{Theorem}
+-\DeclareBrainTcbTheorem{assumption}{Assumption}
+-\DeclareBrainTcbTheorem{definition}{Definition}
++\DeclareBrainTcbTheorem{theorem}{定理}
++\DeclareBrainTcbTheorem{assumption}{假设}
++\DeclareBrainTcbTheorem{definition}{定义}
+ 
+ 
+ 
+@@ -494,18 +497,18 @@
+     enhanced jigsaw,
+   ]
+   \centering
+-  \textbf{\Large Appendix} \\
+-  {\textit{Rethinking the Role of Tensor Decompositions in Post-Training LLM Compression}}
++  \textbf{\Large 附录} \\
++  {\textit{\papertitle}}
+   \end{tcolorbox}
+   % \vspace{1em}
+ }
+ {}
+ 
+ 
+-\DeclareBrainTcbTheorem{proposition}{Proposition}
+-\DeclareBrainTcbTheorem{corollary}{Corollary}
+-\DeclareBrainTcbTheorem{lemma}{Lemma}
+-\DeclareBrainTcbTheorem{remark}{Remark}
++\DeclareBrainTcbTheorem{proposition}{命题}
++\DeclareBrainTcbTheorem{corollary}{推论}
++\DeclareBrainTcbTheorem{lemma}{引理}
++\DeclareBrainTcbTheorem{remark}{注记}
+ 
+ \captionsetup[figure]{labelfont=bf, labelsep=colon, font=small}
+ 

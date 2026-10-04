@@ -1,0 +1,22 @@
+\begin{tikzpicture}[baseline=(current bounding box.center)]
+    \def\l{.8};
+    \def\h{.7};
+    
+    \draw[obj2] (\l,0) -- (0,0);
+    \draw[obj2] (\l,-\h) -- (0,-\h);
+    \draw[obj1] (0,-2*\h) -- (0,\h);
+    
+    \draw[obj2] (-\l,-\h/2) -- (-2*\l,-\h/2);
+    \draw[obj2, rounded corners=3pt] (0,0) -- (-\l,0) -- (-\l,-\h/2);
+    \draw[obj2, rounded corners=3pt] (0,-\h) -- (-\l,-\h) -- (-\l,-\h/2);
+    
+    \node[draw=black, line width=.7pt, fill=gray!20, circle, inner sep=2.9pt] at (-\l,-\h/2) {};
+    
+    \node[draw=black, line width=.7pt, fill=gray!20, rectangle, inner sep=3.8pt, rounded corners=2pt] at (0,0) {};
+    \node[draw=black, line width=.7pt, fill=gray!20, rectangle, inner sep=3.8pt, rounded corners=2pt] at (0,-\h) {};
+    \node at (-\l,-\h/2) {$\sss i$};
+    
+    \node[anchor=south] at (\l/2,0) {$\sss a$};
+    \node[anchor=south] at (\l/2,-\h) {$\sss b$};
+    \node[anchor=south] at (-3*\l/2,-\h/2) {$\sss c$};
+\end{tikzpicture}

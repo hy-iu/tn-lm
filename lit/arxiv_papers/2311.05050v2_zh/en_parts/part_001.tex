@@ -1,0 +1,39 @@
+\begin{document}
+\setlength{\parindent}{2em}
+\renewcommand{\refname}{参考文献}
+\renewcommand{\figurename}{图}
+\renewcommand{\tablename}{表}
+\renewcommand{\acknowledgmentsname}{致谢}
+
+\title{基于可训练 token 嵌入的张量网络 Born 机器上的序列学习\\
+（Sequential learning on a Tensor Network Born machine with Trainable Token Embedding）}
+
+\author{Wanda Hou}
+\affiliation{Department of Physics, University of California, San Diego, CA 92093, USA}
+\author{Miao Li}
+\affiliation{School of Physics, Zhejiang University, Hangzhou 310027, China}
+\affiliation{Department of Physics, Georgia Institute of Technology,
+Atlanta, GA 30332, USA}
+\author{Yi-Zhuang You}
+\thanks{Corresponding author: yzyou@physics.ucsd.edu}
+\affiliation{Department of Physics, University of California, San Diego, CA 92093, USA}
+\date{\today}
+
+\begin{abstract}
+ Generative models aim to learn the probability distributions underlying data, enabling the generation of new, realistic samples. Quantum-inspired generative models, such as Born machines based on the matrix product state (MPS) framework, have demonstrated remarkable capabilities in unsupervised learning tasks. This study advances the Born machine paradigm by introducing trainable token embeddings through positive operator-valued measurements (POVMs), replacing the traditional approach of static tensor indices. Key technical innovations include encoding tokens as quantum measurement operators with trainable parameters and leveraging QR decomposition to adjust the physical dimensions of the MPS. This approach maximizes the utilization of operator space and enhances the model’s expressiveness. Empirical results on RNA data demonstrate that the proposed method significantly reduces negative log-likelihood (NLL) compared to one-hot embeddings, with higher physical dimensions further enhancing single-site probabilities and multi-site correlations. The model also outperforms GPT-2 in single-site estimation and achieves competitive correlation modeling, showcasing the potential of trainable POVM embeddings for complex data correlations in quantum-inspired sequence modeling.
+\end{abstract}
+
+\maketitle
+
+\section{Introduction}
+
+Unsupervised learning is crucial for leveraging the vast amount of unlabeled data available today. One important approach is generative modeling, which aims to model the probability distribution of data given a presumed underlying physical mechanism\cite{lecun2015deep,2019RvMP...91d5002C}. Different from the discriminative models that aim to find the decision boundary of different classes, the goal of the generative model is to replicate the underlying distribution $p(x)$ of observed data, and then generate new samples that are plausible within the context of the original dataset. 
+
+Generative modeling techniques have made rapid advancements in recent years, many models, such as Variational Auto Encoders (VAEs)\cite{2013arXiv1312.6114K}, Generative Adversarial Networks (GANs)\cite{2014arXiv1406.2661G,2018PhRvA..98a2324D}, and Transformers\cite{2017arXiv170603762V}, have been applied across various domains. Drawing inspiration from classical physics, present models have more or less employed the idea of energy-based modeling, where certain probabilities are modeled as $p(x)\propto e^{-E(x)}$ following Boltzmann distribution as in statistical physics\cite{ackley1985learning,salakhutdinov2015learning}. In contrast, quantum physics employs wave function models, where probabilities are modeled as $p(x)=|\Psi(x)|^2$, with $\Psi(x)$ being a quantum wave function. This class of quantum generative models is known as the Born machines\cite{PhysRevX.8.031012, 2022PhRvA.106b2612K, 2021arXiv211205326M}. Quantum probability models are more expressive than their classical counterparts, as they can model distributions that violate Bell’s inequality, a characteristic of quantum entanglement\cite{trueblood2012quantum,haven2016quantum}. 
+
+The Born machines have many featured advantages as being a generative modeling algorithm, such as tractable log-likelihood and marginalized log-likelihood, which provides better interpretability and enables anomaly detection; efficient and exact evaluation of the log-likelihood gradient enables sampling-free gradient-based optimization; supporting both autoregressive and masked sampling. Due to these features, the Born machines have shown excellent performance in many domains of unsupervised learning tasks such as sequential data learning, and can outperform models based on classical physics\cite{2018Entrp..20..583C,2018arXiv180404168L}.
+
+A particularly important class of data is the one-dimensional sequential data, which refers to a set of data points that are ordered based on a specific sequence, typically governed by a temporal or spatial order. Born machines are well-developed for sequence modeling due to the one-dimensional structure of sequences that allows for a highly efficient tensor network representation, called the matrix product state (MPS), for modeling the underlying quantum state\cite{orus2019tensor,2019PhRvX...9c1041L,2021arXiv210612974L}. Born machines support tractable log-likelihood that provides better interpretability and efficient direct sampling, supporting both autoregressive and masked sampling. The current state of research has made tremendous progress by leveraging the entanglement feature of quantum states and encoding them into an MPS to improve the expressiveness of Born machines\cite{2018PhRvA..98a2324D,mitarai2018quantum,2018arXiv180404168L,gong2022born,2019arXiv190300556M}.
+
+For modeling discrete types of sequential data $\vect{x}=(x_1,x_2,\cdots)$, the corresponding tokens $x_i\in \dsN$ are directly treated as the tensor index of the physical dimension of MPS, and encoded as a diagonal basis projector $\ket{x_i}\bra{x_i}$. However, in this study, we explore a more general embedding method such that encoding each token $x_i$ as a more general quantum measurement operator $M_{\gamma}(x_i)$ in the local Hilbert space with trainable parameters $\gamma$ rather than as a diagonal basis projector. The probabilities are modeled as $p_{\theta,\gamma}(\vect{x})=\bra{\Psi_\theta}M_{\gamma}(\vect{x})\ket{\Psi_\theta}$, where $M_\gamma(\vect{x})=\bigotimes_i M_\gamma(x_i)$ is the joint measurement operator corresponding to the sequence $\vect{x}$, and $\ket{\Psi_\theta}$ is a many-body quantum state, still structured as an MPS parametrized by $\theta$. The key innovation is that, encoding the token as a measurement operator fully utilizes the operator space, allowing for the packing of more tokens in a much smaller Hilbert space. Furthermore, by increasing the physical dimension of both embedding quantum measurements and MPS, the model can utilize the power of larger operator space to improve expressiveness. Our experimental result on sequential RNA data shows that, with the flexibility of adjusting physical dimensions, the Born machines can exhibit better performance and learn deeper correlations from the dataset.
+

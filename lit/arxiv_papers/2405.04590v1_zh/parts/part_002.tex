@@ -1,0 +1,16 @@
+\section{相关工作}
+
+机器学习中关于张量网络（tensor network）的研究主要致力于分析神经网络的理论性质。人们对前馈、卷积和循环架构获得了更深入的理解，包括参数压缩 \citep{novikov2015tensorizing}、表达能力 \citep{cohen2016expressive, cohen2016convolutional, khrulkov2018expressive}，以及长期记忆方面的深度效率 \citep{levine2018benefits}。对于 NLP 中的序列建模任务，以往的研究分为两个阶段。
+
+\paragraph{理论性提案.}
+\citep{pestun2017tensor} 提出了一种张量网络语言模型，旨在构建现实世界语言建模中的长程关联；\citep{pestun2017language} 提出了一维格点上的量子统计语言模型，称为 trace-density 模型。
+据我们所知，这些张量网络语言模型仍然停留在理论性提案阶段，而非实证性工作。
+
+
+\paragraph{序列建模.} \cite{novikov2021tensor} 提出了一种新的高效的基于张量列（TT）的方法，用于 TT 密度估计，能够高效地计算概率密度函数。\cite{miller2021tensor} 将一种循环张量网络——uniform matrix product state——应用于概率的序列建模，同时为序列生成模型的设计开辟了重要的新研究方向。然而，可能是由于效率问题，大多数现有模型仅在小词表规模和简单数据集（如 Tomita 文法 \citep{tomita1982dynamic}）上进行了测试；还需要在中等规模的自然语言数据集上做进一步评估，才能充分衡量其性能。我们在附录：\ref{sec:datasets} 中对所使用的数据集与相关工作进行了比较。
+
+本文是首个以可应用于现实世界语言建模数据集的方式导出张量网络语言模型的工作。提升效率的努力有两个方面。第一，我们不计算全概率公式所需的概率 normalization 项，而是转而基于上下文表示来计算条件概率，如第 \ref{sec:recursive probability} 节所述。
+第二，我们进一步分解 TT 核并使用低尺度隐单元，见第 \ref{sec: Tinyttlm} 节。
+
+
+\input{sections/Preliminaries}

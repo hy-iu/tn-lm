@@ -1,0 +1,261 @@
+\section{第二讲：MPS 演算与算法}
+在本节中，我们将介绍矩阵乘积态的演算。具体而言，这包括可观测量的计算，通过为 MPS 张量引入合适的 \emph{normal form}，该计算可得到极大简化。借助这些工具，我们将重点讨论用于有限链基态优化的著名\emph{密度矩阵重整化群}（density matrix renormalisation group, DMRG）算法，以及直接在热力学极限下工作的\emph{变分均匀矩阵乘积态}（variational uniform matrix product state, VUMPS）算法。随后我们研究基态之上的准粒子激发，它们被参数化为\emph{准粒子 ansatz}（quasiparticle ansatz）。首先，让我们从矩阵乘积态的更多示例开始。
+\subsection{示例、单射性与 parent Hamiltonian}\label{sec:Examples}
+\paragraph{直积态} 任意直积态（product state）$\ket{\Psi}=\ket{\psi}^{\otimes N}$（其中 $\ket{\psi}=\sum_i \psi_i\ket{i}$）都可以写为键维为 1 的 MPS，其形式为
+\begin{equation}
+    A^i_{11} = \psi_i.
+\end{equation}
+\paragraph{AKLT} 上文在\cref{sec:AreaLaw}中遇到的非平庸矩阵乘积态的典型范例是 Affleck-Kennedy-Lieb-Tasaki（AKLT）态。该态由如下 MPS 矩阵生成：
+\begin{equation}\label{eq:AKLTState}
+    A^i = \sqrt{\frac{1}{3}}\sigma^i, \quad i=X,Y,Z,
+\end{equation}
+其中 $\sigma^i$ 为 Pauli 矩阵，前置系数确保该态在热力学极限下归一化。
+
+在周期性边界条件下，该态是自旋 1 哈密顿量 \eqref{eq:AKLTHam} 的唯一有能隙基态。正如后文在\cref{sec:SPT1d}中所解释的，该哈密顿量在开链上具有四重基态简并，其特征是存在无能隙边缘模。这是其\emph{对称保护拓扑}（symmetry-protected topological, SPT）序的显著标志。
+\paragraph{GHZ} 另一个可以表示为键维为 2 的 MPS 的态是所谓的 Greenberger–Horne–Zeilinger（GHZ）态~\cite{Greenberger1989}：
+\begin{equation}
+    \ket{\Psi} = \frac{1}{\sqrt{2}} \big( \ket{0}^{\otimes N} + \ket{1}^{\otimes N} \big).
+\end{equation}
+其 MPS 表示为：
+\begin{equation}
+    A^i =
+    \begin{cases}
+        \frac{1}{\sqrt{2}}\begin{pmatrix} 1 & 0 \\ 0 & 0\end{pmatrix}, \quad i=0 \\
+        \frac{1}{\sqrt{2}}\begin{pmatrix} 0 & 0 \\ 0 & 1\end{pmatrix}, \quad i=1.
+    \end{cases}
+\end{equation}
+注意到 GHZ 态可以被视为表现出 $\mbb Z_2$ 对称性破缺。这反映在 MPS 矩阵是分块对角的，且这些分块在 $\prod_\msf i \sigma^X_\msf i$ 的作用下发生互换。显然，GHZ 态的这一 MPS 表示是非单射的。
+
+这必须与 AKLT 态形成对比——AKLT 态的 MPS 矩阵张成整个 $\mbb C^{2\times 2}$ 矩阵代数，因此不能被化为分块对角形式，从而定义了一个单射 MPS。注意 AKLT 态的单射长度为 2，这可以通过直接计算加以验证。
+
+通常情况下，每个均匀 MPS 都可以化为\footnote{在消除非对角块之后，如文献~\cite{Cirac2020}中所综述。}\emph{分块单射}（block injective）形式或\emph{标准}形式（standard form），使得所有 MPS 矩阵都具有形式~\cite{PerezGarcia2006,Cadarso2012}
+\begin{equation}
+    A^i = \bigoplus_{k=1}^r \mu_k A_k^i,
+\end{equation}
+其中所有 $\{A^i_k\}_k$（$k=1,\dots,r$）都是单射的，有时被称为\emph{单射块}（injective blocks）。需要指出的是，对于\emph{费米子} MPS，这种单射性概念需要重新审视，这是\cref{sec:Fermions}的主题。
+
+有趣的是，每个 MPS 都可以被视为相应 \emph{parent Hamiltonian} 的基态，从而将 MPS 及其关联的 parent Hamiltonian 的研究置于同等地位。该 parent Hamiltonian 是有能隙的、局域的且无阻挫的，意味着每一项的能量都被该 MPS 最小化。它的局域项是相应连续自旋区域上局域约化密度矩阵零空间上的投影算符~\cite{PerezGarcia2006,Cirac2020}。例如，对于 GHZ 态，局域 parent Hamiltonian 项由 $\frac{1}{2}(\mbb 1 - \sigma^Z_{\msf i}\sigma^Z_{\msf i+1})$ 给出。当 MPS 为单射时，可以证明它是其 parent Hamiltonian 的唯一基态。更有趣的是，当 parent Hamiltonian 与对称群 $G$ 的在位表示对易时（如在 GHZ 态的情形中），$G$ 的作用会置换不同单射块的（一个极小不可约子集）。在那种情况下，可以找到一个极大子群 $H\subseteq G$，其作用使某一特定参考块保持不变~\cite{Schuch2011}。随后各块由 $G/H$ 中的\emph{陪集}（cosets）标记。\footnote{回想一下，（左）陪集 $gH$ 是集合 $gH=\{gh \mid h\in H\}$。所有陪集的集合记为 $G/H$，构成群 $G$ 的一个划分。}
+
+下文在第~\ref{sec:PhasesOfMatter}讲和第~\ref{sec:GenSym}讲中，我们将再次遇到 parent Hamiltonian，将其作为分类\emph{量子物质相}（quantum phases of matter）的工具；粗略地说，量子物质相是可以通过绝热过程相互演化的哈密顿量的等价类。
+
+\subsection{Normal form、纠缠与可观测量}\label{sec:NormalObs}
+如\cref{sec:AreaLaw}所述，矩阵集合 $\{A^i\}$ 并不是给定 MPS 的唯一表示。这是因为对于任意非奇异矩阵 $X$，矩阵乘积态在如下形式的重新参数化下是不变的：
+\begin{equation}
+    A^i \mapsto XA^iX^{-1}, \quad \forall i=1,2,\dots,d,
+\end{equation}
+因为在连接相邻 MPS 矩阵的键上，矩阵 $X$ 与 $X^{-1}$ 恰好相互抵消。这种冗余通常称为 MPS 描述的 \emph{gauge} 自由度。事实证明，这种 gauge 自由度可以被充分利用，以简化特定计算并提升 MPS 算法的数值稳定性。
+
+通过适当的 gauge 变换，MPS 矩阵可以化为所谓的\emph{左 canonical form} 或\emph{右 canonical form}，即分别通过如下条件定义：
+\begin{align}
+    \sum_{i} A^{i \dagger} A^i &= \mbb 1_\chi \label{eq:MPSLeftCanonical}, \\
+    \sum_{i} A^i A^{i \dagger} &= \mbb 1_\chi. \label{eq:MPSRightCanonical}
+\end{align}
+在图形上，这些条件因此可以写为如下形式：
+\begin{align}
+    \inputtikz{MPSRightCanonical} \quad &= \quad \inputtikz{MPSRightIdentity}\,\, , \\
+    \inputtikz{MPSLeftCanonical} \quad &= \quad \inputtikz{MPSLeftIdentity}\,\, .
+\end{align}
+请注意，条件 \cref{eq:MPSLeftCanonical,eq:MPSRightCanonical} 并未完全固定 MPS 矩阵，因为我们仍可以用\emph{幺正} gauge 矩阵对这些矩阵进行共轭。在后文中，我们将分别用 $A_L$ 和 $A_R$ 表示 MPS 张量 $A$ 的左 canonical form 与右 canonical form。让我们再次强调，$A$、$A_L$ 和 $A_R$ 生成的都是同一个态。将左 canonical form 变换为右 canonical form 的 gauge 变换或 \emph{pivot 矩阵}通常记为 $C$，从而由 $A_L^iC=CA_R^i$（$\forall i$）所刻画。为便于后文引用，我们还引入记号 $A_C^i =A_L^iC=CA_R^i$。若一个 MPS 可以写为如下形式，则称其处于 \emph{mixed canonical form}：
+\begin{equation}\label{eq:MPSMixedGauge}
+    \ket{\Psi[A]} = \inputtikz{MPSMixedgauge}\,\,.
+\end{equation}
+正如该图所暗示的，矩阵 $C$ 包含了 $C$ 左侧与右侧子系统之间纠缠的信息。让我们对此作更精确的阐述。
+
+考虑一个允许张量积分解 $\mc H=\mc H_A\otimes \mc H_B$ 的希尔伯特空间，其中 $d_A=\dim(\mc H_A)$，$d_B=\dim(\mc H_B)$。借助\emph{奇异值分解}（singular value decomposition, SVD），$\mc H$ 中的任意态均可写为如下形式：
+\begin{equation}\label{eq:SchmidtState}
+    \ket{\Psi} = \sum_k s_k \ket{\psi_k^A}\otimes\ket{\psi_k^B},
+\end{equation}
+其中 $\ket{\psi_k^A}$ 与 $\ket{\psi_k^B}$ 分别是 $\mc H_A$ 与 $\mc H_B$ 的标准正交基向量，实数 $s_k$（$k=1,2,\dots,\min(d_A,d_B)$）称为\emph{奇异值}或 \emph{Schmidt 数}，并构成该态的\emph{纠缠谱}（entanglement spectrum）。通过对任一子系统求偏迹，我们可以将约化密度矩阵写为
+\begin{align}
+    \rho_A &= {\rm Tr}_B(\ketbra{\Psi}) = \sum_{k=1}^{d_A} s_k^2 \ket{\psi_k^A}\bra{\psi_k^A}, \\
+    \rho_B &= {\rm Tr}_A(\ketbra{\Psi}) = \sum_{k=1}^{d_B} s_k^2 \ket{\psi_k^B}\bra{\psi_k^B}.
+\end{align}
+与 MPS \eqref{eq:MPSMixedGauge} 进行直接对比可以发现，态 $\ket{\Psi[A]}$ 的 Schmidt 谱与 $C$ 的奇异值完全一致。通过残余的幺正 gauge 自由度 $A_L^i\mapsto UA_L^iU^\dagger $，$A_R^i\mapsto V^\dagger A_R^iV$（其中 $U$ 与 $V$ 来自 SVD $C=USV^\dagger$），MPS $\ket{\Psi[A]}$ 最终可以化为式 \eqref{eq:SchmidtState} 的形式。
+
+\bigskip\noindent MPS 的关键优势之一在于能够高效计算局域可观测量的期望值及其关联函数。这里的“\emph{高效}”是指计算代价随局域算符之间的距离呈线性增长。作为说明，让我们关注分别位于格点 $\msf i$ 与 $\msf j$ 处的局域可观测量 $O_1$ 与 $O_2$ 的两点关联函数。由于平移不变性，该期望值仅依赖于距离 $L=\vert\msf j - \msf i\vert$。按照惯例定义可观测量的期望值：
+\begin{equation}
+    \expval{O_1[\msf i]O_2[\msf j]}_{\Psi[A]} := \mel{\Psi[A]}{O_1[\msf i]O_2[\msf j]}{\Psi[A]},
+\end{equation}
+这归结为如下收缩：
+\begin{equation}
+    \expval{O_1[\msf i]O_2[\msf j]}_{\Psi[A]} \, = \inputtikz{MPSCorrelator_1}.
+\end{equation}
+假设单射性成立，从而转移矩阵具有唯一的最大本征值 1 以及相应的左右本征向量 $\Lambda$ 与 $\rho$，我们能够将该收缩重写为
+\begin{equation}
+    \inputtikz{MPSCorrelator_2}\,\, ,
+\end{equation}
+这表明该关联函数的计算代价按 $\mc O(L\chi^3)$ 标度。事实上，该张量网络的收缩是从左到右进行的，通过明智地选择收缩顺序，主要计算代价在于 $\chi\times\chi$ 矩阵的乘法（参见文献~\cite{Pfeifer2014}中确定一般张量网络最优收缩顺序的算法）。
+作为该表达式的特例，取 $O_1\equiv O$ 且 $O_2\equiv\mbb 1$，我们得到局域算符的期望值：
+\begin{equation}
+    \inputtikz{MPSExpVal}\,\, ,
+\end{equation}
+以及 MPS 的模平方：
+\begin{equation}
+    \braket{\Psi[A]} := \inputtikz{MPSNorm}\,\, .
+\end{equation}
+若我们按惯例定义\emph{连通}（connected）两点关联函数：
+\begin{equation}
+    C(O_1[\msf i],O_2[\msf j]) := \expval{O_1[\msf i]O_2[\msf j]}_{\Psi[A]} - \expval{O_1[\msf i]}_{\Psi[A]} \expval{O_2[\msf j]}_{\Psi[A]},
+\end{equation}
+再次利用转移矩阵的谱分解 \cref{eq:TransferSpec}（假定其存在），可以证明对该关联函数起主导作用的贡献随 $L$ 呈\emph{指数}衰减，更精确地说：
+\begin{equation}
+    C(O_1[\msf i],O_2[\msf j]) \sim \lambda_2^{L-1} \sim \exp(-L/\xi),
+\end{equation}
+这里我们将\emph{关联长度}（correlation length）$\xi$ 定义为 $\xi = - 1/\log(\vert\lambda_2\vert)$。关联函数的这种指数衰减印证了 MPS 能够很好地描述\emph{有能隙}哈密顿量的基态物理，因此无法直接重现\emph{临界系统}中存在的关联代数衰减。然而，借助下一小节的主题——\emph{纠缠标度}（entanglement scaling）理论，依然可以实现对临界关联函数的精确近似。
+\subsection{标度理论}\label{sec:scaling}
+除有能隙基态物理之外，MPS 方法也是计算\emph{临界}系统性质的有力工具。利用直接在热力学极限（即无限长自旋链，参见第 \ref{sec:DMRG_VUMPS} 小节）下工作的均匀方法，可以提取描述连续相变普适类或共形场论（CFT）的临界指数与中心荷。关于该主题已有大量现有研究，最初由文献~\cite{Nishino1996,Tagliacozzo2007,Pollmann2009,Pirvu2012}引入。在此我们遵循文献~\cite{Zauner2015,Rams2018,Vanhecke2019}中发展的方法。
+
+在二阶临界点附近，我们预期关联函数具有 Ornstein-Zernike 形式，即幂律项与指数衰减项的乘积。这可以从关联函数的 K{\"a}ll\`en-Lehmann 表示理解为连续指数项的线性叠加~\cite{Zauner2015}。若要使用 MPS 直接表示该连续谱，需要无穷大键维的 MPS。使用有限键维的 MPS 等价于对该连续谱进行离散化。我们可以通过转移矩阵谱中的能隙来量化这种“离散性”或近似程度。设 $\lambda_i$ 如前所述为转移矩阵的本征值，其中 $\lambda_1=1$，并定义 $\epsilon_i = - \ln\lambda_i$。取前 $n$ 个谱变量 $\epsilon_i$（排除第一个）的线性组合：
+\begin{equation}
+    \delta := \sum_{i=2}^{n} c_i \epsilon_i  \quad \text{with} \quad \sum_{i=2}^n c_i = 0.
+\end{equation}
+在文献~\cite{Zauner2015,Rams2018}中证明了 $\epsilon_i$ 具有动量的物理意义，因此相邻 $\epsilon_i$ 值之间的差引入了一个反长度标度 $\delta$；无论在有能隙还是无能隙情形下，当 $\chi\rightarrow\infty$ 时该标度均趋于零。类比于 Cardy 的有限尺寸标度假说~\cite{Cardy}（其中长度标度为系统尺寸），可以利用这一反长度标度 $\delta$ 为二阶相变的任意序参量 $m$ 建立如下\textit{标度假说}（scaling hypothesis）：
+\begin{equation}
+    m(t,\delta) = s^{-\beta/\nu} \, m\!\left( s^{1/\nu} t,\, s\delta \right).
+\end{equation}
+关联长度的相应标度假说为：
+\begin{equation}
+    \delta \xi(t,\delta) = \xi\!\left( \delta^{-1/\nu} t,\, 1 \right)
+= \tilde{\xi}\!\left( \delta^{-1/\nu} t \right).
+\end{equation}
+由上述形式，还可以推导出纠缠熵的标度假说。利用 CFT 中纠缠熵 $S$ 的形式~\cite{Calabrese2004}，可知 $\text{exp}(\frac{6}{c}S)$ 具有长度的标度行为，因此 $S$ 的标度假说为：
+\begin{equation}
+    \exp\!\left( \frac{6}{c} S(t,\delta) \right)
+= s \exp\!\left( \frac{6}{c} S\!\left( s^{-1/\nu} t,\, s\delta \right) \right),
+\end{equation}
+其中 $c$ 为中心荷。利用具有不同键维 $\chi$ 的均匀 MPS 方法进行模拟，便可通过标准优化方法拟合 $m$、$\xi$ 和 $c$。这一切的核心在于：临界点附近哈密顿量多种不同参数以及不同键维下的许多不同模拟结果可以相互关联，并且临界点与临界指数的正确数值将导致所有相应曲线发生数据塌缩。细节请参考文献~\cite{Vanhecke2019}。使用有限键维就如同在系统中打开一个能隙，其效果与在临界理论中添加一个相关微扰无法区分。通过这种方式，有限纠缠标度理论提供了模拟临界理论的最先进方法——MPS 始终具有能隙这一事实并非缺陷，而是一种特性！
+\subsection{变分 MPS 算法}
+\label{sec:DMRG_VUMPS}
+\subsubsection{密度矩阵重整化群}\label{sec:DMRG}
+\emph{密度矩阵重整化群}（density matrix renormalisation group, DMRG）算法最初由 Steven White 提出~\cite{White1992}，是一种用于寻找\emph{局域一维哈密顿量}基态的变分方法。它已被极其成功地应用于大量模型中，至今仍是 $(1+1)$ 维强关联自旋链基态优化的最先进方法~\cite{Schollwoeck2010,Verstraete2023}。
+
+尽管 DMRG 最初是基于重整化群推导和解释的，但其现代诠释是定义在矩阵乘积态类上的变分方法，其中通过交替最小二乘法迭代寻找最优解~\cite{Verstraete2004a}。DMRG 在最大（有界）键维为 $\chi_{\rm max}$ 的所有有限 MPS 集合上最小化期望值
+\begin{equation}\label{eq:min}
+    \underset{\{A\}}{\rm min}\left(\frac{\expval{H}{\Psi[A]}}{\braket{\Psi[A]}}\right).
+\end{equation}
+所选取的 $\chi_{\rm max}$ 越大，近似效果越好。即使在计算资源适度的情况下，通过利用如 Lanczos 方法等稀疏本征求解器求解有效本征值问题（见下文），也可以轻松达到 $\chi\sim\mc O(10^3)$ 的键维；在同时利用对称性的情况下，甚至可达到 $\mc O(10^5)$~\cite{Sanz2009,Singh2009,Weichselbaum2012,Singh2013,Lootens2024,Devos2025}。
+
+假定哈密顿量写为 MPO 形式（见\cref{sec:MPO}），式 \cref{eq:min} 归结为：
+\begin{equation}
+    \underset{\{A\}}{\rm min}\,\, \frac{\inputtikz{DMRG_H}}{\inputtikz{DMRG_norm}}\,\,.
+\end{equation}
+该算法通过提供基态的初始猜测（通常只需一个随机 MPS）启动，并对所有张量进行一系列局域顺序优化，在自旋链上来回扫描，直至达到收敛。
+
+固定某个格点 $\msf i$，将其左侧的所有张量化为左 canonical form，右侧的所有张量化为右 canonical form，此时对张量 $A[\msf i]$ 的更新归结为将其替换为\emph{有效哈密顿量}（effective Hamiltonian）最小实本征值所对应的本征向量：
+\begin{equation}
+    \inputtikz{DMRG_Heff1}\,\,.
+\end{equation}
+在此图中，$L$ 与 $R$ 分别代表通过收缩格点 $\msf i$ 左侧与右侧的所有 MPS 和 MPO 张量所获得的（依赖于格点的）\emph{环境}（environments）。
+
+由此，该版本的算法逐个单独更新每个格点，被称为\emph{单格点 DMRG}（one-site DMRG）。该方法的缺点是在扫描过程中没有便利的方法来增加键维。当施加对称性时，这一问题尤为严重，因为在这种情况下，算法无法在虚指标能级上探索不同的对称荷。算法的\emph{双格点}版本弥补了这一缺陷。
+
+双格点版本的算法在每次扫描的每一步中将两个格点组合在一起，随后将组合张量 $A'[\msf i,\msf i+1]$ 更新为有效双格点哈密顿量的极小本征向量：
+\begin{equation}
+    \inputtikz{DMRG_Heff2}\,\, .
+\end{equation}
+随后利用奇异值分解将 $A'$ 分解为 $A[\msf i],A[\msf i+1]$。正是在这一步中，可以通过截断 SVD（仅保留最大的奇异值）来动态控制键维。DMRG 的高层伪代码如下所示。
+
+\begin{algorithm}[H]
+\caption{双格点 DMRG（Two-site DMRG）}
+ 初始化 MPS 张量 $A[\msf i]$（通常初始化为随机态）\\
+\For{$k = 1$ \text{到} \texttt{num\_sweeps}}{
+    \tcp{从左至右扫描}
+    \For{$\msf i = 1$ \text{到} $N-2$}{
+         优化并更新格点对 $\msf i, \msf i+1$ \\
+         更新格点 $\msf i+1$ 处的左环境 \\
+    }
+
+    \tcp{从右至左扫描}
+    \For{$\msf i = N-1$ \text{到} $2$}{
+         优化并更新格点对 $\msf i, \msf i+1$ \\
+         更新格点 $\msf i+1$ 处的右环境 \\
+    }
+}
+\Return $\{A[\msf i]\}$
+\end{algorithm}
+\subsubsection{变分均匀矩阵乘积态}\label{sec:VUMPS}
+\emph{变分均匀矩阵乘积态}（variational uniform matrix product state, VUMPS）算法是 DMRG 在无限链上的等价方法，由文献~\cite{Zauner-Stauber2018a}引入（教学性综述参见文献~\cite{Vanderstraeten2019}，另见文献~\cite{McCulloch2008}中的替代方法）。它直接在热力学极限下工作，这使得它对于模拟临界系统以及提取其标度律特别有用。当然，在无限极限下，总基态能量是无界的，因此 VUMPS 最小化的是\emph{能量密度}（energy density）。
+
+在介绍该算法之前，我们先固定一些记号。回顾\cref{sec:NormalObs}中引入的中心 gauge MPS $A_C$ 和键张量 $C$，以及左、右 gauge $A_L, A_R$。随后我们将有效单格点哈密顿量 $H_{\rm eff}$ 以及键张量 $C$ 的有效环境 $H_C$ 定义为：
+\begin{equation}
+\label{eq:VUMPSEnvironments}
+    H_{\text{eff}} := \inputtikz{VUMPS_EffectiveHamiltonian}\,\,, \qquad
+    H_C := \inputtikz{VUMPS_EffectiveEnvironment}\,\,.
+\end{equation}
+此处，左环境与右环境 $L,R$ 分别是转移矩阵 $\mbb T_L^{[H]}, \mbb T_R^{[H]}$ 的不动点：
+\begin{equation}
+    \mbb T_L^{[H]} := \inputtikz{VUMPS_TransferMatrixHamiltonianLeft}\,\, , \qquad
+    \mbb T_R^{[H]} := \inputtikz{VUMPS_TransferMatrixHamiltonianRight}\,\,.
+\end{equation}
+它们可以通过求解线性方程组来计算。
+
+如文献~\cite{Zauner-Stauber2018a}中所推导，在均匀 MPS 流形中基态能量密度的变分极小值由如下方程组的同时解所刻画：
+\begin{equation}
+\begin{split}
+    &H_{\rm eff}(A_C) \propto A_C ,\\
+    &H_C(C) \propto C, \\
+    &A^i_C = A_L^iC = CA_R^i.
+\end{split}
+\end{equation}
+包含最后一个方程是为了避免必须取 $A_L=A_CC^{-1}$ 和 $A_R=C^{-1}A_C$——若 $C$ 接近奇异，这在潜在意义上是病态的。给定基态的初始猜测，VUMPS 算法迭代逼近该解直至达到收敛。在每一步中，$A_C$ 与 $C$ 的当前值通过将其替换为当前 $H_{\rm eff}$ 与 $H_C$ 具有最小实本征值的本征向量来更新。随后，通过对 $A_CC$ 和 $CA_C$ 采用奇异值分解，由 $\tilde A_C$ 与 $\tilde C$ 求得近似的 $\tilde A_L$ 与 $\tilde A_R$：
+\begin{equation}\label{eq:approxALAR}
+\begin{split}
+    \tilde A_L &= U_LV_L^\dagger, \quad U_L\Sigma_LV_L^\dagger =\tilde A_C\tilde C,\\
+    \tilde A_R &= U_RV_R^\dagger,  \quad \tilde C^\dagger \tilde A_C = U_R\Sigma_R V_R^\dagger.
+\end{split}
+\end{equation}
+如此一来，2-范数
+\begin{equation}
+\begin{split}
+    \epsilon_L &= \Vert\tilde A_C - \tilde A_L\tilde C\Vert_2, \\
+    \epsilon_R &= \Vert\tilde A_C - \tilde C\tilde A_R\Vert_2, \\
+\end{split}
+\end{equation}
+被最小化。
+
+用于 MPO 哈密顿量的 VUMPS 伪代码如下所示。
+
+\begin{algorithm}[H]
+\caption{VUMPS}
+    初始化 $\{A_L,A_R,C\}$（通常初始化为随机态）\\
+    初始化当前精度 $\epsilon_{\rm cur}$\\
+    \While{$\epsilon_{\rm cur}>\epsilon_{\rm tol}$}{
+        由 $A_L, H$ 计算 $\mbb T_L^{[H]}$ \\
+        由 $A_R, H$ 计算 $\mbb T_R^{[H]}$ \\
+        由 $\mbb T_R^{[H]}$ 计算左环境 $L$ \\
+        由 $\mbb T_L^{[H]}$ 计算右环境 $R$ \\
+        由 $L, R, H$ 构造有效无限哈密顿量 $H_{\text{eff}}$ \\
+        由 $L, R$ 构造有效无限环境 $H_C$ \\
+        求解 $H_{\text{eff}}$ 的主导本征向量 $A_{C}$ \\
+        求解 $E_{\text{eff}}$ 的主导本征向量 $C$ \\
+        如 \cref{eq:approxALAR} 所示，由 $A_{C}, C$ 计算 $A_L, A_R$ \\
+        设定 $\epsilon_{\rm cur}=\max(\epsilon_L,\epsilon_R)$
+    }
+    \Return $\{A_L,A_R,C\}$
+\end{algorithm}
+\subsection{准粒子激发}\label{sec:Excitations}
+截至目前，我们主要关注基态以及在有限系统（\cref{sec:DMRG}）和无限系统（\cref{sec:VUMPS}）设定下对其进行变分近似的算法。对量子多体系统的全面理解还应当解释其低能激发。通常，有能隙量子多体哈密顿量的能谱由若干孤立的分支（具有局域化\emph{准粒子激发}（quasiparticle excitations）的诠释）以及一系列连续\emph{散射态}（scattering states）（本质上可以通过叠加准粒子态来构建）构成。这些准粒子表现在动力学关联函数中（可以通过例如非弹性中子散射实验进行探测），但在临界系统的情形下，还编码了其有效连续体描述的普适性质\footnote{请记住，在使用 MPS 近似临界基态时，有限键维会使激发产生能隙。}。
+
+矩阵乘积态技术可借助所谓的\emph{准粒子 ansatz}（quasiparticle ansatz）来捕捉这些准粒子激发及其散射态，该方法最早由文献~\cite{Ostlund1995}引入，随后在文献~\cite{Haegeman2011b}中推广至一维链中的单粒子激发，并在文献~\cite{Vanderstraeten2013}中推广至两粒子态。在此，我们假设一个平移不变的局域有能隙哈密顿量 $H$。暂时我们还假设存在唯一基态以排除畴壁激发，后者将在下文讨论。我们将基态的 MPS 近似记为 $\ket{\Psi[A]}$。具有动量 $k$ 的准粒子的 ansatz 随后具有形式
+\begin{equation}\label{eq:QP}
+    \ket{\Psi[A,B],k}= \sum_\msf n e^{ik\msf n} \inputtikz{TangentVector}\,\,.
+\end{equation}
+也就是说，该 ansatz 将其中一个基态张量替换为包含该 ansatz 全部变分参数的张量 $B$，并在无限链中对 $B$ 的位置进行动量叠加。因此，它可以被视作切向量 \cref{eq:TangentVector} 的 \emph{boosted} 版本，从而使人们能够充分利用为切空间发展起来的整套完备技术。此外，值得一提的是，准粒子 ansatz 可以被诠释为 Feynman-Bijl ansatz 或为描述液氦中集体激发而发展的\emph{单模近似}（single mode approximation）的推广~\cite{Bijl1941,Feynman1953,Feynman1954}。请注意，由于有限键维的存在，我们不应将 $\ket{\Psi[A,B],k}$ 理解为描述位于张量 $B$ 处的局域粒子，而应理解为相对于均匀真空具有增加能量密度的团块。给定 $A$，对 $B$ 的优化归结为有效哈密顿量的广义本征值问题，其精神与\cref{sec:VUMPS}类似。该算法的详细阐述超出了本讲义的范围，但我们要指出的是，在其中使用与\cref{sec:MPSmanifold}所描述非常相似的对 $B$ 的高效参数化是至关重要的。
+
+值得强调的是，基态编码了关于激发态的信息。事实上，对于一般的自伴算符，其单个本征向量通常不会揭示关于其他本征向量的任何信息。然而，哈密顿量的局域性是确保 \cref{eq:QP} 为准粒子激发提供\emph{良好} ansatz 的决定性特征。确实，在著名的 Lieb-Robinson 界~\cite{Lieb1961,Nachtergaele2006,Hastings2010}的应用中，文献~\cite{Haegeman2013b}证明了：通过用（空间上）局域算符的动量 $k$ 叠加作用于基态，可以任意好地近似每一个（精确）本征态 $\ket{\Psi_{k,\alpha}}$。因此，\cref{eq:QP} 应当被视为由支撑集截断为单个格点的上述算符作用于 MPS 基态上的极致情形。
+
+有趣的是，在存在内部对称性的情况下，激发被组织成在对称群的（不可约）表示下变换的简并多重态。这与我们目前展示的准粒子方法并不兼容，因为在那时，围绕激发能量 $\Delta$ 的能量窗口 $[\Delta-\delta,\Delta+\delta]$ 对任意 $\delta$ 值都包含不止一个激发。为了补救这一点，可以通过用多重态算符 $\widetilde O_m$ 替代算符 $\widetilde O$ 来修改该 ansatz，这在 MPS 图像中归结为指定 $B$ 张量的荷~\cite{Zauner-Stauber2018b}。
+
+在对称性破缺从而导致简并基态子空间的情形下，具有最低能量的激发并不具有 \cref{eq:QP} 的形式。相反，它们是构成不同基态之间界面的\emph{拓扑畴壁激发}（topological domain wall excitations）。在此语境下，“\emph{拓扑}”是指这些激发是通过一个广延算符从基态创生的，即作用于终止在畴壁位置的半无限链上的对称性算符。这可以通过修改 ansatz 在 $B$ 张量的两侧分别编码不同的基态张量来处理。在这种情况下，所有的 MPS 计算技术都同样有效，但需要注意将正确的环境相互收缩。
+
+在\cref{fig:HeisenbergExcitations}中，我们展示了自旋 1 反铁磁 Heisenberg 模型的低能激发谱。这是通过显式施加 ${\rm SU}(2)$ 对称性获得的，并且我们用激发的自旋对其进行了标记。孤立的 $S=1$ 分支清晰可见，并在 $k=\pi$ 处达到其极小值 $\Delta\approx 0.41$，这便是著名的 \emph{Haldane 能隙}（Haldane gap）~\cite{Haldane1982,Haldane1983}。令人惊叹的是，利用准粒子 ansatz，即使仅凭借极其适度的计算资源，也能以约 10 位有效数字的精度计算该能隙。
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=0.7\linewidth]{plots/HeisenbergExcitationSpectrum.pdf}
+    \caption{利用键维为 48 的单格点准粒子 ansatz 获得的 Heisenberg 自旋 1 反铁磁体激发谱。激发按其 ${\rm SU}(2)$ 自旋标记。特别注意 \emph{Haldane} 能隙位于动量 $\pi$ 处。使用 MPSKit.jl 制作~\cite{VanDamme}。}
+    \label{fig:HeisenbergExcitations}
+\end{figure}
+\subsection{第二讲小结}
+第二讲探讨了矩阵乘积态的计算层面——如何定义 normal form，如何利用交替最小二乘法在 MPS 流形上最小化能量（DMRG），如何将这些方法推广至无限系统尺寸（VUMPS），以及如何通过将完整哈密顿量投影到 MPS 流形的切平面上来定义激发。此外，我们还触及了纠缠标度的主题——借助该理论，可以以前所未有的精度研究临界系统。
+
+在所有这些应用中，计算代价随系统尺寸和键维均仅呈多项式标度这一事实，清楚地印证了张量网络方法切实有效地打破了指数级多体墙——从而具备解决物理与化学中核心问题的巨大潜力。

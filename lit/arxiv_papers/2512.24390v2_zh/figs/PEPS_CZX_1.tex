@@ -1,0 +1,17 @@
+\begin{tikzpicture}[x={(1,0)},z={(.5,.5)},baseline={([yshift=-.9ex]current bounding box.center)}]
+    \def\l{.8};
+    \def\h{.8};
+    \def\d{.62};
+    
+    \draw[obj1] (-\l,0,0) -- (\l,0,0);
+    \draw[obj1] (0,-\l,0) -- (0,\l,0);
+    \draw[obj1] (0,0,0) -- (0,0,\h);
+
+    \draw[obj2, rounded corners=3pt] (\d*\l,-\l,0) -- (\d*\l,\d*\l,0) -- (-\l,\d*\l,0);
+    
+    \node[mpotensor] at (\d*\l,0,0) {};
+    \node[mpotensor] at (0,\d*\l,0) {};
+    \node[mpstensor, inner sep=4pt] at (0,0,0) {};
+    \node at (0,0,0) {$\sss A$};
+    \node[anchor=south] at (-.75*\l,\d*\l,0)  {$\sss g$};
+\end{tikzpicture}

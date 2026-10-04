@@ -1,0 +1,20 @@
+
+\title{TensorLLM：面向大语言模型推理增强与压缩的多头注意力张量化方法}
+
+% \author{\IEEEauthorblockN{Anonymous Authors}}
+\author{
+Yuxuan Gu, Wuyang Zhou, Giorgos Iacovides, Danilo Mandic \\
+\textit{Department of Electrical and Electronic Engineering}\\
+\textit{Imperial College London, United Kingdom}\\
+\{yuxuan.gu21, wuyang.zhou19, giorgos.iacovides20, d.mandic\}@imperial.ac.uk
+}
+
+\maketitle
+
+\begin{abstract}
+通过对大语言模型（Large Language Model, LLM）的权重进行结构性去噪，可以改善其推理（reasoning）能力；然而现有技术主要着眼于对 Transformer 块中前馈网络（Feed-Forward Network, FFN）的去噪，无法有效利用 Transformer 架构的核心——多头注意力（Multi-Head Attention, MHA）块。为解决这一问题，我们提出一个新颖且直观的框架，其核心在于通过多头张量化过程与 Tucker 分解实现 MHA 压缩。通过在多个注意力头的权重之间强制施加一个共享的高维子空间，该方法能够以更高维的方式对 MHA 权重进行结构化去噪与压缩。我们的实验表明，该方法在多个基准测试数据集上、对仅编码器（encoder-only）与仅解码器（decoder-only）两类架构，均能持续提升 LLM 的推理能力，同时使 MHA 权重获得至多约 $\sim 250$ 倍的压缩率，且全程无需任何额外数据、训练或微调。此外，我们还证明所提方法可与现有仅针对 FFN 的去噪技术无缝结合，从而进一步提升 LLM 的推理性能。\footnote{代码可在 \href{https://github.com/guyuxuan9/TensorLLM}{https://github.com/guyuxuan9/TensorLLM} 获取。}
+\end{abstract}
+
+\begin{IEEEkeywords}
+大语言模型，多头注意力，张量化，Tucker 分解，推理（reasoning），压缩
+\end{IEEEkeywords}

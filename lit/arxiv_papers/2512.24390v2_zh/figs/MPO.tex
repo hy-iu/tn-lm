@@ -1,0 +1,11 @@
+\begin{tikzpicture}[baseline={([yshift=-.5ex]current bounding box.center)}]
+	\def\l{1.6};
+    \def\h{.65};
+
+	\draw[obj2] (-.5*\l,0) -- (2.5*\l,0);
+	
+	\foreach \x in {0,1,2}{
+		\draw[obj1] (\x*\l,\h) -- (\x*\l,-\h);
+		\node[mpotensor] at (\x*\l,0) {};
+	}
+\end{tikzpicture}

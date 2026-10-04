@@ -1,0 +1,12 @@
+\begin{tikzpicture}[scale=1,baseline={([yshift=-.5ex]current bounding box.center)}]
+    \def\l{.9};
+    \def\h{.8};
+
+    \draw[obj2, text=black] (0,0) -- (0,-\h) node[anchor=north] {$\sss (af\!d,l)$};
+    \draw[obj2, text=black] (0,0) -- ({-.82*cos(45)*\l},{.82*cos(45)*\h}) node[xshift=-4pt,anchor=south] {$\sss (abe,i)$};
+    \draw[obj2, text=black] (0,0) -- ({.82*cos(45)*\l},{.82*cos(45)*\h}) node[xshift=4pt,anchor=south] {$\sss (ecd,j)$};
+
+    \node[draw=black, line width=.7pt, fill=gray!20, circle, inner sep=2.9pt] at (0,0) {};
+
+    \draw[obj1] (0,0) -- (\l/2,0) node[anchor=west] {$(\sss bcf,k)$};
+\end{tikzpicture}

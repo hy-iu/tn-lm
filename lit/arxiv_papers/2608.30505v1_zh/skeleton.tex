@@ -1,0 +1,49 @@
+% 骨架编译验证文件：00_preamble + 01_frontmatter + 占位正文
+% 仅供前言改造验证使用，不是最终交付主文件。
+\input{parts/00_preamble.tex}
+\input{parts/01_frontmatter.tex}
+
+\newtheorem{theorem}{定理}
+
+\section{测试}
+\label{sec:test}
+
+这是一段用于骨架编译验证的中文占位正文。大语言模型（LLM）中的权重张量、激活张量与 KV 缓存都具有多重线性结构，张量列（TT）分解与张量网络可以有效地利用这种结构，参见文献~\cite{zheng2021fctn}。如\cref{fig:placeholder}、\cref{eq:test}、\cref{tab:test} 与\cref{sec:test} 所示，交叉引用应当渲染为「图 1」「式 (1)」「表 1」「节 1」等中文形式。\Cref{thm:test} 给出一个定理环境示例。
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+    \draw[fill=blue!10] (0,0) rectangle (6,3);
+    \node at (3,1.5) {占位图 placeholder};
+  \end{tikzpicture}
+  \caption{占位图：验证 tikz、图注「图」前缀与 \texttt{\textbackslash cref} 中文渲染。}
+  \label{fig:placeholder}
+\end{figure}
+
+\begin{equation}
+  \label{eq:test}
+  \ten{X} = \sum_{r=1}^{R} \lambda_r\, \vecb{a}_r \otimes \vecb{b}_r \otimes \vecb{c}_r, \qquad \rank(\ten{X}) = R.
+\end{equation}
+
+\begin{table}[htbp]
+  \centering
+  \begin{tblr}{
+      colspec = {lcc},
+      hlines, vlines,
+    }
+    方法 & 压缩率 & 加速比 \\
+    张量列（TT） & $4\times$ & 1.8 \\
+    CP 分解 & $2\times$ & 1.3 \\
+  \end{tblr}
+  \caption{占位表：验证 tabularray 的 tblr 环境与中文表头。}
+  \label{tab:test}
+\end{table}
+
+\begin{theorem}
+  \label{thm:test}
+  占位定理：验证定理环境的中文名称渲染。
+\end{theorem}
+
+\printbibliography
+
+\end{document}

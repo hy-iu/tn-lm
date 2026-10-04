@@ -1,0 +1,24 @@
+\section{Uniform MPS}
+\label{sec:umps}
+
+在本工作中，我们采用\emph{均匀矩阵乘积态}（uniform matrix product state，u-MPS）模型，它是一种循环张量网络，通过将 MPS 的所有 core 取为同一个张量 $\mc{A}^{(j)} = \mc{A}$（形状为 $(D, d, D)$）而得到。为了得到标量的张量元素，使用 $D$ 维向量 $\alpha$ 和 $\omega$ 作为``边界条件''来终结网络初始与末端的键维（bond dimension）。与定长 MPS 不同，u-MPS 的循环特性使其能够生成任意 $n\in\mathbb{N}$ 的 $n$ 阶张量 $\mc{T}_n\in\R^{d^n}$，从而使 u-MPS 可以应用于涉及序列数据的问题。
+
+对于字母表 $\Sigma$（大小为 $d$）上的离散序列，一个 \mbox{u-MPS}（配合双射 $\varphi: \Sigma \to [d]$）可用于将任意长度为 $n$ 的序列映射到 $n$ 阶张量 $\mc{T}_n$ 的指标，从而定义序列上的标量值函数 $f_{\mc{A}}$。用 $\mc{A}(c) = \mc{A}_{:, \varphi(c), :} \in \R^{D\times D}$ 表示与字符 $c\in\Sigma$ 相关联的矩阵，则一个 u-MPS 作用于序列 $s = s_1s_2\cdots s_n \in \Sigma^n$ 的方式为
+%
+\begin{equation}
+\label{eq:mps_amp}
+f_{\mc{A}}(s) = \alpha^{T}\mc{A}(s_1)\mc{A}(s_2)\cdots \mc{A}(s_n)\omega = \alpha^{T}\mc{A}(s)\omega,
+\end{equation}
+%
+其中我们用 $\mc{A}(s) := \mc{A}(s_1)\mc{A}(s_2)\cdots \mc{A}(s_n)$ 表示 \eqnref{eq:mps_amp} 中出现的矩阵乘积。函数 $\mc{A}(s)$ 可以看作任意序列 $s\in\Sigma^*$ 的矩阵值表示，并且是\textit{组合的}（compositional），即 $st$ 由表示 $\mc{A}(s)$ 与 $\mc{A}(t)$ 的乘积来表示。
+
+\begin{figure*}[t]
+\centering
+\centerline{\includegraphics[width=0.85\textwidth]{parallel.pdf}}
+\caption{\small 当 $|s| = 4$ 时 $f_{\mc{A}}(s)$ 的并行与串行求值示意图，其中 $f_{\mc{A}}(s) = (\mathcal{T}_4)_{i_1, i_2, i_3, i_4}$，是由一个 u-MPS 定义的 4 阶张量的一个元素。在从 $s$ 得到矩阵表示 $\mc{A}(s_1),\ldots,\mc{A}(s_n)$ 之后，并行求值需要对相邻矩阵对反复进行批量乘法，边界向量 $\alpha$ 和 $\omega$ 仅在得到矩阵乘积 $\mc{A}(s)$ 之后才被引入。串行求值则从边界向量出发，通过迭代矩阵-向量乘法来收缩该乘积。并行与串行求值的代价分别为 $\bigO(n D^3)$ 和 $\bigO(n D^2)$，但前者可以在 $\bigO(\log n)$ 的并行时间内完成。这两种求值策略在数学上的等价性是张量收缩（contraction）结合律的一个基本例子，从而可以依据模型规模、所处理的问题以及硬件加速的可用性来选择合适的方法。}
+\label{fig:parallel}
+% \vskip -0.2in
+\end{figure*}
+
+虽然 u-MPS 显然是一种串行模型，但当 $|s| = n$ 时，$f_{\mc{A}}(s)$ 的求值可以并行化：如图~\ref{fig:parallel} 所示，对所有相邻矩阵对使用 $\lceil \log_2(n) \rceil$ 次批量矩阵-矩阵乘法来计算 \eqnref{eq:mps_amp}。这种并行化方式要求求值过程中不存在非线性激活函数，并且也可以在线性 RNN 中实现~\citep{martin2018}。
+

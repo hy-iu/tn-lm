@@ -1,0 +1,24 @@
+\begin{tikzpicture}[baseline=(current bounding box.center)]
+	\def\l{1.2};
+    \def\h{1.3};
+
+    \draw[obj1, rounded corners = 3pt] (0,0) -- (-\l/2,0) -- (-\l/2,-\h) -- (0,-\h);
+    \draw[obj1] (0,0) -- (3*\l/2,0);
+    \draw[obj1] (0,-\h) -- (3*\l/2,-\h);
+    
+    \draw[obj1] (0,0) --+ (0,\h/3);
+    \draw[obj1] (0,-\h) --+ (0,-\h/3);
+    \draw[obj1] (\l,0) --+ (0,\h/3);
+    \draw[obj1] (\l,-\h) --+ (0,-\h/3);
+
+    \foreach \i in {0,1}{
+        \node[mpstensor, inner sep=4pt] at (\l*\i,0) {};
+        \node[mpstensor,, inner sep=4pt] at (\l*\i,-\h) {};
+        \node at (\l*\i,0) {$\sss\bar A$};
+        \node at (\l*\i,-\h) {$\sss A$};
+    }
+    \node[matrix, inner sep=4pt] at (-\l/2,-\h/2) {};
+    \node at (-\l/2,-\h/2) {$\sss \Lambda$};
+    
+    \node at (7/4*\l,-\h/2) {$\dots$};
+\end{tikzpicture}

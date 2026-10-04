@@ -1,0 +1,132 @@
+\section{张量运算}\label{chapter:operations}
+回顾一下，张量 $\Tt \in \RR^{d_1 \times \cdots \times d_N}$ 可以看作一个 $N$ 阶多维数组：$N$ 阶（亦称 $N$ 路）张量有 $N$ 个模，每个模对应一个维度 \citep{kolda2009tensor}。
+\paragraph{张量纤维} 对任意模 $i$（其中 $i = 1, \dots, N$），将除第 $i$ 个以外的指标全部固定，便得到张量的\textit{纤维}。例如，矩阵的一列对应模 1 纤维，而矩阵的一行对应模 2 纤维。在三阶张量 $\Tt \in \RR^{d_1 \times d_2 \times d_3}$ 中，模 1 纤维有 $d_2d_3$ 个，它们是尺寸为 $d_1$ 的向量，即对 $i_2 \in [d_2]$ 与 $i_3 \in [d_3]$，有 $\Tt_{:,i_2,i_3} \in \RR^{d_1}$。冒号表示第一个指标变化，而 $i_2$ 与 $i_3$ 保持固定。纤维是向量。
+\paragraph{张量切片} 张量的切片是将除两个指标以外的所有指标固定后得到的二维数组（矩阵）。对三阶张量 $\Tt \in \RR^{d_1 \times d_2 \times d_3}$，分别有水平切片、侧面切片与正面切片，记为 $\Tt_{i_1,:,:} \in \RR^{d_2 \times d_3}$、$\Tt_{:,i_2,:} \in \RR^{d_1 \times d_3}$ 与 $\Tt_{:,:,i_3} \in \RR^{d_1 \times d_2}$。因此，切片是矩阵。
+\paragraph{标量乘法} 
+设 $\lambda \in \RR$ 为标量。标量乘积 $\lambda\Tt$ 
+ 仍是维度为 $d_1 \times \cdots \times d_N$ 的张量，逐元素定义为：
+$
+    (\lambda\Tt)_{i_1 \cdots i_N} = \lambda \cdot \Tt_{i_1 \cdots i_N}$
+对所有可取的指标 $i_k\in[d_k]$ 与 $k\in[N]$。
+\paragraph{张量求和} 设 $\St\in\RR^{d_1\times\cdots\times d_N}$。张量 $\Tt$ 与 $\St$ 之和仍是同维度的张量 $\Tt+\St\in\RR^{d_1\times\cdots\times d_N}$，逐元素定义为：$(\Tt+\St)_{i_1,\cdots,i_N} = \Tt_{i_1,\cdots,i_N} + \St_{i_1,\cdots,i_N}$，对所有可取的指标 $i_k\in[d_k]$ 与 $k\in[N]$。
+\subsection{张量的置换与重排}
+置换与重排是张量的两种基本运算。
+\begin{itemize}
+    \item \textbf{置换} 在不改变模的个数的情况下重新排列张量的指标。置换的一个常见例子是矩阵转置。
+    \item  \textbf{重排} 把多个指标合并为较大的指标，或把一个较大的指标拆分为多个较小的指标，从而减少或增加指标的总数，同时保持张量的总体尺寸不变。
+\end{itemize}
+下面介绍矩阵化（matricization）与向量化（vectorization）这两种常见的张量重排运算。
+\begin{definition}（矩阵化）\label{matricizitation:def}
+设 $\Tt\in\RR^{d_1\times d_2\times \cdots\times d_N}$。对 $n\in[N]$，把 $\Tt$ 的所有模 $n$ 纤维取出并按列堆叠，即可展开为矩阵 $\Tt_{(n)}\in\RR^{d_n\times d_1d_2\cdots d_{n-1}d_{n+1}\cdots d_N}$，称为模 $n$ 矩阵化。例如，张量 $\Tt\in\RR^{d_1\times d_2\times d_3}$ 沿模 $1$ 的矩阵化记作 $\Tt_{(1)}$，它是如下所示的 $d_1\times d_2d_3$ 矩阵
+$$
+    \begin{bmatrix}
+    \vline & \vline & \vline  & \vline \\
+    \Tt_{:,1,1} & {\Tt}_{:,1,2}  & \dots  & {\Tt}_{:,d_2,d_3} \\
+    \vline & \vline & \vline  & \vline 
+    \end{bmatrix}
+\in\RR^{d_1\times d_2d_3}.
+$$
+
+模 2 与模 3 矩阵化 $\Tt_{(2)}\in\RR^{d_2\times d_1d_3}$ 和 $\Tt_{(3)}\in\RR^{d_3\times d_1d_2}$ 的定义类似。
+\end{definition}
+
+注意，在模 1 矩阵化中，对应于 $\Tt$ 的第二和第三个模的两个指标被归并在一起，形成一个取值从 1 到 $d_2d_3$ 的新指标。在前面的定义中，我们选择按字典序排列这个新指标，例如当 $d_2=d_3=3$ 时为 $11,12,13,21,22,23,31,32,33$。矩阵化中各列的排列次序有时也采用别的约定~（例如 \citep{kolda2009tensor} 中的逆字典序）。一般说来，具体采用哪一种排列
+并不重要，但在相关的计算中必须保持一致~（详见 \citep{kolda2006multilinear}）。
+
+
+
+在张量网络图中，我们通过把相应的边合并到一起来表示这种指标归并：
+$$\Tt_{(1)} = 
+\left(\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (T) at (\x,\y){\scalebox{0.85}{$\Tt$}};
+    \draw[edge] (T) -- (\x+0.7,\y) node [midway,above]{\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (T) -- (\x-0.7,\y) node [midway,above]{\scalebox{0.7}{\dimcolor{$d_1$}}};
+    \draw[edge] (T) -- (\x,\y-0.7) node [midway,left]{\scalebox{0.7}{\dimcolor{$d_3$}}}; 
+\end{tikzpicture}\right)_{(1)}
+=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (A) at (\x,\y){\scalebox{0.85}{$\Tt$}};
+    \draw[edge] (\x+0.2,\y+0.15) -- (\x+0.5,\y+0.15)-- (\x+0.5,\y+0.05) -- (\x+1,\y+0.05) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x+0.2,\y-0.15) -- (\x+0.5,\y-0.15)-- (\x+0.5,\y-0.05)-- (\x+1,\y-0.05) node [midway,below]
+    {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \draw[edge] (A) -- (\x-0.7,\y)node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$d_1$}}};
+\end{tikzpicture}
+=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!50!white] (T) at (\x,\y){\scalebox{0.85}{$\Tt$}};
+    \draw[edge](T) -- (\x+1,\y) node [midway, above]{\scalebox{0.7}{\dimcolor{$d_2d_3$}}};
+    \draw[edge](T) -- (\x-1,\y) node [midway, above]{\scalebox{0.7}{\dimcolor{$d_1$}}};
+\end{tikzpicture}
+\in\RR^{d_1\times d_2d_3}.
+$$
+可以看到，形如
+$\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \draw[edge] (\x+0.15,\y+0.2) -- (\x+0.5,\y+0.2) -- (\x+0.5,\y+0.1) -- (\x+1,\y+0.1) node [midway,above]
+    {\scalebox{0.7}{\dimcolor{$d_2$}}};
+    \draw[edge] (\x+0.15,\y-0.1) -- (\x+0.5,\y-0.1)-- (\x+0.5,\y)-- (\x+1,\y) 
+node [midway,below]
+    {\scalebox{0.7}{\dimcolor{$d_3$}}};
+    \end{tikzpicture}
+$
+的归并腿在张量网络图中表示一条大小为 $d_2d_3$ 的边。
+
+
+一般地，矩阵化的概念可以推广到 $\Tt$ 的模的任一子集 $I\subset [N]$：把属于 $I$ 的模映为行，把不属于 $I$ 的模映为列，从而得到大小为 $\prod_{i\in I} d_i \times \prod_{j\in [N]\setminus I} d_j$ 的矩阵 $\Tt_{(I)}$。例如，对六阶张量 $\Tt\in\RR^{d_1\times\dots\times d_6}$，可以按如下方式归并指标：
+\begin{align*}
+\Tt_{i_1,\dots,i_6} 
+&=
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!20!blue!40!white] (T) at (\x,\y){\scalebox{0.85}{$\Tt$}};
+    \draw[edge] (T) -- (\x+0.85,\y) node [very near end,right]
+    {\scalebox{0.7}{\indcolor{$i_4$}}};
+    \draw[edge] (T) -- (\x,\y-0.85) node [very near end, below]
+    {\scalebox{0.7}{\indcolor{$i_6$}}};
+    \draw[edge] (T) -- (\x-0.85,\y)node [very near end,left]
+    {\scalebox{0.7}{\indcolor{$i_1$}}};
+    \draw[edge] (T) -- (\x,\y+0.85) node [very near end,above]
+    {\scalebox{0.7}{\indcolor{$i_3$}}};
+    \draw[edge] (T) -- (\x-0.75,\y+0.5) node [pos=1.3]
+    {\scalebox{0.7}{\indcolor{$i_2$}}};
+    \draw[edge] (T) -- (\x+0.75,\y-0.5) node [pos=1.3]
+    {\scalebox{0.7}{\indcolor{$i_5$}}};
+    \node[draw=none] at (\x+2,\y+0.2){$\underrightarrow{I=\{1,2,6\}}$};
+    \end{tikzpicture}
+\begin{tikzpicture}[baseline=\baseline]
+    \tikzset{tensor/.style = {minimum size = 0.5cm,shape = circle,thick,draw=black,inner sep = 0pt}, edge/.style = {thick,line width=.4mm},every loop/.style={}}
+    \def\y{0}
+    \def\x{0}
+    \node[tensor,fill=red!20!blue!40!white] (T) at (\x,\y){\scalebox{0.85}{$\Tt$}};
+    \draw[edge](T) -- (\x+0.85,\y)node [very near end, right]{\scalebox{0.7}{\indcolor{$i_5$}}};
+    \draw[edge](\x+0.16,\y+0.2) -- (\x+0.5,\y+0.2) -- (\x+0.5,\y+0.1) -- (\x+0.85,\y+0.1)node [very near end, above]{\scalebox{0.7}{\indcolor{$i_3$}}};
+    \draw[edge](\x+0.16,\y-0.2) -- (\x+0.5,\y-0.2) -- (\x+0.5,\y-0.1) -- (\x+0.85,\y-0.1)node [very near end, below]{\scalebox{0.7}{\indcolor{$i_4$}}};
+    \draw[edge](T) -- (\x-0.85,\y)node [very near end, left]{\scalebox{0.7}{\indcolor{$i_2$}}};
+    \draw[edge](\x-0.16,\y+0.2) -- (\x-0.5,\y+0.2) -- (\x-0.5,\y+0.1) -- (\x-0.85,\y+0.1)node [very near end, above]{\scalebox{0.7}{\indcolor{$i_6$}}};
+    \draw[edge](\x-0.16,\y-0.2) -- (\x-0.5,\y-0.2) -- (\x-0.5,\y-0.1) -- (\x-0.85,\y-0.1)node [very near end, below]{\scalebox{0.7}{\indcolor{$i_1$}}};
+\end{tikzpicture}\\
+&=
+(\Tt_{(\{1,2,6\})})_{i_1i_2i_6 , i_3i_4i_5}\in\RR^{d_1d_2d_6\times d_3d_4d_5}.
+\end{align*}
+这一概念虽然直观，写成形式化的记法却很繁琐：张量中属于 $I$ 的指标 $i_{r_1},i_{r_2},\cdots, i_{r_{|I|}}$（按降序排列）被映为行指标 $
+j = 1+\sum_{l=1}^{|I|}
+\left[(i_{r_l}-1)\prod_{m=1}^{l-1}I_{r_m}\right]
+$，而其余指标 $i_{c_1},i_{c_2},\cdots, i_{c_{N-|I|}}$（同样按降序排列）被映为列指标 $k  = 1+\sum_{n=1}^{N - |I|}
+\left[(i_{c_n}-1)\prod_{s=1}^{n-1}I_{r_s}\right]$。借助张量网络，我们只需把这类 
+重排运算表示为边的归并，就能避开这种繁琐。 
+

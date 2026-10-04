@@ -1,0 +1,18 @@
+\begin{tikzpicture}[x={(1,0)},z={(.5,.5)},baseline={([yshift=-.5ex]current bounding box.center)}]
+    \def\l{1.};
+    \def\h{.8};
+    
+    \foreach \y in {0,...,2}{
+    	\draw[obj1] (-.5*\l,\y*\l,0) --++ (3*\l,0,0);
+    }
+    \foreach \x in {0,...,2}{
+    		\draw[obj1] (\x*\l,-.5*\l,0) --++ (0,3*\l,0);
+    }
+    \foreach \y in {0,...,2}{
+    	\foreach \x in {0,...,2}{
+    		\draw[obj1] (\x*\l,\y*\l,0) --+ (0,0,\h);
+    		\node[mpstensor, inner sep=4pt] at (\x*\l,\y*\l,0) {};
+            \node at (\x*\l,\y*\l,0) {$\sss A$};
+    	}
+    } 
+\end{tikzpicture}

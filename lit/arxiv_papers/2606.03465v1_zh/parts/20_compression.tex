@@ -1,0 +1,266 @@
+\section{压缩策略}
+\label{sec:compression}
+
+\subsection{剪枝}
+
+剪枝去除对模型行为贡献最小的参数或组件，其做法是利用 LLM 中固有的高度非均匀的参数冗余。值得注意的是，已有研究 \citep{unreasonable_ineffectiveness_2024} 与我们自己的实验（图~\ref{fig:full_width_graph}）均表明，中间层对最终质量的影响相对较小，可以承受激进的剪枝。这一现象的成因在于，最前与最后的层不成比例地承担着形成词元表示、生成最终预测等关键任务，而中间层的作用相对较小。
+然而，剪枝虽然能有效去掉这些中间层的“尾部”，但由于参数主体仍原封未动，其可达到的最大压缩率受到限制。它并未对剩余结构做紧凑的重参数化，因而只是相对于结构上更先进的分解方法的一个朴素基线。
+
+
+
+% -------------------------------------------------------------
+
+%ссылки
+\subsection{矩阵分解}
+
+% Определение задачи низкорангового приближения, описать СВД 
+
+自然的下一步是矩阵分解，它通过低秩重参数化而非删除来压缩权重。对于包含模型大部分参数的前馈网络（FFN）\citep{FFNs_Are_Memory_2021}，我们按照附录~\ref{app:gptj_llama_tensor_protocol} 所述的协议，选取并评估了若干矩阵分解方法。
+
+
+% As introduced in Section~\ref{sec:intro}, truncated SVD yields the globally optimal low-rank approximation in any unitarily invariant norm~\citep{Eckart_Young_1936,Eckart_Young_Mirsky_1960}. LASER~\citep{LASER_2024} applies this directly to selected Transformer weight matrices without retraining, choosing layer, matrix type, and retained rank by grid search; the reported improvements are interpreted as a denoising effect that removes low-salience singular directions. More recent methods improve upon this baseline by making the rank selection data-driven: SVD-LLM~\citep{svdllm2025} introduces truncation-aware data whitening that aligns singular values with actual compression loss, and applies a layer-wise closed-form parameter update to compensate for truncation error. Dobi-SVD~\citep{wang2025dobisvd} makes the truncation position differentiable, learning it on calibration data via gradient-robust backpropagation and resolving rank into memory savings through a remapping step. SoLA~\citep{huang2025sola} instead identifies a minority of FFN neurons with high activation norms and keeps them dense, applying low-rank decomposition only to the remainder, combined with an adaptive rank-allocation strategy formulated as integer programming. FLAT-LLM~\citep{tian2025flatllm} uses head-wise PCA in the activation space to compute per-head truncation bases for attention blocks and Nystr\"{o}m approximation for MLP blocks, with a greedy importance-preserving rank-redistribution strategy across decoders. HASSLE- free~\citep{hasslefree2025} decomposes each weight matrix into a sparse component plus a low-rank component, jointly minimizing the full layer-wise reconstruction objective with alternating updates.
+
+% =============================================================
+%  Related Work
+% =============================================================
+% \section{Related Work}
+% \label{sec:related_work}
+
+% Low-rank compression of Transformer weight matrices is grounded in the
+% Eckart–Young–Mirsky theorem, which guarantees that truncated SVD yields
+% the globally optimal low-rank approximation in any unitarily invariant
+% norm~\citep{Eckart_Young_1936,Eckart_Young_Mirsky_1960}.
+% LASER~\citep{LASER_2024} applies truncated SVD directly to selected
+% weight matrices without retraining, interpreting gains as a denoising
+% effect on low-salience singular directions.
+% SliceGPT~\citep{slicegpt2024} exploits the rotational invariance of
+% RMSNorm-connected Transformers to absorb PCA bases into adjacent layers,
+% removing low-variance directions and producing smaller dense matrices
+% with real inference speedups.
+% SVD-LLM~\citep{svdllm2025} improves rank selection via
+% truncation-aware data whitening and a layer-wise closed-form update that
+% compensates for truncation error.
+% Dobi-SVD~\citep{wang2025dobisvd} makes the truncation position
+% differentiable, optimising it on calibration data with respect to the
+% activation rather than the weight matrix.
+% SoLA~\citep{huang2025sola} preserves a small set of high-activation-norm
+% FFN neurons in dense form and applies low-rank decomposition only to the
+% remainder, with rank allocation formulated as integer programming.
+% FLAT-LLM~\citep{tian2025flatllm} applies head-wise PCA for attention
+% blocks and Nystr\"{o}m approximation for MLP blocks, with greedy rank
+% redistribution across decoders.
+% HASSLE-free~\citep{hasslefree2025} decomposes each weight into a sparse
+% plus low-rank component, jointly minimised via alternating updates over
+% the layer-wise reconstruction objective.
+
+% \paragraph{LASER}
+% \label{subsec:laser}
+
+\texttt{LASER}~\citep{LASER_2024} 将
+式~\ref{eq:svd} 应用于单个 FFN 权重矩阵，无需重训练或校准数据，而是通过对下游任务准确率做网格搜索来选定层、矩阵类型与秩 $r$。降秩有时能提升推理（reasoning）任务的性能，这被解释为一种\emph{去噪}效应：据推测，低奇异值方向编码了相互竞争的回应，会压制学习不充分的事实。\texttt{LASER} 不对截断误差做任何修正，因而是一个自然的免训练基线。
+
+% -------------------------------------------------------------
+% \texttt{Dobi-SVD}~\citep{wang2025dobisvd} argues that minimizing the weight reconstruction error $\|W - \hat{W}_{r}\|$ is a poor proxy for the true goal of minimizing the activation error $\|Wx - \hat{W}_{r}x\|$ on calibration data $x$. It introduces a continuous relaxation of the truncation boundary and optimizes it end-to-end via gradient-robust backpropagation, keeping the original weights frozen. The resulting rank is then used to reconstruct compressed weights using IPCA, with a remapping step that ensures
+% lower ranks translate to actual memory savings.
+
+% -------------------------------------------------------------
+
+\texttt{HASSLE-free}~\citep{hasslefree2025} 方法将每个权重矩阵分解为
+稀疏与低秩两个部分，即
+\begin{equation}
+    W \approx S + AB^{\top},
+\end{equation}
+并通过交替最小化来最小化逐层激活重构误差 $\|Wx - (S + AB^{\top})x\|$：对残差 $W - AB^{\top}$ 做阈值化以更新 $S$，对 $W - S$ 求解最小二乘问题以更新 $AB^{\top}$。稀疏
+部分捕捉低秩因子难以逼近的孤立大幅值元素，而低秩部分则编码结构化信号。
+
+\begin{figure}[htbp]
+  \centering
+  \begin{minipage}[t]{0.48\textwidth}
+    \texttt{SoLA}~\citep{huang2025sola} 利用了更深层的矩阵结构划分：将激活范数最高的 top-$k$ 个神经元作为稠密子集保留为全精度，其余部分作为压缩子集施以截断奇异值分解（SVD）。这避免了对高范数神经元做低秩逼近时产生的不成比例的大误差。此外，\texttt{SoLA} 通过整数规划在各层之间分配秩，在全局参数预算约束下最小化总重构误差，将容量集中于截断误差
+最敏感之处。
+
+    \texttt{FLAT-LLM}~\citep{tian2025flatllm} 对注意力块应用逐头 PCA、对 MLP 块应用 Nystr\"{o}m 逼近，从校准激活中计算截断基。各解码器层的秩通过基于敏感度的贪心重分配策略进行分配，把全局秩预算分给截断造成重构误差最大的层。
+  \end{minipage}%
+  \hfill%
+  \begin{minipage}[t]{0.48\textwidth}
+    \vspace{0pt}
+    \centering
+    \includegraphics[width=\linewidth]{emnlp/figs/gptj_mlp_all_methods_c4_with_lens_noquant.pdf}
+    \captionof{figure}{GPT-J~6B 上的 FFN 压缩。所有方法压缩相同的
+    中后段块范围。}
+    \label{fig:matrix_decomps}
+  \end{minipage}
+  \vspace{-1em}
+\end{figure}
+
+图~\ref{fig:matrix_decomps} 揭示出一个明显趋势：采用某种形式微调
+或利用额外校准数据的方法（如
+\texttt{Dobi-SVD}、\texttt{HASSLE-free} 与 \texttt{SoLA}），相比仅依赖
+矩阵分解的方法（如 \texttt{LASER} 与
+\texttt{Flat-LLM}），其性能退化
+要小得多。
+
+尽管如此，最高的压缩率仍由 LASER 取得（$\approx 14\%$），但困惑度（PPL）增加了 $+8$。这引出了我们在第~\ref{sec:td-dense} 节中回答的自然问题：
+
+\begin{tcolorbox}
+    \textbf{Q1}：\textit{能否在不牺牲模型质量的前提下获得更高的压缩率？}
+\end{tcolorbox}
+
+% The fundamental problem of the low-rank matrix approximation is to find a matrix
+% $\widehat{X}$ of restricted rank $r$ that closely approximates a target
+% matrix $X$. Formally, this is expressed as the optimization problem:
+% \allowdisplaybreaks
+% \begin{equation} \label{eq:task}
+%     \min_{\operatorname{rank}(\widehat{X}) \le r}
+% \left\| X - \widehat{X} \right\|_{\alpha}.
+% \end{equation}
+% According to the Eckart-Young-Mirsky theorem
+% \citep{Eckart_Young_Mirsky_1960}, for any unitarily invariant norm $\|\!\cdot\!\|_{\alpha}$ (e.g., Frobenius or spectral) the global optimum to \eqref{eq:task} is given by the truncated SVD.
+
+% The SVD factorizes the original matrix into a product of three components:
+% $$
+% X = U \Sigma V^{\top},
+% $$
+% where $U$ and $V$ contain the left and right singular vectors,
+% respectively, and $\Sigma$ is a diagonal matrix of singular values.
+% Truncating this decomposition to the top $r$ singular values yields the
+% theoretically optimal compressed representation:
+% $$
+% \widehat{X} = U_r \Sigma_r V_r^{\top}.
+% $$
+% While generally effective, this approach can deteriorate in layers containing functionally critical superweights \citep{superweight}. These weights are not merely large-magnitude outliers: they participate in narrow computational pathways that can produce massive activations on specific low-semantic-content tokens \citep{SinksAndSpikes_2026}. Since truncated SVD optimizes a global, task-agnostic reconstruction objective, it prioritizes high-energy singular directions rather than task-sensitive directions or entries. Consequently, such layers may require higher ranks or targeted corrections that explicitly preserve functionally critical coordinates.
+
+
+
+
+\begin{figure*}[t!]
+  \centering
+  \includegraphics[width=0.85\textwidth]{emnlp/figs/pareto_no_rtn_c4_arrows_side_inner_short_emph_v4_diag_leaders.pdf}
+  \vspace{-2mm}
+  \caption{GPT-J 6B 与 LLaMA 2 7B 上、不计嵌入参数的 C4 困惑度与节省比特数的关系。每个点对应一次压缩运行，$L$ 表示连续压缩的 Transformer 块数。箭头将每种分解与其经低秩适配（LoRA）修复的变体相连，Pareto 前沿标出观测到的最佳折衷。}
+  \label{fig:c4_pareto}
+  \vspace{-1em}
+\end{figure*}
+
+\subsection{稠密架构的张量分解}
+\label{sec:td-dense}
+% Описать что такое ТТ, Такер и все такое
+
+众所周知，相对于维数而言，张量分解能够对稠密张量实现指数级压缩。TT-SVD~\citep{oseledets2011tensor} 与 HOSVD~\citep{hosvdopt} 等方法在 Frobenius 范数下达到准最优的逼近误差，分别以张量列（TT）与 Tucker 格式表示张量。借助这些算符格式的表示~\citep{tyrtyshnikov2003tensor, hackbusch2006low, oseledets2011tensor}，可以先将 FFN 权重矩阵重排为张量，再对其进行压缩。
+图~\ref{fig:matrix_decomps} 通过在 GPT-J~6B 上将 FFN 层的 TT 分解与基于矩阵的方法相比较，部分回答了 \textbf{Q1}。结果清楚表明，TT 分解在 PPL 上的表现比 \texttt{LASER} 更差，但取得了更大的压缩。
+% , further confirming that decomposition without additional fine-tuning leads to substantial degradation in model quality. 
+
+另一方面，正如 \texttt{TensorLLM}~\citep{tensorllm2025} 所展示的，多头注意力（MHA）层天然具有四维张量表示，能使其低维结构显式化，这使得 Tucker 分解成为该场景下结构上最合适的格式。而对于占模型参数大多数的 FFN 块，并不存在这样天然的张量结构；因此我们不得不采用 TT 分解，以匹配矩阵方法的压缩率并完整回答 \textbf{Q1}。为了最大化压缩，在所有 TT 分解实验中我们都把权重矩阵重排为 $12$ 个核，因为两个模型的最小维度均为 $4096 = 2^{12}$。然而，所得分解会引入不可忽略的困惑度退化；为了部分恢复质量，我们施加一个轻量级 LoRA 修复阶段（$r=16$，在 WikiText-2 上训练），作为矩阵压缩方法中所用校准感知权重分解~\citep{wang2025dobisvd,svdllm2025} 的一种参数高效对应物。我们按照附录~\ref{app:gptj_llama_tensor_protocol} 详述的协议，在四种压缩方案下评估 GPT-J~6B~\citep{gpt-j} 与 LLaMA~2~7B~\citep{touvron2023llama}：仅对注意力做 Tucker 分解（复现 \texttt{TensorLLM} 风格的因子化）、仅对 FFN 做 TT 分解、Tucker+TT 联合，以及对所有投影做 TT 分解，Tucker 秩上限为 $64$。此外，我们在附录~\ref{app:detailed_gptj_llama_results} 中报告了张量分解方法的更多组合。
+
+
+% Figure~\ref{fig:matrix_decomps} presents a comparison of FFN layer TT decomposition against matrix-based methods. The results clearly show that TT decomposition performs on par with \texttt{LASER} in terms of PPL, further confirming that decomposition without additional fine-tuning leads to substantial degradation in model quality.
+
+% Similarly to Figure~\ref{fig:matrix_decomps}, we compress contiguous middle blocks: starting at block $14$ for GPT-J 6B (range $14-20$) and block $16$ for LLaMA~2~7B (range $16-23$), and progressively extend the range to measure error accumulation.
+
+
+图~\ref{fig:c4_pareto} 总结了这些结果。仅压缩注意力能保持困惑度，但带来的体积缩减微乎其微；压缩 FFN 层能获得更高的压缩率，代价是质量急剧退化。LoRA 修复能部分恢复质量，却无法化解根本的折衷。尽管张量格式与 LLM 组件之间存在结构上的对齐，所有方法在实际压缩率下都表现出很差的压缩-质量折衷，这指向标准张量假设与 LLM 学到的表示之间更深层的错配。我们还在附录~\ref{app:quality_compression} 中给出了 WikiText-2 困惑度与 LM-Eval 宏平均准确率下降的折衷结果。
+
+% For FFN layers, where Tucker degenerates to standard matrix factorization, we additionally provide a direct comparison against LASER-style truncated SVD on LLaMA~2~7B. Figure~\ref{app:app_tt_vs_laser_ffn} shows that TT and matrix rank reduction follow nearly identical trend, with TT reaching marginally higher bits saved at the cost of the same monotonic quality drop. Appendix~\ref{app:single_layer_decomposition} further shows that decomposition sensitivity is layer-dependent, with early layers being the most fragile.
+
+% Activation analysis confirms reduced angular diversity and distorted norm distributions, indicating that TT compresses FFN representations into a restricted latent structure no more faithfully than its matrix counterpart. Even this flexible tensorization fails to escape the core trade-off between compression ratio and representation diversity (Figure~\ref{fig:activation_geometry}).
+
+% \begin{figure}[!htbp]
+%   \centering
+%   \includegraphics[width=0.8\linewidth]{emnlp/figs/llama2_tt_ffn_vs_laser_ffn_r512_r1024_c4.pdf}
+%   \caption{TT versus LASER for FFN compression on LLaMA 2 7B. Both methods compress the same middle-to-late block ranges. \textcolor{red}{Add here a revised version with different LLM decompositions, also add an ablation for different kernels amount}}
+%   \label{app:app_tt_vs_laser_ffn}
+%   % \vspace{-1em}
+% \end{figure}
+
+
+% In the context of this article, a tensor is an extension of a vector and a matrix to higher dimensions. The $N$-th order tensor is written as $\mathcal{X} \in \mathbb{R}^{I_1 \times I_2 \times \cdots \times I_N}$. 
+% As discussed above, tensor representations naturally arise in LLM components
+% such as MHA and MoE blocks, where heads and experts introduce explicit
+% structural dimensions. This motivates the use of tensor-based compression
+% methods, which approximate such objects with fewer parameters while preserving
+% their multi-dimensional organization.
+
+% Tucker decomposition represents a tensor using a smaller core tensor and one factor matrix for each mode:
+% $$
+% \mathcal{X}
+% \approx
+% \mathcal{G}
+% \times_1 U^{(1)}
+% \times_2 U^{(2)}
+% \cdots
+% \times_N U^{(N)},\text{ where}
+% $$
+% \begin{itemize}
+%     \item $\mathcal{G} \in \mathbb{R}^{R_1 \times \cdots \times R_N}$ -- the core tensor;
+%     \item $U^{(n)} \in \mathbb{R}^{I_n \times R_n}$ -- matrix factor for the $n$-th mode;
+%     \item $(R_1,\ldots,R_N)$ -- the Tucker ranks.
+% \end{itemize}
+% Tensor Train (TT) decomposition represents a high-order tensor as a chain of
+% small core tensors:
+% $$
+% \mathcal{X}_{i_1,\ldots,i_N}
+% \approx
+% \!\!\!\sum\limits_{r_1,\ldots,r_{N-1}}
+% \!\!\mathcal{G}^{(1)}_{1,i_1,r_1}
+% \mathcal{G}^{(2)}_{r_1,i_2,r_2}
+% \cdots
+% \mathcal{G}^{(N)}_{r_{N-1},i_N,1}, \text{ where}
+% $$
+% \begin{itemize}
+%     \item $\mathcal{G}^{(n)} \in \mathbb{R}^{R_{n-1} \times I_n \times R_n}$ -- the $n$-th TT core tensor;
+%     \item $R_0 = R_N = 1$ -- boundary ranks;
+%     \item $(R_1,\ldots,R_{N-1})$ -- the TT ranks.
+% \end{itemize}
+% Since MHA is equivalent to a structured convolution-like operator \citep{mhacnn2020}, it is naturally represented as a tensor with an explicit head dimension. This makes Tucker decomposition a natural choice for compressing attention while preserving head-wise structure.
+
+% Prior work has explored Tucker-style compression of attention projections, including LeSTD \citep{li2026lestd} and TensorLLM \citep{tensorllm2025}. In our experiments, ``Tucker'' refers to the TensorLLM-style Tucker factorization applied to the attention projections. We evaluate GPT-J 6B and LLaMA 2 7B with maximum rank 64, comparing four compression methods: Tucker on attention projections only, TT on feed-forward projections only, Tucker on attention together with TT on feed-forward projections, and TT applied to all selected attention and feed-forward projections.
+
+% We compress contiguous transformer blocks near the middle of the network and progressively extend the compressed range toward later layers. The starting blocks are chosen based on our layer-sensitivity experiments (see Figure~\ref{fig:full_width_graph}), which show that middle blocks tolerate modification better than the earliest or latest blocks. This observation is backed up by the recent works from other compression strategies such as post-training quantization \citep{wang2026sliderquant}. Expanding the range then lets us measure how approximation error accumulates as more transformer blocks are compressed. For GPT-J 6B, the range starts at block 14 and grows to blocks 14-20; for LLaMA 2 7B, it starts at block 16 and grows to blocks 16-23. We evaluate each decomposed model before and after a lightweight LoRA ($r = 16$) repair stage trained on WikiText-2, to test whether limited data-dependent adaptation can recover the quality lost by factorization. Compression is measured as bits saved over non-embedding model parameters.
+
+% Figure~\ref{fig:c4_pareto} summarizes the quality--compression trade-off. Attention-only compression preserves the perplexity better, but saves little of the full model size. Methods that compress feed-forward projections reach higher compression, but their perplexity increases sharply. LoRA recovery often helps, as shown by the arrows, but it does not remove the steep trade-off between useful compression and model quality. We also provide trade-offs for WikiText-2 perplexity and macro LM-Eval accuracy drop in Appendix~\ref{app:quality_compression}.
+
+% \textcolor{red}{Where are the experiments???} \changedinline{We also consider the same question in sparse expert architectures. MoE layers are a natural tensor target because the expert index provides an explicit tensor mode; accordingly, we evaluate TD-MoE as a complementary setting.}
+
+% Even this flexible tensorization fails to escape the core trade-off
+% between compression ratio and representation diversity (Fig.~\ref{fig:gptj_activation_geometry}).
+% This mirrors the LASER-style matrix baseline of Fig.~\ref{fig:matrix_decomps}:
+% flattening attention or FFN weights into a higher-order tensor does not
+% recover information that Frobenius-optimal matrix factorization already
+% discards. We next test whether architectures with an \emph{explicit}
+% tensor mode - mixture-of-experts layers - escape this trade-off.
+
+% \vspace{-0.5em}
+% \subsection{Tensor decompositions for Mixture-of-Experts}
+% \label{sec:td-moe}
+
+% % \textcolor{red}{We extend this evaluation to MoE architectures by applying TD-MoE~\citep{tdmoe2026} on Qwen3-30B-A3B and GPT-OSS-20B, tracking both perplexity and downstream accuracy (Appendices~\ref{app:td_moe},~\ref{app:td_moe_gpt_oss}).}
+ 
+% MoE layers are an a priori favourable target for tensorization: the
+% expert index supplies a natural third mode in addition to input and
+% output features, so stacking expert FFN weights into a three-dimensional tensor and applying Tucker decomposition (as in \texttt{TD-MoE}~\citep{tdmoe2026}) factors expert structure into the format itself. A complementary matrix-based approach is taken by \texttt{MoBE}~\citep{chen2025mobe}, which exploits cross-expert redundancy by factorizing each expert's up-/gate weight matrix as $W = AB$, where $A$ is expert-specific and $B$ is reparameterized as a linear combination of basis matrices $\{B_i\}$ shared across all experts within a layer, with the decomposition learned by minimizing the layer-wise reconstruction error. We test whether the structural alignment of tensor formats translates into better post-training compression on Qwen3-30B-A3B~\citep{qwen3technicalreport} (128 experts, 8 active) benchmarking \texttt{TD-MoE} against \texttt{MoBE} as a matrix-decomposition baseline. Additional experiments with GPT-OSS-20B~\citep{openai2025gptoss} can be find in Appendix~\ref{app:td_moe_gpt_oss}.
+ 
+% % \paragraph{Progressive layer compression.}
+% Following the protocol from Appendix~\ref{app:td_moe}, Figure~\ref{fig:moe_main} summarizes the comparison between \texttt{MoBE} and \texttt{TD-MoE}. Surprisingly, \texttt{TD-MoE} performs substantially worse than \texttt{MoBE}, despite both methods employing gradient-based optimization during compression. \texttt{MoBE} remains close to the original model across all tested compression ratios, whereas \texttt{TD-MoE} degrades significantly, suggesting that the structural alignment between the tensor format and the expert index does not by itself confer a compression advantage over matrix-based factorization with shared bases. Thus, Tucker decomposition for MoE yields substantially better results than for MHA, yet remains considerably weaker than the matrix-based method MoBE. This observation leads to the following question.
+
+% \begin{tcolorbox}
+%     \textbf{Q2}: \textit{What are the underlying reasons for such behaviour of tensor decompositions across the two considered architectures?}
+% \end{tcolorbox}
+
+
+% two per-layer compression ratios are tested,
+% $\rho \in \{0.2, 0.4\}$. Figure~\ref{fig:moe_main} (left) reports
+% WikiText-2 perplexity for Qwen3-30B-A3B. at $\rho = 0.2$ perplexity
+% remains within $\sim 1.1\times$ baseline for up to roughly 12
+% compressed layers and degrades gracefully; at $\rho = 0.4$ degradation
+% is steep throughout the schedule. The same pattern is even sharper on
+% GPT-OSS-20B, where the smaller expert pool offers less cross-expert
+% redundancy and downstream accuracy collapses much earlier
+% (Appendix~\ref{sec:td_moe_qwen}, Figs.~\ref{fig:td_moe_downstream},
+% \ref{fig:gpt_oss_downstream}). The progressive schedule deliberately
+% avoids the shallow super-expert layers
+% 1--3~\citep{su2025superexperts}; reaching those layers triggers an
+% abrupt quality collapse, in line with the
+% super-weight/super-activation phenomenon discussed in
+% \S\ref{sec:superweights}.
+
+

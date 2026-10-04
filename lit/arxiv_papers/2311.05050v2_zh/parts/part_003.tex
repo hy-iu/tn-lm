@@ -1,0 +1,47 @@
+\section{边缘化与生成式采样}
+
+训练完成后，Born 机器可以按照 \eqnref{eq: P} 进行自回归生成；相比之下，energy-based model 通常需要借助 Markov 链蒙卡（MCMC）才能从 $p(\vect{x})=\frac{1}{Z}e^{-E(\vect{x})}$ 中采样。Born 机器的自回归采样过程逐位进行，依赖于其计算条件概率/边缘概率的能力。重要的是，由于张量收缩运算满足交换律，采样方向不受限制，既不必从头开始，也可以沿任意方向进行。因此，对于已给定 token 的位点，可以通过插入相应的 POVM 对其施加条件，然后再求迹移除；而对于待采样的位点，则可以直接对 MPS 相应的物理腿求迹移除来实现边缘化，这得益于 \eqnref{eq: emb} 中的归一化性质。整个序列的生成通过迭代地重复同一过程、填满所有空位来完成。
+
+例如，设 $K\subseteq\{1,2,...,n\}$ 为一个位点子集，$\vect{x}_{K}=\{x_i\}_{i\in K}$ 为区域 $K$ 内的 token。训练完成后，假设我们想在给定补集区域 $\bar{K}$ 中其余 token $\vect{x}_{\bar{K}}$ 的条件下，计算条件分布 $p_{\theta,\gamma}(\vect{x}_K|\vect{x}_{\bar{K}})$。它可以按下式求值：
+\begin{equation}\label{eq: single site}
+    p_{\theta,\gamma}(\vect{x}_K|\vect{x}_{\bar{K}})=\bra{\Psi_\theta(\vect{x}_{\bar{K}})}M_{\gamma}(\vect{x}_K)\ket{\Psi_\theta(\vect{x}_{\bar{K}})},
+\end{equation}
+其中 $M_{\gamma}(\vect{x}_K)=\bigotimes_{i\in K}M_{\gamma}(x_i)$ 是区域 $K$ 内的测量算符，而 $\ket{\Psi_\theta(\vect{x}_{\bar{K}})}$ 表示根据区域 $\bar{K}$ 中的测量结果 $\vect{x}_{\bar{K}}$ 坍缩后的量子态，其定义为
+\begin{equation}
+\ket{\Psi_\theta(\vect{x}_{\bar{K}})}=\frac{1}{Z}\bigotimes_{i\in\bar{K}}Q_{\gamma}(x_i)\ket{\Psi_{\theta}},
+\end{equation}
+其中 $Z=\bra{\Psi_\theta}M(\vect{x}_{\bar{K}})\ket{\Psi_\theta}$ 是该态的归一化常数。
+与常规自回归模型只能沿因果顺序计算条件概率分布不同，这里的 Born 机器能够计算任意子集 $K$ 中 token 的概率分布，其条件为补集 $\bar{K}$ 中的 token。
+% Based on this, the stand-by site has the single site probability of each token
+% \begin{equation}\label{eq: single site}
+%     p_{\theta,\gamma}(x_i|\vect{x}_0)=\bra{\Psi_\theta(\vect{x}_0)}M_{\gamma}(x_i)\ket{\Psi_\theta(\vect{x}_0)},
+% \end{equation}
+% where $\ket{\Psi(\vect{x}_0)}$ is obtained by acting the conditional POVMs onto the backbone quantum state with arbitrary order. \yzy{What is the mathematical definition of $\Psi(x_0)$? Unlike autoregressive models, which are greedy, token sampling must be performed following a causal order. Born machine, each measurement collapses the wave function globally, and token sampling can be performed in any order.} \hwd{I think $\Psi(x_0)$ is given by collapsing the original wave function according to measurement outcomes, $\ket{\Psi_\theta(\vect{x}_0)}=\mathcal{P}(\vect{x}_0)\ket{\Psi_\theta}=\mathcal{P}(x_{v_1,i_1}, x_{v_2,i_2},\dots, x_{v_m,i_m})\ket{\Psi_\theta}$ where $v, i$ label the vocabulary index/site index, and $m$ is the number of measured sites. Since each of the measure collapse the wave function globally, the projection procedure can be performed in arbitrary order for each site. In our case, the conditional environment of a projected site is calculated by inserting a POVM between the wave functions and the conjugate of itself, therefore the explicit form of our projection operator should be the matrix square-root of POVMs $\mathcal{P}(x_{v_1,i_1}, x_{v_2,i_2},\dots, x_{v_m,i_m})=\sqrt{M(x_{v_1,i_1})}\sqrt{M(x_{v_2,i_2})}\cdots\sqrt{M(x_{v_m,i_m})}$. For masked sampling task\eqref{eq: single site}, $\ket{\Psi_\theta(\vect{x}_0)}$ is further normalized; for joint probability evaluation procedure\eqref{eq: P}, the half-collapsed wave function in the intermediate is not normalized because the result value represents model $p_{\theta}(\vect{x}) \in (0,1)$.}
+
+\begin{algorithm}[H]
+\caption{带条件依赖的生成式采样}
+\label{alg:gen}
+\begin{algorithmic}
+\REQUIRE 训练好的参数 $\theta$、$\gamma$，序列长度 $n$，可选的初始序列 $x_{\text{init}}$
+\IF{未提供 $x_{\text{init}}$}
+    \STATE 初始化长度为 $n$ 的序列 $x = [ \text{empty} ]$
+\ELSE
+    \STATE 以 $x_{\text{init}}$ 作为起始序列，其中元素可以为空或预先给定的 token
+\ENDIF
+\STATE 定义集合 $K$ 为已知 token 的下标集合，$\bar{K}$ 为待采样 token 的下标集合
+\WHILE{$\bar{K}$ 非空}
+    \FOR{$\bar{K}$ 中的每个下标 $i$}
+        \IF{$x[i]$ 为空}
+            \STATE 利用 \eqnref{eq: single site}，在给定已知 token 的条件下计算 token $x_i$ 的条件概率：
+            \STATE $p(x_i|x_{K}) = \langle \Psi_{\theta}(x_{K}) | M_{\gamma}(x_i) | \Psi_{\theta}(x_{K}) \rangle$
+            \STATE 从 $p(x_i|x_{K})$ 中采样得到 $x_i$
+            \STATE 用采样得到的 token $x_i$ 更新 $x[i]$
+            \STATE 将 $i$ 加入集合 $K$，并从 $\bar{K}$ 中移除 $i$
+        \ENDIF
+    \ENDFOR
+\ENDWHILE
+\ENSURE 生成的序列 $x$
+\end{algorithmic}
+\end{algorithm}
+
+由于 Born 机器支持按任意顺序进行自回归生成，可以利用这一特性，通过计算单位点概率 \eqnref{eq: single site} 或多位点的联合概率，直接进行掩码采样或异常检测。此外，还可以将模型学到的边缘概率与训练数据集的统计频率进行比较，以评估训练后模型的性能，这将在 \secref{Empirical result} 中进一步讨论。该过程的详细实现见算法~\ref{alg:gen}。

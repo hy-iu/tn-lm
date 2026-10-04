@@ -1,0 +1,19 @@
+\begin{tikzpicture}[baseline={([yshift=-.5ex]current bounding box.center)}]
+	\def\l{.8};
+    \def\h{.65};
+
+	\draw[obj3] (-\l,0) -- (6*\l,0);
+	
+	\foreach \x in {0,2,4}{
+		\draw[obj1] (\x*\l,0) -- (\x*\l,-\h);
+		\node[mpotensor, inner sep=3.6pt] at (\x*\l,0) {};
+	}
+    \foreach \x in {1,3,5}{
+		\draw[obj1] (\x*\l,0) -- (\x*\l,\h);
+		\node[mpotensor, inner sep=3.6pt] at (\x*\l,0) {};
+        \node at (\x*\l,0) {$+$};
+	}
+
+    \draw[obj1, dotted] (-\l,-\h) -- (-\l,\h);
+    \draw[obj1, dotted] (6*\l,-\h) -- (6*\l,\h);
+\end{tikzpicture}

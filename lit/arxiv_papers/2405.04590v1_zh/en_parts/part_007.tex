@@ -1,0 +1,76 @@
+\section{Experimental Evaluation} 
+\label{sec: experiments}
+
+To further understand the properties of TTLM variants, we now investigate the effectiveness of TTLM, TTLM-Large and TTLM-Tiny compared to Second-order RNNs, RACs, MI-RNNs, and Vanilla-RNNs. 
+
+
+We specify our  experimental setting in Sec. \ref{sec:setting} and implementation details in Sec. \ref{sec:implementations}. We study the influence of ranks on the performance of TTLM variants in Sec \ref{sec: rank} and examine the impact of nonlinear activation functions on the effectiveness of TTLM variants in Sec.\ref{sec: activation}. 
+
+
+
+\subsection{Experimental Setting}
+\label{sec:setting}
+\begin{table*}[t]
+\small
+\centering
+  \begin{tabular}{l|cc|cc|ccc}
+    \toprule
+      \multirow{2}{*}{Model} & \multicolumn{2}{c|}{
+      WikiText-2} &
+    \multicolumn{2}{c|}{PTB} & Hidden & Layer & Embed  \\
+    
+    &Param & PPL  & Param  & PPL & (Rank) & & Size\\
+    % \hline
+    
+    % RNN \citep{mikolov2012context} & - & - & - & 124.7 & 300 & 1 & - \\
+    % LSTM \citep{zaremba2014recurrent} & - & - & - & 114.5 & 200 & 2 & -\\
+    % LSTM \citep{grave2016improving} & -& 99.3 & -& 82.3& 1024 & 1 & -\\ 
+    % LSTM \citep{merity2017regularizing} & - & 100.9 & - & 80.6 & 650 & 2 & -\\
+    \midrule
+    Transformer \citep{vaswani2017attention} & 90.5M & 293.0 & 32.8M & 208.7 &20 & 1 & 400 \\
+    Vanilla-RNNs \citep{mikolov2012context} & 11.6M & 96.6 & 4.0M & 115.3 & 20 & 1 & 400\\
+    Second-order RNNs \citep{hochreiter1997long} & 11.8M & 96.0 & 4.2M& 108.2 & 20 & 1 & 400\\
+    RACs  \citep{levine2018benefits} &11.6M& 97.6 & 4.0M  & 116.8 &20 & 1 & 400 \\
+    MI-RNNs \citep{wu_multiplicative_2016} &  11.6M & 99.6 &4.0M & 119.1 & 20 & 1 & 400 \\
+    \hline
+    TTLM & 12.2M & 546.4 & 4.2M & 559.8 & 20& 1 & 400\\
+    TTLM-Tiny & 11.6M &94.9 & 4.0M &106.8 & 20 & 1 & 400\\
+    TTLM-Large &11.8M &\textbf{82.3} & 4.2M & \textbf{99.3} & 20 & 1 & 400 \\
+  \bottomrule
+\end{tabular}
+\caption{Test set PPL on the WikiText-2 and PTB datasets. The symbol "$-$" means these data are not available in their original paper. The “Param” column denotes the number of parameters; see Sec. \ref{sec:implementations} for a detailed description.  The "Hidden (Rank)" column  denotes the number of hidden units or ranks. The "Embed Size" column denotes the size of each embedding vector.  We report the lowest test set PPL of the Transformer whose number of heads is  selected from [2, 4, 5, 8]. \label{tab:evaluation}}
+\end{table*}
+%
+\paragraph{Task, Datasets, and Metric.}  We conduct experiments on two word-level language model datasets: \textbf{(1)} English Penn Treebank (PTB) \citep{marcinkiewicz1994building}, which consists of 929k training tokens, 73k validation tokens, and 82k test tokens. Its vocabulary size is 10k. \textbf{(2)} The WikiText-2 dataset \citep{merity2016pointer} is derived from Wikipedia articles and consists of 2088k training tokens, 217k validation tokens, 45k test tokens, and a vocabulary of over 30k types. We compare these models on the language modeling task,  evaluated by the Perplexity (PPL) \citep{meister-cotterell-2021-language}; the lower the PPL, the better the model.
+
+% \subsubsection{Baselines and Implements}
+
+\paragraph{Baselines.} Our models are compared with the following baselines: 
+  Transformer \citep{vaswani2017attention} ,  Vanilla-RNNs \citep{mikolov2012context},     Second-order RNNs \citep{hochreiter1997long}, Recurrent Arithmetic Circuits (RACs)   \citep{levine2018benefits}, and   Multiplicative Integration RNNs (MI-RNNs) \citep{wu_multiplicative_2016}. The implementation details are provided in Sec. \ref{sec:implementations}.
+
+
+% \subsubsection{Parameter Setting}
+% \label{sec:experimental_setting}
+
+% (2)  Different TT cores settings will influence the number of trainable parameters. Sec. \ref{sec: model size} compares the \textbf{model size} of TT variants
+
+% \begin{comment}
+
+% \subsubsection{Evaluation Metric}
+% It  is  the  average  per-word  log-probability on the holdout data set. The low the perplexity, the more effective the model is. The formula of PPL is shown in Eq.\ref{eq:ppl}:
+
+% \begin{equation} \small
+% \label{eq:ppl}
+%     \text{PPL} = e^{-\frac{1}{n}\sum_{i}\log(p(w_i))}
+% \end{equation}
+% \end{comment}
+
+% \textbf{Reproductibility statements} To foster reproducibility, all of our code in Sec. \ref{eq: experiments} are provided in the  \textit{link}
+
+
+% \textbf{Training environments.} 
+
+% \textbf{Initialization} The learning weights of embedding tensor $\tW^{xe} \in \mathbb{R}^{|V|\times R\times R}$ were uniformly initialized in the interval $[-0.1,0.1]$ and all other weights were initialized between $[-\frac{1}{\sqrt{H}}, \frac{1}{\sqrt{H}}]$, where $H$ is the hidden units for RNN models. For TTLM-Large or TTLM-Tiny, The learning tensor $\tW^{eh}$ is initialized between $[-\frac{1}{R}, \frac{1}{R}]$ where R is the rank of TTLM. $\mW^{hh}$ is initialized between $[-\frac{1}{\sqrt{R}}, \frac{1}{\sqrt{R}}]$.
+
+\paragraph{Hyperparameters.} \textbf{(1)} To compare the effectiveness of comparable models on the same scale, we set the rank/hidden units of TTLM variants/Vanilla-RNNs as [5, 10, 20, 25, 30, 35, 40, 45, 50]. The embedding size of these models is the squared number of hidden units/ranks. This setup is because of the architectures of TTLM-Large and TTLM-Tiny as introduced in Sec. \ref{sec: Tinyttlm}. \textbf{(2)}  To avoid the potential impact of the embedding size on Vanilla-RNNs' performance, we provide several common choices of embedding size in the model by setting its embedding size as [100, 200, 300]. We name them as RNNs-100, RNNs-200, and RNNs-300 correspondingly and display them in Fig. \ref{fig:rank}. \textbf{(3)}  We train all models for 50 epochs and choose the best model in the validation set to predict the result in the test set. \textbf{(4)}   The weights in the models are adjusted to minimize the average cross entropy loss over training sequences via stochastic gradient descent computed using the truncated backpropagation through time algorithm \citep{werbos1990backpropagation,williams1990efficient}.  The random seed is fixed to ensure the experimental results are not influenced by initializing the weights.
+

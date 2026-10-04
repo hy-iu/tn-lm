@@ -1,0 +1,163 @@
+\section{贯穿生命周期的张量化}
+\label{sec:lifecycle-analysis}
+
+本节展开生命周期视角：按照 \cref{sec:lifecycle-overview} 中引入的生命周期分类，把面向 LLM 的张量方法应用按阶段组织起来。每个小节先给出形式化的问题定义，随后是文献综述，并在文献覆盖充分时附上一张汇总表。对文献稀疏的阶段，则直接指出其空白。
+% Finally, \cref{subsec:component-vs-stage} closes the section with a component-vs-stage comparison, mapping the component-wise view of \cref{sec:components} against the stage-wise view of the current section.
+
+\subsection{词元化}
+\label{subsec:tokenization}
+
+词元化阶段把原始文本映射为取自固定词表 $\set{V}$ 的子词单元序列，词表通常由字节对编码 (byte-pair encoding) \cite{sennrich2016bpe} 或一元语法语言模型 (unigram language model) \cite{kudo2018unigramlm} 生成，并常通过 SentencePiece \cite{kudo2018sentencepiece} 来实施。
+词表是一组离散符号，分词器又是不可微的映射，这使得该阶段成为张量方法的一个特殊目标：在词元被嵌入之前，并不存在连续的多重线性对象。
+
+据我们所知，尚无已发表的工作把张量方法应用于词元化过程本身。
+与之最接近的张量工作要晚一步，始于词元的表示：MorphTE \cite{gan2022morphte} 把形态学结构注入嵌入表，TN-gram \cite{zhou2026tensorizingengram} 则对 $n$-gram 嵌入进行张量化 (\cref{subsec:embeddings})。两者都把词表视为给定。分词器已有随机化 \cite{kudo2018unigramlm}, \cite{provilkov2020bpedropout} 乃至可学习化 \cite{tay2022charformer} 的做法，但尚未被张量化。我们在 \cref{sec:future-directions} 中概述了张量化在这一阶段可能带来的收益。
+
+
+
+% The tokenization stage maps raw text to a sequence of subword units via a tokenizer, typically Byte-Pair Encoding (BPE) \cite{sennrich2016neural} or SentencePiece \cite{kudo2018sentencepiece}. The resulting token vocabulary $\mathcal{V}$ of size $V$ can be viewed as a set of symbols with no inherent continuous representation. Tensorization at this stage would impose structure on the vocabulary, such as morphological, phonetic, or orthographic similarities among tokens. Formally, given a vocabulary $\mathcal{V}$ and a feature function $\phi: \mathcal{V} \rightarrow \R^d$, one may seek a compressed representation via tensor decomposition:
+% \begin{equation}
+% \min_{\mathcal{V}' \subset \mathcal{V}, \|\mathcal{V}'\| \le V'} \mathcal{L}_{\rm LM}(\mathcal{V}' ; \theta),
+% \end{equation}
+% where $\mathcal{V}'$ is a tensor-factorized vocabulary and $V' \ll V$. However, this is a significantly under-explored area.
+
+% \textit{No published work currently applies tensor decompositions directly to the tokenization stage of modern LLMs.} While subword regularization \cite{kudo2018subword} and BPE-dropout \cite{provilkov2020bpe} explore stochastic tokenization, and Uni-Parser \cite{shen2022uniparser} learns tokenization via neural parsing, none of these use tensor structure to compress or organize the vocabulary. Tensorized tokenization remains a promising open problem (see \cref{sec:future-directions}).
+
+
+\subsection{嵌入}
+\label{subsec:embeddings}
+
+\paragraph{问题定义。}
+
+对嵌入层进行张量化可以追求不同的优化目标，这与预训练（见 \cref{subsec:pre-training}）和压缩（见 \cref{subsec:compression}）的两类目标相呼应：要么从零训练嵌入矩阵，要么对预训练好的嵌入矩阵施加免训练的压缩方案。与 \cref{subsec:pre-training} 和 \cref{subsec:compression} 中讨论的方法不同，这两种情形都只影响嵌入层，模型的其余部分保持不变。这一二分法与 \cref{sec:component-emb} 中按表类型的分类正交，因为任一表类型都可能出现在任一目标之下。
+
+\paragraph{文献综述。}
+
+在 LLM 出现之前，NLP 中的张量方法主要用于语言单元的表示学习。早期工作通过受 Tucker 分解启发的因子化 \cite{cruys2013svo} 以及词向量上的张量代数运算 \cite{etal2014svotensorspaces}，为主-谓-宾三元组构造表示。第二条研究路线源于把嵌入学习问题重述为共现矩阵的矩阵分解。这促生了张量扩展：把情感 \cite{rahimi2021tenssent} 或框架语义角色标注 \cite{etal2017frame} 等额外信息聚合进更高阶的共现张量，再对其分解以产生词表示，从而获得更丰富的表示。然而，随着 LLM 的发展，目标从基于张量的表示增强转向了对已学习嵌入表的压缩与参数化。
+
+在现代 LLM 中，对经典嵌入层（见 \cref{sec:component-emb}）进行张量化的主流做法依赖 TT 族分解。Hrinchuk 等人 \cite{hrinchuk2020tensorized} 用 TTM 表示替换嵌入层，并从零训练模型。
+% Combined with weight tying \cite{wolf2017weighttying1},
+该参数化在语言建模任务上为 Transformer-XL \cite{dai2019transformerxl} 实现了可观的压缩 \cite{hrinchuk2020tensorized}。然而，这一方法需要在该参数化下从零训练；而且如 \cref{sec:component-emb} 所讨论，行独立性被破坏：词元的排列顺序可能影响表示质量 \cite{hrinchuk2020tensorized}。TensorGPT \cite{xu2023tensorgpt} 则独立处理嵌入层的每一行；具体而言，对已预训练的模型，把每一行重排后经 TT-SVD \cite{oseledets2011tensor} 压缩（见 \cref{fig:ex-emb-train} 左）。这免除了重新训练，但表示能力可能较弱，并会增加推理 (inference) 延迟。
+
+
+在标准嵌入表之外，张量方法还被用于两种结构上不同的场景：n-gram 嵌入表与基于词素的嵌入表（见 \cref{sec:component-emb}）。在第一种情形中，TN-gram \cite{zhou2026tensorizingengram} 把 n-gram 嵌入表参数化为 CP 表示，将参数量从关于 $n$ 呈指数增长的 $\mathcal{O}(|\set{V}|^nd)$ 降为线性的 $\mathcal{O}(Rn|\set{V}| + Rd)$。同时，每个 CP 因子对应 n-gram 中的一个特定位置，使分解具有可解释性。不过，与 TT-Embedding 一样，由于 CP 参数化内在于 n-gram 表，TN-gram 必须从零训练。在第二种情形中，MorphTE \cite{gan2022morphte} 走了另一条路：它不压缩词级表，而是维护一个小的词素嵌入表，把词表示构造为词素向量的克罗内克积（原文称之为张量积）。这大幅缩减了嵌入表的规模，但同样需要从零训练，以使模型适配这样的嵌入。
+
+\paragraph{对比。} \Cref{tab:embeddings-methods} 从结构角度对比上述嵌入方法。每种方法针对结构上不同的嵌入表，服务于不同的表示目的与应用领域。因此，这些方法之间无法公平比较，这也是此处不设压缩率或困惑度列的原因。表中列出所采用的分解、嵌入表类型，以及是否需要训练阶段（免训练对比从零训练）。
+
+\begin{table}[!htbp]
+\centering
+\caption{\footnotesize 嵌入阶段张量方法的结构性对比。}
+\label{tab:embeddings-methods}
+\footnotesize
+\begin{tblr}{
+  width = \textwidth,
+  colspec = {Q[3.0cm,m,c]Q[4.5cm,m,c]Q[3.5cm,m,c]X[m,c]},
+  row{1} = {font=\bfseries},
+  rowsep = 3pt,
+  hline{1,6} = {1pt},
+  hline{2} = {0.6pt},
+  hline{3,4,5} = {0.6pt, gray7},
+}
+方法 & 分解 & 嵌入表 & 训练 \\
+TT-embeddings \cite{hrinchuk2020tensorized} & TTM & 经典 & 从零训练 \\
+TensorGPT \cite{xu2023tensorgpt} & TT 逐行 & 经典 & 免训练 \\
+TN-gram \cite{zhou2026tensorizingengram} & CP &  N-gram & 从零训练 \\
+MorphTE \cite{gan2022morphte} & 词素嵌入的\newline 克罗内克积 & 基于词素 & 从零训练 \\
+\end{tblr}
+\end{table}
+
+\subsection{预训练}
+\label{subsec:pre-training}
+
+\paragraph{问题定义。}
+
+张量化预训练的优化目标可以表述为如下约束优化问题：
+\begin{equation}
+\begin{aligned}
+& \min_{\ten{W} \in \mathfrak{TN}(\set{R})} \mathcal{L}_{\rm LM} (\ten{W}; \ \mathcal{D}_{\rm LM}), \\
+& {\rm s.t.} ~ m(\ten{W}) \leq M,\ c(\ten{W}) \leq C
+% \rm s.t. \quad &\text{memory/latency budget.}
+\end{aligned}
+\end{equation}
+其中 $\ten{W}$ 表示语言模型的张量化权重，$\mathfrak{TN}(\set{R})$ 是给定秩集合 $\set{R}$ 时的张量网络参数族，$\mathcal{L}_{\rm LM}$ 是语料 $\mathcal{D}_{\rm LM}$ 上的语言建模损失。预算约束用两个函数来反映张量化的不同影响：$m(\cdot)$ 度量内存，通常是存储的参数加上训练期间达到的峰值内存占用；$c(\cdot)$ 度量计算，即缩并的 FLOPs，或它们在目标硬件上引起的延迟。
+与压缩目标（见 \cref{subsec:compression}）不同，预训练目标没有作为参照的稠密 $\mat{W}$，因此张量化权重 $\ten{W}$ 要从零训练。而且与嵌入阶段（见 \cref{subsec:embeddings}）不同，这里的张量化可以针对 Transformer 的任意部分。
+
+\paragraph{文献综述。} 
+
+在 Transformer 之外，张量方法早已用于 NLP。概率语言模型曾直接以张量分解构建：张量空间语言模型 (Tensor Space Language Model, TSLM) \cite{zhang2019tslm} 把句子表示为词向量的张量积，再把下一个词元的条件概率表达为两个张量的内积。张量列语言模型 (Tensor Train Language Model, TTLM) \cite{su2024ttlm} 延续这一路线，用 TT 分解对语言模型进行参数化。
+
+% On the other hand, tensorization of fully connected layers in neural networks has been explored: dense layers were parameterized in TT form \cite{novikov2015tensorizing}. The next discussed work follows this approach by tensorizing some components within the Transformer architecture.
+
+若干工作把注意力机制本身重述为张量网络，以
+缓解 Transformer 架构在复杂度上的劣势。Ma 等人
+\cite{ma2019tensorized} 将其完全改写为 BT 形式（式~\eqref{eq:btd}）：查询、键
+与值充当一个三阶张量的因子矩阵 $\mat{A}^{(1)} = \mat{Q}$、$\mat{A}^{(2)} = \mat{K}$、
+$\mat{A}^{(3)} = \mat{V}$，在全部 $K$ 个块之间共享，各块仅
+在其对角核心张量 $\ten{G}_k \in \R^{R \times R \times R}$ 上不同；于是每个块项
+扮演经典 MHA 中一个头的角色，头数由 $K$ 取代，头
+维数由秩 $R$ 取代。这一构造换来了因子共享与低秩核心，代价是非平凡的因果掩码；
+作者对这一问题基本未作解释，在阅读
+\cref{tab:pre-training-methods} 中的困惑度时应牢记这一点。TensorCoder
+\cite{zhang2020tensorcoder} 付出了类似代价：其按维注意力把复杂度从 $\mathcal{O}(T^2 d)$ 降到
+$\mathcal{O}(T d^2)$，但仅限编码器，因为
+因果掩码使解码器回到 $\mathcal{O}(T^2 d^2)$。总体而言，张量网络能够在结构上改变
+注意力，而自回归掩码是其中的约束性限制。
+
+更大一类方法保持注意力机制不变，转而单独对权重
+投影进行张量化，这延续了早期对神经网络张量化的工作
+\cite{novikov2015tensorizing}。GPT-TTM \cite{chekalina2023ttm} 把这一思想用于 LLM，
+用 TTM 参数化替换稠密层中的每一个投影矩阵
+(\cref{sec:component-ffn})。困难正如该处所述：低 TTM 秩既是该格式
+值得使用的区间，也是其全秩
+表达能力最难保持的区间。Hypoformer \cite{li2022hypoformer} 以一个
+混合层 $\mat{W} = \begin{bmatrix} \mat{W}_{\rm dense} \\ \mat{W}_{\rm TTM}  \end{bmatrix}$ 应对这一问题，其中 $\mat{W}_{\rm dense} \in \R^{\alpha I \times J}$、$\mat{W}_{\rm TTM} \in \R^{(1-\alpha)I \times J}$，低秩 TTM
+分支与稠密分支并行传播，输入向量在两个分支之间
+按受控比例 ($\alpha$ / $1 - \alpha$) 划分，从而把张量网络的压缩能力与
+稠密矩阵的全秩表达能力结合起来。不过，这两种方法都在训练前
+固定了秩，因此要满足给定预算需要代价高昂的搜索。CoMERA \cite{yang2024comera} 则把秩本身纳入
+优化：它将 TT 参数化与对角因子交错排列
+\begin{equation*}
+  \ten{W} = \ten{G}^{(1)} \leftindex_{-1} \times^1 ~ \mat{D}^{(1)} \leftindex_{-1} \times^1 ~ \ten{G}^{(2)} \leftindex_{-1} \times^1 ~ \dots \leftindex_{-1} \times^1 ~ \mat{D}^{(N - 1)} \leftindex_{-1} \times^1 ~ \ten{G}^{(N)}
+\end{equation*}
+从而在一个多目标优化问题中，借助矩阵 $\mat{D}^{(n)} \in \R^{R_{n} \times R_{n}}$ 在训练期间动态调整 TT 秩。
+作者还给出了经 CUDA Graph 优化的框架实现。
+TT 族并非唯一选择；Shapeshifter \cite{pahani2021shapeshifter} 转而把所有矩阵参数化为
+克罗内克积之和，尽管其中项数同样是事先固定的。
+
+\paragraph{对比。} 
+\Cref{tab:pre-training-methods} 对比张量化预训练方法，且仅限于那些在语言建模基准上报告了困惑度的工作。只有多重线性注意力 \cite{ma2019tensorized} 与 GPT-TTM \cite{chekalina2023ttm} 满足这一条件，且各自在两个经过验证的规模上出现。但二者的证据强度并不相同：多重线性注意力 \cite{ma2019tensorized} 是与深度和宽度都不同的 Transformer-XL 基线比较的，其压缩效果可能反映了配置的改变。Shapeshifter \cite{pahani2021shapeshifter}、Hypoformer \cite{li2022hypoformer} 与 CoMERA \cite{yang2024comera} 被略去，因为它们完全没有报告语言建模验证，其压缩主张无法与 LM 预训练规模的证据相比较。鉴于就标度定律 (Scaling Laws) \cite{kaplan2020scalinglaws} 而言，标度行为是预训练阶段的核心关切，这一区分在此尤为重要；因此，在下结论之前必须了解某一方法的经验证据究竟覆盖到多远。
+
+
+\begin{table}[!htbp]
+\centering
+\caption{\footnotesize 张量化预训练方法对比。各列定义如下：「分解」表示底层分解及其秩 $R$；「基线」表示计算 $\Delta$ PPL 时对照的模型；「参数量」给出张量化模型的参数数目；CR 表示压缩率，$\rm CR = \frac{\text{\# parameters}_{\rm baseline}}{\text{\# parameters}_{\rm tensorized}}$。我们计算 $\Delta \rm PPL = \frac{\text{perplexity}_{\rm tensorized} - \text{perplexity}_{\rm baseline}}{\text{perplexity}_{\rm baseline}} \times 100$，其中 $\downarrow$ 表示数值越低越好。}
+
+\label{tab:pre-training-methods}
+\footnotesize
+\begin{tblr}{
+  width = \textwidth,
+  colspec = {Q[2.0cm,m,c]Q[2.0cm,m,c]Q[2.75cm,m,c]Q[2.5cm,m,c]Q[1.25cm,m,c]Q[0.8cm,m,c]X[m,c]},
+  row{1} = {font=\bfseries},
+  cell{2}{1} = {r=2}{},
+  cell{2}{2} = {r=2}{},
+  cell{4}{1} = {r=2}{},
+  rowsep = 3pt,
+  hline{1,6} = {1pt},
+  hline{2} = {0.6pt},
+  hline{4} = {0.6pt, gray7},
+}
+方法 & 分解 & 基线 & 训练 / 测试数据集 & $\#$参数量 & CR &$\Delta$ PPL ($\downarrow$) \\
+多重线性注意力 (core 2) \cite{ma2019tensorized} & BT & Transformer-XL Large (257M) \cite{dai2019transformerxl} & WikiText-103 / WikiText-103 & 85M & 3.01\textsuperscript{*} & 3.28 \\
+ & & Transformer-XL Large (0.8B)  & One-Billion / One-Billion & 160M & 5.0\textsuperscript{*} & -10.55 \\
+GPT-TTM \cite{chekalina2023ttm} & TTM (R=64) & $\text{GPT-2}_{\rm small}$ \cite{radford2019language} & WikiText-103 / WikiText-103 & 84M & 1.49 & 3.02 \\
+ & TTM (R=72) & $\text{GPT-2}_{\rm medium}$ \cite{radford2019language} & OpenWebText / WikiText-103 & 218M & 1.63 & 50.05 \\
+\end{tblr}
+\vspace{2pt}
+\begin{flushleft}
+\footnotesize
+\textsuperscript{*} 该压缩率是相对一个深度与宽度均不相同的基线计算的；参见正文讨论。
+
+\end{flushleft}
+\end{table}
+
+
