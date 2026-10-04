@@ -2,9 +2,10 @@
 """Generate app/library.html: embeds bibliography.csv as JSON with local-PDF mapping."""
 import json, os, re, csv
 import urllib.parse
+from pathlib import Path
 
-LIT = "/Users/bjergsen/Documents/GitHub/tn-lm/lit"
-OUT = "/Users/bjergsen/Documents/GitHub/tn-lm/app/library.html"
+LIT = str(Path(__file__).resolve().parent)
+OUT = str(Path(LIT).parent / "app/library.html")
 
 with open(os.path.join(LIT, "bibliography.csv"), encoding="utf-8") as f:
     bib = list(csv.DictReader(f))
@@ -167,6 +168,8 @@ for i, r in enumerate(bib):
         links.append(["GitHub", v["github"]])
     if v.get("homepage"):
         links.append(["项目主页", v["homepage"]])
+    if v.get("reading"):
+        links.append(["中文解读", v["reading"]])
     f = fname(r)
     local = os.path.join(LIT, "papers", f)
     pdf = f"../lit/papers/{f}" if os.path.exists(local) else None
@@ -195,11 +198,28 @@ for i, r in enumerate(bib):
         "pdf": pdf,
     })
 
+# Sources named in the memo but absent from the original search export.
+extra_path = Path(LIT) / "audit/memo_extra_papers.json"
+if extra_path.exists():
+    for extra in json.loads(extra_path.read_text()):
+        title_key = lambda title: ''.join(c for c in title.casefold() if c.isalnum())
+        existing = next((r for r in records if r["u"] == extra["u"]
+                         or title_key(r["t"]) == title_key(extra["t"])), None)
+        if existing is None:
+            records.append({k: v for k, v in extra.items() if k != "key"})
+        else:
+            # Reviewed metadata enriches the export without discarding local PDFs.
+            old_links = [["已有题录链接", existing["u"]], *existing.get("lk", [])]
+            existing.update({k: v for k, v in extra.items()
+                             if k not in {"key", "pdf", "c"}})
+            existing["lk"] += [link for link in old_links
+                               if link[1] != existing["u"]
+                               and not any(item[1] == link[1] for item in existing["lk"])]
 data_js = json.dumps(records, ensure_ascii=False)
 n_pdf = sum(1 for r in records if r["pdf"])
 n_vk = sum(1 for r in records if r["vk"])
 n_unv = len(records) - n_vk
-tot_cit = sum(r["c"] for r in records)
+tot_cit = sum(r["c"] or 0 for r in records)
 years = [r["y"] for r in records if r["y"]]
 yspan = f"{min(years)}–{max(years)}"
 
@@ -304,7 +324,9 @@ table.flat .tt{font-family:var(--serif);font-size:15px}
 table.flat .tt a{color:var(--ink);border-bottom:1px solid var(--tint)}
 table.flat .tt a:hover{color:var(--accent)}
 footer{margin-top:70px;border-top:2px solid var(--ink);padding:26px 0 60px;font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.linked-paper{outline:2px solid var(--accent);outline-offset:-2px;background:var(--surface)}
 </style>
+<link rel="stylesheet" href="local-index.css">
 </head>
 <body>
 <nav id="side">
@@ -365,8 +387,10 @@ footer{margin-top:70px;border-top:2px solid var(--ink);padding:26px 0 60px;font-
   <div id="list"></div>
 </section>
 
-<footer><span>MPS × LLM · Library</span><span>原始数据：<a href="https://raw.githubusercontent.com/hy-iu/tn-lm/main/lit/bibliography.csv" download>bibliography.csv ↓</a> · <a href="https://raw.githubusercontent.com/hy-iu/tn-lm/main/lit/trend_data.csv" download>trend_data.csv ↓</a></span><span>来源：学术检索索引 / arXiv / OpenAlex，仅供参考</span></footer>
+<footer><span>MPS × LLM · Library</span><span>补充题录：<a href="https://raw.githubusercontent.com/hy-iu/tn-lm/main/lit/audit/memo_extra_papers.json">正文引用补充</a> · 原始数据：<a href="https://raw.githubusercontent.com/hy-iu/tn-lm/main/lit/bibliography.csv" download>bibliography.csv ↓</a> · <a href="https://raw.githubusercontent.com/hy-iu/tn-lm/main/lit/trend_data.csv" download>trend_data.csv ↓</a></span><span>来源：学术检索索引 / arXiv / OpenAlex，仅供参考</span></footer>
 </div></main>
+<script src="local-index-data.js"></script>
+<script src="local-index.js"></script>
 <script>
 const PAPERS=__DATA__;
 // 本地 PDF 存档（lit/papers/）不随 Pages 发布，线上隐藏徽章避免 404
@@ -381,15 +405,16 @@ function mainOf(cl){const m=new Set();MAINMAP.forEach(([k,g])=>{if(cl.indexOf(k)
 const S={q:"",g:"all",ymin:null,ymax:null,groupBy:"main",sortKey:"c",sortDir:-1,closed:new Set(),openAbs:new Set()};
 function esc(s){return String(s==null?"":s)}
 function rowEl(p,i){
- const d=document.createElement("div");d.className="grow";
+ const d=document.createElement("div");d.className="grow";d.dataset.paperIndex=i;
  const r1=document.createElement("div");r1.className="r1";
  const rt=document.createElement("span");rt.className="rt";
  const a=document.createElement("a");a.href=p.u;a.target="_blank";a.rel="noopener";a.textContent=p.t;rt.appendChild(a);
  r1.appendChild(rt);
  const addBadge=(txt,cls)=>{const b=document.createElement("span");b.className="badge "+cls;b.textContent=txt;r1.appendChild(b)};
  addBadge(p.y||"—","");
- addBadge("被引 "+p.c,p.c>50?"c":"");
+ addBadge("被引 "+(p.c==null?"—":p.c),p.c>50?"c":"");
  if(p.pdf&&LOCAL_PDF){const b=document.createElement("span");b.className="badge pdf";const l=document.createElement("a");l.href=p.pdf;l.target="_blank";l.rel="noopener";l.textContent="PDF";b.appendChild(l);r1.appendChild(b)}
+ appendLocalAssets(r1,[p.u,...(p.lk||[]).map(x=>x[1])]);
  d.appendChild(r1);
  const meta=document.createElement("div");meta.className="rmeta";
  meta.textContent=(p.a?p.a+" · ":"")+(p.v||"")+(p.cl?" ｜ 命中："+p.cl:"");
@@ -412,13 +437,14 @@ function flatTable(ps){
   th.addEventListener("click",()=>{if(S.sortKey===k)S.sortDir*=-1;else{S.sortKey=k;S.sortDir=k==="t"?1:-1}render()});
   head.appendChild(th)});
  tb.appendChild(head);
- ps.forEach(({p})=>{const tr=document.createElement("tr");
+ ps.forEach(({p,i})=>{const tr=document.createElement("tr");tr.dataset.paperIndex=i;
   const td=document.createElement("td");td.className="tt";
   const a=document.createElement("a");a.href=p.u;a.target="_blank";a.rel="noopener";a.textContent=p.t;
   if(p.pdf&&LOCAL_PDF){const l=document.createElement("a");l.href=p.pdf;l.target="_blank";l.textContent=" · PDF";td.appendChild(l)}
+  appendLocalAssets(td,[p.u,...(p.lk||[]).map(x=>x[1])]);
   td.prepend(a);tr.appendChild(td);
   const y=document.createElement("td");y.textContent=p.y||"—";tr.appendChild(y);
-  const c=document.createElement("td");c.textContent=p.c;tr.appendChild(c);
+  const c=document.createElement("td");c.textContent=p.c==null?"—":p.c;tr.appendChild(c);
   const v=document.createElement("td");v.style.cssText="font-size:12px;color:var(--muted)";v.textContent=p.v;tr.appendChild(v);
   tb.appendChild(tr)});
  return tb;
@@ -479,6 +505,21 @@ document.querySelectorAll(".chip[data-g]").forEach(ch=>ch.addEventListener("clic
  document.querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));
  ch.classList.add("on");S.g=ch.dataset.g;render()}));
 render();
+function openLinkedPaper(){
+ if(!location.hash.startsWith("#paper="))return;
+ let url;try{url=decodeURIComponent(location.hash.slice(7))}catch{return}
+ const i=PAPERS.findIndex(p=>p.u===url||(p.lk||[]).some(link=>link[1]===url));
+ if(i<0)return;
+ S.q="";S.g="all";S.ymin=null;S.ymax=null;S.closed.clear();S.openAbs.add(i);
+ document.getElementById("q").value="";
+ document.getElementById("ymin").value="";document.getElementById("ymax").value="";
+ document.querySelectorAll(".chip[data-g]").forEach(ch=>ch.classList.toggle("on",ch.dataset.g==="all"));
+ render();
+ const row=document.querySelector('[data-paper-index="'+i+'"]');
+ if(row){row.classList.add("linked-paper");row.scrollIntoView({block:"center"});row.tabIndex=-1;row.focus({preventScroll:true})}
+}
+window.addEventListener("hashchange",openLinkedPaper);
+openLinkedPaper();
 /* theme */
 function t(){const r=document.documentElement;const cur=r.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');const n=cur==='dark'?'light':'dark';r.setAttribute('data-theme',n);localStorage.setItem('tn-theme',n);}
 (function(){const s=localStorage.getItem('tn-theme');if(s)document.documentElement.setAttribute('data-theme',s);else if(matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.setAttribute('data-theme','dark');})();

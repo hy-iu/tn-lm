@@ -392,3 +392,5 @@ idx,file,status,source,bytes
 301,nd_TensorSpike_Tractable_Probabilistic_Modeling_for_N.pdf,fail,https://openreview.net/pdf?id=i37ukD43nT,0
 302,nd_Variational_Algorithms_in_Quantum_Artificial_Intel.pdf,ok,https://inspirehep.net/files/9f18be0dd7295a8b9c34debc9474edbf,4420082
 303,nd_Variational_Quantum_Circuits_for_Efficient_Transfo.pdf,fail,https://openreview.net/pdf?id=tdc6RrmUzh,0
+304,2024_arxiv_2405.04590.pdf,ok,https://arxiv.org/pdf/2405.04590,1417947
+305,2025_arxiv_2509.21287.pdf,ok,https://arxiv.org/pdf/2509.21287,737910

@@ -11,7 +11,7 @@ usage: /opt/homebrew/Caskroom/miniforge/base/bin/python3 lit/audit/trend_refresh
 import argparse, csv, os, re
 from collections import Counter
 
-LIT = "/Users/bjergsen/Documents/GitHub/tn-lm/lit"
+LIT = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "lit")
 MAIN = {
     "MPS 语言模型": "MPS 作模型（序列/语言/生成）",
     "MPS/序列建模": "MPS 作模型（序列/语言/生成）",
@@ -84,7 +84,14 @@ import matplotlib.pyplot as plt
 from matplotlib import font_manager
 
 avail = {f.name for f in font_manager.fontManager.ttflist}
-font = next((c for c in ["PingFang SC", "Songti SC", "Noto Sans CJK SC", "Heiti SC"] if c in avail), None)
+# WSL/Linux 常无预装 CJK 字体；检测到 Windows 盘（/mnt/c）或 Noto 包时先注册再选
+for fp in ("/mnt/c/Windows/Fonts/msyh.ttc", "/mnt/c/Windows/Fonts/simsun.ttc",
+           "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"):
+    if os.path.exists(fp):
+        font_manager.fontManager.addfont(fp)
+avail = {f.name for f in font_manager.fontManager.ttflist}
+font = next((c for c in ["PingFang SC", "Songti SC", "Noto Sans CJK SC", "Heiti SC",
+                         "Microsoft YaHei", "SimSun"] if c in avail), None)
 if font:
     plt.rcParams["font.family"] = font
 plt.rcParams["axes.unicode_minus"] = False

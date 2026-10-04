@@ -1,0 +1,132 @@
+{
+  "checked_on": "2026-09-30",
+  "papers": [
+    {
+      "arxiv": "2403.12969",
+      "id": "p25",
+      "title": "Entangling Machine Learning with Quantum Tensor Networks",
+      "authors": "Constantijn van der Poel, Dan Zhao",
+      "year": 2024,
+      "venue": "arXiv 预印本",
+      "before_body": "§2 表格简述",
+      "before_key": false,
+      "summary": "以具有长程关联的 Motzkin 链作为语言结构的代理任务，比较稠密 MPS 与 factored-core MPS。因子化核引入水平、垂直键和高度，降低局部表示成本；实验显示较强的合法链判别能力和小样本表现。",
+      "interpretation": "本课题解读：可用于构造受控的 χ–长度实验，但合法性分类与概率分布拟合应分开评估。原文附录显示高 AUC 可与较弱的分布拟合并存。因子化后的有效稠密键维为 χ_h^h，不能把局部键较小直接解释为突破 MPS 的信息上界；成本分析还依赖高度随长度增长的假设。",
+      "sources": [
+        "https://arxiv.org/abs/2403.12969",
+        "https://arxiv.org/html/2403.12969v1"
+      ]
+    },
+    {
+      "arxiv": "2311.05050",
+      "id": "p26",
+      "title": "Sequential learning on a Tensor Network Born machine with Trainable Token Embedding",
+      "authors": "Wanda Hou, Miao Li, Yi-Zhuang You",
+      "year": 2025,
+      "venue": "Machine Learning: Science and Technology 6, 025071（预印本 2023）",
+      "before_body": "未找到",
+      "before_key": false,
+      "summary": "用可训练的正算符值测量（POVM）编码 token，取代固定 one-hot 物理指标；QR 参数化保证测量算符的正性与完备性，并使物理维度成为可调超参数。RNA 实验中 NLL 和相关性拟合优于固定嵌入；与 GPT-2 的比较涉及单点统计及相关性指标。",
+      "interpretation": "本课题解读：表达瓶颈可能同时来自物理维度 d、token 嵌入和键维 χ。建议做 one-hot／POVM × d × χ 的消融，在相同训练预算下比较 NLL 与跨切分互信息。RNA 的小字母表结果不能直接外推到自然语言大词表，也不能把单点统计领先解释为整体语言建模能力超过 GPT-2。",
+      "sources": [
+        "https://arxiv.org/abs/2311.05050",
+        "https://arxiv.org/html/2311.05050v2",
+        "https://doi.org/10.1088/2632-2153/adde29"
+      ]
+    },
+    {
+      "arxiv": "2603.12026",
+      "id": "p12",
+      "title": "Efficient Generative Modeling with Unitary Matrix Product States Using Riemannian Optimization",
+      "authors": "Haotong Duan, Zhongming Chen, Ngai Wong",
+      "year": 2026,
+      "venue": "arXiv 预印本",
+      "before_body": "图表里程碑，无独立正文解读",
+      "before_key": true,
+      "summary": "以归一化约束 Z=1 消除生成式 MPS 更新中的整体尺度冗余，将训练写成结构化流形上的优化，提出 space-decoupling 的 Riemannian 方法。在 Bars-and-Stripes 与 EMNIST 上验证更新稳定性、收敛效率和生成质量。",
+      "interpretation": "本课题解读：先排除优化失败，再解释 χ 扫描的饱和。可将流形优化作为 Born machine 的对照臂，与规范化后的常规优化比较收敛 NLL、时间和多次初始化结果。这里的 unitary MPS 强调约束结构，uniform MPS 强调各站点共享核，两者不是同一概念；图像实验也不直接证明长上下文优势。",
+      "sources": [
+        "https://arxiv.org/abs/2603.12026",
+        "https://arxiv.org/html/2603.12026v1"
+      ]
+    },
+    {
+      "arxiv": "1711.01416",
+      "id": "p27",
+      "title": "Language as a matrix product state",
+      "authors": "Vasily Pestun, John Terilla, Yiannis Vlassopoulos",
+      "year": 2017,
+      "venue": "arXiv 预印本",
+      "before_body": "§1 提及标题，缺少独立解读",
+      "before_key": false,
+      "summary": "把语言视为幺半群，以复矩阵表示词元及其串接，并构造相容的平移不变概率测度；该测度可解释为平移不变 MPS 经 Born 规则产生的语言统计模型。",
+      "interpretation": "本课题解读：这是共享矩阵核与 Born 概率模型的理论源头，可帮助明确词元矩阵乘积、边界条件及归一化要求。它提出的是概率语言模型的数学构造，不能据此声称已在现代自然语言基准上验证了小 χ 的效果；从形式化到训练和评估仍需独立实验。",
+      "sources": [
+        "https://arxiv.org/abs/1711.01416"
+      ]
+    },
+    {
+      "arxiv": "1803.10908",
+      "id": "p28",
+      "title": "Matrix product operators for sequence-to-sequence learning",
+      "authors": "Chu Guo, Zhanming Jie, Wei Lu, Dario Poletti",
+      "year": 2018,
+      "venue": "Physical Review E 98, 042114",
+      "before_body": "未找到",
+      "before_key": false,
+      "summary": "直接训练 MPO 学习输入序列到输出序列的映射，用于元胞自动机与非线性耦合映射，并给出元胞自动机的解析 MPO 表示；还展示分类用途，与 CRF 和双向 LSTM 比较。",
+      "interpretation": "本课题解读：MPO 不只用于事后压缩权重，也可作为可训练的序列映射本体。可用具有已知局部更新规则的合成数据校验所需键维与拟合精度，再与概率 MPS 对照；物理动力学预测和自然语言翻译、next-token 建模的目标不同，不能互换实验结论。",
+      "sources": [
+        "https://arxiv.org/abs/1803.10908",
+        "https://journals.aps.org/pre/abstract/10.1103/PhysRevE.98.042114"
+      ]
+    },
+    {
+      "arxiv": "1905.04271",
+      "id": "p29",
+      "title": "Mutual Information Scaling and Expressive Power of Sequence Models",
+      "authors": "Huitao Shen",
+      "year": 2019,
+      "venue": "arXiv 预印本",
+      "before_body": "未找到",
+      "before_key": false,
+      "summary": "研究序列模型的互信息随时间间距的衰减。结合线性 RNN 理论与非线性 RNN 实验，讨论循环模型的指数衰减和 Transformer 捕获较慢长程关联的能力，并指出自然语言数据的非均匀性会影响统计。",
+      "interpretation": "本课题解读：应同时测量位置间互信息 I(x_t;x_{t+r}) 与整段前后缀互信息，两者回答不同问题。可把距离衰减曲线作为 χ 扫描的辅助诊断，并控制数据非平稳性；这篇论文不直接给出 χ*(W)，也不能将线性 RNN 的解析结论视为所有非线性循环模型的普遍定理。",
+      "sources": [
+        "https://arxiv.org/abs/1905.04271",
+        "https://arxiv.org/html/1905.04271v1"
+      ]
+    },
+    {
+      "arxiv": "1710.10248",
+      "id": "p30",
+      "title": "Tensor network language model",
+      "authors": "Vasily Pestun, Yiannis Vlassopoulos",
+      "year": 2017,
+      "venue": "arXiv 预印本",
+      "before_body": "§1 提及标题，缺少独立解读",
+      "before_key": false,
+      "summary": "在有向无环图的节点放置多线性张量映射、边上放置向量空间，以张量网络描述具有长程关联的语言统计；分析树图的参数模空间，并讨论统计翻译等应用。",
+      "interpretation": "本课题解读：为链式 MPS 与层级／树状网络的比较提供理论背景。可检验不同拓扑在相同参数与计算预算下保留关联的差异；与 1711.01416 的矩阵链概率模型应分别引用。其树图分析和翻译讨论不等于现代大规模 TTN 语言模型的实测成绩。",
+      "sources": [
+        "https://arxiv.org/abs/1710.10248"
+      ]
+    },
+    {
+      "arxiv": "2608.30505",
+      "id": "p18",
+      "title": "Tensor Methods for Language Models: From Token Representation to Training, Adaptation, Inference, Compression, and Interpretability",
+      "authors": "Matvei Tarasov, Salman Ahmadi-Asl, Andre L. F. de Almeida, Andrzej Cichocki",
+      "year": 2026,
+      "venue": "arXiv 预印本",
+      "before_body": "§2–§3 讨论及推荐阅读",
+      "before_key": true,
+      "summary": "以 tokenization、嵌入、预训练、适配、压缩、推理、可解释性七阶段，以及嵌入／注意力／前馈模块视角，统一梳理语言模型张量方法；提出 ρ_gap 衡量理论压缩与实际系统加速之间的差距，并讨论与量化、剪枝和蒸馏的组合。",
+      "interpretation": "本课题解读：用于组织路线和实验协议，要求同时报告参数量、显存、延迟／吞吐与质量指标。综述讨论张量化学生及压缩后蒸馏，但其引用覆盖不能证明 teacher→可调 χ MPS 学生的研究完全不存在；本项目可把此方向作为待进一步系统检索和实测的候选课题。",
+      "sources": [
+        "https://arxiv.org/abs/2608.30505",
+        "https://arxiv.org/html/2608.30505v1"
+      ]
+    }
+  ]
+}

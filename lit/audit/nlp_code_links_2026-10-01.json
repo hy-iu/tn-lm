@@ -1,0 +1,136 @@
+{
+  "checked_on": "2026-10-01",
+  "scope": "新增 NLP 评测相关 8 篇；检查公开链接和 README，未安装运行代码。",
+  "papers": [
+    {
+      "title": "Tensor networks for probabilistic sequence modeling",
+      "status": "public_code_partial",
+      "note": "作者 MIT 代码可访问；README 明确未包含完整 regex sampler。",
+      "links": [
+        [
+          "GitHub",
+          "https://github.com/jemisjoky/umps_code"
+        ]
+      ],
+      "sources": [
+        "https://github.com/jemisjoky/umps_code"
+      ]
+    },
+    {
+      "title": "Tensorized Embedding Layers for Efficient Model Compression",
+      "status": "public_code",
+      "note": "原文所列 TT-embedding 实验仓库可访问；另有作者 TT-PyTorch 实现。",
+      "links": [
+        [
+          "GitHub",
+          "https://github.com/tt-embedding/tt-embeddings"
+        ],
+        [
+          "作者 TT-PyTorch",
+          "https://github.com/KhrulkovV/tt-pytorch"
+        ],
+        [
+          "发表版",
+          "https://aclanthology.org/2020.findings-emnlp.436/"
+        ]
+      ],
+      "sources": [
+        "https://arxiv.org/html/1901.10787",
+        "https://github.com/tt-embedding/tt-embeddings",
+        "https://github.com/KhrulkovV/tt-pytorch"
+      ]
+    },
+    {
+      "title": "Language Modeling Using Tensor Trains",
+      "status": "public_code",
+      "note": "作者仓库可访问，含数据、模型和训练入口；未运行复现。",
+      "links": [
+        [
+          "GitHub",
+          "https://github.com/shuishen112/tensortrainlm"
+        ]
+      ],
+      "sources": [
+        "https://github.com/shuishen112/tensortrainlm"
+      ]
+    },
+    {
+      "title": "Saten: Sparse Augmented Tensor Networks for Post-Training Compression of Large Language Models",
+      "status": "public_code",
+      "note": "论文所列仓库可访问，README 给出 Llama-3.2-3B 实验入口；不代表每项论文实验均已复现。",
+      "links": [
+        [
+          "GitHub",
+          "https://github.com/rmsolgi/saten"
+        ]
+      ],
+      "sources": [
+        "https://aclanthology.org/2025.findings-emnlp.1287.pdf",
+        "https://github.com/rmsolgi/saten"
+      ]
+    },
+    {
+      "title": "M²RNN: Non-Linear RNNs with Matrix-Valued States for Scalable Language Modeling",
+      "status": "public_code_and_weights",
+      "note": "作者训练框架、内核仓库与模型权重集合均可访问。",
+      "links": [
+        [
+          "训练代码",
+          "https://github.com/open-lm-engine/lm-engine"
+        ],
+        [
+          "内核",
+          "https://github.com/open-lm-engine/accelerated-model-architectures"
+        ],
+        [
+          "模型权重",
+          "https://huggingface.co/collections/open-lm-engine/m2rnn"
+        ]
+      ],
+      "sources": [
+        "https://github.com/open-lm-engine/lm-engine",
+        "https://github.com/open-lm-engine/accelerated-model-architectures",
+        "https://huggingface.co/collections/open-lm-engine/m2rnn"
+      ]
+    },
+    {
+      "title": "Sequence processing with quantum-inspired tensor networks",
+      "status": "public_code",
+      "note": "作者仓库可访问；CQCL 旧地址现重定向至 Quantinuum。",
+      "links": [
+        [
+          "GitHub",
+          "https://github.com/Quantinuum/classification-with-qttn"
+        ]
+      ],
+      "sources": [
+        "https://www.nature.com/articles/s41598-024-84295-2",
+        "https://github.com/Quantinuum/classification-with-qttn"
+      ]
+    },
+    {
+      "title": "A Generalized Language Model in Tensor Space",
+      "status": "author_link_unverified_access",
+      "note": "作者主页列有代码链接；本轮无法读取 GitHub/API/README，当前可访问性与许可证未确认。",
+      "links": [
+        [
+          "GitHub（作者主页所列）",
+          "https://github.com/shuishen112/AAAI19-TSLM"
+        ]
+      ],
+      "sources": [
+        "https://shuishen112.github.io/zhansu/"
+      ]
+    },
+    {
+      "title": "Language Modeling Using Entanglement Enhanced Tensor Trains",
+      "status": "not_located",
+      "note": "检查原文、ACL 页面并定向检索，尚未定位作者代码链接；不等于确认未开源。",
+      "links": [],
+      "sources": [
+        "https://aclanthology.org/2025.rocling-main.27/",
+        "https://aclanthology.org/2025.rocling-main.27.pdf"
+      ]
+    }
+  ]
+}

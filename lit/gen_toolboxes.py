@@ -18,9 +18,10 @@ import re
 import sys
 from collections import OrderedDict
 
-LIT = "/Users/bjergsen/Documents/GitHub/tn-lm/lit"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+LIT = os.path.join(ROOT, "lit")
 AUD = os.path.join(LIT, "audit")
-OUT = "/Users/bjergsen/Documents/GitHub/tn-lm/app/toolboxes.html"
+OUT = os.path.join(ROOT, "app", "toolboxes.html")
 TODAY = "2026-09-27"
 
 SRC_LABEL = {"llms": "Tensor Methods for LLMs 清单", "tnn": "Tensorial NN 清单"}
@@ -549,6 +550,7 @@ table.plain td.ghc a{word-break:break-all}
 .ghn{font-family:var(--mono);font-size:10px;color:var(--muted)}
 footer{margin-top:70px;border-top:2px solid var(--ink);padding:26px 0 60px;font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 </style>
+<link rel="stylesheet" href="local-index.css">
 </head>
 <body>
 <nav id="side">
@@ -738,6 +740,31 @@ footer{margin-top:70px;border-top:2px solid var(--ink);padding:26px 0 60px;font-
       </tr>
     </tbody>
   </table>
+
+  <h3>社区维护的精选清单（3）</h3>
+  <table class="plain">
+    <thead><tr><th>清单仓库</th><th>定位与收录范围</th><th>配套论文</th><th>链接</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="tt"><b>ma-tt-a/awesome-tensor-methods-for-llms</b></td>
+        <td>大模型张量方法全景清单（嵌入、注意力、压缩、微调、可解释性逐节维护），本页工具表 <b>llms 表</b>的取数来源。</td>
+        <td class="num"><a href="https://arxiv.org/abs/2608.30505" target="_blank" rel="noopener">arXiv:2608.30505</a></td>
+        <td class="num"><a href="https://github.com/ma-tt-a/awesome-tensor-methods-for-llms" target="_blank" rel="noopener">GitHub</a></td>
+      </tr>
+      <tr>
+        <td class="tt"><b>tnbar/awesome-tensorial-neural-networks</b></td>
+        <td>张量化神经网络专题清单（张量卷积/循环/注意力与软硬件协同），本页工具表 <b>tnn 表</b>的取数来源。</td>
+        <td class="num"><a href="https://arxiv.org/abs/2302.09019" target="_blank" rel="noopener">arXiv:2302.09019</a></td>
+        <td class="num"><a href="https://github.com/tnbar/awesome-tensorial-neural-networks" target="_blank" rel="noopener">GitHub</a></td>
+      </tr>
+      <tr>
+        <td class="tt"><b>vantienpham/Awesome-Tensor-Decomposition</b></td>
+        <td>模型压缩方向的张量分解资源清单（论文 / 工具 / 综述并收，无配套综述论文）。本页工具表未取自该清单，作为压缩专题的延伸检索入口收录。</td>
+        <td class="num">—</td>
+        <td class="num"><a href="https://github.com/vantienpham/Awesome-Tensor-Decomposition" target="_blank" rel="noopener">GitHub</a></td>
+      </tr>
+    </tbody>
+  </table>
 </section>
 
 <section id="formats">
@@ -770,6 +797,8 @@ footer{margin-top:70px;border-top:2px solid var(--ink);padding:26px 0 60px;font-
 
 <footer><span>MPS × LLM · Toolboxes</span><span>来源：ma-tt-a/awesome-tensor-methods-for-llms · tnbar/awesome-tensorial-neural-networks · 清单外补充见 lit/audit/toolbox_extra.csv</span><span>核验于 __TODAY__</span></footer>
 </div></main>
+<script src="local-index-data.js"></script>
+<script src="local-index.js"></script>
 <script>
 const D=__DATA__;
 const S={q:"",g:"all",sortKey:"st",sortDir:-1,closed:new Set(),open:new Set()};
@@ -796,6 +825,7 @@ function toolEl(p,i){
  const ver=el("span","ver");
  (p.u||[]).forEach(([lb,url])=>ver.appendChild(link(url,lb,lb==="GitHub"?"gh":"")));
  if(p.gh)ver.appendChild(link("https://github.com/"+p.gh+"/commits","提交历史"));
+ appendLocalAssets(ver,(p.u||[]).map(x=>x[1]).concat(p.gh?["https://github.com/"+p.gh]:[]));
  r1.appendChild(ver);
  d.appendChild(r1);
  d.appendChild(el("div","capline",(p.cap&&p.cap.length)?p.cap[0][1]:"（清单与仓库都没有给出一句话说明）"));

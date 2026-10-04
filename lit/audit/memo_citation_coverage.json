@@ -1,0 +1,284 @@
+{
+  "checked_on": "2026-10-01",
+  "groups": [
+    {
+      "mention": "主线一，MPS 作为学习模型。",
+      "matched_blocks": 1,
+      "references": [
+        "Supervised Learning with Quantum-Inspired Tensor Networks",
+        "Unsupervised generative modeling using matrix product states"
+      ]
+    },
+    {
+      "mention": "主线二，MPO/TT 压缩。",
+      "matched_blocks": 1,
+      "references": [
+        "Tensorizing neural networks",
+        "Compactifai: extreme compression of large language models using quantum-inspired tensor networks"
+      ]
+    },
+    {
+      "mention": "主线三，量子/量子启发大模型。",
+      "matched_blocks": 1,
+      "references": [
+        "Quantum large language models via tensor network disentanglers"
+      ]
+    },
+    {
+      "mention": "Oseledets 2011 年",
+      "matched_blocks": 1,
+      "references": [
+        "Tensor-Train Decomposition"
+      ]
+    },
+    {
+      "mention": "多篇综述系统梳理",
+      "matched_blocks": 1,
+      "references": [
+        "Tensor networks meet neural networks: A survey and future perspectives",
+        "Quantum-inspired tensor networks in machine learning models"
+      ]
+    },
+    {
+      "mention": "奠基性工作是 Stoudenmire",
+      "matched_blocks": 1,
+      "references": [
+        "Supervised Learning with Quantum-Inspired Tensor Networks",
+        "Exponential Machines",
+        "TensorNetwork for Machine Learning"
+      ]
+    },
+    {
+      "mention": "这条线随后扩展",
+      "matched_blocks": 1,
+      "references": [
+        "Patch-based Medical Image Segmentation using Matrix Product State Tensor Networks",
+        "Multi-Layered Projected Entangled Pair States for Image Classification",
+        "A matrix product state model for simultaneous classification and generation",
+        "Variational tensor neural networks for deep learning"
+      ]
+    },
+    {
+      "mention": "Han 等人（PRX 2018）",
+      "matched_blocks": 1,
+      "references": [
+        "Unsupervised generative modeling using matrix product states",
+        "Probabilistic modeling with matrix product states",
+        "Tensor networks for unsupervised machine learning"
+      ]
+    },
+    {
+      "mention": "在模型类表达力方面",
+      "matched_blocks": 1,
+      "references": [
+        "Expressive power of tensor-network factorizations for probabilistic modeling",
+        "Quantum tensor networks, stochastic processes, and weighted automata"
+      ]
+    },
+    {
+      "mention": "Miller、Rabusseau 与 Terilla（AISTATS",
+      "matched_blocks": 1,
+      "references": [
+        "Tensor networks for probabilistic sequence modeling"
+      ]
+    },
+    {
+      "mention": "Novikov 等人 2015 年的",
+      "matched_blocks": 1,
+      "references": [
+        "Tensorizing neural networks",
+        "Tensor-train recurrent neural networks for video classification",
+        "Compressing lstm networks by matrix product operators",
+        "Compressing recurrent neural networks with tensor ring for action recognition",
+        "Learning Compact Recurrent Neural Networks with Block-Term Tensor Decomposition",
+        "Convolutional tensor-train LSTM for spatio-temporal learning",
+        "Tensorized Embedding Layers for Efficient Model Compression",
+        "A tensorized transformer for language modeling"
+      ]
+    },
+    {
+      "mention": "TRAWL",
+      "matched_blocks": 1,
+      "references": [
+        "Trawl: Tensor reduced and approximated weights for large language models"
+      ]
+    },
+    {
+      "mention": "KARIPAP",
+      "matched_blocks": 2,
+      "references": [
+        "KARIPAP: Quantum-Inspired Tensor Network Compression of Large Language Models Using Infinite Projected Entangled Pair States and Tensor Renormalization …"
+      ]
+    },
+    {
+      "mention": "几个值得强调的结构性发现",
+      "matched_blocks": 1,
+      "references": [
+        "Compactifai: extreme compression of large language models using quantum-inspired tensor networks"
+      ]
+    },
+    {
+      "mention": "Multiverse Computing（西班牙）",
+      "matched_blocks": 1,
+      "references": [
+        "Compactifai: extreme compression of large language models using quantum-inspired tensor networks"
+      ]
+    },
+    {
+      "mention": "2026 年的系统复评",
+      "matched_blocks": 1,
+      "references": [
+        "Rethinking the Role of Tensor Decompositions in Post-Training LLM Compression",
+        "A Practical Tensor-Network Compression Pipeline for Production-Scale Large Language Models"
+      ]
+    },
+    {
+      "mention": "Aizpurua、Orús 等人的",
+      "matched_blocks": 1,
+      "references": [
+        "Quantum large language models via tensor network disentanglers"
+      ]
+    },
+    {
+      "mention": "多模态情感分析中的",
+      "matched_blocks": 1,
+      "references": [
+        "Tensor Fusion Network for Multimodal Sentiment Analysis",
+        "Efficient Low-rank Multimodal Fusion with Modality-Specific Factors"
+      ]
+    },
+    {
+      "mention": "视觉侧：",
+      "matched_blocks": 1,
+      "references": [
+        "Partial Tensorized Transformers for Natural Language Processing"
+      ]
+    },
+    {
+      "mention": "可解释性：TN",
+      "matched_blocks": 1,
+      "references": [
+        "Explainable natural language processing with matrix product states",
+        "Tensor networks for explainable machine learning in cybersecurity",
+        "Privacy-preserving machine learning with tensor networks",
+        "Tensor networks for probabilistic sequence modeling",
+        "Unsupervised generative modeling using matrix product states"
+      ]
+    },
+    {
+      "mention": "MPS 分类器、Born machine、uMPS",
+      "matched_blocks": 1,
+      "references": [
+        "Supervised Learning with Quantum-Inspired Tensor Networks",
+        "Unsupervised generative modeling using matrix product states",
+        "Tensor networks for probabilistic sequence modeling"
+      ]
+    },
+    {
+      "mention": "CompactifAI、Saten、Minima、TensorGPT",
+      "matched_blocks": 1,
+      "references": [
+        "Compactifai: extreme compression of large language models using quantum-inspired tensor networks",
+        "Saten: Sparse Augmented Tensor Networks for Post-Training Compression of Large Language Models",
+        "A Practical Tensor-Network Compression Pipeline for Production-Scale Large Language Models",
+        "Tensorgpt: Efficient compression of large language models based on tensor-train decomposition"
+      ]
+    },
+    {
+      "mention": "TN 去纠缠器 VQC+MPO",
+      "matched_blocks": 1,
+      "references": [
+        "Quantum large language models via tensor network disentanglers"
+      ]
+    },
+    {
+      "mention": "开放问题与机会点",
+      "matched_blocks": 1,
+      "references": [
+        "KARIPAP: Quantum-Inspired Tensor Network Compression of Large Language Models Using Infinite Projected Entangled Pair States and Tensor Renormalization …",
+        "A Practical Tensor-Network Compression Pipeline for Production-Scale Large Language Models"
+      ]
+    },
+    {
+      "mention": "MPS 张量网络为深度学习提供了一套",
+      "matched_blocks": 1,
+      "references": [
+        "Compactifai: extreme compression of large language models using quantum-inspired tensor networks",
+        "Saten: Sparse Augmented Tensor Networks for Post-Training Compression of Large Language Models",
+        "A Practical Tensor-Network Compression Pipeline for Production-Scale Large Language Models",
+        "Rethinking the Role of Tensor Decompositions in Post-Training LLM Compression"
+      ]
+    },
+    {
+      "mention": "为便于理论推导",
+      "matched_blocks": 1,
+      "references": [
+        "Matrix product states and projected entangled pair states: Concepts, symmetries, theorems",
+        "Tensor networks for complex quantum systems",
+        "Tensor Methods for Language Models: From Token Representation to Training, Adaptation, Inference, Compression, and Interpretability",
+        "Quantum-inspired tensor networks in machine learning models"
+      ]
+    },
+    {
+      "mention": "2010.10653 ↙, 2003.01039",
+      "matched_blocks": 1,
+      "references": [
+        "Quantum tensor networks, stochastic processes, and weighted automata",
+        "Tensor networks for probabilistic sequence modeling"
+      ]
+    },
+    {
+      "mention": "2010.10653, 2010.10029",
+      "matched_blocks": 1,
+      "references": [
+        "Quantum tensor networks, stochastic processes, and weighted automata",
+        "Connecting Weighted Automata, Tensor Networks and Recurrent Neural Networks through Spectral Learning"
+      ]
+    },
+    {
+      "mention": "0905.4013 + 面积律",
+      "matched_blocks": 1,
+      "references": [
+        "Entanglement entropy and conformal field theory"
+      ]
+    },
+    {
+      "mention": "1901.02217, 1708.01525",
+      "matched_blocks": 1,
+      "references": [
+        "Tree tensor networks for generative modeling",
+        "Language design as information renormalization"
+      ]
+    },
+    {
+      "mention": "Pestun–Vlassopoulos (1710.10248 / 1711.01416)",
+      "matched_blocks": 1,
+      "references": [
+        "Tensor network language model",
+        "Language as a matrix product state"
+      ]
+    },
+    {
+      "mention": "事后张量化预训练 LLM 的工作很多",
+      "matched_blocks": 1,
+      "references": [
+        "Tensorgpt: Efficient compression of large language models based on tensor-train decomposition",
+        "Compactifai: extreme compression of large language models using quantum-inspired tensor networks",
+        "A Practical Tensor-Network Compression Pipeline for Production-Scale Large Language Models",
+        "Saten: Sparse Augmented Tensor Networks for Post-Training Compression of Large Language Models",
+        "KARIPAP: Quantum-Inspired Tensor Network Compression of Large Language Models Using Infinite Projected Entangled Pair States and Tensor Renormalization …",
+        "LeSTD: LLM Compression via Learning-based Sparse Tensor Decomposition",
+        "LatentLLM: Attention-Aware Joint Tensor Compression",
+        "Rethinking the Role of Tensor Decompositions in Post-Training LLM Compression",
+        "Tensor Methods for Language Models: From Token Representation to Training, Adaptation, Inference, Compression, and Interpretability"
+      ]
+    },
+    {
+      "mention": "实际 NLP 分数：张量化层与端到端训练。",
+      "matched_blocks": 1,
+      "references": [
+        "Tensorized Embedding Layers for Efficient Model Compression"
+      ]
+    }
+  ]
+}

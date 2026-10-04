@@ -1,0 +1,14 @@
+.memo-ref{display:inline-flex;vertical-align:baseline;align-items:center;justify-content:center;width:20px;height:20px;margin-left:5px;padding:2px;border:0;background:transparent;color:var(--accent);cursor:pointer;border-radius:4px;line-height:1}
+.memo-ref:hover,.memo-ref:focus-visible,.memo-ref[aria-expanded="true"]{background:var(--tint);outline:1px solid var(--accent)}
+.memo-ref svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.5}
+.memo-ref-panel{position:fixed;z-index:100;width:min(370px,calc(100vw - 24px));max-height:min(440px,70vh);overflow:auto;padding:15px 17px;background:var(--card);color:var(--ink);border:1px solid var(--muted);border-radius:8px;box-shadow:0 8px 28px #0003;font:12px/1.65 var(--sans)}
+.memo-ref-panel[hidden]{display:none}
+.memo-ref-item+.memo-ref-item{margin-top:12px;padding-top:12px;border-top:1px solid var(--tint)}
+.memo-ref-title{font-weight:600;font-size:13px;margin-bottom:5px}
+.memo-ref-links{display:flex;flex-wrap:wrap;gap:4px 12px}
+.memo-ref-links a{color:var(--accent);text-decoration:none;border-bottom:1px solid var(--tint);overflow-wrap:anywhere}
+.memo-ref-links a:hover{text-decoration:underline}
+.memo-ref-local{font-size:11px;color:var(--muted);overflow-wrap:anywhere;margin-top:6px}
+.p-head .memo-ref{flex:none;margin-left:0}
+.memo-ref-meta{font-size:11px;line-height:1.65;color:var(--muted);margin:0 0 8px;overflow-wrap:anywhere}
+.memo-ref-links .memo-ref-library{border:1px solid var(--tint);border-radius:3px;padding:0 5px;font-size:11px}

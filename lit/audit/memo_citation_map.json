@@ -1,0 +1,251 @@
+{
+  "checked_on": "2026-10-01",
+  "rules": [
+    {
+      "mention": "主线一，MPS 作为学习模型。",
+      "references": [
+        "p02",
+        "p03"
+      ]
+    },
+    {
+      "mention": "主线二，MPO/TT 压缩。",
+      "references": [
+        "p01",
+        "p08"
+      ]
+    },
+    {
+      "mention": "主线三，量子/量子启发大模型。",
+      "references": [
+        "Quantum large language models via tensor network disentanglers"
+      ]
+    },
+    {
+      "mention": "Oseledets 2011 年",
+      "references": [
+        "ext-tt"
+      ]
+    },
+    {
+      "mention": "多篇综述系统梳理",
+      "references": [
+        "Tensor networks meet neural networks: A survey and future perspectives",
+        "Quantum-inspired tensor networks in machine learning models"
+      ]
+    },
+    {
+      "mention": "奠基性工作是 Stoudenmire",
+      "references": [
+        "p02",
+        "ext-exm",
+        "TensorNetwork for Machine Learning"
+      ]
+    },
+    {
+      "mention": "这条线随后扩展",
+      "references": [
+        "ext-patch",
+        "ext-peps",
+        "A matrix product state model for simultaneous classification and generation",
+        "ext-vtnn"
+      ]
+    },
+    {
+      "mention": "Han 等人（PRX 2018）",
+      "references": [
+        "p03",
+        "Probabilistic modeling with matrix product states",
+        "Tensor networks for unsupervised machine learning"
+      ]
+    },
+    {
+      "mention": "在模型类表达力方面",
+      "references": [
+        "p04",
+        "Quantum tensor networks, stochastic processes, and weighted automata"
+      ]
+    },
+    {
+      "mention": "Miller、Rabusseau 与 Terilla（AISTATS",
+      "references": [
+        "p05"
+      ]
+    },
+    {
+      "mention": "Novikov 等人 2015 年的",
+      "references": [
+        "p01",
+        "Tensor-train recurrent neural networks for video classification",
+        "Compressing lstm networks by matrix product operators",
+        "Compressing recurrent neural networks with tensor ring for action recognition",
+        "Learning Compact Recurrent Neural Networks with Block-Term Tensor Decomposition",
+        "Convolutional tensor-train LSTM for spatio-temporal learning",
+        "Tensorized Embedding Layers for Efficient Model Compression",
+        "A tensorized transformer for language modeling"
+      ]
+    },
+    {
+      "mention": "TRAWL",
+      "references": [
+        "Trawl: Tensor reduced and approximated weights for large language models"
+      ]
+    },
+    {
+      "mention": "KARIPAP",
+      "references": [
+        "KARIPAP: Quantum-Inspired Tensor Network Compression of Large Language Models Using Infinite Projected Entangled Pair States and Tensor Renormalization"
+      ]
+    },
+    {
+      "mention": "几个值得强调的结构性发现",
+      "references": [
+        "p08"
+      ]
+    },
+    {
+      "mention": "Multiverse Computing（西班牙）",
+      "references": [
+        "p08"
+      ]
+    },
+    {
+      "mention": "2026 年的系统复评",
+      "references": [
+        "p14",
+        "p13"
+      ]
+    },
+    {
+      "mention": "Aizpurua、Orús 等人的",
+      "references": [
+        "Quantum large language models via tensor network disentanglers"
+      ]
+    },
+    {
+      "mention": "多模态情感分析中的",
+      "references": [
+        "Tensor Fusion Network for Multimodal Sentiment Analysis",
+        "Efficient Low-rank Multimodal Fusion with Modality-Specific Factors"
+      ]
+    },
+    {
+      "mention": "视觉侧：",
+      "references": [
+        "Partial Tensorized Transformers for Natural Language Processing"
+      ]
+    },
+    {
+      "mention": "可解释性：TN",
+      "references": [
+        "Explainable natural language processing with matrix product states",
+        "Tensor networks for explainable machine learning in cybersecurity",
+        "Privacy-preserving machine learning with tensor networks",
+        "p05",
+        "p03"
+      ]
+    },
+    {
+      "mention": "MPS 分类器、Born machine、uMPS",
+      "references": [
+        "p02",
+        "p03",
+        "p05"
+      ]
+    },
+    {
+      "mention": "CompactifAI、Saten、Minima、TensorGPT",
+      "references": [
+        "p08",
+        "p11",
+        "p13",
+        "p07"
+      ]
+    },
+    {
+      "mention": "TN 去纠缠器 VQC+MPO",
+      "references": [
+        "Quantum large language models via tensor network disentanglers"
+      ]
+    },
+    {
+      "mention": "开放问题与机会点",
+      "references": [
+        "KARIPAP: Quantum-Inspired Tensor Network Compression of Large Language Models Using Infinite Projected Entangled Pair States and Tensor Renormalization",
+        "p13"
+      ]
+    },
+    {
+      "mention": "MPS 张量网络为深度学习提供了一套",
+      "references": [
+        "p08",
+        "p11",
+        "p13",
+        "p14"
+      ]
+    },
+    {
+      "mention": "为便于理论推导",
+      "references": [
+        "Matrix product states and projected entangled pair states: Concepts, symmetries, theorems",
+        "Tensor networks for complex quantum systems",
+        "p18",
+        "Quantum-inspired tensor networks in machine learning models"
+      ]
+    },
+    {
+      "mention": "2010.10653 ↙, 2003.01039",
+      "references": [
+        "Quantum tensor networks, stochastic processes, and weighted automata",
+        "p05"
+      ]
+    },
+    {
+      "mention": "2010.10653, 2010.10029",
+      "references": [
+        "Quantum tensor networks, stochastic processes, and weighted automata",
+        "Connecting Weighted Automata, Tensor Networks and Recurrent Neural Networks through Spectral Learning"
+      ]
+    },
+    {
+      "mention": "0905.4013 + 面积律",
+      "references": [
+        "ext-cft"
+      ]
+    },
+    {
+      "mention": "1901.02217, 1708.01525",
+      "references": [
+        "Tree tensor networks for generative modeling",
+        "Language design as information renormalization"
+      ]
+    },
+    {
+      "mention": "Pestun–Vlassopoulos (1710.10248 / 1711.01416)",
+      "references": [
+        "p30",
+        "p27"
+      ]
+    },
+    {
+      "mention": "事后张量化预训练 LLM 的工作很多",
+      "references": [
+        "p07",
+        "p08",
+        "p13",
+        "p11",
+        "KARIPAP: Quantum-Inspired Tensor Network Compression of Large Language Models Using Infinite Projected Entangled Pair States and Tensor Renormalization",
+        "LeSTD: LLM Compression via Learning-based Sparse Tensor Decomposition",
+        "LatentLLM: Attention-Aware Joint Tensor Compression",
+        "p14",
+        "p18"
+      ]
+    },
+    {
+      "mention": "实际 NLP 分数：张量化层与端到端训练。",
+      "references": [
+        "Tensorized Embedding Layers for Efficient Model Compression"
+      ]
+    }
+  ]
+}
