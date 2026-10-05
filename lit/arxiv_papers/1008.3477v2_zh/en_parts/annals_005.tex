@@ -1,0 +1,111 @@
+Similarly, we will shorten $\ket{a_\ell}_A \rightarrow \ket{a_\ell}$, when the fact that the state lives on block A is irrelevant or totally obvious. 
+
+\begin{figure}
+\centering\includegraphics[scale=0.8]{PyMPS_BlockGrowth.eps}
+\caption{A block of length $\ell-1$ is grown towards the right to a block of length $\ell$ by adding a site $\ell$.}
+\label{fig:BlockGrowth}
+\end{figure}
+
+\begin{figure}
+\centering\includegraphics[scale=0.8]{PyMPS_ABulk.eps}
+\caption{Graphical representation of $A$-matrices: the left diagram represents $A\ ^{\sigma_{\ell}}_{a_{\ell-1},a_\ell}$, the right diagram the {\em conjugate} $A\ ^{\sigma_{\ell}*}_{a_{\ell-1},a_\ell}$. The solid circle represents the lattice sites, the vertical line the physical index, the horizontal lines the matrix indices.}
+\label{fig:ABulk}
+\end{figure}
+
+The advantage of the matrix notation, which contains the decimation procedure yet unspecified, is that it allows for a simple {\em recursion} from a block of length $\ell$ to the smallest, i.e.\ vanishing block. Quantum states obtained in this way take a very special form:
+\begin{eqnarray}
+\ket{a_{\ell}}_A &=& \sum_{a_{\ell-1}} \sum_{\sigma_\ell} A^{\sigma_\ell}_{a_{\ell-1}, a_{\ell}} \ket{a_{\ell-1}}_A \ket{\sigma_{\ell}} \nonumber \\
+&=& \sum_{a_{\ell-1},a_{\ell-2}} \sum_{\sigma_{\ell-1},\sigma_\ell} 
+A^{\sigma_{\ell-1}}_{a_{\ell-2}, a_{\ell-1}} A^{\sigma_\ell}_{a_{\ell-1}, a_{\ell}} \ket{a_{\ell-2}}_A \ket{\sigma_{\ell-1}}\ket{\sigma_{\ell}} = \ldots \nonumber \\
+&=& \sum_{a_1,a_2,\ldots,a_{\ell-1}} \sum_{\sigma_1,\sigma_2,\ldots,\sigma_\ell} A^{\sigma_1}_{1,a_1} A^{\sigma_2}_{a_1,a_2} \ldots A^{\sigma_\ell}_{a_{\ell-1},a_\ell} \ket{\sigma_1}\ket{\sigma_2} \ldots \ket{\sigma_\ell} \nonumber \\
+&=& \sum_{\sigma_i \in {\rm A}}  (A^{\sigma_1}A^{\sigma_2}\ldots A^{\sigma_\ell})_{1,a_\ell}  \ket{\sigma_1}\ket{\sigma_2} \ldots \ket{\sigma_\ell} ,
+\end{eqnarray}
+where $i$ runs through all sites of block A. The index 'A' indicates that we are considering states on the left side of the chain we are building. On the first site, we have, in order to keep in line with the matrix notation, introduced a dummy row index 1: the states of block length 1 are built from the local states on site 1 and the block states of the ``block'' of length 0, for which we introduce a dummy state and index 1. This means that $A^{\sigma_1}$ is in fact a (row) vector (cf.\ Fig.~\ref{fig:ABulkEdge}). We also see that the left or row index of $A$ correspond to states ``left'' of those labelled by the right or column index. Quite generally, we can show this construction as in Fig.~\ref{fig:BlockByMPS}, if -- as before -- we introduce the rule that all connected legs are summed over (contracted). The advantage of the matrix notation is that we can hide summations in matrix multiplications.
+
+\begin{figure}
+\centering\includegraphics[scale=0.8]{PyMPS_BlockByMPS.eps}
+\caption{Graphical representation of the recursive construction of a state $\ket{a{\,}_\ell}$ by contraction (multiplication) of $A$-matrices. Contractions run over all connected legs.}
+\label{fig:BlockByMPS}
+\end{figure}
+
+Similarly, we can build blocks to grow towards the left instead of to the right (Fig.~\ref{fig:BlockGrowth_Right}): we have
+\begin{equation}
+\ket{a_\ell}_B = \sum_{a_{\ell+1}\sigma_{\ell+1}} \phantom\langle_B \braket{a_{\ell+1} \sigma_{\ell+1}}{a_\ell}_B \,\, \ket{a_{\ell+1}}_B \ket{\sigma_{\ell+1}} 
+\end{equation}
+or 
+\begin{equation}
+\ket{a_\ell}_B = \sum_{a_{\ell+1}\sigma_{\ell+1}}B^{[\ell+1]\sigma_{\ell+1}}_{a_\ell, a_{\ell+1}}  \ket{a_{\ell+1}}_B \ket{\sigma_{\ell+1}} 
+\end{equation}
+with
+\begin{equation}
+B^{[\ell+1]\sigma_{\ell+1}}_{a_\ell, a_{\ell+1}} = \phantom\langle_B \braket{a_{\ell+1} \sigma_{\ell+1}}{a_\ell}_B .
+\end{equation}
+We call matrices $B$ to indicate that they emerge from a growth process towards the left, in DMRG language this would mean block B. Recursion gives
+\begin{equation}
+\ket{a_{\ell}}_B = \sum_{\sigma_i \in {\rm B}}  (B^{\sigma_{\ell+1}}B^{\sigma_{\ell+2}}\ldots B^{\sigma_L})_{a_{\ell+1},1}  \ket{\sigma_{\ell+1}}\ket{\sigma_{\ell+2}} \ldots \ket{\sigma_L}, 
+\end{equation}   
+where $i$ runs from $\ell+1$ to $L$, the sites of block B. A similar dummy index as for position 1 is introduced for position $L$, where the $B$-matrix is a (column) vector. 
+
+Note a slight asymmetry in the notation compared to the $A$-matrices: in order to be able to match blocks A and B later, we label block states according to the bond at which they terminate: bond $\ell$ connects sites $\ell$ and $\ell+1$, hence a labeling as in Fig.~\ref{fig:labelling}.
+
+\begin{figure}
+\centering\includegraphics[width=\textwidth]{PyMPS_BlockGrowth_Right.eps}
+\caption{A block B of length $L-\ell-1$ is grown towards the left to a block B of length $L-\ell$ by adding site $\ell+1$.}
+\label{fig:BlockGrowth_Right}
+\end{figure}
+
+\begin{figure}
+\centering\includegraphics[scale=1.0]{PyMPS_Labelling.eps}
+\caption{Blocks A (sites 1 through $\ell$) and B (sites $\ell+1$ through $L$) are joined at bond $\ell$. States are labelled $\ket{a\ _{\ell}}_A$ and $\ket{a'_\ell}_B$.}
+\label{fig:labelling}
+\end{figure}
+
+If we introduce $A$-matrices and $B$-matrices in this way, they can be seen to have very special properties. If we consider the growth from the left, i.e.\ $A$-matrices, and demand reasonably that the chosen states should for each block length be orthonormal to each other, we have using Eq.~(\ref{eq:matrixbyRG})
+\begin{eqnarray}
+\delta_{a'_\ell, a_\ell} = \phantom\langle_A \braket{a'_\ell}{a_\ell}_A &=& \sum_{\sigma'_\ell,\sigma_\ell} \sum_{a'_{\ell-1},a_{\ell-1}} A^{\sigma'_\ell*}_{a'_{\ell-1}, a'_\ell} A^{\sigma_\ell}_{a_{\ell-1},a_\ell} 
+ \phantom\langle_A\braket{a'_{\ell-1} \sigma'_\ell}{a_{\ell-1} \sigma_\ell}_A \\
+&=& \sum_{\sigma_\ell} \sum_{a_{\ell-1}} A^{\sigma_\ell \dagger}_{a'_\ell,a_{\ell-1}} A^{\sigma_\ell}_{a_{\ell-1},a_\ell} = \sum_{\sigma_\ell}
+(A^{\sigma_\ell \dagger}A^{\sigma_\ell})_{a'_{\ell},a_{\ell}} .
+\end{eqnarray}
+Summarizing we find that the $A$-matrices are {\em left-normalized}:
+\begin{equation}
+\sum_{\sigma} A^{\sigma\dagger} A^\sigma = I .
+\end{equation}
+A graphical representation is provided in Fig.~\ref{fig:LeftNormalization}: The multiplication can also be interpreted as the contraction of $A$ and $A^*$ over both $\sigma$ and their left index.
+
+Similarly, we can derive for $B$-matrices of blocks B built from the right that the {\em right-normalization} identity
+\begin{equation}
+\sum_{\sigma} B^\sigma B^{\sigma\dagger} = I
+\end{equation}
+holds (usually, $A$ and $B$  will be used to distinguish the two cases). See Fig.~\ref{fig:RightNormalization}. This means that orthonormal states can always be decomposed into left- or right-normalized matrices in the MPS sense and that all states constructed from left- or right-normalized matrices form orthonormal sets, provided the type of normalization and the direction of the growth match.
+
+\begin{figure}
+\centering\includegraphics[scale=1.0]{PyMPS_LeftNormalization.eps}
+\caption{If two {\em left}-normalized $A$-matrices are contracted over their {\em left} index and the physical indices, a $\delta\ _{a'_\ell,a_\ell}$ line results.}
+\label{fig:LeftNormalization}
+\end{figure}
+
+\begin{figure}
+\centering\includegraphics[scale=1.0]{PyMPS_RightNormalization.eps}
+\caption{If two {\em right}-normalized $B$-matrices are contracted over their {\em right} index and the physical indices, a $\delta\ _{a'_\ell,a_\ell}$ line results.}
+\label{fig:RightNormalization}
+\end{figure}
+
+Let us take a closer look at the matrix dimensions. Growing from the left, matrix dimensions go as $(1 \times d)$, $(d \times d^2)$, $(d^2 \times d^3)$, $(d^3 \times D)$, where I have assumed that $d^4 > D$. Then they continue at dimensions $(D \times D)$. At the right end, they will have dimensions  $(D \times D)$, $(D \times d^3)$,  $(d^3 \times d^2)$, $(d^2 \times d)$ and $(d \times 1)$. 
+
+We can now again write down a matrix product state. Putting together a chain of length $L$ from a (left) block A of length $\ell$ (sites $1$ to $\ell$) and a (right) block B of length $L-\ell$ (sites $\ell+1$ to $L$), we can form a general superposition
+\begin{equation}
+\ket{\psi} = \sum_{a_\ell, a'_\ell} \Psi_{a_\ell, a'_\ell} \ket{a_\ell}_A \ket{a'_\ell}_B .
+\end{equation}
+Inserting the states explicitly, we find
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} (A^{\sigma_1} \ldots A^{\sigma_\ell})_{1,a_\ell} \Psi_{a_\ell, a'_\ell} 
+ (B^{\sigma_{\ell+1}} \ldots B^{\sigma_L})_{a'_\ell,1} \ket{\fat{\sigma}} .
+\end{equation}
+The bold-faced $\fat{\sigma}$ stands for all local state indices, $\ket{\fat{\sigma}} =\ket{\sigma_1,\sigma_2,\ldots,\sigma_L}$. The notation suggests to interpret $\Psi$ as a matrix; then the notation simplifies to
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} A^{\sigma_1} \ldots A^{\sigma_\ell}\Psi
+ B^{\sigma_{\ell+1}} \ldots B^{\sigma_L} \ket{\fat{\sigma}} .
+ \label{eq:MPSwithPsi}
+\end{equation}
+

@@ -1,0 +1,114 @@
+得到这种记法的另一种途径是：先做一次标准的左规范分解，把生成的（以及此前被丢弃的）所有奇异值矩阵存为 $\Lambda^{[i]}$，然后再在所有相邻的 $A$-矩阵 $A^{\sigma_i}$ 与 $A^{\sigma_{i+1}}$ 之间插入恒等式 $\Lambda^{[i]}(\Lambda^{[i]})^{-1}$。随后利用式~(\ref{eq:agammalambda}) 便得到同样的结果。
+
+\begin{figure}
+\centering\includegraphics[width=\textwidth]{PyMPS_VidalMPS.eps}
+\caption{用 Vidal 记法表示的 MPS。奇异值在键上保持显式（菱形）。$\Lambda$ 位于键上，$\Gamma$ 位于格点上。按构造，相邻的 $\Lambda$ 与 $\Gamma$ 可缩并成左规范或右规范的 $A$ 或 $B$ 矩阵。该态可以平凡地分组为一串 $A$（给出正交归一的块态）、一个奇异值矩阵、以及一串 $B$（给出正交归一的块态）。}
+\label{fig:vidalmps}
+\end{figure}
+
+类似地，若从右端出发、利用 $B$-矩阵的右规范进行分解，则同一态可用如下分组得到
+\begin{equation}
+B^{\sigma_\ell}_{a_{\ell-1},a_{\ell}} = \Gamma^{\sigma_\ell}_{a_{\ell-1},a_\ell} \Lambda^{[\ell]}_{a_\ell,a_\ell} ,
+\label{eq:bgammalambda}
+\end{equation}
+其中，为简化本式以及 $A$-矩阵对应方程（式~(\ref{eq:agammalambda})）的记法，引入哑元 $\Lambda^{[0]}$ 与 $\Lambda^{[L]}$ 会很有用，二者均为标量 1。
+
+$A$ 与 $B$-矩阵的这种分组使得我们能够用 $\Gamma\Lambda$ 语言重新表述左规范与右规范条件：左规范条件为
+\begin{equation}
+I = \sum_{\sigma_i} A^{\sigma_i\dagger} A^{\sigma_i} = \sum_{\sigma_i} \Gamma^{\sigma_i\dagger} \Lambda^{[i-1]\dagger} \Lambda^{[i-1]} \Gamma^{\sigma_i}
+\end{equation}
+或者更紧凑地写为
+\begin{equation}
+\sum_{\sigma_i}  \Gamma^{\sigma_i\dagger} \rho_B^{[i-1]} \Gamma^{\sigma_i} = I .
+\label{eq:leftnormalizevidal}
+\end{equation}
+右规范条件为
+\begin{equation}
+\sum_{\sigma_i} \Gamma^{\sigma_i} \rho_A^{[i]} \Gamma^{\sigma_i\dagger} = I . 
+\label{eq:rightnormalizevidal}
+\end{equation}
+有趣的是，若利用式~(\ref{eq:agammalambda}) 与式~(\ref{eq:bgammalambda}) 来翻译密度算符的递推关系（式~(\ref{eq:rhoarecursion}) 与式~(\ref{eq:rhobrecursion})），同样会得到式~(\ref{eq:leftnormalizevidal}) 与式~(\ref{eq:rightnormalizevidal})。
+形如式~(\ref{eq:canonicalform}) 且满足约束条件式~(\ref{eq:leftnormalizevidal}) 与式~(\ref{eq:rightnormalizevidal}) 的矩阵乘积态称为{\em 规范}的。
+
+在 $AB$ 记法、$\Gamma\Lambda$ 记法以及 DMRG 的块-格点记法之间都可以相互转换，只是其中暗藏一些数值上的陷阱。
+
+{\em 转换} $\Gamma\Lambda \rightarrow A,B$：从 $\Gamma\Lambda \rightarrow A,B$ 的转换很容易。若在 $\ket{\psi}$ 的最左端引入一个额外的哑标量 $\Lambda^{[0]} = 1$ 充当``矩阵''，就可以利用上面的定义式~(\ref{eq:agammalambda}) 分组得到
+\begin{equation}
+(\Lambda^{[0]} \Gamma^{\sigma_1})
+(\Lambda^{[1]} \Gamma^{\sigma_2})(\Lambda^{[2]} \Gamma^{\sigma_3})
+ \ldots \rightarrow A^{\sigma_1}A^{\sigma_2}A^{\sigma_3}\ldots 
+ \end{equation}
+或者利用式~(\ref{eq:bgammalambda}) 得到
+\begin{equation}
+(\Gamma^{\sigma_1}\Lambda^{[1]})
+(\Gamma^{\sigma_2}\Lambda^{[2]} )(\Gamma^{\sigma_3}\Lambda^{[3]})
+ \ldots \rightarrow B^{\sigma_1}B^{\sigma_2}B^{\sigma_3}\ldots 
+ \end{equation}
+
+考虑到 DMRG 及其他 MPS 方法的实际做法，考察{\em 混合}转换是很有意思的。考虑格点 $\ell$ 与 $\ell+1$ 之间的键 $\ell$。我们可以从左端开始将 $\Lambda \Gamma \rightarrow A$ 缩并，得到左规范矩阵；从右端将 $\Gamma\Lambda \rightarrow B$ 缩并，得到右规范矩阵；只在中心留下 $\Lambda^{[\ell]}$ 不动（图~\ref{fig:dmrg0mps}）：
+\begin{figure}
+\centering\includegraphics[width=\textwidth]{PyMPS_DMRG0MPS.eps}
+\caption{Vidal 的 MPS 记法、$A$、$B$-矩阵 MPS 记法以及 DMRG 块记法。$A$-矩阵生成左块态，$B$ 矩阵生成右块态。矩阵 $\Lambda^{[\ell]}$ 通过奇异值将二者连接起来。}
+\label{fig:dmrg0mps}
+\end{figure}
+
+\begin{figure}
+\centering\includegraphics[width=\textwidth]{PyMPS_DMRG1MPS.eps}
+\caption{单格点 DMRG 中一个态的表示：把 Vidal 的 MPS 记法及 $A,B$-矩阵 MPS 记法翻译成 DMRG 块记法。$A$-矩阵生成左块态，$B$ 矩阵生成右块态。$\Psi^{\sigma_\ell}$ 的矩阵元正是 DMRG 态的系数。}
+\label{fig:dmrg1mps}
+\end{figure}
+
+
+\begin{equation}
+(\Lambda^{[0]}\Gamma)(\Lambda^{[1]}\Gamma)\ldots(\Lambda^{[\ell-2]}\Gamma)(\Lambda^{[\ell-1]}\Gamma) \Lambda^{[\ell]} (\Gamma\Lambda^{[\ell+1]})(\Gamma\Lambda^{[\ell+2]}) \ldots (\Gamma\Lambda^{[L]}) .
+\end{equation}
+由于键 $\ell$ 左侧的加括号方式生成左规范的 $A$-矩阵，右侧生成右规范的 $B$ 矩阵，我们可以像上一节的递推那样把它们乘开，得到 A 与 B 的正交归一块基，从而得到 Schmidt 分解
+\begin{equation}
+\ket{\psi} = \sum_{a_{\ell}} \ket{a_\ell}_A s_{a_\ell} \ket{a_\ell}_B .
+\end{equation}
+更进一步，我们还可以取一个格点（$\ell$）或两个格点（$\ell,\ell+1$），把那里的所有矩阵乘成一个矩阵（图~\ref{fig:dmrg1mps} 与图~\ref{fig:dmrg2mps}）：
+\begin{figure}
+\centering\includegraphics[width=\textwidth]{PyMPS_DMRG2MPS.eps}
+\caption{双格点 DMRG 中一个态的表示：把 Vidal 的 MPS 记法及 $A,B$-矩阵 MPS 记法翻译成 DMRG 块记法。$A$-矩阵生成左块态，$B$ 矩阵生成右块态。矩阵 $\Psi^{\sigma_{\ell}\sigma_{\ell+1}}$ 的元素正是 DMRG 态的系数。}
+\label{fig:dmrg2mps}
+\end{figure}
+
+
+\begin{equation}
+(\Lambda^{[0]}\Gamma)(\Lambda^{[1]}\Gamma)\ldots(\Lambda^{[\ell-2]}\Gamma)(\Lambda^{[\ell-1]}\Gamma \Lambda^{[\ell]}) (\Gamma\Lambda^{[\ell+1]})(\Gamma\Lambda^{[\ell+2]}) \ldots (\Gamma\Lambda^{[L]}) .
+\end{equation}
+把中心矩阵记为 $\Psi^{\sigma_\ell}= \Lambda^{[\ell-1]}\Gamma^{\sigma_\ell} \Lambda^{[\ell]}$，我们就可以写
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} A^{\sigma_1} \ldots A^{\sigma_{\ell-1}} \Psi^{\sigma_\ell} B^{\sigma_{\ell+1}} \ldots B^{\sigma_L}
+\ket{\fat{\sigma}}
+\end{equation}
+或者，再次构建块基，
+\begin{equation}
+\ket{\psi} = \sum_{a_{\ell-1},a_{\ell},\sigma_\ell} \ket{a_{\ell-1}}_A \Psi^{\sigma_\ell}_{a_{\ell-1}a_\ell} \ket{a_\ell}_B .
+\end{equation}
+如果我们把两个格点也一并分组，则有
+\begin{equation}
+(\Lambda^{[0]}\Gamma)(\Lambda^{[1]}\Gamma)\ldots(\Lambda^{[\ell-2]}\Gamma)(\Lambda^{[\ell-1]}\Gamma \Lambda^{[\ell]} \Gamma\Lambda^{[\ell+1]})(\Gamma\Lambda^{[\ell+2]}) \ldots (\Gamma\Lambda^{[L]}) 
+\end{equation}
+或者，取中心矩阵 $\Psi^{\sigma_\ell \sigma_{\ell+1}}=\Lambda^{[\ell-1]}\Gamma^{\sigma_\ell} \Lambda^{[\ell]} \Gamma^{\sigma_{\ell+1}}\Lambda^{[\ell+1]}$，
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} A^{\sigma_1} \ldots A^{\sigma_{\ell-1}} \Psi^{\sigma_\ell \sigma_{\ell+1}} B^{\sigma_{\ell+2}} \ldots B^{\sigma_L} \ket{\fat{\sigma}}
+\end{equation}
+或者，用块基表示，
+\begin{equation}
+\ket{\psi} = \sum_{a_{\ell-1},a_{\ell+1},\sigma_\ell,\sigma_{\ell+1}} \ket{a_{\ell-1}}_A \Psi^{\sigma_\ell \sigma_{\ell+1}}_{a_{\ell-1}a_{\ell+1}} \ket{a_{\ell+1}}_B .
+\end{equation}
+这正是``单格点''与最初的``双格点''DMRG 所考虑的态，它们在两个块之间显式地保留一个或两个格点。
+
+{\em 转换} $A,B \rightarrow \Gamma\Lambda$：反方向的转换 $A,B \rightarrow \Gamma\Lambda$ 要更复杂一些。其想法是逐次迭代地求出该态的 Schmidt 分解（从而得到奇异值），也就是对角矩阵 $\Lambda^{[\ell]}$，再由此算出 $\Gamma^{\sigma}$-矩阵。这一做法实际上与证明任意量子态都存在规范 $\Gamma\Lambda$ 表示所用的方法非常相似。
+
+设 $\ket{\psi}$ 是右规范的，则态系数形如 $B^{\sigma_1}B^{\sigma_2}B^{\sigma_3}B^{\sigma_4}\ldots$。于是我们可以通过一连串 SVD 逐步进行
+\begin{eqnarray*}
+& & B^{\sigma_1}B^{\sigma_2}B^{\sigma_3}B^{\sigma_4} \ldots \\
+&=& (A^{\sigma_1} \Lambda^{[1]} V^\dagger) B^{\sigma_2}B^{\sigma_3}B^{\sigma_4} \ldots \\
+&=& \Gamma^{\sigma_1} M^{\sigma_2} B^{\sigma_3}B^{\sigma_4} \ldots \\
+&=& \Gamma^{\sigma_1} (A^{\sigma_2}  \Lambda^{[2]} V^\dagger) B^{\sigma_3}B^{\sigma_4} \ldots \\
+&=& \Gamma^{\sigma_1} \Lambda^{[1]} \Gamma^{\sigma_2} M^{\sigma_3} B^{\sigma_4} \ldots \\
+\end{eqnarray*} 
+如此继续下去。这里，待作 SVD 的矩阵为 $M^{\sigma_\ell} = \Lambda^{[\ell-1]} V^\dagger B^{\sigma_\ell}$。$\Gamma^{\sigma_\ell}$-矩阵则由 $A^{\sigma_\ell}$-矩阵借助记下的 $\Lambda^{[\ell-1]}$ 并利用式~(\ref{eq:agammalambda}) 得到，这意味着要除以奇异值。
+

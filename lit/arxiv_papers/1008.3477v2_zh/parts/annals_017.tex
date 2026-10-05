@@ -1,0 +1,112 @@
+接着对新的密度矩阵进行对角化，并按最大的 $D$ 个本征值作截断，得到一个列正交归一的 $(dD \times D)$ 矩阵，$U_{(a_{\ell-1}\sigma_{\ell}), a_{\ell}} \rightarrow A^{\sigma_{\ell}}_{a_{\ell-1}, a_{\ell}}$，然后我们在下一个格点上继续；由于我们只利用修正后密度矩阵本征值的相对次序，而不作他用，因此它们之和不等于 1 也无关紧要。为给大型稀疏矩阵求解器预测下一个 $\Psi^{\sigma_{\ell+1}}$，我们使用下一节推导的 DMRG 预测公式，
+\begin{equation}
+\Psi^{\sigma_{\ell+1}}_{a_{\ell}a_{\ell+1}} = 
+\sum_{a_{\ell-1}\sigma_{\ell} a_{\ell}'} 
+A^{\sigma_{\ell} \dagger}_{a_{\ell},a_{\ell-1}} \Psi^{\sigma_{\ell}}_{a_{\ell-1}a_{\ell}'}  B^{\sigma_{\ell+1}}_{a_{\ell}', a_{\ell+1}} .
+\end{equation}
+除此之外，其余一切保持不变。对于一种通常收敛快得多、也远不容易陷入非最优结果的算法而言，额外的数值开销与编程工作量是微不足道的。
+
+\subsection{用 MPS 语言表述的传统 DMRG：微妙的差别}   
+\label{subsec:conventionalDMRGinMPS}
+前一节的做法与传统 DMRG 有何关联？本质性的答案是：对于开边界条件（OBC），MPS 方法与有限系统 DMRG 完全相同，只是前提是我们每次移动一个格点而不是两个，
+亦即\ 考虑``单格点''而非``双格点''DMRG：此时考虑的是块-格点-块构型 A$\bullet$B，而不是块-格点-格点-块构型 A$\bullet\bullet$B。
+
+让我们先回顾一下这些算法的关键步骤，假定扫描方向向右：(i) 给定某个构型 A$\bullet$B（或相应的构型 $AAAMBB$）和哈密顿量 $\hat{H}$，用大型稀疏矩阵本征值求解器寻找最优的 $\psi_{a_{\ell-1} \sigma_\ell a_\ell}$（DMRG 中）或 $M^{\sigma_\ell}_{a_{\ell-1}, a_\ell}$（MPS 中）以求得基态；A$\bullet\bullet$B 情形类似。(ii) 得到基态后，MPS 导出一组左规范化的 $A$-矩阵，而 DMRG 则找到新的块态，其结构可以用左规范化的 $A$-矩阵编码。(iii) 所有算法都切换到新的 A$\bullet$B、A$\bullet\bullet$B 或 $AAAAMB$ 构型，其中活动中心向右移动一个格点，并为下一个基态的计算提供初猜，然后回到步骤 (i)。
+
+步骤 (i)：如果使用相同的态构型和相同的哈密顿量，结果必须相同。由于 DMRG 从左右两侧分别生长块 A 和块 B，而每个块生长步骤 A$\bullet \rightarrow$A 都可以用 $A$-矩阵编码，$\bullet$B $\rightarrow$ B 同理，我们可以断言 A 上的所有矩阵都是左规范化的，B 上的所有矩阵都是右规范化的，于是双格点 DMRG 态取如下形式
+\begin{equation}
+\ket{\psi} = \sum_{a_{\ell-1} \sigma_\ell \sigma_{\ell+1} a_{\ell+1}} \Psi^{\sigma_\ell\sigma_{\ell+1}}_{a_{\ell-1}, a_{\ell+1}} \ket{a_{\ell-1}}_A \ket{\sigma_\ell} \ket{\sigma_{\ell+1}} \ket{a_{\ell+1}}_B = \sum_{\fat{\sigma}} A^{\sigma_1} \ldots A^{\sigma_{\ell-1}} 
+\Psi^{\sigma_\ell \sigma_{\ell+1}} B^{\sigma_{\ell+2}} \ldots B^{\sigma_L} \ket{\fat{\sigma}},
+\end{equation}
+其中单格点 DMRG 态只需作显而易见的替换 $\Psi^{\sigma_\ell\sigma_{\ell+1}} \rightarrow \Psi^{\sigma_\ell}$。这与变分 MPS 方法中的混合规范形式态完全一致，我们面对的是同样的态结构。 
+
+尚需证明两者的哈密顿量也相同。严格地说，情况并非如此：
+我们刚才使用的 $\hat{H}$ 的 MPO 表示显然是精确的。另一方面，DMRG 中 $\hat{H}$ 的表示包含一系列约化基变换，因此本质上是不精确的。这样看来，两种表示似乎互不相干，且 MPO 一方因精确而占优。但更仔细的分析表明，在计算 MPS 与 DMRG 基态搜索中出现的期望值 $\bra{\psi} \hat{H} \ket{\psi}$ 的层面上，两种表示给出完全相同的结果（对于更高的矩，例如 $\bra{\psi} \hat{H}^2 \ket{\psi}$，两者并不相同，此时 MPO 表示以一定数值代价换取明显更高的精度，见下文）。
+
+DMRG 哈密顿量与 MPO 哈密顿量都包含精确哈密顿量的全部项。正如我们在把哈密顿量 MPO 作用于混合规范形式态时已经看到的（第~\ref{subsec:Hamiltonianmixedcanonical} 节），大型稀疏本征值问题即式~(\ref{eq:vMPSeigenequation}) 中出现的 $L$ 与 $R$ 对象的计算，无非就是 DMRG 中直到当前 A$\bullet$B 构型为止的那一串约化基变换。因此，对于 $\bra{\psi} \hat{H} \ket{\psi}$（但一般也仅限于此量！），两种方法完全相同。
+
+此外，本征值问题中出现的运算 $\hat{H}\ket{\psi}$，其操作计数并不比相应的 DMRG 流程更差。为看清这一点，让我们聚焦于各向异性最近邻海森堡链的那个示例 MPO。考虑对 $b_{\ell-1}, b_{\ell}$ 的双重求和时，效率上似乎存在差别。从 $W$-矩阵的结构可以清楚地看出，$D_W^2$ 个（示例中为 25 个）矩阵元中大多数是零，因此我们可以强烈地限制求和范围。但即便如此，计数结果仍是：把场设为 0，对海森堡哈密顿量而言，DMRG 框架中有 8 项贡献：严格作用于 A 和 B 的哈密顿量部分 $\hat{H}_A$ 与 $\hat{H}_B$ 各一项，每个块三项，对应于连接块与格点的三种算符组合。这些项在另一个块中都是对角的，故总共有 8 个代价为 $O(D^3)$ 的操作。在 MPO 计算中，双矩阵-矩阵乘法让人天真地估计为 16 个代价 $O(D^3)$ 的操作，对应 $W^{\sigma_{\ell},\sigma'_{\ell}}$ 的 8 个非零矩阵元。但我们随后可以利用以下规则：若 $b_{\ell-1}=d_W$，则左边没有操作，$L^{a_{\ell-1}, a'_{\ell-1}}_{d_W}= \delta_{a_{\ell-1}, a'_{\ell-1}}$，于是一个操作被省去；类似地，若 $b_{\ell}=1$，则右边没有操作，$R^{a_{\ell},a'_{\ell}}_{b_{\ell}}=\delta_{a_{\ell},a'_{\ell}}$，又省去一个操作。审视 $W$ 的结构可知，所有非零矩阵元都满足这两个条件之一，于是计数减半至 8 个操作。只有更远程的相互作用不符合这一图景，但它们在 DMRG 中同样要付出 $2O(D^3)$ 的代价。
+
+步骤 (ii)：能量极小化之后，变分 MPS 与 DMRG 产生（相同的）$M^{\sigma_\ell}$ 与 $\Psi^{\sigma_\ell}$，或 $\Psi^{\sigma_\ell \sigma_{\ell+1}}$。两种方法随后对这个结果的处理看起来不同，实际上却是一回事：在变分 MPS 中，做一次 SVD 以保证左规范化，然后向右移动一个格点，继续在下一个格点上极小化。在 DMRG 中，则先做密度矩阵分析以确定新的（截断后的）块基。但如果执行相应的 SVD，就会发现非零奇异值（因而非零密度矩阵本征值）的个数受矩阵维数 $D$ 的限制：
+\begin{equation}
+\Psi^{\sigma_\ell}_{a_{\ell-1},a_ \ell} \rightarrow \Psi_{(a_{\ell-1} \sigma_ \ell), a_ \ell} = \sum_{k=1}^{\min(dD,d)=D} A^{\sigma_ \ell}_{a_{\ell-1},k} S_{kk} (V^\dagger)_{k, a_ \ell} .
+\end{equation}
+因此，这里没有发生任何截断，我们只是在做一次酉变换，为新的更大的块 A 获得正交归一的态（由于 SVD 与密度矩阵对角化之间的联系，这恰好就是 MPS 中的左规范化）。两种表述的作用完全相同；既然没有截断发生，用瘦 QR 分解也同样可行。
+
+另一方面，在双格点 DMRG 中，同一步骤变为
+\begin{equation}
+\Psi^{\sigma_ \ell\sigma_{\ell +1}}_{a_{\ell-1},a_{\ell +1}} \rightarrow \Psi_{(a_{\ell-1} \sigma_ \ell), (\sigma_{\ell +1} a_{\ell +1})} = \sum_{k=1}^{\min(dD,dD)=dD} A^{\sigma_ \ell}_{a_{\ell-1},k} S_{k,k} (V^\dagger)_{k,(\sigma_{\ell +1} a_{\ell +1})} .
+\end{equation}
+但新块中只能保留 $D$ 个态，因此必须发生截断！这就是变分 MPS 与单格点 DMRG 一方、双格点 DMRG 另一方之间{\em 唯一}的差别。
+
+步骤 (iii)：在 DMRG 中，一次迭代完成后，自由格点向右移动一位，导致块 A 生长、块 B 收缩。在这一步上，所有方法再次一致：在变分 MPS 中，B 的收缩只不过体现在态由一串 $B$-矩阵构成、而最左边的那个已经脱落；A 的生长则由类似的一串矩阵给出，只是新加进了一个 $A$-矩阵。自由格点上的矩阵在所有方法中都是待定的，因此关于它的规范化无话可说。
+
+如前所述，基态能量的极小化是一个代价高昂的大型稀疏矩阵问题。由于这些方法是迭代的，一个好的初猜是可取的。DMRG 为此提供了某种``态预测''\cite{White96}。事实上，人们发现预测的结果恰恰就是在变分 MPS 语言中自然而然得到的东西，而无需为寻找态预测耗费智力上的努力。
+
+设在单格点 DMRG 中我们刚刚优化了 $\Psi^{\sigma_\ell}$，导出了新的 $A^{\sigma_ \ell}$。那么在 MPS 语言中，下一个态是 $\Psi^{\sigma_{\ell +1}}= SV^{\dagger} B^{\sigma_{\ell +1}}$，其中 $S$ 与 $V^\dagger$ 来自 SVD。在 DMRG 语言中，我们取
+\begin{equation}
+\ket{\psi} = \sum_{a_{\ell-1}\sigma_ \ell a_{\ell }'} \Psi^{\sigma_ \ell}_{a_{\ell-1}, a_{\ell }} \ket{a_{\ell-1}}_A \ket{\sigma_ \ell} \ket{a_{\ell}'}_B
+\end{equation}
+并两次插入近似恒等算符 $I= \sum \ket{a_ \ell}_A\phantom\langle_A\bra{a_ \ell}$ 与
+$I= \sum \ket{\sigma_{\ell +1}}\ket{a_{\ell+1}}_B \phantom\langle_B\bra{a_{\ell +1}} \bra{\sigma_{\ell+1}}$。用 $A$ 与 $B$ 矩阵表示矩阵元后，该态现在读作
+\begin{equation}
+\ket{\psi} = \sum_{a_\ell\sigma_{\ell +1} a_{\ell +1}} \left( \sum_{a_{\ell-1}\sigma_ \ell  a_{\ell}'} 
+A^{\sigma_ \ell \dagger}_{a_ \ell,a_{\ell-1}} \Psi^{\sigma_ \ell}_{a_{\ell-1}, a_{\ell}'}  B^{\sigma_{\ell +1}}_{a_{\ell}' a_{\ell +1}} \right) 
+\ket{a_{\ell}}_A \ket{\sigma_{\ell +1}} \ket{a_{\ell +1}}_B
+\end{equation}
+于是预测公式为
+\begin{equation}
+\Psi^{\sigma_{\ell +1}}_{a_{\ell}, a_{\ell+1}} = 
+\sum_{a_{\ell-1}\sigma_ \ell a_{\ell}'} 
+A^{\sigma_ \ell \dagger}_{a_ \ell,a_{\ell-1}} \Psi^{\sigma_ \ell}_{a_{\ell-1}, a_{\ell}'}  B^{\sigma_{\ell +1}}_{a_{\ell}' a_{\ell +1}} .
+\end{equation}
+但这正是下一个本征值问题的 MPS 拟设，因为 $ A^{\sigma_ \ell \dagger} \Psi^{\sigma_ \ell}  B^{\sigma_{\ell +1}} =
+A^{\sigma_ \ell \dagger} A^{\sigma_ \ell } S V^{\dagger} B^{\sigma_{\ell +1}}$，而这又正是
+$S V^{\dagger} B^{\sigma_{\ell +1}}$，因为在拟设中对 $\sigma_ \ell $ 求和且左规范化成立。双格点 DMRG 可依此类推，留作读者的练习。
+
+这澄清了变分 MPS、单格点 DMRG（二者相同）与双格点 DMRG（不同）之间的关系。但必须指出，信息存储方式或更隐式或更显式的差别，即使在算法严格说来完全相同的情况下也会带来差异——预测在一种表述中轻而易举而在另一种中却非如此，这一事实已经给了我们一个例子。此外还有更多。
+
+(i) 在 DMRG 中，表示态的等效基与表示哈密顿量或其他算符的等效基是捆绑在一起的。这就是为什么当我们同时考虑若干不同态（如基态与第一激发态）时，会出现诸如多态瞄准这样的概念。此时人们考虑混合约化密度算符
+\begin{equation}
+\hat{\rho}_A = \sum_{i} \alpha_i \tr_B \ket{\psi_i}\bra{\psi_i}
+\end{equation}
+其中 $\ket{\psi_i}$ 为目标态，且 $0 < \alpha_i \leq 1$，$\sum_i \alpha_i =1$，以便为所有感兴趣的态提供一个共同的基集合。当然，在给定数值资源的条件下，这只能以一定的精度损失为代价、且只对少数几个态可行。在 MPO/MPS 表述中，若愿意为每个态重新计算收缩，则态的基只在精确完备基的层面才被捆绑在一起。因此，一旦涉及多个态，MPO/MPS 表述相对于传统 DMRG 语言便发挥出其全部潜力。
+
+(ii) MPO/MPS 表述更优越的另一个情形，尽管数值代价更高，是计算 $\bra{\psi} \hat{H}^2 \ket{\psi}$，例如在估计基态被求得的精度如何时它很有用。在 MPO 形式体系中，通过收缩图~\ref{fig:calculationH2} 所示的网络，可以把它精确算出（当然要对 $\ket{\psi}$ 作内在的近似）。对程序员而言，最经济的做法当然是计算 $\hat{H}\ket{\psi}$ 再取范数，这两个操作在现阶段都是现成的。这样做的操作代价是：MPO 的作用需 $O(LD^2D_W^2 d^2)$，范数计算需 $O(LD^3 D_W^3 d)$。后者非常昂贵，因此更高效的做法是像计算 $\bra{\psi} \hat{H} \ket{\psi}$ 时那样采用迭代式的构造。我要作一个重要说明：维数 $D_W^2$ 只是 $\hat{H}^2$ 的最坏情形\cite{Frowis10}：把平方展开并为表达式引入规则，可以得到更高效的 MPO，其最优性可以通过数值方法检验——做一次 SVD 压缩，查看奇异值中哪些为零即可。对我们的各向异性海森堡哈密顿量，$\hat{H}^2 $ 只需 $D_W=9$ 而不是 25。对更高次幂，收益更为可观，且可以通过数值方法获得：构造 $\hat{H}^n$ 的显式 MPO 后作压缩，只丢弃奇异值中的那些零。
+
+\begin{figure}
+\centering\includegraphics[scale=0.7]{PyMPS_MPOCalculationHsquare.eps}
+\caption{$\hat{H}^2$ 期望值的``精确''计算：哈密顿量 MPO 被重复两次，底部夹 $\ket{\psi}$，顶部夹 $\bra{\psi}$。}
+\label{fig:calculationH2}
+\end{figure}
+ 
+在 DMRG 计算中，得到的将是序列 $\hat{H}(\hat{H} \ket{\psi})$，位于 DMRG 块-格点基中，如图~\ref{fig:DMRGcalculationH2} 所示。关键在于，在第二次施加 $\hat{H}$ 之前，会发生一次到约化块基上的投影，它不是恒等变换，从而丢失信息。
+
+\begin{figure}
+\centering\includegraphics[scale=0.7]{PyMPS_DMRGCalculationHsquare.eps}
+\caption{$\hat{H}^2$ 期望值的 DMRG 计算：在步骤 (1) 中，哈密顿量 MPO 在 DMRG 基中被施加于 $\ket{\psi}$ 一次，即结果被投影到约化基上，得到某个 $\Phi^{\, \sigma_{\ell}}$。它随后在步骤 (2) 中第二次施加 $\hat{H}$ 时取代 $\Psi^{\, \sigma_{\ell}}$。最终，结果再被投影到块基上。}
+\label{fig:DMRGcalculationH2}
+\end{figure}
+
+MPS 与 DMRG 的比较在算法上意味着什么？首先，传统 DMRG 的截断误差——它已被证明是衡量结果质量的高度可靠的工具——不过是有些反常的双格点设置造成的人为产物。在变分 MPS 或单格点 DMRG 中，它必须由别的判据取代，例如能量的方差。其次，虽然所有方法在``寻求给定类型拟设所能达到的最低能量''这一意义上都是变分的，但双格点 DMRG 的拟设逐格点而变（因为拟设中的 $\Psi^{\sigma\sigma}$ 反常），而单格点 DMRG 的拟设自始至终保持不变，在概念上更为优雅。当然，这以可能陷入局部极小为代价，这也提醒我们：数学上最美的未必是最实用的。
+ 
+\section{用 MPS 处理时间演化（实时的与虚时的）}
+计算 $\eul^{-\imag \hat{H}t}$ 或 $\eul^{-\beta\hat{H}}$ 这类算符对量子态的作用，无论对于量子态的实时演化还是对于量子统计力学，都是量子力学中的核心问题；$\beta$ 可以解释为虚时。MPS 最吸引人的特性之一，就是这类实时或虚时演化可以被非常整洁而高效地编码。这一点对纯态和混合态（在有限温度下十分重要）都成立。在下文中，我将聚焦于基于演化算符 Trotter 分解的时间演化\cite{Vidal03a,Vidal04b,Daley04,WhiteFeiguin04,VerstraeteRipoll04}：先解释 Trotter 分解以及纯态情形的算法结构，再讲 Trotter 分解的 MPO 表示。在此之后，我将讨论模拟混合态动力学所需的改动。
+\subsection{传统时间演化：纯态}
+
+\subsubsection{时间演化的 Trotter 分解}
+设 $\hat{H}$ 只包含最近邻相互作用，即 $\hat{H} = \sum_i \hat{h}_i$，其中 $\hat{h}_i$ 包含格点 $i$ 与 $i+1$ 之间的相互作用。于是我们可以把时间离散化为 $t = N \tau$（$\tau\rightarrow 0$，$N \rightarrow \infty$），并且（在最朴素的方案中）做一阶 Trotter 分解：
+\begin{equation}
+\eul^{-\imag \hat{H}\tau} = \eul^{-\imag  \hat{h}_1 \tau}\eul^{-\imag  \hat{h}_2 \tau}\eul^{-\imag  \hat{h}_3 \tau} \ldots  \eul^{-\imag  \hat{h}_{L-3} \tau}\eul^{-\imag  \hat{h}_{L-2} \tau}\eul^{-\imag  \hat{h}_{L-1} \tau} + O(\tau^2),
+\end{equation}
+它包含一个因键哈密顿量互不对易而产生的误差，一般有 $[ \hat{h}_i,\hat{h}_{i+1}] \neq 0$；更高阶的分解将在本节后面讨论。所有作用在奇数键上的时间演化（$\eul^{-\imag \hat{H}_{{\rm odd}} \tau}$）彼此对易，偶数键上的（$\eul^{-\imag \hat{H}_{{\rm even}} \tau}$）也彼此对易，因此可以同时进行。于是我们要寻找一个在奇数键上执行无穷小时间步的 MPO，以及另一个在偶数键上做同样事情的 MPO。
+
+既然任何算符都保证可以表示为 MPO，让我们暂且假定确实能够高效地构造这些无穷小时间步的表示（显式构造见下一节）。我们将会看到，无穷小时间步 MPO 的最大键维数是 $d^2$，因为 $\eul^{-\imag \hat{h} \tau}$ 的维数是 $(d^2 \times d^2)$。因此，施加无穷小时间步 MPO 会使键维数从 $D$ 增大到 $d^2 D$。反复施加无穷小时间演化 MPO 会导致矩阵维数指数式增长，所以每个时间步之后都必须作截断。
+
+由此得到的时间演化算法形式非常简单：从 $\ket{\psi(t=0)}$ 出发，重复以下步骤：
+\begin{itemize}
+\item 将奇数键的 MPO 作用于 $\ket{\psi(t)}$。
+\item 将偶数键的 MPO 作用于 $\eul^{-\imag \hat{H}_{{\rm odd}}\tau}\ket{\psi(t)}$。
+\item 将 MPS $\ket{\psi(t+\tau)}=\eul^{-\imag \hat{H}_{{\rm even}}\tau}\eul^{-\imag \hat{H}_{{\rm odd}}\tau}\ket{\psi(t)}$ 从维数 $d^2 D$ 压缩到 $D$，并监控误差。显然，也可以允许某个压缩误差（态间距离）$\epsilon$ 并选取随时间变化的 $D$：它通常会随时间强烈增长，从而限制可达的时间尺度。仿照基态计算的做法，所有结果都应在 $D\rightarrow\infty$ 或 $\epsilon\rightarrow 0$ 下外推。
+\end{itemize}
+

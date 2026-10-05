@@ -1,0 +1,115 @@
+让我们首先考虑构建 $L$ 和 $R$。在实际应用中，我们绝不会执行它们背后完整的网络收缩，因为本着 DMRG 的精神，我们面对的是逐格点增大和缩小的块。不过，$L$ 和 $R$ 的构建方式是迭代的，恰好与块的生长和收缩直接对应。我将以 $L$ 为例加以说明，使用 $A$ 矩阵；左正规化只在某一点被显式地用于进一步简化，因此各公式都是一般性的。我们从考虑大小为 1 的块开始：将 $A^{[1]}$ 与 $A^{[1]\dagger}$ 同 $W^{[1]}$ 收缩。块的基表示则由下式给出
+\begin{equation}
+F^{[1]}_{a_1,b_1;a'_1} = \sum_{\sigma_1,\sigma_1',a_0,b_0,a'_0} W^{[1]\sigma_1\sigma'_1}_{b_0,b_1} (A^{[1]\sigma_1\dagger})_{a_1,a_0} F^{[0]}_{a_0,b_0,a'_0} A^{[1]\sigma'_1}_{a'_0,a'_1}
+\end{equation}
+其中我们引入了一个哑标量 $F^{[0]}_{a_0,b_0,a'_0}=1$，且 $a_0,b_0,a'_0$ 只能取值 1；这只是为了让第一步与后续各步保持一致。所得对象是一个张量 $F^{[1]}_{a_1,b_1,a'_1}$，对应于伸出的三条腿。
+
+现在我们可以简单地继续在下一个格点上收缩 $A$、$A^\dagger$ 和 $W$，收缩更新为
+\begin{equation}
+F^{[i]}_{a_i,b_{i},a'_i} =  \sum_{\sigma_i,\sigma_i',a_{i-1},b_{i-1},a'_{i-1}} W^{[i]\sigma_i\sigma'_i}_{b_{i-1},b_{i}}  
+(A^{[i]\sigma_i\dagger})_{a_i,a_{i-1}} F^{[i-1]}_{a_{i-1},b_{i-1},a'_{i-1}} A^{[i]\sigma'_i}_{a'_{i-1},a'_i} 
+\end{equation}
+其图示表示如图~\ref{fig:constructionEmatrices} 所示。
+\begin{figure}
+\centering\includegraphics[scale=0.7]{PyMPS_EMatrixUpdate.eps}
+\caption{通过与 $A^{[i]*}$、$W^{[i]}$ 和 $A^{[i]}$ 收缩，从 $F^{[i-1]}$ 更新到 $F^{[i]}$。虽然在数学上把这三个新加入的张量视为一个对象是合理的，但在数值实践中，出于效率考虑，它们是被逐一收缩进网络的。}
+\label{fig:constructionEmatrices}
+\end{figure}
+
+通过最优加括号方式，这一构建可以最有效地计算为
+\begin{equation}
+F^{[i]}_{a_i,b_{i},a'_i} = \sum_{\sigma_i,a_{i-1}}
+(A^{[i]\sigma_i\dagger})_{a_i,a_{i-1}} 
+\left( \sum_{\sigma_i',b_{i-1}}
+W^{[i]\sigma_i\sigma'_i}_{b_{i-1},b_{i}}
+\left( \sum_{a'_{i-1}} F^{[i-1]}_{a_{i-1},b_{i-1},a'_{i-1}} A^{[i]\sigma'_i}_{a'_{i-1},a'_i}  \right) \right) .
+\end{equation}
+这里，我们把三个新张量逐一收缩进网络，其运算量分别是最内层括号 $O(dD^3 D_W)$、其次 $O(d^2 D^2 D_W^2)$、最后 $O(d D^3 D_W)$。实际上，第二步运算在实践中更快，因为我们知道 $\hat{W}$ 中大多数算符干脆就是零；剩余的算符通常也具有简单的结构。在从左正规化矩阵构建 $L$ 且指标 $b_i=D_W$ 的情形下，如果我们按照上一节概述的规则构建 $\hat{H}$，还可以进一步加速：我们知道在这种情况下只有恒等算符向左作用，这意味着 $F^{[i]}_{a_i,D_W,a'_i} = \delta_{a_i,a'_i}$，从而同时简化了最内层括号和最外层运算。同样的想法也适用于右侧指标 $b_i=1$ 的情形，即从右正规化矩阵构建 $R$。
+
+请注意，这一构建是针对 DMRG 所解释的表示更新的推广：一个典型情形是 $\hat{O}_i \hat{O}_j$ 的表示，其中两个算符分别局域地作用在格点 $i$ 和 $j$ 上。此时 MPO 处处维数为 $(1\times 1)$，且除格点 $i$ 和 $j$ 外，处处有 $W^{\sigma\sigma'} = \delta_{\sigma,\sigma'}$，而在这两个格点上则为 $W^{\sigma_i\sigma'_i} = O^{[i]\sigma_i,\sigma'_i}$，$j$ 处类似。向前推进收缩，$F^{[i-1]}$ 仍是标量 1。于是
+\begin{equation}
+F^{[i]} =  \sum_{\sigma_i,\sigma_i'} O^{[i]\sigma_i,\sigma'_i} A^{[i]\sigma_i\dagger} A^{[i]\sigma'_i}
+\end{equation}
+其中 $F^{[i]}$、$A^{[i]\sigma_i\dagger}$ 和 $A^{[i]\sigma'_i}$ 都是矩阵，且暗含乘积 $A^{[i]\sigma_i\dagger} A^{[i]\sigma'_i}$。$F^{[i]}$ 矩阵正是涵盖格点 1 到 $i$ 的块基中的算符表示。
+
+更新到格点 $j-1$ 之前，各步都简化为
+\begin{equation}
+F^{[k]} =  \sum_{\sigma_k} A^{[k]\sigma_k\dagger} F^{[k-1]} A^{[k]\sigma_k} ,\quad (i<k<j)
+\end{equation}
+（暗含矩阵乘法），而在格点 $j$ 处我们再次得到一个非平凡的步骤，
+\begin{equation}
+F^{[j]} = \sum_{\sigma_j,\sigma'_j} O^{[j]\sigma_j,\sigma'_j} A^{[j]\sigma_j\dagger} F^{[j-1]} A^{[j]\sigma'_j},
+\end{equation}
+此后的更新照旧按前面各格点的方式进行。若把矩阵乘法显式写出，就会看到这正是 DMRG 算法中讨论过的构建。
+  
+最后，$\hat{H}\ket{\psi}$ 可以有利地按如下方式加括号：
+\begin{equation}
+\hat{H}\ket{\psi} = \sum_{b_{\ell-1}, a'_{\ell-1}} 
+ L^{a_{\ell-1},a'_{\ell-1}}_{b_{\ell-1}} 
+\left( \sum_{b_{\ell} \sigma'_{\ell}} 
+W^{\sigma_{\ell},\sigma'_{\ell}}_{b_{\ell-1},b_{\ell}}
+ \left( \sum_{a'_{\ell}} R^{a_{\ell},a'_{\ell}}_{b_{\ell}} \Psi^{\sigma'_{\ell}}_{a'_{\ell-1},a'_{\ell}} \right) \right) \ket{a_{\ell-1}}_A \ket{\sigma_{\ell}} \ket{a_{\ell}}_B ,
+\end{equation}
+其最坏标度行为为 $O(D^3)$。更精确地说，最内层运算为 $O(D^3 D_W d)$；下一层为 $O(D^2 D_W^2 d^2)$，再往后是一个代价为 $O(D^3 D_W^2 d^2)$ 的求和。跟踪 $W$ 的结构是有利的，即弄清对哪些 $(b_{\ell-1},b_{\ell})$ 取值组合它为零从而无需计算（通常占大多数），并在态处于混合规范形式时利用刚才讨论的关于 $L$ 和 $R$ 的简化。
+ 
+\subsection{迭代基态搜索}
+
+现在让我们转向算法本身。设 $\hat{H}$ 以 MPO 形式给出，并考虑一类具有预定矩阵维数的 MPS（只需设想一个由形状和大小符合要求的矩阵 $M^\sigma$ 构成的随机 MPS，暂且不假设其归一化）。为了在这一类态中找到对基态的最优逼近，我们必须找到使下式取极小值的 MPS $\ket{\psi}$：
+\begin{equation}
+E = \frac{\bra{\psi} \hat{H} \ket{\psi}}{\braket{\psi}{\psi}} .
+\end{equation} 
+事实证明，这可以转化为一个远比从某个随机态出发做虚时演化高效的基态算法。为了求解此问题，我们引入拉格朗日乘子 $\lambda$，并对
+\begin{equation}
+\bra{\psi} \hat{H} \ket{\psi} - \lambda {\braket{\psi}{\psi}} ;
+\label{eq:Lagrange}
+\end{equation}
+求极值；最终，$\ket{\psi}$ 将是所求的基态，而 $\lambda$ 则是基态能量。表示式~(\ref{eq:Lagrange}) 的 MPS 网络如图~\ref{fig:extremizationexpression} 所示。
+\begin{figure}
+\centering\includegraphics[scale=0.7]{PyMPS_MPSEnergyMinimization.eps}
+\caption{为求得用于寻找基态及其能量而需取极值的泛函所要收缩的网络。左边表示 $\bra{\psi} \hat{H} \ket{\psi}$ 项，右边表示平方范数 $\braket{\psi}{\psi}$。}
+\label{fig:extremizationexpression}
+\end{figure}
+
+这一方法的问题在于，变量（矩阵元 $M^\sigma_{aa'}$）以乘积的形式出现，使其成为一个高度非线性的优化问题。但它同样可以迭代地进行，而这正是驱动 DMRG 的同一思想：保持除一个格点（$\ell$）之外所有格点上的矩阵不变，只把格点 $\ell$ 上的矩阵元 $M^{\sigma_\ell}_{a_{\ell-1}a_\ell}$ 当作变量。于是变量在式~(\ref{eq:Lagrange}) 中只以二次形式出现，对它求极值是一个良性的线性代数问题。这会降低能量，找到一个变分上更好的态，但当然不是最优的。接着继续变动另一格点上的矩阵元，寻找能量更低的态，如此遍历所有格点多轮，直到能量不再改善为止。
+
+让我们先考虑重叠的计算，同时把选定的 $M^{\sigma_\ell}$ 保持显式写出。我们发现
+\begin{equation}
+\braket{\psi}{\psi} = \sum_{\sigma_\ell} \sum_{a_{\ell-1}a_{\ell}} \sum_{a'_{\ell-1}a'_{\ell}} \Psi^A_{a_{\ell-1},a'_{\ell-1}} M^{\sigma_\ell*}_{a_{\ell-1}, a_{\ell}} M^{\sigma_\ell}_{a'_{\ell-1}, a'_{\ell}} \Psi^B_{a_\ell, a_\ell'},
+\end{equation}
+其中
+\begin{eqnarray}
+\Psi^A_{a_{\ell-1},a'_{\ell-1}} &=& \sum_{\sigma_1,\ldots,\sigma_{\ell-1}} (M^{\sigma_{\ell-1}\dagger} \ldots M^{\sigma_1\dagger} M^{\sigma_1} \ldots M^{\sigma_{\ell-1}})_{a_{\ell-1},a'_{\ell-1}} \\
+\Psi^B_{a_\ell, a'_\ell} &=& \sum_{\sigma_{\ell+1},\ldots,\sigma_L} (M^{\sigma_{\ell+1}} \ldots M^{\sigma_L} M^{\sigma_L\dagger} \ldots M^{\sigma_{\ell+1}\dagger})_{a'_\ell,a_\ell} .
+\end{eqnarray}
+如图形表示所特别清楚地显示的那样，在得到最后两个表达式时，适用于重叠的同一套聪明收缩规则同样适用；此外，如果我们在格点 $\ell$ 上从一个相邻格点移动到下一个相邻格点，它们可以迭代地更新，从而使计算代价最小。当格点 1 到 $\ell-1$ 为左正规化、格点 $\ell+1$ 到 $L$ 为右正规化时，归一化条件带来进一步的简化，即
+\begin{equation} 
+\Psi^A_{a_{\ell-1},a'_{\ell-1}} = \delta_{a_{\ell-1},a'_{\ell-1}} \quad\quad  \Psi^B_{a_\ell a'_\ell} = \delta_{a_\ell a'_\ell} .
+\end{equation}
+
+现在让我们考虑 $\hat{H}$ 以 MPO 语言表述时的 $\bra{\psi} \hat{H} \ket{\psi}$。结合上一节对 $\hat{H}\ket{\psi}$ 的分析，我们可以立即写出
+\begin{equation}
+\bra{\psi} \hat{H} \ket{\psi} = \sum_{\sigma_\ell,\sigma'_\ell} \sum_{a'_{\ell-1}a'_{\ell}}  \sum_{a_{\ell-1}a_{\ell}} \sum_{b_{\ell-1},b_\ell} L^{a_{\ell-1},a'_{\ell-1}}_{b_{\ell-1}} W^{\sigma_\ell,\sigma'_\ell}_{b_{\ell-1},b_\ell} R^{a_\ell,a'_\ell}_{b_\ell} M^{\sigma_\ell*}_{a_{\ell-1},a_\ell} M^{\sigma'_\ell}_{a'_{\ell-1},a'_\ell} 
+\end{equation}
+其中 $L$ 和 $R$ 如前面所定义；至于如何高效地求值这样的表达式，前文已经讨论过。
+
+现在若对 $M^{\sigma_\ell*}_{a_{\ell-1},a_\ell}$ 取式~(\ref{eq:Lagrange}) 的极值，我们得到
+\begin{equation}
+\sum_{\sigma'_\ell}  \sum_{a'_{\ell-1}a'_{\ell}} \sum_{b_{\ell-1},b_\ell} L^{a_{\ell-1},a'_{\ell-1}}_{b_{\ell-1}} W^{\sigma_\ell,\sigma'_\ell}_{b_{\ell-1},b_\ell} R^{a_\ell,a'_\ell}_{b_\ell}  M^{\sigma'_\ell}_{a'_{\ell-1},a'_\ell} 
+ - \lambda  \sum_{a'_{\ell-1}a'_{\ell}} \Psi^A_{a_{\ell-1},a'_{\ell-1}} \Psi^B_{a_\ell a'_\ell} M^{\sigma_\ell}_{a'_{\ell-1}, a'_{\ell}} = 0.
+ \label{eq:vMPSeigenequation}
+\end{equation}
+这实际上是一个非常简单的本征值方程；如果我们通过重排指标引入矩阵 $H$ 和 $N$：$H_{(\sigma_\ell a_{\ell-1} a_\ell), (\sigma'_\ell a'_{\ell-1} a'_\ell)} = \sum_{b_{\ell-1},b_\ell} L^{a_{\ell-1},a'_{\ell-1}}_{b_{\ell-1}} W^{\sigma_\ell,\sigma'_\ell}_{b_{\ell-1},b_\ell} R^{a_\ell,a'_\ell}_{b_\ell} $ 以及
+$N_{(\sigma_\ell a_{\ell-1} a_\ell), (\sigma'_\ell a'_{\ell-1} a'_\ell)} = \Psi^A_{a_{\ell-1},a'_{\ell-1}} \Psi^B_{a_\ell, a'_\ell} \delta_{\sigma_\ell,\sigma'_\ell}$，以及满足 $v_{\sigma_\ell a_{\ell-1} a_\ell} = M^{\sigma_\ell}_{a_{\ell-1}, a_{\ell}}$ 的矢量 $v$，我们就得到一个{\em 广义本征值问题}
+矩阵维数为 $(dD^2 \times dD^2)$，
+\begin{equation}
+H v - \lambda N v = 0,
+\end{equation}
+其图示见图~\ref{fig:equationsystem}。
+解出最低本征值 $\lambda_0$ 就得到 $v^0_{\sigma_\ell a_{\ell-1} a_\ell}$，再把它重排回 $M^{\sigma_\ell}_{a_{\ell-1}a_{\ell}}$，而 $\lambda_0$ 即为当前的基态能量估计值。
+
+\begin{figure}
+\centering\includegraphics[scale=0.7]{PyMPS_MPSEnergyEquationSystem.eps}
+\caption{用于优化 $M^{\ \sigma_\ell}_{\ a_{\ell-1},a_\ell}$ 的广义本征值问题。未知矩阵在左、右两个网络中被圈出。}
+\label{fig:equationsystem}
+\end{figure}
+

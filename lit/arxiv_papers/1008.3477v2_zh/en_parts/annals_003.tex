@@ -1,0 +1,115 @@
+\subsubsection{Decomposition of arbitrary quantum states into MPS}
+\label{subsubsec:MPSdecomposition}
+Consider a lattice of $L$ sites with $d$-dimensional local state spaces $\{ \sigma_i \}$ on sites $i=1,\ldots,L$. In fact, while we will be naturally thinking of a one-dimensional lattice, the following also holds for a  lattice of arbitrary dimension on which sites have been numbered; however, MPS generated from states on higher-dimensional lattices will not be manageable in numerical practice. The most general pure quantum state on the lattice reads
+\begin{equation}
+\ket{\psi} = \sum_{\sigma_1,\ldots,\sigma_L} c_{\sigma_1 \ldots \sigma_L} \ket{\sigma_1,\ldots,\sigma_L},
+\end{equation}
+where we have exponentially many coefficients $c_{\sigma_1 \ldots \sigma_L}$ with quite oblique content in typical quantum many-body problems. Let us assume that it is normalized. Can we find a notation that gives a more local notion of the state (while preserving the quantum non-locality of the state)? Indeed, SVD allows us to do just that. The result may look quite forbidding, but will be shown to relate profoundly to familiar concepts of quantum physics. There are three ways of doing this that are of relevance to us.
+
+{\em (i) Left-canonical matrix product state.} In a first step, we {\em reshape} the state vector with $d^L$ components into a matrix $\Psi$ of dimension $(d \times d^{L-1})$, where the coefficients are related as 
+\begin{equation}
+\Psi_{\sigma_1, (\sigma_2 \ldots \sigma_L)} = c_{\sigma_1 \ldots \sigma_L}  .
+\end{equation}
+An SVD of $\Psi$ gives
+\begin{equation}
+c_{\sigma_1 \ldots \sigma_L}  = \Psi_{\sigma_1, (\sigma_2 \ldots \sigma_L)} = \sum_{a_1}^{r_1} U_{\sigma_1,a_1} S_{a_1,a_1} (V^\dagger)_{a_1, (\sigma_2 \ldots \sigma_L)} \equiv \sum_{a_1}^{r_1}  U_{\sigma_1,a_1} c_{a_1\sigma_2\ldots\sigma_L} ,
+\end{equation}
+where in the last equality $S$ and $V^\dagger$ have been multiplied and the resulting matrix has been reshaped back into a vector. The rank is $r_1 \leq d$. We now decompose the matrix $U$ into a collection of $d$ row vectors $A^{\sigma_1}$ with entries $A^{\sigma_1}_{a_1}=U_{\sigma_1,a_1}$. At the same time, we reshape $c_{a_1\sigma_2\ldots\sigma_L}$ into a matrix $\Psi_{(a_1\sigma_2),(\sigma_3 \ldots \sigma_L)}$ of dimension $(r_1 d \times d^{L-2})$, to give
+\begin{equation}
+c_{\sigma_1 \ldots \sigma_L}  = \sum_{a_1}^{r_1} A^{\sigma_1}_{a_1} \Psi_{(a_1\sigma_2), (\sigma_3 \ldots \sigma_L)} .
+\end{equation}
+$\Psi$ is subjected to an SVD, and we have 
+\begin{equation}
+c_{\sigma_1 \ldots \sigma_L}  = \sum_{a_1}^{r_1} \sum_{a_2}^{r_2} A^{\sigma_1}_{a_1} U_{(a_1\sigma_2),a_2} S_{a_2,a_2} (V^\dagger)_{a_2, (\sigma_3 \ldots \sigma_L)} =  
+\sum_{a_1}^{r_1} \sum_{a_2}^{r_2} A^{\sigma_1}_{a_1} A^{\sigma_2}_{a_1,a_2} \Psi_{(a_2\sigma_3), (\sigma_4 \ldots \sigma_L)} ,
+\end{equation}
+where we have replaced $U$ by a set of $d$ matrices $A^{\sigma_2}$ of dimension $(r_1 \times r_2)$ with entries $A^{\sigma_2}_{a_1,a_2} = U_{(a_1\sigma_2),a_2}$ and multiplied $S$ and $V^\dagger$, to be reshaped into a matrix $\Psi$ of dimension $(r_2 d \times d ^{L-3})$, where $r_2 \leq r_1 d \leq d^2$. Upon further SVDs, we obtain
+\begin{equation}
+c_{\sigma_1 \ldots \sigma_L} = \sum_{a_1, \ldots, a_{L-1}} A^{\sigma_1}_{a_1} A^{\sigma_2}_{a_1,a_2} \ldots A^{\sigma_{L_1}}_{a_{L-2},a_{L-1}} A^{\sigma_{L}}_{a_{L-1}}
+\end{equation}
+or more compactly
+\begin{equation}
+c_{\sigma_1 \ldots \sigma_L} = A^{\sigma_1} A^{\sigma_2} \ldots A^{\sigma_{L-1}} A^{\sigma_L} ,
+\end{equation}
+where we have recognized the sums over $a_1$, $a_2$ and so forth as matrix multiplications. The last set of matrices $A^{\sigma_L}$ in fact consists of column vectors. If we wish, dummy indices 1 may be introduced in the first and last $A$ to turn them into matrices, too. In any case, the (arbitrary) quantum state is now represented exactly in the form of a {\em matrix product state:}
+\begin{equation}
+\ket{\psi} = \sum_{\sigma_1,\ldots,\sigma_L} A^{\sigma_1} A^{\sigma_2} \ldots A^{\sigma_{L-1}} A^{\sigma_L} \ket{\sigma_1,\ldots,\sigma_L} .
+\end{equation}
+
+Let us study the properties of the $A$-matrices. The maximal dimensions of the matrices are reached when for each SVD done the number of non-zero singular values is equal to the upper bound (the lesser of the dimensions of the matrix to be decomposed). Counting reveals that the dimensions may maximally be $(1 \times d), (d \times d^2), \ldots, (d^{L/2-1} \times d^{L/2}), (d^{L/2} \times d^{L/2-1}), \ldots, (d^2 \times d), (d \times 1)$, going from the first to the last site (I have assumed $L$ even for simplicity here). This shows that in practical calculations it will usually be impossible to carry out this exact decomposition explicitly, as the matrix dimensions blow up exponentially.
+
+But there is more to it. Because at each SVD $U^\dagger U = I$ holds, the replacement of $U$ by a set of $A^\sigma$ entails the following relationship:
+\begin{eqnarray*}
+\delta_{a_\ell,a'_\ell} &=& \sum_{a_{\ell-1}\sigma_\ell} (U^\dagger)_{a_\ell, (a_{\ell-1}\sigma_\ell)} U_{(a_{\ell-1}\sigma_\ell), a'_\ell} \\
+&=& \sum_{a_{\ell-1}\sigma_\ell} (A^{\sigma_\ell\dagger})_{a_\ell, a_{\ell-1}} A^{\sigma_\ell}_{a_{\ell-1}, a'_\ell} \\
+&=& \sum_{\sigma_\ell} ( A^{\sigma_\ell\dagger} A^{\sigma_\ell})_{a_\ell,a'_\ell} 
+\end{eqnarray*}
+or, more succinctly,
+\begin{equation}
+\sum_{\sigma_\ell} A^{\sigma_\ell \dagger} A^{\sigma_\ell} = I . 
+\end{equation}
+Matrices that obey this condition we will refer to as {\em left-normalized}, matrix product states that consist only of left-normalized matrices we will call {\em left-canonical}. In fact, a closer look reveals that on the last site the condition may be technically violated, but as we will see once we calculate norms of MPS this corresponds to the original state not being normalized to 1. Let us ignore this subtlety for the moment.
+
+In view of the DMRG decomposition of the universe into blocks A and B it is instructive to split the lattice into parts A and B, where A comprises sites $1$ through $\ell$ and B sites $\ell+1$ through $L$. We may then introduce states
+\begin{eqnarray}
+\ket{a_\ell}_A &=& \sum_{\sigma_1,\ldots,\sigma_\ell} (A^{\sigma_1} A^{\sigma_2} \ldots A^{\sigma_\ell})_{1,a_\ell} \ket{\sigma_1,\ldots,\sigma_\ell} \\
+\ket{a_\ell}_B &=& \sum_{\sigma_{\ell+1},\ldots,\sigma_L} (A^{\sigma_{\ell+1}} A^{\sigma_{\ell+2}} \ldots A^{\sigma_L})_{a_\ell,1} \ket{\sigma_{\ell+1},\ldots,\sigma_L}
+\end{eqnarray}
+such that the MPS can be written as
+\begin{equation}
+\ket{\psi} = \sum_{a_\ell} \ket{a_\ell}_A \ket{a_\ell}_B . 
+\end{equation}
+This pairing of states looks tantalizingly close to a Schmidt decomposition of $\ket{\psi}$, but this is not the case. The reason for this is that while the $\{ \ket{a_\ell}_A \}$ form an orthonormal set, the $\{ \ket{a_\ell}_B \}$ in general do not. This is an immediate consequence of the left-normality of the $A$-matrices. For part A we find 
+\begin{eqnarray*}
+\phantom\langle_A \braket{a'_\ell}{a_\ell}_A &=& \sum_{\sigma_1,\ldots,\sigma_\ell} (A^{\sigma_1} \ldots A^{\sigma_\ell})^*_{1,a'_\ell} (A^{\sigma_1} \ldots A^{\sigma_\ell})_{1,a_\ell} \\
+&=& \sum_{\sigma_1,\ldots,\sigma_\ell} (A^{\sigma_1} \ldots A^{\sigma_\ell})^\dagger_{a'_\ell,1} (A^{\sigma_1} \ldots A^{\sigma_\ell})_{1,a_\ell} \\
+&=& \sum_{\sigma_1,\ldots,\sigma_\ell} (A^{\sigma_\ell\dagger} \ldots A^{\sigma_1\dagger}A^{\sigma_1} \ldots A^{\sigma_\ell})_{a'_\ell,a_\ell} \\
+&=& \delta_{a'_\ell,a_\ell} ,
+\end{eqnarray*}
+where we have iteratively carried out the sums over $\sigma_1$ through $\sigma_\ell$ and used left-normality. On the other hand, the same calculation for part B yields
+\begin{eqnarray*}
+\phantom\langle_B \braket{a'_\ell}{a_\ell}_B &=& \sum_{\sigma_{\ell+1},\ldots,\sigma_L} (A^{\sigma_{\ell+1}} \ldots A^{\sigma_L})^*_{a'_\ell,1} (A^{\sigma_{\ell+1}} \ldots A^{\sigma_L})_{a_\ell,1} \\
+&=& \sum_{\sigma_{\ell+1},\ldots,\sigma_L} (A^{\sigma_L\dagger} \ldots A^{\sigma_{\ell+1}\dagger})_{1,a'_\ell} (A^{\sigma_{\ell+1}} \ldots A^{\sigma_L})_{a_\ell,1} \\
+&=& \sum_{\sigma_{\ell+1},\ldots,\sigma_L} (A^{\sigma_{\ell+1}} \ldots A^{\sigma_L}A^{\sigma_L\dagger} \ldots A^{\sigma_{\ell+1}\dagger})_{a'_\ell,a_\ell},
+\end{eqnarray*}
+which cannot be simplified further because in general $\sum_\sigma A^\sigma A^{\sigma\dagger} \neq I$.
+
+The change of representation of the state coefficients can also be represented graphically (Fig.~\ref{fig:MPSBySVD}). Let us represent the coefficient $c_{\sigma_1 \ldots \sigma_L}$ as a black box (with rounded edges), where the physical indices $\sigma_1$ through $\sigma_L$ stick out vertically. The result after the first decomposition we represent as in the second line, where we have on the left hand site an object representing $A^{\sigma_1}_{a_1}$, on the right $c_{a_1 \sigma_2 \ldots \sigma_L}$. The auxiliary degrees of freedom ($a_1$) are represented by horizontal lines, and the rule is that {\em connected lines are summed over.} The second step is then obvious, we have 
+$A^{\sigma_1}_{a_1}$, then $A^{\sigma_2}_{a_1,a_2}$ and on the right $c_{a_2 \sigma_3 \ldots \sigma_L}$, with all connected lines summed over. In the end, we have arrived at $L$ $A$-matrices multiplied together and labelled by physical indices (last line of the figure).
+
+The graphical rules for the $A$-matrices, that on the first and last site are row and column vectors respectively, are summarized in Fig.~\ref{fig:ABulkEdge}: a site $\ell$ is represented by a solid circle, the physical index $\sigma_\ell$ by a vertical line and the two matrix indices by horizontal lines.
+
+\begin{figure}
+\centering\includegraphics[scale=0.6]{PyMPS_MPSBySVD.eps}
+\caption{Graphical representation of an iterative construction of an exact MPS representation of an arbitrary quantum state by a sequence of singular value decompositions.}
+\label{fig:MPSBySVD}
+\end{figure}
+
+\begin{figure}
+\centering\includegraphics[scale=0.6]{PyMPS_ABulkEdge.eps}
+\caption{Graphical representation of $A$-matrices at the ends and in the bulk of chains: the left diagram represents $A\ ^{\ \sigma_{1}}_{\ 1,a_1}$, the row vector at the left end, the right diagram represents $A\ ^{\sigma_{L}}_{a_L,1}$, the column vector at the right end. In the center there is $A\ ^{\sigma_{\ell}}_{a_{\ell-1},a_\ell}$.}
+\label{fig:ABulkEdge}
+\end{figure}
+
+Let me conclude this exposition by showing the generation of a left-canonical matrix product state by a sequence of QR decompositions. We start as
+\begin{equation}
+c_{\sigma_1\ldots\sigma_L} = \Psi_{\sigma_1,(\sigma_2\ldots\sigma_L)} =
+\sum_{a_1} Q_{\sigma_1,a_1} R_{a_1,(\sigma_2\ldots\sigma_L)} =
+\sum_{a_1} A^{\sigma_1}_{1,a_1} \Psi_{(a_1\sigma_2),(\sigma_3\ldots\sigma_L)},
+\end{equation}
+where we reshape $Q\rightarrow A$ and $R\rightarrow \Psi$ in analogy to the SVD procedure. The next QR decomposition yields
+\begin{equation}
+c_{\sigma_1\ldots\sigma_L} = \sum_{a_1,a_2} A^{\sigma_1}_{1,a_1} Q_{(a_1\sigma_2),a_2} R_{a_2,(\sigma_3\ldots\sigma_L)} = \sum_{a_1,a_2} A^{\sigma_1}_{1,a_1} A^{\sigma_2}_{a_1,a_2} \Psi_{(a_2\sigma_3),(\sigma_4\ldots\sigma_L)}
+\end{equation}
+and so on (on the right half of the chain, thin QR is needed, as an analysis of the dimensions shows). $Q^\dagger Q=I$ implies the desired left-normalization of the $A$-matrices. If numerically feasible, this is faster than SVD. What we lose is that we do not see the spectrum of the singular values; unless we use more advanced rank-revealing QR decompositions, we are also not able to determine the ranks $r_1, r_2, \ldots$, unlike in SVD. This means that this decomposition fully exploits the maximal $A$-matrix dimensions.
+
+{\em (ii) Right-canonical matrix product state.} Obviously, there was nothing specific in the decomposition starting from the left, i.e.\ site 1. Similarly, we can start from the right in order to obtain
+\begin{eqnarray*}
+c_{\sigma_1 \ldots \sigma_L} &=& \Psi_{(\sigma_1 \ldots \sigma_{L-1}), \sigma_L} \\
+&=& \sum_{a_{L-1}} U_{(\sigma_1 \ldots \sigma_{L-1}), a_{L-1}} S_{a_{L-1},a_{L-1}} (V^\dagger)_{a_{L-1},\sigma_L} \\
+&=& \sum_{a_{L-1}} \Psi_{(\sigma_1 \ldots \sigma_{L-2}),(\sigma_{L-1} a_{L-1})} B^{\sigma_L}_{a_{L-1}} \\
+&=& \sum_{a_{L-2}, a_{L-1}} U_{(\sigma_1 \ldots \sigma_{L-2}), a_{L-2}} S_{a_{L-2},a_{L-2}} (V^\dagger)_{a_{L-2},(\sigma_{L-1}a_{L-1})} B^{\sigma_L}_{a_{L-1}} \\
+&=& \sum_{a_{L-2}, a_{L-1}} \Psi_{(\sigma_1 \ldots \sigma_{L-3}), (\sigma_{L-2} a_{L-2})} B^{\sigma_{L-1}}_{a_{L-2},a_{L-1}} B^{\sigma_L}_{a_{L-1}} = \ldots \\
+&=& \sum_{a_{1},\ldots, a_{L-1}} B^{\sigma_1}_{a_{1}} B^{\sigma_{2}}_{a_{1},a_{2}} \ldots B^{\sigma_{L-1}}_{a_{L-2},a_{L-1}} B^{\sigma_L}_{a_{L-1}}.
+\end{eqnarray*}
+

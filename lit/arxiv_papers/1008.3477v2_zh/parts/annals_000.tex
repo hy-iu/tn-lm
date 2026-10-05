@@ -1,0 +1,131 @@
+\documentclass[a4paper,10pt,oneside,onecolumn,1p,times]{elsarticle}
+
+%\documentclass[letter,10pt,oneside,onecolumn,1p,times]{elsarticle}
+
+% ---- 中文排版支持（xelatex 编译）----
+\usepackage{xeCJK}
+\IfFontExistsTF{SimSun}{%
+  \setCJKmainfont[BoldFont=SimHei, ItalicFont=KaiTi]{SimSun}%
+  \setCJKsansfont{SimHei}%
+  \setCJKmonofont{FangSong}%
+}{%
+  % 本机无 SimSun：XeTeX 按家族名会命中 Noto TTC 的第 0 面（jp），
+  % 故用 fontTools 从 TTC 抽出 SC 面存于 ~/.fonts，并按文件路径加载
+  \setCJKmainfont[Path=/home/w/.fonts/, BoldFont={NotoSerifCJKsc-Bold.otf}]{NotoSerifCJKsc-Regular.otf}%
+  \setCJKsansfont[Path=/home/w/.fonts/, BoldFont={NotoSansCJKsc-Bold.otf}]{NotoSansCJKsc-Regular.otf}%
+  \setCJKmonofont[Path=/home/w/.fonts/]{NotoSansMonoCJKsc-Regular.otf}%
+}
+\renewcommand\figurename{图}
+\renewcommand\tablename{表}
+\renewcommand\refname{参考文献}
+\renewcommand\contentsname{目\quad 录}
+\abstracttitle{摘要}
+% ------------------------------------
+
+\newcommand{\mc}{\mathcal}
+\newcommand{\ham}{\hat{H}}                          % Hamiltonian 
+\newcommand{\Tr}{{\rm Tr}}
+\newcommand{\tr}{{\rm Tr }}
+\newcommand{\diff}{{\rm d}}
+\newcommand{\eul}{{\rm e }}
+\newcommand{\imag}{{\rm i }}
+\newcommand{\obs}{{\rm obs}}
+\newcommand{\fit}{{\rm fit}}
+\newcommand{\bra}[1]{\mbox{$\langle #1  |$}} 
+\newcommand{\ket}[1]{\mbox{$| #1  \rangle$}} 
+\newcommand{\identity}{I}
+\newcommand{\braket}[2]{\mbox{$\langle #1  | #2 \rangle$}} 	% <x|y>
+\newcommand{\fat}[1]{\mbox{\boldmath$#1$\unboldmath}}	% fat also for Greek
+\newcommand{\syslength}{L}
+\newcommand{\Eq}[1]{式~(\ref{#1})}
+
+
+
+\begin{document}
+\title{矩阵乘积态时代的密度矩阵重正化群\\ The density-matrix renormalization group in the age of matrix product states}
+\author{Ulrich Schollw\"{o}ck}
+\ead{schollwoeck@lmu.de}
+\address{Department of Physics, Arnold Sommerfeld Center for Theoretical Physics and Center for NanoScience, University of Munich, Theresienstrasse 37, 80333 Munich, Germany \\
+Institute for Advanced Study Berlin, Wallotstrasse 19, 14159 Berlin, Germany}
+
+\begin{abstract}
+密度矩阵重正化群方法（DMRG）在过去十年中已确立了其作为模拟一维强关联量子格点系统静态与动力学的首要方法的地位。在该方法的进一步发展中，人们认识到 DMRG 所处理的是一类极有研究价值的量子态，即所谓矩阵乘积态（MPS），这使得我们对 DMRG 方法的内在结构、进一步潜力及其局限有了深入得多的理解。在本文中，我想用 MPS 语言对当前的 DMRG 思想作详细阐述，以便使 DMRG 算法族的推荐实现方式能够完全用 MPS 术语透明地表达出来。随后我将转而讨论一些可能富有成果的进一步算法发展方向：尽管 DMRG 如今已是非常成熟的方法，我仍然看到进一步改进的潜力，若干新近提出的算法即是明证。   
+\end{abstract}
+
+\maketitle 
+
+\tableofcontents
+
+\section{引言}
+低维格点上的强关联量子系统至今仍在向现代量子多体物理提出一些最引人入胜的挑战。在凝聚态物理中，关联效应在量子自旋链与自旋梯子、一维与二维空间中的阻挫磁体以及高温超导体等众多令人关注的物理系统中占据主导地位。而近年来，光晶格中高度可控、可调谐的强相互作用超冷原子气体的出现，为这一领域开辟了一个全新的方向\cite{Bloch08}。 
+
+无论从解析还是数值的角度，这些系统都难以研究：只有在极少数情形下才能得到精确的解析解，例如一维情形下借助 Bethe 拟设的求解\cite{Bethe31,Lieb68}。在强相互作用存在时，微扰理论会失效。其他方法，如场论方法，曾给出深刻的洞见，例如关于整数自旋反铁磁链的 Haldane 能隙物理\cite{Haldane83}，但它们要作可能相当严重的近似，这些近似最终必须靠数值方法加以检验控制。这类数值方法包括精确对角化、量子蒙特卡罗、级数展开或耦合簇方法。
+
+自 1992 年 Steve White 发明以来\cite{White92,White93}，密度矩阵重正化群（DMRG）已牢固确立了其作为当前
+研究一维量子格点的最强大数值方法的地位\cite{Schollwoeck05,Hallberg06}。在对诸如海森堡、$t$-$J$ 与 Hubbard 等强关联哈密顿量的低激发本征态（特别是基态）的静态性质（能量、序参量、$n$ 点关联函数）作了初步研究之后，该方法又被推广到研究
+本征态的动力学性质，如动力学结构函数或频率依赖的电导率\cite{Hallberg95,Ramasesha97,Kuhner99,Jeckelmann02}。与此同时，将其推广用于分析二维经典 \cite{Nishino95} 与一维量子 \cite{Wang97,Shibata97} 转移矩阵，使人们得以获得经典二维系统与量子一维系统的高精度有限温度信息；更近一些时候，DMRG 的转移矩阵变体也被推广到有限温度下的动力学\cite{Sirker05}。它甚至被推广到数值上要求高得多的非厄米（赝）哈密顿量的研究，这类哈密顿量出现在对一维系统远离平衡时向经典稳态弛豫的分析中\cite{Hieida98,Carlon99,Carlon01,Henkel01}。 
+
+在 DMRG 的许多应用中，结果的精度基本上只受机器精度的限制，即便使用的数值资源相当有限也是如此，而且与哈密顿量的具体性质几乎无关。因此毫不奇怪，除了把算法推广到越来越多的问题类别之外，人们也想知道 DMRG 优异表现的物理根源，以及这一成功故事能否扩展到实时动力学或二维系统的研究。 
+
+事实上，这两个问题紧密相关：人们很快就意识到，DMRG 应用于二维格点时只能算中等成功：虽然相对较小的系统可以高精度地加以研究\cite{White96,White98a,White98b,White00,White03,Chernyshev03,Chernyshev05,White07}，但所需的数值资源量基本上随系统尺寸指数增长，使大的格点系统无法企及。事后来看，DMRG 在一维与二维中截然不同的行为，与多体态中量子纠缠在一维和二维的不同标度密切相关\cite{Vidal03,Latorre04}，后者由所谓面积定律所支配（近期综述见 \cite{Eisert10}）。 
+
+在本文中，我将局限于一维物理的框架之内；虽然把 DMRG 推广到更高维度会自然地约化为一维 DMRG，但由此涌现的结构远比一维丰富，超出了本文的范围。  
+  
+在一项原本不相干的发展中，所谓{\em 矩阵乘积态}（MPS）作为适合解析研究的一类有趣量子态被发现了。事实上，这一结构如此简单却又如此有力，因此在过去五十多年里它们以各种各样新的名称被反复引入和使用（最著名的或许是 Baxter \cite{Baxter68}）也就不足为奇了。就本文的语境而言，最相关的史前事例可以说是标志性的一维 AKLT 态在此形式下的精确表达式\cite{Affleck87,Affleck88,Fannes89}，它引发了对 MPS 中平移不变子类——即所谓有限关联态\cite{Fannes92}——的大量研究。此后这一形式在各种语境中被用于解析变分计算，例如自旋-1 海森堡反铁磁体\cite{Klumper93,Kolezhuk96a,Kolezhuk96b,Kolezhuk98}与亚铁磁体\cite{Kolezhuk97,Kolezhuk99}。
+
+MPS 与 DMRG 的联系分两步建立起来。第一步，Ostlund 与 Rommer \cite{Ostlund95} 意识到，所谓无限系统 DMRG 的块增长步骤可以按 MPS 中矩阵所取的形式表达为一个矩阵。由于在均匀系统中这一块增长步骤在热力学极限下导向一个不动点，他们便取该不动点矩阵作为平移不变 MPS 的构建单元。更进一步，人们认识到更重要的有限系统 DMRG 给出 MPS 形式的量子态，并在其上作变分优化\cite{Dukelsky98}。人们还认识到，在传统 DMRG 中，作变分优化的态类会随算法的推进而改变，因此如果要求某种意义上``完美''的变分性质，就需要对算法作一点小改动，然而发现这会加剧（可解决的）亚稳性问题\cite{Takasaki99,White05}。 
+
+一个耐人寻味的历史事实是，直到 2004 年前后 Cirac、Verstraete、Vidal 及其合作者开始非常系统地发掘 MPS 的威力之前，只有少数 DMRG 实践者认真对待这一进展。虽然人们认为它对概念性目的有用，但令人惊讶的是，很少有人去思考如何纯粹用 MPS 语言重新思考和重新表述实际使用的 DMRG 实现；可以说，这是因为绝大多数传统 DMRG 应用（即具有开边界条件的量子链的基态问题）几乎从中无利可图。而被忽视的是：它轻而易举地开辟了通往 DMRG 强大扩展的道路，这些扩展在传统 DMRG 语言中既难以看出也难以表述。 
+
+一个非穷尽的扩展清单可以列出：实时演化\cite{Vidal03a,Vidal04b,Daley04,WhiteFeiguin04,VerstraeteRipoll04,Prosen09,Hartmann09,Banuls09}（也包括有限温度下的\cite{VerstraeteRipoll04,Feiguin05a}）、周期边界条件的高效使用\cite{VerstraetePorras04,Pippan10,Pirvu10}、可靠的单格点 DMRG\cite{White05}、数值重正化群（NRG）应用\cite{Weichselbaum09}、无限系统算法\cite{Vidal07,Orus08,McCulloch08}、连续系统\cite{Verstraete10}，更不必说从 \cite{VerstraeteCirac04} 开始、利用 MPS 态类的推广\cite{Nishino01} 而在更高维度取得的进展了。 
+
+本文的目标不可能是提供一部从 2010 年视角回顾 1992 年以来 DMRG 的完整综述，尤其是鉴于已有综述\cite{Schollwoeck05}试图对截至 2004 年夏的 DMRG 作出相当全面的论述。我更愿意把自己限定在较新的进展上，并完全用矩阵乘积态的语言来表述它们，重点放在方法的具体构造上，而不是展示大量应用。我希望这篇综述能让本领域的新手迅速写出自己的代码，并牢牢掌握 MPS 算法的关键构件。它与 \cite{VerstraeteMurg08,McCulloch07} 的引论部分在所介绍的关键方法上有重叠，但侧重于不同的扩展（其中一些产生于这些文章之后），并且在许多地方力求更加显明。它采取的观点不同于 \cite{Peschel98}——那是 1998 年对 DMRG 的首次全面阐述，因为在那时与 MPS 的联系（虽然已知）尤其是与量子信息的联系在许多方面尚未被开发利用，而后者正是本文的焦点。尽管如此，作为第一个``历史性''步骤，我想提醒读者回顾引入 DMRG 的原始方式，它并不借助矩阵乘积态的思想。这应当能让读者更容易进入较早的文献，不过如果对此不感兴趣，也可以直接跳到第 \ref{sec:matrixproductstates} 节。 
+ 
+第二步，我将证明任何量子态都可以精确地写成一种非常特定的形式，也就是前面已经提到的矩阵乘积态所给出的形式。事实上，之所以限于一维，是因为只有在这种情形下 MPS 才在数值上可处理。我将着重指出 MPS 的特殊规范形式，并建立它们与作为数学工具的奇异值分解（SVD）以及作为量子态紧凑表示的 Schmidt 分解之间的联系。在此之后，我将解释 MPS 如何成为一维状态抽取方案（如 DMRG 与 Wilson 的 NRG 中出现的那类方案）的自然框架。作为一个简单而非平凡的例子，我将显式讨论其 MPS 形式下的 AKLT 态。
+然后我们转向显式讨论对 MPS 的各种操作：重叠、归一化、算符矩阵元、期望值以及 MPS 相加。这些是对任何量子态都会做的操作；更具 MPS 特色的是把它们化为便于计算的规范形式的方法，以及用一个维数更小的 MPS 来逼近另一个 MPS 的方法。在结束这篇关于 MPS 的阐述时，我将讨论我所偏爱的 MPS 记法、Vidal 提出的另一种记法以及 DMRG 书写态的方式之间的关系与相互转换；这一相对技术性的章节应有助于读者更顺利地阅读文献。
+
+MPS 的思想可以从态推广到算符的表示，因此我接着讨论矩阵乘积算符（MPO）的使用\cite{VerstraeteRipoll04,McCulloch07,VerstraetePirvu08,Crosswhite08,Frowis10}。据我所见，所有我们感兴趣的算符（从局域算符、键演化算符一直到完整哈密顿量）都能用 MPO 得到非常紧凑而透明的表述。这使 DMRG 相关算法的表述大为简洁，有时甚至在数值上更为精确，但它们的使用尚未广泛传播。
+
+不可否认，读到这里，读者的耐心可能已经被消磨了不少，因为迄今为止还没有一个现实可用的算法（例如基态搜索或时间演化）用 MPS 语言表述出来；但将会显而易见的是，DMRG 算法中大量繁琐的数值细节已经被干净利落地隐藏在 MPS 与 MPO 结构之中。 
+
+我将讨论基态算法，讨论单中心格点或双中心格点的 DMRG 与完全基于 MPS 的算法之间的等价性与差异，包括避免陷入亚稳态的改进。我将聚焦于开边界条件的有限系统，这些方法在此表现卓越。
+
+在此之后，我转向动力学的时间依赖方法，涵盖纯态与混合态。在讨论了基本算法及其细微差别之后，我将聚焦于延长此类模拟时间范围这一关键问题：能够对复杂量子多体态计算高精度的实时与虚时演化，令许多人尤为振奋，部分也因为它来得正是时候，恰逢高度可调谐的超冷原子系统的研究兴起。虽然这一发展已经带来了大量有趣的洞见与应用，但人们很快意识到，含时 DMRG 及相关方法的时间范围受制于非平衡量子态中纠缠的增长，使得长时间物理无法企及。在这一背景下，近期在设法超越这一限制方面已经取得了有趣的进展。
+
+本综述以两条进一步的发展轴线作结。我将首先讨论 DMRG 与 Wilson 的 NRG 之间的联系，展示如何以非常简洁的方式表述 NRG，以及如何在多个方向上对它加以改进。这闭合了一个有趣的历史循环，因为 NRG 在均匀一维量子格点上的彻底失败——与之相对的是映射到特殊非均匀一维量子格点上的量子杂质模型——正是 White 发明 DMRG 的出发点\cite{WhiteNoack92}。
+
+接下来我考察直接在热力学极限下工作的基于 MPS 的无限尺寸算法，其中一种基于时间演化（iTEBD）\cite{Vidal07}。另一种（iDMRG）\cite{McCulloch08}是无限系统 DMRG 算法的扩展，它有一段有趣的历史：在许多关于 DMRG 的早期论述中，它被当作 DMRG 的关键所在，而有限系统 DMRG 只被当作实践者为进一步提高数值精度而附加的手段。后来人们认识到，在许多情形下即使只求定性正确，也必须运用有限系统 DMRG，而无限系统 DMRG 只被视为一种热身步骤。直到最近，McCulloch\cite{McCulloch08} 才指出一种方法，把无限系统 DMRG 变成生成均匀系统热力学极限态的高效工具。 
+
+最后但同样重要的是，我将对本文未能涵盖的 MPS 进一步应用作一展望。
+
+\section{密度矩阵重正化群（DMRG）}
+\subsection{无限系统与有限系统算法}
+作为玩具模型，让我们考虑一维空间中长度为 $L$、外磁场为 $h$ 的（各向异性）$S=\frac{1}{2}$ 海森堡反铁磁（$J=1$）自旋链， 
+\begin{equation}
+\hat{H} = \sum_{i=1}^{L-1} \frac{J}{2} (\hat{S}^+_{i}  \hat{S}^-_{i+1} + \hat{S}^-_{i} \hat{S}^+_{i+1}) + J^z \hat{S}^z_{i} \hat{S}^z_{i+1} - \sum_{i=1}^L h \hat{S}^z_i .
+\label{eq:basicHam}
+\end{equation}
+我们考虑{\em 开边界条件}（图~\ref{fig:toymodel}），这一点非常值得强调：从解析的角度看，周期边界条件通常更方便；许多数值方法其实并不强烈依赖边界条件，有些方法（如精确对角化）在周期边界条件下甚至更为高效。而 DMRG 则偏爱开边界条件。
+
+\begin{figure}
+\centering\includegraphics[width=0.8\textwidth]{PyMPS_Toymodel.eps}
+\caption{我们的玩具模型：一条长度为 $L$、两端开放的自旋链，每个格点上有一个自旋-$\frac{1}{2}$，并与最近邻相互作用。}
+\label{fig:toymodel}
+\end{figure}
+
+还应强调的是，DMRG 作为在某类态上作变分的方法，并不受诸如费米子符号问题之类的困扰，可以同样应用于玻色系统与费米系统。 
+
+DMRG 的出发点是求 $\hat{H}$ 的基态与基态能量。我们可以对热力学极限 $L\rightarrow\infty$ 提出这个问题，也可以更谦逊一些对有限 $L$ 提出。在前一种情形，答案由{\em 无限系统} DMRG 给出，尽管精度相当有限；在后一种情形，答案虽然可以从无限系统 DMRG 读出，但更合适的做法是运行一个两步流程，先运行无限系统 DMRG，再继续运行{\em 有限系统} DMRG。
+
+无论如何，数值上的拦路虎来自希尔伯特空间维数的指数增长，在我们的例子中即 $d^L$，其中 $d=2$ 是自旋-$\frac{1}{2}$ 的局域态空间维数。 
+
+\subsection{无限系统 DMRG}
+
+无限系统 DMRG 处理这一问题的办法是考虑长度渐增的链，通常为 $L=2$、$4$、$6$、$\ldots$，并舍弃足够多的态以使希尔伯特空间的大小保持在可处理的范围内。这一{\em 状态抽取}步骤是算法成功的关键：我们假设存在一个能够描述相关物理的约化态空间，并且我们能够设计出一个把它识别出来的流程。第一个假设是一切变分方法的典型假设，而我们将会看到，在一维情形我们确实很幸运：一维中所有短程哈密顿量都存在这样一个包含相关物理的约化态空间！
+
+如何找到它？在无限系统 DMRG 中（图~\ref{fig:DMRGCombined}），构建过程如下：我们引入左、右两个{\em 块} A 与 B，第一步中它们可以各由一个自旋（或格点）组成，使总链长为 2。更长的链随后从左右两端迭代地构建，在两块之间插入成对的自旋，使链长依次增长到 4、6 等等；每一步中，之前的自旋被并入左右两块，使块尺寸按 1、2、3 等等增长，导致整块态空间维数按 $2^\ell$ 指数增长，其中 $\ell$ 是当前块尺寸。于是我们的链始终具有块-格点-格点-块的结构，即 A$\bullet\bullet$B。
+
+让我们假定我们的数值资源足以处理维数为 $D$ 的约化块态空间（实践中 $D$ 大约取 $O(100)$ 到 $O(1000)$ 之间的值），并且对长度为 $\ell$ 的块 A，我们在一个 $D$ 维约化希尔伯特空间中拥有块 A 的有效描述，其正交归一基为 $\{ \ket{a_\ell}_A \}$。对于非常小的块，基的维数可能小于 $D$；对较大的块，则必定已发生过某种截断，这一点我们暂且视作理所当然。这里不妨立即提到，在文献中，$D$——它将被证明是一个关键数字——有着各种各样新的名称：在传统 DMRG 文献中，它通常被记作 $m$（或 $M$）；在较新的矩阵乘积态文献中，则 $D$ 与 $\chi$ 两个记号都在使用。
+
+在这一框架内，我们现在可以问：(i) 当前长度为 $2\ell +2$ 的链（也称为{\em 超块}）的基态是什么；(ii) 如何为新块 A$\bullet$ 与 $\bullet$B 找到维数为 $D$ 的约化希尔伯特空间。 
+

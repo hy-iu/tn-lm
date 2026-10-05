@@ -1,0 +1,137 @@
+\subsection{Minimally entangled typical thermal states}
+Simulating thermal density operators for the calculation of static and dynamic properties works very well. Theoretically, there are no limits to this method. In practice, one encounters several limitations. On the one hand, simulations become difficult at very low temperatures $T\rightarrow 0$. In this limit, the mixed state living on the physical system P will evolve towards the pure state projector on the ground state, $\hat{\rho}^P_\infty = \ket{\psi_\infty}_P \phantom{\,}_P\bra{\psi_\infty}$ (here I use $\ket{\psi_\infty}_P$ as the ground state of the physical Hamiltonian $\hat{H}$, to refer to $\beta=\infty$ as in the purification section). But in this limit P is not entangled with the auxiliary system Q anymore, and we simulate a product of two pure states: assume for simplicity that the ground state energy is set to 0. Consider now the reduced density operator for the auxiliary system. Up to an irrelevant norm, 
+\begin{equation}
+\hat{\rho}^Q_{\beta\rightarrow\infty} = \lim_{\beta\rightarrow\infty} \tr_P \eul^{-\beta\hat{H}/2} \ket{\psi_0} \bra{\psi_0} \eul^{-\beta\hat{H}/2} = \phantom{\,}_P\braket{\psi_\infty}{\psi_0} \braket{\psi_0}{\psi_\infty}_P ,
+\end{equation}
+because in the limit $\beta\rightarrow\infty$ the trace reduces to the ground state contribution,
+$\tr_P \rightarrow \phantom{\,}_P\bra{\psi_\infty} \cdot \ket{\psi_\infty}_P$. With the $\beta=0$ purification of the density operator, $\ket{\psi_0} = d^{-L/2} \sum_{\fat{\sigma}} \ket{\fat{\sigma}}_P \ket{\fat{\sigma}}_Q$, the last expression reduces, again up to an irrelevant norm, to
+\begin{equation}
+\hat{\rho}^Q_{\beta\rightarrow\infty} = \sum_{\fat{\sigma}\fat{\sigma}'} \psi^{\fat{\sigma}*}_\infty \ket{\fat{\sigma}}_Q \phantom{\,}_Q \bra{\fat{\sigma}'} \psi^{\fat{\sigma}'}_\infty =
+\ket{\psi_\infty}_Q \phantom{\,}_Q \bra{\psi_\infty} ,
+\end{equation}
+where the $\psi^{\fat{\sigma}}_\infty$ are the expansion coefficients of the ground state. Hence, the zero temperature purification is a product state 
+\begin{equation}
+\ket{\psi_\infty} = \ket{\psi_\infty}_P \ket{\psi_\infty}_Q,
+\end{equation}
+where the latter state is just the physical ground state defined on the auxiliary state space.
+Assuming that it can be described with sufficient precision using matrix dimension $D$, the product will be described by matrices of dimension $D^2$. Effectively this means that our algorithm scales with the sixth instead of the third power of the characteristic matrix dimension for the problem under study. On the other hand, and this is the issue prediction has tried to address, we encounter long-time simulation problems in particular at high temperatures $T\rightarrow\infty$: many states contribute at similar, but not identical, weight and MPS are not efficient at encoding this wealth of contributing states.
+
+As White \cite{Stoudenmire10,White09} has pointed out, one can avoid the purification approach entirely by sampling over a cleverly chosen set of thermal states, the so-called {\em minimally entangled typical thermal states} (METTS). This approach has already been shown to alleviate strongly the first limitation, while not much is known yet about the second limitation. 
+
+A thermal average is given by
+\begin{equation}
+\langle \hat{A} \rangle = \frac{1}{Z} \tr \eul^{-\beta \hat{H}} \hat{A} = \frac{1}{Z} \sum_n \eul^{-\beta E_n} \bra{n} \hat{A} \ket{n} ,
+\end{equation}
+where I have chosen, like all textbooks do, the energy representation of the thermal density operator. As already pointed out by Schr\"{o}dinger many decades ago, this is mathematically correct, but unphysical in the sense that real systems at finite temperature will usually not be in a statistical mixtures of eigenstates, as eigenstates are highly fragile under coupling to an environment. But the choice of the basis for taking the trace is arbitrary, and one may also write
+\begin{equation}
+\langle A \rangle = \frac{1}{Z} \sum_i \bra{i} \eul^{-\beta\hat{H}/2} \hat{A} \eul^{-\beta\hat{H}/2} \ket{i}
+= \frac{1}{Z} \sum_i P(i) \bra{\phi(i)} \hat{A} \ket{\phi(i)}
+\end{equation}
+where $\{ \ket{i} \}$ is an arbitrary orthonormal basis and $\ket{\phi(i)} = P(i)^{-1/2} \eul^{-\beta\hat{H}/2} \ket{i}$. With $P(i) = \bra{i} \eul^{-\beta \hat{H}} \ket{i}$, we recognize $\ket{\phi_{i}}$ to be normalized. It is easy to see that $\sum_i P(i) = Z$, hence the $P(i)/Z$ are probabilities. One can therefore statistically estimate $\langle \hat{A}\rangle$ by {\em sampling} $\ket{\phi(i)}$ with probabilities $P(i)/Z$ and average over $\bra{\phi(i)} \hat{A} \ket{\phi(i)}$.
+
+Several questions arise before this can be turned into a practical algorithm. How can we sample correctly given that we do not know the complicated probability distribution? Can we choose a set of states such that averages converge most rapidly? Given that an imaginary time evolution will be part of the algorithm, can we find a low-entanglement basis $\{ \ket{i} \}$ such that time evolution can be done with modest $D$, i.e.\ runs fast?
+
+To address these issues, White chooses as orthonormal basis the computational basis formed from product states,
+\begin{equation}
+\ket{i} = \ket{i_1}\ket{i_2}\ket{i_3} \ldots \ket{i_L} ,
+\end{equation}
+classical (unentangled) product states (CPS) that can be represented exactly with $D=1$. The corresponding states
+\begin{equation}
+\ket{\phi(i)} = \frac{1}{\sqrt{P(i)}} \eul^{-\beta \hat{H}/2} \ket{i}
+\end{equation}
+are so-called {\em minimally entangled typical thermal states} (METTS): The hope is that while the imaginary time evolution introduces entanglement due to the action of the Hamiltonian, it is a reasonable expectation that the final entanglement will be lower than for similar evolutions of already entangled states. While this is not totally true in a strict mathematical sense, in a practical sense it seems to be! Compared to purification, this will be a much faster computation, in particular as the factorization issue of purification will not appear.
+
+In order to sample the $\ket{\phi(i)}$ with the correct probability distribution, which we cannot calculate, one uses the same trick as in Monte Carlo and generates a Markov chain of states,
+$\ket{i_1} \rightarrow \ket{i_2} \rightarrow \ket{i_3} \rightarrow \ldots$ such that the correct probability distribution is reproduced. From this distribution, we can generate $\ket{\phi(i_1)}$, $\ket{\phi(i_2)}$, $\ket{\phi(i_3)}$, $\ldots$ for calculating the average.
+
+The algorithm runs as follows: we start with a random CPS $\ket{i}$. From this, we repeat the following three steps until the statistics of the result is good enough:
+\begin{itemize}  
+\item Calculate $\eul^{-\beta\hat{H}/2} \ket{i}$ by imaginary time evolution and normalize the state (the squared norm is $P(i)$, but we won't need it in the algorithm). 
+\item Evaluate desired quantities as $\bra{\phi(i)} \hat{A} \ket{\phi(i)}$ for averaging.
+\item Collapse the state $\ket{\phi(i)}$ to a new CPS $\ket{i'}$ by quantum measurements with probability $p(i\rightarrow i') = |\braket{i'}{\phi(i)}|^2$, and restart with this new state.
+\end{itemize}
+
+Let us convince ourselves that this gives the correct sampling, following \cite{Stoudenmire10}. As the $\ket{\phi(i)}$ follow the same distribution as the $\ket{i}$, one only has to show that the latter are sampled correctly. Asking with which probability one collapes into some $\ket{j}$ provided the previous CPS $\ket{i}$ was chosen with the right probability $P(i)/Z$, one finds 
+\begin{equation}
+\sum_i \frac{P(i)}{Z} p(i\rightarrow j) = \sum_i \frac{P(i)}{Z} | \braket{j}{\phi(i)} |^2 = \sum_i
+\frac{1}{Z} | \bra{j} \eul^{-\beta \hat{H}/2} \ket{i}|^2 = \frac{1}{Z} \bra{j} \eul^{-\beta\hat{H}} \ket{j} = \frac{P(j)}{Z}.
+\end{equation}
+This shows that the desired distribution is a fixpoint of the update procedure. It is therefore valid, but it is of course sensible to discard, as in Monte Carlo, a number of early data points, to eliminate the bias due to the initial CPS.  It turns out that - after discarding the first few METTS, to eliminate effects of the initial choice - averaging quantities over only a hundred or so allows to calculate local static quantities (magnetizations, bond energies) with high accuracy.
+
+While we already know how to do an imaginary time evolution, we still have to discuss the collapse procedure. As it turns out, the structure of MPS can be exploited to make this part of the algorithm extremely fast compared to the imaginary time evolution.
+
+For each site $i$, we choose an {\em arbitrary} $d$-dimensional orthonormal basis $\{ \ket{\tilde{\sigma}_i} \}$, to be distinguished from the computational basis $\{ \ket{\sigma_i} \}$. From this we can form projectors $\hat{P}^{\tilde{\sigma}_i} = \ket{\tilde{\sigma}_i} \bra{\tilde{\sigma}_i}$ with the standard quantum mechanical probability of a local collapse into state $\ket{\tilde{\sigma}_i}$ given by
+$p_{\tilde{\sigma}_i} =\bra{\psi} \hat{P}^{\tilde{\sigma}_i} \ket{\psi}$. If we collapse $\ket{\psi}$ into the CPS
+$\ket{\psi'} = \ket{ \tilde{\sigma}_1} \ket{ \tilde{\sigma}_2} \ldots \ket{ \tilde{\sigma}_L}$, the probability is given by  $\bra{\psi} \hat{P}^{\tilde{\sigma}_1} \ldots \hat{P}^{\tilde{\sigma}_L} \ket{\psi} = | \braket{\psi'}{\psi} |^2$, as demanded by the algorithm. After a single-site collapse, the wave function reads
+\begin{equation}
+\ket{\psi} \rightarrow  p_{\tilde{\sigma}_i}^{-1/2} \hat{P}^{\tilde{\sigma}_i}\ket{\psi} ,
+\end{equation}
+where the prefactor ensures proper normalization of the collapsed state as in elementary quantum mechanics. To give an example, for $S=\frac{1}{2}$ spins measured along an arbitrary axis ${\mathbf n}$, the projectors would read
+\begin{equation}
+\hat{P}^{\uparrow_n,\downarrow_n} = \frac{1}{2} \pm {\mathbf n} \cdot \hat{{\mathbf S}}_i .
+\end{equation}
+
+Such a sequence of local measurements and collapses on all sites can be done very efficiently, as pointed out by \cite{Stoudenmire10}, if one exploits two features of MPS and CPS: (i) local expectation values can be evaluated very efficiently if they are on explicit sites (in DMRG language) or on sites between left- and right-normalized sites of a mixed-canonical state (in MPS language) and (ii) after the collapse, the resulting state is a product state of local states on all collapsed sites and the uncollapsed remainder.  
+
+Assume that $\ket{\psi}$ is right-canonical (with the relaxation that the normalization on site 1 is irrelevant). Then the evaluation of $p_{\tilde{\sigma}_1} =\bra{\psi} \hat{P}^{\tilde{\sigma}_1} \ket{\psi}$ trivializes because the contraction of the expectation value network over sites 2 through $L$ just yields $\delta_{a_1,a'_1}$. Hence
+\begin{equation}
+\bra{\psi} \hat{P}^{\tilde{\sigma}_i} \ket{\psi} = \sum_{a_1,\sigma_1,\sigma'_1} B^{\sigma_1 *}_{a_1} \bra{\sigma_1} \hat{P}^{\tilde{\sigma}_1} \ket{\sigma'_1} B^{\sigma'_1}_{a_1} = 
+\sum_{a_1} \left[ \sum_{\sigma_1} B^{\sigma_1*}_{a_1} \braket{\sigma_1}{\tilde{\sigma}_1} \right]
+\left[ \sum_{\sigma'_1} B^{\sigma'_1}_{a_1} \braket{\tilde{\sigma}_1}{\sigma'_1} \right] .
+\label{eq:probsinmetts}
+\end{equation}
+This expression looks very specific to the first site (because of the open boundary), but as we will see it is not! 
+
+Once the probabilites for the collapse on site 1 are calculated, one particular collapse is chosen randomly according to the distribution just generated, $\ket{\tilde{\sigma}_1}$. The state after collapse will be of the form $\ket{\tilde{\sigma}_1} \ket{\psi_{{\rm rest}}}$, hence a product state. Therefore, the new matrices (which we call $A^{\sigma_1}$) on site 1 must all be scalars, i.e.\ $D=1$ matrices. From
+$\ket{\tilde{\sigma}} = \sum_{\sigma} \ket{\sigma} \braket{\sigma}{\tilde{\sigma}} = \sum_\sigma \ket{\sigma} A^{\sigma}$ they are given by
+\begin{equation}
+A^{\sigma_1}_{1,1} = \braket{\sigma_1}{\tilde{\sigma}_1} ;
+\end{equation}
+it is easy to see that left-normalization is trivially ensured, hence the labelling by $A$. But this change in the dimension of $A^{\sigma_1}$ means that $B^{\sigma_2}$ has to be changed too, namely
+\begin{equation}
+B^{\sigma_2}_{a_1,a_2} \rightarrow M^{\sigma_2}_{\tilde{\sigma}_1,a_2} =
+p_{\tilde{\sigma}_1}^{-1/2} \sum_{\sigma_1,a_1} \braket{\tilde{\sigma}_1}{\sigma_1} B^{\sigma_1}_{a_1} B^{\sigma_2}_{a_1 a_2} .
+\end{equation}
+As the label $\tilde{\sigma}_1$ takes a definite value, it is just a dummy index, and the row dimension of $M^{\sigma_2}$ is just 1, like for the matrices on the first site. Hence, Eq.~(\ref{eq:probsinmetts}) generalizes to all sites, and the most costly step is the update of $B^{\sigma_2}$, which scales as $D^2 d^2$, but not as $D^3$, as time evolution does.
+
+To see the substitution, we express $\hat{P}^{\tilde{\sigma}_1}$ as an MPO, $W^{\sigma_1 \sigma'_1} = \braket{\sigma_1}{\tilde{\sigma}_1} \braket{\tilde{\sigma}_1}{\sigma'_1}$. Hence, the collapsed $\ket{\psi}$ reads
+\begin{eqnarray*}
+& & p_{\tilde{\sigma}_1}^{-1/2} \sum_{\fat{\sigma}} \sum_{\sigma'_1} \braket{\sigma_1}{\tilde{\sigma}_1} \braket{\tilde{\sigma}_1}{\sigma'_1} B^{\sigma'_1} B^{\sigma_2} \ldots \ket{\fat{\sigma}} = \\
+& & \sum_{\fat{\sigma}} \sum_{a_2} A^{\sigma_1}_{1,1} \left( \sum_{\sigma'_1 a_1}  p_{\tilde{\sigma}_1}^{-1/2}  \braket{\tilde{\sigma}_1}{\sigma'_1} B^{\sigma'_1}_{1,a_1} B^{\sigma_2}_{a_1,a_2} \right) (B^{\sigma_3} \ldots B^{\sigma_L})_{a_2,1} \ket{\fat{\sigma}} ,
+\end{eqnarray*}
+which yields the substitution.
+
+A few more comments are in order. At each site, the measurement basis can be chosen randomly, and in order to obtain short autocorrelation ``times'' of the Markov chain, i.e.\ high quality of the sampling, this is certainly excellent, but also much more costly than collapsing always into the same basis, which however generates ergodicity problems. The proposal is to switch alternatingly between two bases where for each basis projectors are maximally mixed in the other basis (e.g.\ if we measure spins alternatingly along the $x$- and $z$- (or $y$-)axis). Autocorrelation times then may go down to 5 steps or so \cite{Stoudenmire10}. For estimating the statistical error, in the simplest cases it is enough to calculate averages over bins larger than the autocorrelation time, and to look at the statistical distribution of these bin averages to get an error bar. 
+
+Intriguing questions remain, concerning both the potential and the foundation of the algorithm: how well will it perform for longer-ranged correlators, as needed for structure functions? Dynamical quantities can be accessed easily, as the time-evolution of the weakly entangled METTS is not costly - but will the efficiency of averaging over only a few ``typical" states continue to hold? 
+\subsection{Dissipative dynamics: quantum jumps}
+Dissipative (i.e.\ non-Hamiltonian) dynamics occurs when our physical system A is coupling to some environment B such that A is an {\em open} quantum system. This is a very rich field of physics, so let me review a few core results useful here. The time evolution of the density operator of the system can always be written in the Kraus representation as
+\begin{equation}
+\hat{\rho}_A (t) = \sum_j \hat{E}_A^j(t) \hat{\rho}_A (0) \hat{E}_A^{j\dagger}(t),
+\end{equation}
+where the Kraus operators meet the condition 
+\begin{equation}
+\sum_j \hat{E}_A^{j\dagger}(t) \hat{E}_A^j(t) = \hat{I}_A .
+\end{equation}
+If the dynamics is without memory (Markovian), it depends only on the density operator at an infinitesimally earlier time, and a master equation, the Lindblad equation, can be derived. In the limit $\diff t\rightarrow 0$, the environment remains unchanged with probability $p_0 \rightarrow 1$ and changes (quantum jumps) with a probability linear in $\diff t$. If we associate Kraus operator $\hat{E}_A^0(t)$ with the absence of change, a meaningful ansatz scaling out time is
+\begin{equation}
+\hat{E}_A^0(\diff t) = \hat{I}_A + O(\diff t) \quad\quad \hat{E}_A^j(\diff t) = \sqrt{\diff t} \hat{L}_A^j  \quad (j>0)
+\end{equation}
+or more precisely
+\begin{equation}
+\hat{E}_A^0(\diff t) = \hat{I}_A + (\hat{K}_A - \imag \hat{H}_A) \diff t ,
+\end{equation}
+with two Hermitian operators $\hat{K}_A$ and $\hat{H}_A$. The normalization condition of the Kraus operators entails 
+\begin{equation}
+\hat{K}_A = -\frac{1}{2} \sum_{j>0} \hat{L}_A^{j\dagger} \hat{L}_A^j .
+\end{equation}
+These ansatzes allow to derive a differential equation from the Kraus evolution formula, which is the Lindblad equation
+\begin{equation}
+\frac{\diff \hat{\rho}}{\diff t} = - \imag [\hat{H},\hat{\rho}] + \sum_{j>0} \left( \hat{L}^j \hat{\rho} \hat{L}^{j\dagger} - \frac{1}{2} \{ \hat{L}^{j\dagger} \hat{L}^j, \hat{\rho} \} \right) ,
+\end{equation} 
+where I have dropped the indices A. Indeed, in the absence of  quantum jumps ($j=0$ only), one recovers the von Neumann equation. At the price of non-hermiticity, this equation can be simplified. If we introduce $\hat{H}_{{\rm eff}} := \hat{H} + \imag \hat{K}$, then the last term disappears and we have
+\begin{equation}
+\frac{\diff \hat{\rho}}{\diff t} = - \imag [\hat{H}_{{\rm eff}}\hat{\rho}-\hat{\rho}\hat{H}_{{\rm eff}}^\dagger] + \sum_{j>0} \hat{L}^j \hat{\rho} \hat{L}^{j\dagger} .
+\label{eq:Lindblad2}
+\end{equation} 
+

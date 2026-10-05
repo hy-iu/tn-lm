@@ -1,0 +1,118 @@
+然而，如果我们利用规范形式，就可以{\em 大幅}简化压缩过程！假设 $\ket{\tilde{\psi}}$ 处于混合规范形式 $\tilde{A}^{\sigma_1} \ldots \tilde{A}^{\sigma_{i-1}} \tilde{M}^{\sigma_i} \tilde{B}^{\sigma_{i+1}}  \ldots \tilde{B}^{\sigma_L}$，我们想要更新 $\tilde{M}^{\sigma_i}$：在待更新矩阵的左边，一切都已左规范化，右边一切都已右规范化，而 $\tilde{M}^{\sigma_i}$ 的形式无关紧要，因为它反正会被重新计算。
+
+于是，由于左规范化，$\tilde{L}_{a_{i-1},a'_{i-1}} = \delta_{a_{i-1},a'_{i-1}}$；类似地，由于右规范化，$\tilde{R}_{a_{i},a'_{i}} = \delta_{a_{i},a'_{i}}$，因此 
+$\tilde{O}_{a_{i-1}a_i,a'_{i-1}a'_i} = \delta_{a_{i-1},a'_{i-1}} \delta_{a_{i},a'_{i}}$。在线性方程组中这意味着 $P=I$，于是我们平凡地得到
+\begin{equation}
+v = b,
+\end{equation}
+所以无需求解大型方程组（图~\ref{fig:normalizediterativecompression}）。
+
+\begin{figure}
+\centering\includegraphics[scale=0.6]{PyMPS_MPS_NormalizedIterativeCompression.eps}
+\caption{对经过适当归一化的态作 MPS 迭代压缩的方程。较粗的线对应待压缩的态，较细的线对应压缩后的态。}
+\label{fig:normalizediterativecompression}
+\end{figure}
+
+\begin{figure}
+\centering\includegraphics[scale=0.6]{PyMPS_MPS_IterativeCompressionLRObjects.eps}
+\caption{压缩中迭代构造的对象 $\tilde{L}$ 和 $\tilde{R}$。}
+\label{fig:normalizediterativecompressionLR}
+\end{figure}
+
+
+要让这一做法适用于整条链，我们必须在沿链移动时移动左规范化矩阵与右规范化矩阵之间的分界。假设开始时所有矩阵都是左规范化的。然后我们从右到左穿过链，先在最后一个格点上求解 $\tilde{M}^{\sigma_L}$，像前面一样通过 SVD（或者，由于我们不需要奇异值，用更廉价的 QR）将其右规范化，得到 $\tilde{A}^{\sigma_1} \ldots \tilde{A}^{\sigma_{L-2}} \tilde{M}^{\sigma_{L-1}} \tilde{B}^{\sigma_{L}}$，其中 $\tilde{M}^{\sigma_{L-1}}$ 一般而言未归一化。它现在按如下方式优化
+\begin{equation}
+\tilde{M}^{\sigma_i}_{a_{i-1},a_i} =  \sum_{a'_{i-1}} L_{a_{i-1},a'_{i-1}} \left( \sum_{a'_i} R_{a_{i},a'_{i}}
+M^{\sigma_i}_{a'_{i-1},a'_i} \right), 
+\label{eq:compressionrhs}
+\end{equation}
+其中 
+\begin{equation}
+L_{a_{i-1},a'_{i-1}} = \left( \sum_{\sigma_{i-1}}  \tilde{M}^{\sigma_{i-1}\dagger} \left( \ldots \left( \sum_{\sigma_1}  
+\tilde{M}^{\sigma_{1}\dagger} M^{\sigma_{1}} \right) \ldots \right) M^{\sigma_{i-1}} \right)_{a_{i-1},a'_{i-1}}
+\end{equation}
+类似地处理 $R$，结果是右规范化的，如此这般沿链继续。到最后，所有矩阵都右规范化了，我们再从左边重新开始。
+
+为了评估收敛性，我们可以在每一步监测 $\| \ket{\psi} - \ket{\tilde{\psi}} \|^2$ 并观察该值的收敛情况；必要时必须增大 $D$。这个计算看似代价高昂，实则不然。如果我们让 $\ket{\tilde{\psi}}$ 保持恰当的混合归一化，并利用式~(\ref{eq:compressionrhs}) 化简重叠 $\braket{\psi}{\tilde{\psi}}$，就会发现
+\begin{equation}
+\| \ket{\psi} - \ket{\tilde{\psi}} \|^2 = 1 - \sum_{\sigma_i} \tr (\tilde{M}^{\sigma_i\dagger}\tilde{M}^{\sigma_i}) , 
+\end{equation}
+该式易于计算。被减去的求和项正是 $\braket{\tilde{\psi}}{\tilde{\psi}}$；最后，这使我们能够通过简单的重新标度来归一化态 $\ket{\tilde{\psi}}$。
+
+正如单格点 DMRG 中已暗示的那样——我们将在第~\ref{sec:groundstates} 节详细讨论这一问题——这种变分拟设存在陷入非全局极小值的危险，即压缩态与原态之间距离的非全局极小。通常（但不总是）仿照两格点 DMRG，同时考虑两个格点进行优化会有所帮助。运算量统计表明这会稍慢一些。假设压缩后的 $\ket{\tilde{\psi}}$ 处于混合规范表示
+\begin{equation}
+\ket{\tilde{\psi}} = \sum_{{\fat \sigma}} \tilde{A}^{\sigma_1} \ldots \tilde{A}^{\sigma_{\ell-1}} \tilde{M}^{\sigma_{\ell}\sigma_{\ell+1}} \tilde{B}^{\sigma_{\ell+2}} \ldots \tilde{B}^{\sigma_L}  \ket{{\fat \sigma}}.
+\end{equation}
+重复前面同样的论证，对 $\tilde{M}^{\sigma_{\ell}\sigma_{\ell+1}*}_{a_{\ell-1},a_{\ell+1}}$ 作优化，便得到如图~\ref{fig:twositecompression} 所示关于 $\tilde{M}^{\sigma_{\ell}\sigma_{\ell+1}}_{a_{\ell-1},a_{\ell+1}}$ 的方程。现在发生主要变化：我们把新的 $\tilde{M}^{\sigma_{\ell}\sigma_{\ell+1}}$ 重塑为 $\tilde{M}_{(a_{\ell-1}\sigma_{\ell}),(\sigma_{\ell+1}a_{\ell+1})}$，作一次 SVD 得到 
+\begin{equation}
+\sum_{a_\ell} \tilde{U}_{(a_{\ell-1}\sigma_\ell), a_\ell} S_{a_\ell} (V^\dagger)_{a_\ell, (\sigma_{\ell+1}a_{\ell+1})} = \sum_{a_\ell} \tilde{M}^{\sigma_\ell}_{a_{\ell-1}, a_\ell} B^{\sigma_{\ell+1}}_{a_\ell, a_{\ell+1}} ,
+\end{equation}
+其中的 $\tilde{M}$ 由重塑 $\tilde{U} S$ 得到。实际上它被丢弃了，因为我们向左移动一个格点，去寻找 $\tilde{M}^{\sigma_{\ell-1}\sigma_{\ell}}$。我们也可以改用对 $\tilde{M}^\dagger$ 作更廉价的 QR 分解，从 $Q^\dagger$ 得到 $B$。
+
+\begin{figure}
+\centering\includegraphics[scale=0.6]{PyMPS_MPS_TwoSiteCompression.eps}
+\caption{两格点方案下 MPS 迭代压缩的方程。}
+\label{fig:twositecompression}
+\end{figure}
+
+
+在结束本节关于压缩的讨论之前，让我比较一下各种方法的相对优劣。如果压缩量不大，SVD 方法的相互依赖性并不太要紧。尽管如此，变分拟设仍更优越；其唯一的弱点是由于其迭代性质，必须为压缩后的态提供初始猜测。若随机选取，该方法会把大量时间浪费在仅仅进入正确的邻域上。因此，聪明的做法是把 SVD 压缩得到的态作为迭代方法的最初输入。我们如何才能至少部分地避免由 $D'$ 带来的潜在高成本？
+
+实践中，压缩主要出现在两种情形：（i）MPS 已相加，因而矩阵维数也相加了；（ii）矩阵乘积算符（MPO）已作用于某个 MPS；我们将看到这会导致 MPS 与 MPO 的矩阵维数相乘。
+
+在第一种情形，可以利用 $\ket{\psi} = \ket{\phi_1} + \ket{\phi_2} + \ldots \ket{\phi_n}$ 这一事实来加速变分压缩。于是我们可以把变分方程改写为
+\begin{equation}
+ \frac{\partial}{\partial \tilde{M}^{\sigma_i*}_{a_{i-1}a_i}} ( \braket{\tilde{\psi}}{\tilde{\psi}}
+- \braket{\tilde{\psi}}{\psi} ) =  \frac{\partial}{\partial \tilde{M}^{\sigma_i*}_{a_{i-1}a_i}} ( \braket{\tilde{\psi}}{\tilde{\psi}} - \braket{\tilde{\psi}}{\phi_1}
+- \braket{\tilde{\psi}}{\phi_2} - \ldots - \braket{\tilde{\psi}}{\phi_n}) = 0 .
+\end{equation}
+如果把方程展开（假设混合规范表示），右边现在由 $n$ 个涉及 $D$ 维矩阵的重叠之和构成，而不是一个涉及 $D$ 维与 $nD$ 维矩阵的重叠（该重叠中出现的两类矩阵乘法分别代价高达 $O(n^2D^3)$ 与 $O(nD^3)$）；现在我们有 $n$ 个重叠，每个代价为 $O(D^3)$。当 $n$ 很大时，``分解''方法应当最多快 $n$ 倍。
+
+第二种情形的细节我们推迟到讨论过 MPO 之后。想法是进行 SVD 压缩，但省去事先保证正确归一化这一代价特别高的步骤；如果由于某种原因块态仍然几乎正交归一，那么结果应当相当不错（并且可以转化为规范形式，这在压缩之后是很廉价的），或者至少可以作为变分方法的合理输入 \cite{Stoudenmire10}。
+
+\subsection{记法与转换}
+迄今为止，我们探讨的 MPS 记法基于每个格点一组矩阵；我们利用了这些矩阵的特殊归一化性质，从而得到具有诱人附加特性的 MPS（比如生成正交归一的态集合，或编码一个 Schmidt 分解）。考虑我们的晶格，其格点编号为 $1$ 到 $L$，就 DMRG 构造而言，若能方便地访问用单次切割可得到的系统 AB 的全部 $L-1$ 种可能二分，将很有用处。
+
+这种记法由 Vidal\cite{Vidal03a} 引入，形式如下：
+\begin{equation}
+\ket{\psi} = \sum_{\sigma_1,\ldots,\sigma_L} \Gamma^{\sigma_1} \Lambda^{[1]}  \Gamma^{\sigma_2} \Lambda^{[2]}  \Gamma^{\sigma_3} \Lambda^{[3]} \ldots  \Gamma^{\sigma_{L-1}} \Lambda^{[L-1]}  \Gamma^{\sigma_L} \ket{\sigma_1,\ldots,\sigma_L} ,
+\label{eq:canonicalform}
+\end{equation} 
+其中我们在每个格点 $\ell$ 上引入一组 $d$ 个矩阵 $\Gamma^{\sigma_\ell}$，并在每条键 $\ell$ 上引入一个对角矩阵 $\Lambda^{[\ell]}$。这些矩阵由如下要求确定：对任意 $1\leq \ell < L$，我们都能读出 Schmidt 分解
+\begin{equation}
+\ket{\psi} = \sum_{a_\ell} s_{a_\ell} \ket{a_\ell}_A \ket{a_\ell}_B
+\end{equation}
+其中 Schmidt 系数是 $\Lambda^{[\ell]}$ 的对角元，$s_{a_\ell} = \Lambda^{[\ell]}_{a_\ell,a_\ell}$，而 A 和 B 上的态由下式给出
+\begin{eqnarray}
+\ket{a_\ell}_A &=& \sum_{\sigma_1,\ldots,\sigma_\ell}
+ (\Gamma^{\sigma_1}\Lambda^{[1]}\Gamma^{\sigma_2} \ldots \Lambda^{[\ell-1]} \Gamma^{\sigma_\ell})_{a_{\ell}}
+\ket{\sigma_1,\ldots,\sigma_\ell}, \\
+\ket{a_\ell}_B &=& \sum_{\sigma_{\ell+1},\ldots,\sigma_L} 
+(\Gamma^{\sigma_{\ell+1}}\Lambda^{[\ell+1]}\Gamma^{\sigma_{\ell+2}} \ldots \Lambda^{[L-1]} \Gamma^{\sigma_L})_{a_\ell}
+\ket{\sigma_{\ell+1},\ldots,\sigma_L},
+\end{eqnarray}
+其中 A 上与 B 上的态各自正交归一，这让人想起由 $A$-矩阵和 $B$-矩阵出发的类似构造。图形上，新记法可表示成图~\ref{fig:vidalmps} 那样。它显然是 $A$-矩阵记法的一个更显式的版本，其优点是显式保留了奇异值、约化密度矩阵本征值与纠缠：切开键 $\ell$，约化密度算符 $\hat{\rho}_A$ 与 $\hat{\rho}_B$ 在本征基表示下读作
+\begin{equation}
+\rho_A^{[\ell]} = \rho_B^{[\ell]} = (\Lambda^{[\ell]})^2 ,
+\end{equation}
+更精确地（但对实且对角的 $\Lambda^{[\ell]}$ 无关紧要）$\rho_A^{[\ell]} = \Lambda^{[\ell]}\Lambda^{[\ell]\dagger}$ 与 $\rho_B^{[\ell]} = \Lambda^{[\ell]\dagger}\Lambda^{[\ell]}$，
+其中 $\rho_A^{[\ell]}$ 与 $\rho_B^{[\ell]}$ 的本征态分别由 $\{ \ket{a_\ell}_A \}$ 与 $\{ \ket{a_\ell}_B \}$ 给出。纠缠的 von Neumann 熵可直接从 $\Lambda^{[\ell]}$ 读出：$S_{A|B} = -\tr (\Lambda^{[\ell]})^2 \log_2 (\Lambda^{[\ell]})^2$。
+
+在探讨与其他记法的联系之前，让我们首先证明：任何量子态确实都能通过一个与前述把 $\ket{\psi}$ 分解为 $A$-矩阵乘积（$B$-矩阵亦然）的过程极为类似的程序化成该形式。从系数 $c_{\sigma_1\ldots\sigma_L}$ 出发，我们将其重塑为 $\Psi_{\sigma_1, (\sigma_2 \ldots \sigma_L)}$，然后对其进行迭代 SVD。我们把奇异值矩阵记为 $\Lambda^{[i]}$。第一次 SVD 之后，我们把 $A^{\sigma_1}$ 改名为 $\Gamma^{\sigma_1}$。在随后的各次 SVD 中，与前面一样，我们把 $\Lambda$ 与 $V^\dagger$ 乘入 $\Psi$ 以构成下一个待 SVD 的矩阵，并作重塑使得行指标总是一个 $a$-指标和一个 $\sigma$-指标。利用已用过的重塑 $U_{(a_{\ell-1}\sigma_\ell), a_{\ell}} \rightarrow A^{\sigma_\ell}_{a_{\ell-1},a_\ell}$，我们得到
+\begin{eqnarray*}
+c_{\sigma_1\ldots\sigma_L} &=& \Psi_{\sigma_1, (\sigma_2 \ldots \sigma_L)} \\
+&=& \sum_{a_1} A^{\sigma_1}_{a_1} \underbrace{\Lambda^{[1]}_{a_1,a_1} (V^\dagger)_{a_1, (\sigma_2 \ldots \sigma_L)}} \\
+&=& \sum_{a_1} \Gamma^{\sigma_1}_{a_1} \Psi_{(a_1\sigma_2), (\sigma_3 \ldots \sigma_L)} \\
+&=& \sum_{a_1,a_2} \Gamma^{\sigma_1}_{a_1} A^{\sigma_2}_{a_1,a_2} \underbrace{\Lambda^{[2]}_{a_2,a_2} (V^\dagger)_{a_2, (\sigma_3 \ldots \sigma_L)}} \\
+&=& \sum_{a_1,a_2} \Gamma^{\sigma_1}_{a_1} \overbrace{\Lambda^{[1]}_{a_1,a_1} \Gamma^{\sigma_2}_{a_1,a_2}} \Psi_{(a_2\sigma_3), (\sigma_4 \ldots \sigma_L)} \\
+&=& \sum_{a_1,a_2,a_3} \Gamma^{\sigma_1}_{a_1} \Lambda^{[1]}_{a_1,a_1} \Gamma^{\sigma_2}_{a_1,a_2} A^{\sigma_3}_{a_2,a_3}  \underbrace{\Lambda^{[3]}_{a_3,a_3} (V^\dagger)_{a_3, (\sigma_4 \ldots \sigma_L)}} \\ 
+&=& \sum_{a_1,a_2,a_3} \Gamma^{\sigma_1}_{a_1} \Lambda^{[1]}_{a_1,a_1} \Gamma^{\sigma_2}_{a_1,a_2} \overbrace{\Lambda^{[2]}_{a_2,a_2} \Gamma^{\sigma_3}_{a_2,a_3}}  \Psi_{(a_3\sigma_4), (\sigma_5 \ldots \sigma_L)} 
+\end{eqnarray*}
+如此继续下去。与分解为 $A$-矩阵的关键区别在于：利用上一步得到的 $\Lambda^{[\ell-1]}$ 的信息，每个 $A$ 被分解为 
+\begin{equation}
+A^{\sigma_\ell}_{a_{\ell-1},a_\ell} = \Lambda^{[\ell-1]}_{a_{\ell-1},a_{\ell-1}} \Gamma^{\sigma_\ell}_{a_{\ell-1},a_\ell} ,
+\label{eq:agammalambda}
+\end{equation}
+这意味着要除以 $\Lambda^{[\ell-1]}$ 的对角元。如果在 SVD 中我们只保留非零奇异值，这在数学上是合法的运算，尽管在数值上可能相当棘手。在这个概念性演示中忽略这一问题，我们确实得到了所需形式的分解；为了证明它确实正确，我们必须证明在每一步迭代中我们确实得到一个 Schmidt 分解。但这很容易看出：任何 $\Lambda^{[\ell]}$ 左边的矩阵都可以归并成（或者更确切地说，是由其生成的）左规范化的 $A$-矩阵，它们在晶格从格点 1 到 $\ell$ 的部分上生成一组正交归一的态。在任何 $\Lambda^{[\ell]}$ 的右边，有一个各行正交归一的矩阵 $V^\dagger$，这意味着态 $\ket{a_\ell}_B = \sum_{\sigma_{\ell+1},\ldots}
+(V^\dagger)_{a_\ell, \sigma_{\ell+1} \ldots} \ket{\sigma_{\ell+1} \ldots}$ 也是正交归一的。因此，给出 $\Lambda^{[\ell]}$ 的 SVD 确实导致一个合法的 Schmidt 分解。
+

@@ -1,0 +1,118 @@
+在 MPS 形式框架下模拟 Lindblad 方程是相当容易的，特别是利用 MPO \cite{VerstraeteRipoll04}，也可以采用超算符形式 \cite{VidalZwolak04}。这一做法的问题在于，与一个态在哈密顿量下的演化相比，它在数值上代价更高。\cite{Daley09} 提出了一种非常有吸引力的替代方案，它可以最大限度地复用现有的纯态程序，将纯态时间演化与量子轨迹方法结合起来。
+
+量子轨迹方法在量子光学中已得到广泛应用\cite{Plenio98}。量子轨迹方法不直接使用 Lindblad 方程（后者同时考虑了通过 $\hat{\rho}(0)$ 体现的初始态的概率分布以及所有可能的量子跳跃序列），而是对初始态的分布进行抽样，并对每个抽样态做纯态时间演化，其中随机的量子跳跃在随机时刻发生。这些选取方式使得如果对物理量在这族随时间演化的态的分布上取平均，就能重新得到 Lindblad 方程的结果。让我们略去对初始态的抽样（假定初始态总是相同的），转而关注概念上更困难的对量子跳跃的平均。
+
+算法随后在时间区间 $[0,T]$ 内（其中 $T$ 是模拟的终止时刻）按如下方式生成 ${\mathcal N}$ 条量子轨迹：
+\begin{itemize}
+\item 生成一个初始态 $\ket{\psi(0)}$；根据物理问题的不同，它要么正确地抽样 $t=0$ 时刻的密度算符，要么干脆总是取同一个态。
+\item 在 $[0,1]$ 中选取一个均匀分布的随机数 $p_0$。
+\item 用我们的某种纯态时间演化方法，让 $\ket{\psi(0)}$ 在 $\hat{H}_{{\rm eff}}$ 作用下做时间演化。由于有效哈密顿量是非厄米的，态的范数会随时间减小。在时刻 $t_1$ 停止时间演化，该时刻由
+$\braket{\psi(t_1)}{\psi(t_1)} = p_0$ 定义；这就是第一次量子跳跃发生的时刻。注意若 $T<t_1$，则模拟在 $T$ 处停止，我们得到一条没有跳跃的轨迹，并对末态做归一化。
+\item 为了在 $t_1$ 时刻实施量子跳跃，我们计算
+\begin{equation}
+\tilde{p}_j = \bra{\psi(t_1)} \hat{L}^{j\dagger} \hat{L}^j \ket{\psi(t_1)} \quad\quad p_j = \frac{\tilde{p}_j}{\sum_{j>0} \tilde{p}_j} \quad (j>0)
+\end{equation}
+并按照归一化的概率分布 $\{ p_j \}$ 选取一个 $j$。
+\item 我们实施这一跳跃并将态归一化，
+\begin{equation}
+\ket{\psi(t_1^+)} = \frac{\hat{L}^j \ket{\psi(t_1)}}{\| \hat{L}^j \ket{\psi(t_1)} \|} .
+\end{equation}
+\item 此后，我们继续寻找新的 $p_0$，由它出发，$\ket{\psi(t_1^+)}$ 在 $\hat{H}_{{\rm eff}}$ 作用下的时间演化给出第二次量子跳跃的位置 $t_2$，如此继续，直到超过 $T$。
+\end{itemize}
+现在把直到时刻 $T$ 的物理量对已生成的 ${\mathcal N}$ 条量子轨迹取平均。如果所有态在任何时刻都被归一化，就会得到正确的概率；但算法中情形并非如此，因此必须把例如时刻 $t$ 的范数考虑进去。显然，需要对 ${\mathcal N} \rightarrow \infty$ 的收敛性做仔细分析，不过看起来对于少量的跳跃算符，甚至几百条轨迹就可能给出高度可靠的结果 \cite{Daley09}。
+
+关于这种抽样能重现 Lindblad 方程动力学的观察，属于量子轨迹方面的标准文献内容（原文此处拼写为 trajactories）。证明可以分两步进行，这里只作简述。第一步，考虑固定的时间步长 $\diff t$，计算该时间区间内"无跳跃"与"发生跳跃 $j$"的概率（$p_j = \diff t \bra{\psi(t)} \hat{L}^{j\dagger} \hat{L}^j \ket{\psi(t)}$，$p_0 = 1 - \sum_j p_j$）。然后按照生成的分布，要么在 $\hat{H}_{{\rm eff}}$ 作用下演化 $\diff t$ 并归一化，要么实施跳跃并归一化。可以证明这样能重现 Lindblad 方程。第二步，证明按此方式生成的量子跳跃分布与我们在算法中使用的分布是相同的。
+
+\section{DMRG 与 NRG}
+\subsection{Wilson 的数值重正化群（NRG）与 MPS}
+Wilson 的数值重正化群（NRG）\cite{Wilson75,Bulla08,Krishnamurthy80} 源于解释为何含少量磁性杂质的金属表现出非单调电阻率行为的尝试。
+人们发现，一个足够好的极小模型由
+\begin{equation}
+\hat{H}_A = \sum_{k\sigma} \epsilon_k \hat{c}^\dagger_{k\sigma} \hat{c}^{\phantom\dagger}_{k\sigma} + \sum_{k\sigma} V_k (\hat{f}^\dagger_\sigma \hat{c}^{\phantom\dagger}_{k\sigma} + {\rm h.c.}) + U (\hat{n}_{f\uparrow}-1/2) (\hat{n}_{f\downarrow}-1/2).
+\end{equation}
+这个单杂质 Anderson 模型包含一个最多可被两个电子占据的杂质格点（算符 $\hat{f}^\dagger_\sigma$），具有在位排斥 $U$，并通过某种杂化函数 $V_k$ 与能散为 $\epsilon_k$ 的导带（算符 $\hat{c}^\dagger_{k\sigma}$）耦合。
+
+为了使问题易于处理，人们从动量表象改用能量表象，假定只有低能各向同性的 $s$ 波散射是重要的，并引入对数离散化：能带被表示为一系列能带片段，其能量宽度在靠近费米能量 $\epsilon_F$ 处按指数方式减小。这对应于如下观察：量子杂质物理的决定性特征，即在局域杂质谱函数中费米能量处出现的极窄共振峰，与费米能量附近的态以指数强度的方式联系在一起。然而，要在技术层面上让 NRG 真正运转起来，对数离散化同样是必需的！
+
+经过进一步的变换（对此我请读者参阅 \cite{Wilson75,Bulla08}），Anderson 哈密顿量最终被映射为一条除第一个格点外无相互作用的半无限链：
+\begin{equation} 
+\hat{H}= U (\hat{n}_{f\uparrow}-1/2) (\hat{n}_{f\downarrow}-1/2) + t_{-1} \sum_\sigma (\hat{f}^\dagger_\sigma \hat{d}_{0\sigma} + {\rm h.c.}) + \sum_{\sigma,n=0}^\infty t_n (\hat{d}^\dagger_{n\sigma} \hat{d}_{n+1,\sigma} + {\rm h.c.}),
+\end{equation}
+其中 $\hat{d}_{\sigma}$ 是费米子算符。关键之处在于 $t_n$ 指数衰减，$t_n \sim \Lambda^{-n}$，其中 $\Lambda$ 是对数离散化中能带的收缩因子，通常取 1.5 到 2 量级的值。这显然是一个我们的方法可以处理的模型，例如基态搜索——由于跃迁按指数衰减，我们无须考虑一条真正无限的链。
+
+NRG 建立在如下观察之上：指数衰减导致能量尺度的分离——假定我们已知部分链到某一长度为止的谱，那么由于链深处指数小的能量尺度，其余所有格点只会对它做出指数小的修正。求基态（以及更一般地求低能激发谱）现在通过迭代精确对角化来实现：假定我们对链的某个左端部分有 $D$ 维的有效本征空间。那么更大一号的链的态空间维数是 $dD=4D$；为避免指数增长，我们必须截断回 $D$ 个态。NRG 的处方是对该系统对角化并保留 $D$ 个最低的本征态。从仍可精确对角化的很短的链出发，这一过程对最低能态的分辨按指数方式变好，其正当性由能量尺度分离保证：在某一步保留哪些态的决定，即便事后来看也不会被急剧改变，因为链上所有更远的格点都在小得多的能量上相互作用。所得到的各个能量尺度（链长）下的本征谱，随后可用来提取 RG 流信息，或计算杂质问题的热力学量或动力学量。
+
+既然 MPS 的构建单元 $A^\sigma$ 可以被解读为在把块增长一个格点时对一次状态抽取步骤进行编码，而且与具体的状态抽取方案无关，那么立刻可以看出，NRG 与 DMRG 一样，也可以被视为在 MPS 上运作\cite{Weichselbaum09}。这闭环了一段历史：事实上，正是把 NRG 朴素地应用于海森堡模型和 Hubbard 模型时失败的分析，催生了 DMRG 的发展。一个 NRG 态看起来形如
+\begin{equation}
+\ket{a_\ell} = \sum_{\sigma_1,\ldots,\sigma_\ell} (A^{\sigma_1} \ldots  A^{\sigma_\ell})_{a_\ell} \ket{\sigma_1\ldots\sigma_\ell}.
+\end{equation}
+在每个长度 $\ell$ 处，我们都得到一个由 $D$ 个态构成的谱。
+
+既然 DMRG 是在 MPS 拟设空间上做变分的，那么可以合理地预期，相对于 NRG 方法至少总能有一些改进。事实的确如此 \cite{Weichselbaum09}；下一节中，我将讨论一些已经牢固定型的改进，以及其他一些更具推测性的改进，即尚缺乏在相关复杂问题上进行基准测试的改进。
+
+\subsection{超越数值重正化群}
+事实上，考虑 NRG 的 MPS 表述即便不借助与 DMRG 这类变分方法的联系也有帮助，例如对某些求和规则的严格执行 \cite{Weichselbaum07,Peters06}，但这超出了本综述的范围。
+
+然而我们还能做更多的事：把 NRG 生成的最终 MPS 构造施以类似 DMRG 的扫描。这会在一定程度上改进基态的质量，但首要的是，高能（短链）处的截断过程将获悉低能处的截断，反之亦然。与 NRG 不同，现在各能量尺度之间存在反馈。在这个意义上，把 NRG 用于杂质问题，其概念上的推进类似于无限系统 DMRG 为变分的有限系统 DMRG 所提供的热身过程。
+
+在对数离散化下，能量尺度的分离足够大，以致这一效应是次要的；对于一个聚焦于 Abrikosov-Kondo-Suhl 共振的简单单杂质问题，最终的改进非常有限，因为 NRG 本来就是为最优地描述这一特征而设计的。要点在于，由于反馈的存在，能量尺度分离现在可以完全放弃，因而对数离散化也可以放弃，我们可以在物理上合适之处选择对能带更细粒度的分辨。这可能找到多方面的应用。
+
+在一个应用中，人们对处于外场中的杂质问题做了 MPS 上的变分计算。外场导致共振峰分裂为两个依赖自旋的峰，分别移到费米能量之上和之下。在图 \ref{fig:NRGDMRG} 中我们考虑其中一个峰，使用了三种技术：NRG、一种解析方法\cite{Rosch03,Garst05} 以及变分 MPS（DMRG）计算。由于对数离散化，NRG 聚焦于 $\epsilon_F$，完全看不到这个依赖外场的峰。放松对数离散化，并在预期峰位附近、$\epsilon_F$ 之外提供足够细的能量区间，移动后的共振就可以被清晰地分辨出来，甚至与解析结果符合得非常好。
+
+这项工作的第二个有趣应用，是在动力学平均场理论（DMFT）的框架中以之取代 NRG 作为杂质求解器 \cite{Georges96,Nishimoto04,Garcia04,Raas04,Raas05}。在那种情形下，需要费米能量处金属共振之外的信息，因此改进其他能量尺度上的谱分辨将是非常值得的。
+
+\begin{figure}
+\centering\includegraphics[height=200pt]{PyMPS_Spectral.eps}
+\caption{外场中 Kondo 模型的杂质谱函数。细竖线标示能量区间：在某一能量以下，对数离散化转为线性。变分 MPS 计算（带与不带去卷积）揭示了 NRG 错过的一个峰，其峰位与 Rosch {\em et al.} \cite{Rosch03} 的计算加上微扰求得的峰移符合得非常好。取自 \cite{Weichselbaum09}。}
+\label{fig:NRGDMRG}
+\end{figure}
+
+由于这条半无限链除第一个格点外没有相互作用，我们可以考虑把它展开为一条自旋 $1/2$ 的无限链：杂质位于中心，自旋向上或自旋向下费米子的有无对应两种自旋态，链的左半部分对应自旋向上的费米子，右半部分对应自旋向下的费米子 \cite{Raas04}。相近的能量现在不再被归在一起，但在类 DMRG 的做法中这已不再要紧！通过中心杂质才发生相互作用的自旋本质上可能并不纠缠，这一直觉得到了实际计算的证实。这一点很重要，因为它意味着我们不必为矩阵维数的增大付出沉重代价。恰恰相反：如果在 NRG 做法中我们看到的本质上是两条彼此平行的无耦合自旋链，这就意味着，若自旋链的维数为 $D$，则相应的 MPS 维数为 $O(D^2)$。因此我们可以预期，一个态数为 $D$ 的 NRG 计算可以被一个态数为 $O(\sqrt{D})$ 的更快的 DMRG 计算所取代。
+
+除了这一加速之外，当杂质与多个能带耦合时（此时 NRG 呈指数复杂性\cite{Weichselbaum09}），当然也可以应用展开。中心格点当然保持不变，而它的数值处理可能变得极其昂贵，因此必须为这个格点设计新的策略。这方面还有大量工作要做，但围绕这些想法的首批有趣的后续研究已经出现\cite{Saberi08,Holzner10}。
+
+\section{无限尺寸算法}
+\label{sec:infinite}
+
+\subsection{用 MPS 语言重新表述无限系统 DMRG}
+
+在对有限系统算法的广泛讨论之后，现在让我们完全用 MPS 语言重新表述无限系统 DMRG。为顾及格点的迭代插入，方便起见对局域态稍作不同的标记；我们把各态称为 $\ket{\sigma_1^A} \ket{\sigma_2^A} \ldots \ket{\sigma_\ell^A}\ket{\sigma_\ell^B} \ldots \ket{\sigma_2^B}\ket{\sigma_1^B}$。此外，给矩阵 $A$ 和 $B$ 各配两个标记将会非常有用，
+因为矩阵与其生成时所在格点之间的联系将会消失。
+
+从大小为 0 的块出发（即一条 2 格点的链），基态波函数为 $\ket{\psi_1}=\sum_{\sigma_1^A \sigma_1^B} \Psi^{\sigma_1^A \sigma_1^B} \ket{\sigma_1^A} \ket{\sigma_1^B}$。把 $\Psi^{\sigma_1^A\sigma_1^B}$ 读作矩阵 $(\Psi^1)_{\sigma_1^A,\sigma_1^B}$，对它做奇异值分解得  $\Psi^1=U_1 \Lambda^{[1]} V^\dagger_1$。由此我们读出
+\begin{equation}
+A^{[1]\sigma_1^A}_{1,a_1} = (U_1)_{\sigma_1^A,a_1} \quad\quad B^{[1]\sigma_1^B}_{a_1,1} = (V^\dagger_1)_{a_1,\sigma_1^B} .
+\end{equation} 
+$A$ 和 $B$ 从 $U$ 和 $V^\dagger$ 继承左规范与右规范的性质，态取如下形式
+\begin{equation}
+\ket{\psi_1} = \sum_{\sigma_1^A \sigma_1^B} A^{[1]\sigma_1^A} \Lambda^{[1]} B^{[1]\sigma_1^B} \ket{\sigma_1^A \sigma_1^B} .
+\end{equation}
+现在插入两个格点并对 $\hat{H}$ 的能量求极小，我们得到
+\begin{equation}
+\ket{\psi_2} = \sum_{\sigma_1^A \sigma_2^A \sigma_2^B \sigma_1^B} A^{[1]\sigma_1^A} 
+\Psi^{\sigma_2^A \sigma_2^B} 
+B^{[1]\sigma_1^B} \ket{\sigma_1^A \sigma_2^A \sigma_2^B \sigma_1^B},
+\end{equation}
+其中每个 $\Psi^{\sigma_2^A \sigma_2^B}$ 都是维数与 $A$ 和 $B$ 相匹配的矩阵，隐含地假定矩阵乘积 $A\Psi B$。把这组 $\Psi$ 矩阵重塑为一个矩阵，
+\begin{equation}
+(\Psi_2)_{(a_1^A \sigma_2^A),(a_1^B \sigma_2^B)} =  (\Psi^{\sigma_2^A \sigma_2^B})_{a_1^A,a_1^B},
+\end{equation}
+SVD 给出 $\Psi_2 = U_2 \Lambda^{[2]} V^\dagger_2$，由此我们可以构造
+\begin{equation}
+A^{[2]\sigma_2^A}_{a_1^A,a_2^A} = U_{(a_1^A \sigma_2^A), a_2^A} \quad\quad  
+B^{[2]\sigma_2^B}_{a_2^B,a_1^B} = V^\dagger_{(a_1^B \sigma_2^B), a_2^B}
+\end{equation}
+于是
+\begin{equation}
+\ket{\psi_2} = \sum_{\sigma_1^A \sigma_2^A \sigma_2^B \sigma_1^B} 
+A^{[1]\sigma_1^A}A^{[2]\sigma_2^A} \Lambda^{[2]} B^{[2]\sigma_2^B}B^{[1]\sigma_1^B} 
+\ket{\sigma_1^A \sigma_2^A \sigma_2^B \sigma_1^B}.
+\end{equation}
+在第 $\ell$ 步，波函数将成为
+\begin{equation}
+\ket{\psi_\ell} = \sum_{\sigma_1^A \ldots \sigma_\ell^A \sigma_\ell^B \ldots \sigma_1^B} 
+A^{[1]\sigma_1^A} \ldots A^{[\ell]\sigma_\ell^A} \Lambda^{[\ell]} B^{[\ell]\sigma_\ell^B} \ldots B^{[1]\sigma_1^B}  
+\ket{\sigma_1^A \ldots \sigma_\ell^A \sigma_\ell^B \ldots \sigma_1^B}
+\end{equation}
+其形状如图~\ref{fig:infiniteDMRG_AB} 所示。
+

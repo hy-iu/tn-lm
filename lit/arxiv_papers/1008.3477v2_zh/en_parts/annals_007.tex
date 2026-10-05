@@ -1,0 +1,124 @@
+The methods of the next section can now be used to work out analytically the correlators of the AKLT state:  antiferromagnetic correlators are decaying exponentially, $\langle S^z_i S^z_j \rangle \propto (-1/3)^{i-j}$, whereas the string correlator $\langle S^z_i \eul^{\imag \pi\sum_{i<k<j} S^z_k}S^z_j \rangle =-4/9$ for $j-i>2$, indicating hidden order.
+
+To summarize, it has been possible to express the AKLT state as a $D=2$ matrix product state, the simplest non-trivial MPS! In fact, the projection from the larger state space of the auxiliary spins which are linked by maximally entangled states (here: singlets) onto the smaller physical state space can also be made the starting point for the introduction of MPS and their higher-dimensional generalizations\cite{VerstraetePorras04,VerstraeteCirac04}. 
+
+\subsection{Overlaps, expectation values and matrix elements}
+
+Let us now turn to operations with MPS, beginning with the calculation of expectation values.
+Expectation values are obviously special cases of general matrix elements, where states $\ket{\psi}$ and $\ket{\phi}$ are identical. Staying in the general case, let us consider an overlap between states $\ket{\psi}$ and $\ket{\phi}$, described by matrices $M$ and $\tilde{M}$, and focus on open boundary conditions. 
+
+Taking the adjoint of $\ket{\phi}$, and considering that the wave function coefficients are scalars, the overlap reads
+\begin{equation}
+\braket{\phi}{\psi} = \sum_{\fat{\sigma}} \tilde{M}^{\sigma_1*} \ldots \tilde{M}^{\sigma_L*} M^{\sigma_1} \ldots M^{\sigma_L} .
+\end{equation}
+Transposing the scalar formed from the $\tilde{M} \ldots \tilde{M}$ (which is the identity operation), we arrive at adjoints with reversed ordering:
+\begin{equation}
+\braket{\phi}{\psi} = \sum_{\fat{\sigma}} \tilde{M}^{\sigma_L\dagger} \ldots \tilde{M}^{\sigma_1\dagger} M^{\sigma_1} \ldots M^{\sigma_L} .
+\label{eq:finaloverlap}
+\end{equation}
+In a pictorial representation (Fig.~\ref{fig:overlap}), this calculation becomes much simpler, if we follow the rule that all bond indices are summed over.
+\begin{figure}
+\centering\includegraphics[width=\textwidth]{PyMPS_Overlap.eps}
+\caption{Overlap between two states $\ket{\phi}$ and $\ket{\psi}$. All contractions (sums) over same indices are indicated by arrows.}
+\label{fig:overlap}
+\end{figure}
+
+\subsubsection{Efficient evaluation of contractions}
+
+Evaluating expression (\ref{eq:finaloverlap}) in detail shows the importance of finding the {\em right (optimal) order of contractions} in matrix or more generally tensor networks. We have contractions over the matrix indices implicit in the matrix multiplications, and over the physical indices. If we decided to contract first the matrix indices and then the physical indices, we would have to sum over $d^L$ strings of matrix multiplications, which is exponentially expensive. But we may regroup the sums as follows:
+\begin{equation}
+\braket{\phi}{\psi} = \sum_{\sigma_L} 
+\tilde{M}^{\sigma_L\dagger} \left( 
+\ldots \left( 
+\sum_{\sigma_2}  \tilde{M}^{\sigma_2 \dagger} \left(
+\sum_{\sigma_1} \tilde{M}^{\sigma_1\dagger} M^{\sigma_1}\right) 
+M^{\sigma_2}\right) 
+ \ldots  \right) 
+ M^{\sigma_L} .
+\end{equation}
+This means, in the (special) first step we multiply the column and row vectors $\tilde{M}^{\sigma_1\dagger}$ and $M^{\sigma_1}$ to form a matrix and sum over the (first) physical index. In the next step, we contract a three-matrix multiplication over the second physical index, and so forth (Fig.~\ref{fig:overlaporder}). The important observation is that from the second step onwards the complexity does not grow anymore. Also, it is of course most efficient to decompose matrix multiplications $ABC$ as $(AB)C$ or $A(BC)$. Then we are carrying out $(2L-1)d$ multiplications, each of which is of complexity $O(D^3)$, ignoring for simplicity that matrices are non-square in general at the moment. The decisive point is that we go from exponential to weak polynomial complexity, with total operation count $O(LD^3 d)$.
+
+\begin{figure}
+\centering\includegraphics[width=\textwidth]{PyMPS_OverlapOrder.eps}
+\caption{Overlap between two states $\ket{\phi}$ and $\ket{\psi}$ with indication of the optimal sequence of contractions, running like a zipper through the chain.}
+\label{fig:overlaporder}
+\end{figure}
+
+
+What is also immediately obvious, is that for a norm calculation $\braket{\psi}{\psi}$ and OBC having a state in left- or right-normalized form immediately implies that it has norm 1. In the calculation above it can be seen that for left-normalized matrices $A$, the innermost sum is just the left-normalization condition, yielding $I$, so it drops out, and the next left-normalization condition shows up, until we are through the chain (Fig.~\ref{fig:overlaplnormalized}):
+\begin{eqnarray*}
+\braket{\psi}{\psi} &=& \sum_{\sigma_L} A^{\sigma_L\dagger} \left( \ldots \left( \sum_{\sigma_2}  A^{\sigma_2 \dagger} \left(\sum_{\sigma_1} A^{\sigma_1\dagger} A^{\sigma_1}\right) A^{\sigma_2}\right)  \ldots  \right) A^{\sigma_L} \\
+&=&  \sum_{\sigma_L} A^{\sigma_L\dagger} \left( \ldots \left( \sum_{\sigma_2}  A^{\sigma_2 \dagger}  A^{\sigma_2}\right)  \ldots  \right) A^{\sigma_L} = \ldots \\
+&=& \sum_{\sigma_L} A^{\sigma_L\dagger} A^{\sigma_L} = 1.
+\end{eqnarray*}
+
+\begin{figure}
+\centering\includegraphics[width=\textwidth]{PyMPS_OverlapLNormalized.eps}
+\caption{Steps of a norm calculation for a {\em left normalized} state $\ket{\psi}$ by subsequent applications of the contraction rule for left-normalized $A$-matrices.}
+\label{fig:overlaplnormalized}
+\end{figure}
+
+To calculate general matrix elements, we consider $\bra{\phi} \hat{O}^{[i]} \hat{O}^{[j]} \ldots \ket{\psi}$, tensored operators acting on sites $i$ and $j$. The matrix elements of such operators are taken from 
+\begin{equation}
+ \hat{O}^{[\ell]} = \sum_{\sigma_\ell,\sigma'_\ell} O^{\sigma_\ell,\sigma'_\ell} \ket{\sigma_\ell} \bra{\sigma'_\ell} .
+\end{equation}
+Let us extend this to an operator on every site, which in practice will be the identity on almost all sites, e.g. for local expectation values or two-site correlators. We are therefore considering operator matrix elements $O^{\sigma_1,\sigma'_1} O^{\sigma_2,\sigma'_2} \cdots  O^{\sigma_L,\sigma'_L}$.
+In the analytical expression, we again transpose and distribute the (now double) sum over local states (matrix multiplications for the $M$-matrices are as before): 
+\begin{eqnarray*}
+& & \sum_{\fat{\sigma},\fat{\sigma}'} \tilde{M}^{\sigma_1*} \ldots \tilde{M}^{\sigma_L*} 
+O^{\sigma_1,\sigma'_1} O^{\sigma_2,\sigma'_2} \cdots  O^{\sigma_L,\sigma'_L}
+M^{\sigma'_1} \ldots M^{\sigma'_L} \\
+&=& \sum_{\sigma_L,\sigma'_L} O^{\sigma_L,\sigma'_L} \tilde{M}^{\sigma_L\dagger}  \left( \ldots \left( \sum_{\sigma_2,\sigma'_2}  O^{\sigma_2,\sigma'_2} \tilde{M}^{\sigma_2 \dagger} \left(\sum_{\sigma_1,\sigma'_1} O^{\sigma_1,\sigma'_1} \tilde{M}^{\sigma_1\dagger} M^{\sigma'_1}\right) M^{\sigma'_2}\right)  \ldots  \right) M^{\sigma'_L}
+\end{eqnarray*}
+This amounts to the same calculation as for the overlap, with the exception that formally the single sum over the physical index turns into a double sum (Fig.~\ref{fig:matrixelement}). For typical correlators the double sum will trivially reduce to a single sum on most sites, as for most sites only the identity acts, $\hat{O}^{[i]}=\hat{I}$; on the few non-trivial sites, of the up to $d^2$ matrix elements, most will be zero for conventional operators, strongly restricting the number of terms, so essentially the operational count is $O(LD^3 d)$ again.
+
+\begin{figure}
+\centering\includegraphics[scale=1.0]{PyMPS_MatrixElement.eps}
+\caption{Matrix elements between two states $\ket{\phi}$ and $\ket{\psi}$ are calculated like the overlap, with the operators inserted at the right places, generating a double sum of physical indices there, as indicated by the arrows.}
+\label{fig:matrixelement}
+\end{figure}
+
+\begin{figure}
+\centering\includegraphics[scale=1.0]{PyMPS_LocalOverlap.eps}
+\caption{$\bra{\psi} \hat{O}^{[\ell]} \ket{\psi}$ for a state $\ket{\psi}$ with left- and right-normalized matrices to the left and right of site $\ell$.}
+\label{fig:localoverlap}
+\end{figure}
+
+Important simplifications for expectation values $\bra{\psi} \hat{O}^{[\ell]} \ket{\psi}$ are feasible and should be exploited whenever possible: Assume that we look at a local operator $\hat{O}^{[\ell]}$ and that normalizations are such that to the left of site $\ell$ all matrices are left-normalized and to the right of site $\ell$ all matrices are right-normalized; the status of site $\ell$ itself is arbitrary. Then left- and right-normalization can be used to contract the network as in Fig.~\ref{fig:overlaplnormalized} without explicit calculation, such that just two matrices remain (Fig.~\ref{fig:localoverlap}). The remaining calculation is just
+\begin{equation}
+\bra{\psi} \hat{O}^{[\ell]} \ket{\psi} = \sum_{\sigma_\ell \sigma'_\ell} O^{\sigma_\ell \sigma'_\ell} \tr
+(M^{\sigma_\ell \dagger} M^{\sigma'_\ell}),
+\end{equation} 
+an operation of order $O(D^2 d^2)$, saving one order of $D$ in calculation time. As we will encounter algorithms where the state is in such mixed-canonical representation, it makes sense to calculate observables ``on the sweep''. This is just identical to expectation values on the explicit sites of DMRG.
+    
+A frequently used notation for the calculation of overlaps, expectation values and matrix elements is provided by reading the hierarchy of brackets as an iterative update of a matrix, which eventually gives the scalar result. We now introduce matrices $C^{[\ell]}$, where $C^{[0]}$ is a dummy matrix, being the scalar 1. Then an overlap $\braket{\phi}{\psi}$ can be carried out iteratively by running $\ell$ from 1 through $L$:
+\begin{equation}
+C^{[\ell]} = \sum_{\sigma_\ell} \tilde{M}^{\sigma_{\ell}\dagger} C^{[\ell-1]} M^{\sigma_{\ell}} ,
+\end{equation}
+where $C^{[L]}$ will be a scalar again, containing the result. For operators taken between the two states, the natural extension of this approach is 
+\begin{equation}
+C^{[\ell]} = \sum_{\sigma_\ell,\sigma'_\ell} O^{\sigma_\ell,\sigma'_\ell} \tilde{M}^{\sigma_{\ell}\dagger} C^{[\ell-1]} M^{\sigma'_{\ell}} .
+\end{equation}
+Again, the right order of evaluating the matrix products makes a huge difference in efficiency:
+\begin{equation}
+C^{[\ell]}_{a_\ell,a'_\ell} = \sum_{\sigma_\ell,a_{\ell-1}}  \tilde{M}^{\sigma_{\ell}*}_{a_{\ell-1},a_\ell} \left( \sum_{\sigma'_\ell} O^{\sigma_\ell,\sigma'_\ell} 
+\left( \sum_{a'_{\ell-1}} C^{[\ell-1]}_{a_{\ell-1},a'_{\ell-1}} 
+M^{\sigma'_{\ell}}_{a'_{\ell-1},a'_\ell} \right) \right) 
+\end{equation}
+reduces an operation $O(D^4 d^2)$ to $O(D^3 d) + O(D^2d^2) + O(D^3 d)$.
+
+Of course, we can also proceed from the right end, introducing matrices $D^{[\ell]}$, starting with
+$D^{[L]}=1$, a scalar. To this purpose, we exchange the order of scalars in $\braket{\phi}{\psi}$,
+\begin{equation}
+\braket{\phi}{\psi} = \sum_{\fat{\sigma}}M^{\sigma_1} \ldots M^{\sigma_L}  \tilde{M}^{\sigma_1*} \ldots \tilde{M}^{\sigma_L*}  ,
+\end{equation}
+and transpose again the $\tilde{M}$-matrices, leading to a hierarchy of bracketed sums, with the sum over $\sigma_L$ innermost. The iteration running from $\ell=L$ to $\ell=1$ then reads:
+\begin{equation}
+D^{[\ell-1]} = \sum_{\sigma_\ell}  M^{\sigma_{\ell}} D^{[\ell]} \tilde{M}^{\sigma_{\ell}\dagger} ,
+\end{equation}
+which can be extended to the calculation of matrix elements as
+\begin{equation}
+D^{[\ell-1]} = \sum_{\sigma_\ell,\sigma'_\ell}  O^{\sigma_\ell,\sigma'_\ell} M^{\sigma'_{\ell}} D^{[\ell]} \tilde{M}^{\sigma_{\ell}\dagger} .
+\end{equation}
+$D^{[0]}$ then contains the result.
+

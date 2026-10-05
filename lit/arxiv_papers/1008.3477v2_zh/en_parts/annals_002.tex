@@ -1,0 +1,122 @@
+An important observation is that both the infinite-system and finite-system algorithm can also be carried out by inserting only a single explicit site $\bullet$, hence one would study superblocks of the form A$\bullet$B, with slightly adapted growth procedures. An advantage of this method would be a speedup by roughly a factor $d$ in the large sparse eigensolver; for example, the application of $\hat{h}$ to a state in Eq.~(\ref{eq:hamfragment}) would then lead to $O(D^3 d)$ operations.
+In the infinite-system algorithm an obvious disadvantage would be that superblock lengths oscillate between odd and even; in the finite-system algorithm the question of the relative merits is much more interesting and will be discussed at length in Section \ref{subsec:conventionalDMRGinMPS}.
+
+Obviously, for $D\rightarrow\infty$, no truncations occur and DMRG becomes exact; increasing $D$ reduces truncation and therefore monotonically improves observables, which one extrapolates in $D\rightarrow\infty$ (even better, in the truncation error $\epsilon\rightarrow 0$, for which local observables often show effectively linear error dependence on $\epsilon$) for optimal results.
+
+For more details on DMRG and its applications, I refer to \cite{Schollwoeck05}. 
+  
+\section{DMRG and entanglement: why DMRG works and why it fails}
+The DMRG algorithm quite naturally leads to the consideration of bipartite quantum systems, where the parts are A$\bullet$ and $\bullet$B. For an arbitrary bipartition,  $\ket{\psi} = \sum_{ij} \psi_{ij} \ket{i}_A \ket{j}_B$, where the states $\ket{i}_A$ and $\ket{j}_B$ form orthonormal bases of dimensions $N_A$ and $N_B$ respectively. Thinking of the $\psi_{ij}$ as entries of a rectangular matrix $\Psi$ (dimension $N_A \times N_B$), the reduced density matrices $\rho_A$ and $\rho_B$ take the form
+\begin{equation}
+\rho_A = \Psi \Psi^\dagger \quad\quad \rho_B = \Psi^\dagger \Psi.
+\label{eq:ABdensityoperators}
+\end{equation}
+If we assume that we know $\ket{\psi}$ exactly, but can approximate it in DMRG only with at most $D$ states per block, the optimal DMRG approximation is provided by retaining as block states the eigenstates belonging to the $D$ largest eigenvalues. If we happen to know the eigenspectra of reduced density operators of $\ket{\psi}$, we can easily assess the quality a DMRG approximation can have; it simply depends on how quickly the eigenvalues $w_a$ decrease. In fact, such analyses have been carried out for some exactly solved systems in one and two dimensions \cite{Peschel99,Okunishi99,Chung00,Chung01,Chan02}. They reveal that in one dimension for gapped systems eigenvalues $w_a$  generically decay exponentially fast (roughly as $\eul^{- c \ln^2 a}$), which explains the success of DMRG, but in two-dimensional stripe geometries of size $L \times W$, $L\gg W$, $c \propto 1/W$, such that with increasing width $W$ (increasing two-dimensionality) the eigenspectrum decay is so slow as to make DMRG inefficient. 
+
+Usually, we have no clear idea about the eigenvalue spectrum; but it turns out that in such cases 
+entanglement entropies can serve as ``proxy'' quantities, namely the von Neumann entanglement or entanglement entropy. It is given by the non-vanishing part of the eigenvalue spectrum of $\rho_A$ (identical to that of $\rho_B$, as we will discuss below) as
+\begin{equation}
+S_{A|B}  = - \Tr\, \rho_A \log_2 \rho_A = - \sum_\alpha w_a \log_2 w_a .
+\end{equation}
+It would seem as if we have gained nothing, as we don't know the $w_a$, but general laws about entanglement scaling are available. If we consider a bipartitioning A$|$B where AB is in the thermodynamic limit and A of size $L^{\cal D}$, with ${\cal D}$ the spatial dimension, the so-called {\em area laws}
+\cite{Eisert10,Bekenstein73,Srednicki93,Callan94,Plenio05} predict that for ground states of short-ranged Hamiltonians with a gap to excitations entanglement entropy is not extensive, but proportional to the surface, i.e. $S(A|B) \sim L^{{\cal D}-1}$, as opposed to thermal entropy. This implies $S \sim $ cst. in one dimension and $S \sim L$ in two dimensions. At criticality, a much richer structure emerges: in one dimension,
+$S = \frac{c+\overline{c}}{6} \log_2 L + k$, where $c$ and $\overline{c}$ are the (an)holonomic central charges from conformal field theory\cite{Vidal03,Latorre04}; in two dimensions, bosonic systems seem to be insensitive to criticality (i.e. $S \propto L$)\cite{Srednicki93,Barthel06}, whereas fermionic systems get a logarithmic correction $S \propto L \log_2 L$ for a one-dimensional Fermi surface (with a prefactor proportional to its size), but seem to grow only sublogarithmically if the Fermi surface consists of points \cite{Barthel06,Gioev06}. It should be emphasized that these properties of ground states are highly unusual: in the thermodynamic limit, a random state out of Hilbert space will indeed show extensive entanglement entropy with probability 1.
+
+In a mathematically non-rigorous way one can now make contact between DMRG and the area laws of quantum entanglement: between two $D$-dimensional state spaces for A and B, the maximal entanglement is $\log_2 D$ in the case where all eigenvalues of $\rho_A$ are identical and $D^{-1}$ (such that $\rho_A$ is maximally mixed); meaning that one needs a state of dimension $2^S$ and more to encode entanglement $S$ properly. This implies that for gapped systems in one dimension an increase in system size will not lead to a strong increase in $D$; in two dimensions, $D \sim 2^L$, such that DMRG will fail even for relatively small system sizes, as resources have to grow exponentially (this however does not exclude very precise results for small two-dimensional clusters or quite large stripes). Critical systems in one dimension are borderline cases: $D \sim L^{\frac{c+\overline{c}}{6}}$; this means that the thermodynamic limit is not reachable, but the growth of $D$ is sufficiently slow (usually the power is weak, say $1/3$ or $1/6$, due to typical values for central charges) such that large system sizes ($L \sim O(10^3)$) can be reached; this allows for very precise finite-size extrapolations.
+
+Obviously, this argument implicitly makes the cavalier assumption that the eigenvalue spectrum is close to flat, which leads to maximal entanglement, such that an approximate estimation of $D$ can be made. In practice, the spectrum is dictated by the problem and indeed far from flat: as we have seen, it is in fact usually exponentially decaying. But numerically, it turns out that for standard problems the scaling of the resource $D$ is predicted correctly on the qualitative level. 
+
+It even turns out that in a mathematically strict analysis, von Neumann entanglement does {\em not} allow a general prediction of resource usage: this is because one can construct artificial eigenvalue spectra that allow or forbid efficient simulation, while their von Neumann entanglement would suggest the opposite, following the above argument \cite{Schuch08}. Typical many-body states of interest, however, do not have such ``pathological'' spectra. In fact, Renyi entanglement entropies, a generalization of von Neumann entanglement entropies, do allow mathematically rigourous connections \cite{Schuch08}, but usually are hard to calculate, with criticality in one dimension as an exception due to conformal field theory.  
+
+\section{Matrix product states (MPS)}
+\label{sec:matrixproductstates}
+
+If we consider our paradigmatic problem, the one-dimensional Heisenberg antiferromagnet, the key problem is that Hilbert space seems to be exponentially big ($d^L = 2^L$). Looking for the ground state may therefore seem like looking for a needle in the haystack. The claim is that at least for local Hamiltonians with a gap between ground state and first excited state, the haystack is not very big, effectively infinitesimally small compared to the size of the full Hilbert space, as we have already seen from the very peculiar entanglement scaling properties. What is even more important, this relevant corner of Hilbert space can be parametrized efficiently, i.e.\ with modest numerical resources, operated upon efficiently, and efficient algorithms of the DMRG type to solve important questions of quantum physics do exist. This parametrization is provided by the {\em matrix product states (MPS)}.
+
+Maybe the two DMRG algorithms explained above seem to be very cumbersome to implement. But it turns out that if we do quantum mechanics in the restricted state class provided by matrix product states, DMRG and other methods almost force themselves on us. The manipulation of matrix product states seems to be very complicated at first, but in fact can be formalized beautifully, together with a graphical notation that allows to generate permitted operations almost automatically; as any good formalism (such as bra and ket), it essentially enforces correctness. 
+
+\subsection{Introduction of matrix product states}
+
+\subsubsection{Singular value decomposition (SVD) and Schmidt decomposition}
+Throughout the rest of this paper, we will make extensive use of one of the most versatile tools of linear algebra, the so-called {\em singular value decomposition} (SVD), which is at the basis of a very compact representation of quantum states living in a bipartite universe AB, the {\em Schmidt decomposition}. Let us briefly recall what they are about.
+
+SVD guarantees for an arbitrary (rectangular) matrix $M$ of dimensions $(N_A \times N_B)$ the existence of a decomposition
+\begin{equation}
+M =   U S V^\dagger ,
+\end{equation}
+where 
+\begin{itemize}
+\item $U$ is of dimension $(N_A \times \min (N_A,N_B))$ and has orthonormal columns (the {\em left singular vectors}), i.e. $U^\dagger U = I$; if $N_A \leq N_B$ this implies that it is unitary, and also $UU^\dagger = I$. 
+\item $S$ is of dimension $(\min (N_A,N_B) \times \min (N_A,N_B))$, diagonal with non-negative entries $S_{aa} \equiv s_a$. These are the so-called {\em singular values}. The number $r$ of non-zero singular values is the {\em (Schmidt) rank} of $M$. In the following, we assume descending order: $s_1 \geq s_2 \geq \ldots \geq s_r > 0.$
+\item $V^\dagger$ is of dimension $(\min (N_A,N_B) \times N_B)$ and has orthonormal rows (the {\em right singular vectors}), i.e.\ $V^\dagger V = I$. If $N_A \geq N_B$ this implies that it is unitary, and also $VV^\dagger  = I$.
+\end{itemize}
+This is schematically shown in Fig.~\ref{fig:SVD}. Singular values and vectors have many highly interesting properties. One which is of practical importance in the following is the optimal approximation of $M$ (rank $r$) by a matrix $M'$ (with rank $r'<r$) in the Frobenius norm $\| M \|_F^2 = \sum_{ij} |M_{ij}|^2$ induced by the inner product $\braket{M}{N}= \tr\, M^\dagger N$. It is given by 
+\begin{equation}
+M' = U S' V^\dagger \quad\quad S'={\rm diag} (s_1, s_2, \ldots, s_{r'}, 0,\ldots ),
+\end{equation} 
+i.e.\ one sets all but the first $r'$ singular values to be zero (and in numerical practice, will shrink the column dimension of $U$ and the row dimension of $V^\dagger$ accordingly to $r'$).
+
+\begin{figure}
+\centering\includegraphics[width=\textwidth]{PyMPS_SVD.eps}
+\caption{Resulting matrix shapes from a singular value decomposition (SVD), corresponding to the two rectangular shapes that can occur. The singular value diagonal serves as a reminder that in $M=USV^{\ \dagger}$ $S$ is purely non-negative diagonal.}
+\label{fig:SVD}
+\end{figure}
+
+As a first application of the SVD, we use it to derive the {\em Schmidt decomposition} of a general quantum state. Any pure state 
+$\ket{\psi}$ on AB
+can be written as
+\begin{equation}
+\ket{\psi} = \sum_{ij} \Psi_{ij} \ket{i}_A \ket{j}_B,
+\label{eq:generalquantumstate}
+\end{equation}
+where $\{ \ket{i}_A \}$ and $\{ \ket{j}_B \}$ are orthonormal bases of A and B with dimension $N_A$ and $N_B$ respectively; we read the coefficients as entries of a matrix $\Psi$. From this representation we can derive the  reduced density operators $\hat{\rho}_A = \tr_B \ket{\psi}\bra{\psi}$ and $\hat{\rho}_B = \tr_A \ket{\psi}\bra{\psi}$, which expressed with respect to the block bases take the matrix form 
+\begin{equation} 
+\rho_A = \Psi \Psi^\dagger \quad\quad \rho_B = \Psi^\dagger\Psi .
+\end{equation}
+
+If we carry out an SVD of matrix $\Psi$ in Eq.~(\ref{eq:generalquantumstate}), we obtain
+\begin{eqnarray}
+\ket{\psi} &=& \sum_{ij} \sum_{a=1}^{\min(N_A,N_B)} U_{ia} S_{aa} V^*_{ja} \ket{i}_A \ket{j}_B \nonumber \\
+&=& \sum_{a=1}^{\min(N_A,N_B)} \left( \sum_i U_{ia} \ket{i}_A \right) s_a \left( \sum_j V_{ja}^* \ket{j} \right) \nonumber \\
+&=& \sum_{a=1}^{\min(N_A,N_B)} s_a \ket{a}_A \ket{a}_B .
+\end{eqnarray}
+Due to the orthonormality properties of $U$ and $V^\dagger$, the sets $\{ \ket{a}_A \}$ and $\{ \ket{a}_B \}$ are orthonormal and can be extended to be orthonormal bases of A and B. If we restrict the sum to run only over the $r \leq \min(N_A,N_B)$ positive nonzero singular values, we obtain the {\em Schmidt decomposition}
+\begin{equation}
+\ket{\psi} = \sum_{a=1}^r s_a \ket{a}_A \ket{a}_B .
+\end{equation}
+It is obvious that $r=1$ corresponds to (classical) product states and $r>1$ to entangled (quantum) states.
+
+The Schmidt decomposition allows to read off the reduced density operators for A and B introduced above very conveniently: carrying out the partial traces, one finds
+\begin{equation}
+\hat{\rho}_A = \sum_{a=1}^r s^2_a \ket{a}_A  \phantom\rangle_A \bra{a} \quad\quad \hat{\rho}_B = \sum_{a=1}^r s^2_a \ket{a}_B \phantom\rangle_B \bra{a} ,
+\end{equation}
+showing that they share the non-vanishing part of the spectrum, but not the eigenstates. The eigenvalues are the squares of the singular values, $w_a = s^2_a$, the respective eigenvectors are the left and right singular vectors.  The von Neumann entropy of entanglement can therefore be read off directly from the SVD,
+\begin{equation}
+S_{A|B}(\ket{\psi}) = - \tr\, \hat{\rho}_A \log_2 \hat{\rho}_A = - \sum_{a=1}^r s_a^2 \log_2 s_a^2 .
+\end{equation}
+
+In view of the large size of Hilbert spaces, it is also natural to approximate $\ket{\psi}$ by some $\ket{\tilde{\psi}}$ spanned over state spaces of A and B that have dimension $r'$ only. This problem can be related to SVD, because the 2-norm of $\ket{\psi}$ is identical to the Frobenius norm of the matrix $\Psi$,
+\begin{equation}
+\| \ket{\psi} \|_2^2 = \sum_{ij} | \Psi_{ij} |^2 = \| \Psi \|_F^2 ,
+\end{equation}
+if and only if the sets $\{ \ket{i} \}$ and $\{ \ket{j} \}$ are orthonormal (which is the case here).
+The optimal approximation is therefore given in the 2-norm by the optimal approximation of $\Psi$ by $\tilde{\Psi}$ in the Frobenius norm, where $\tilde{\Psi}$ is a matrix of rank $r'$. As discussed above, $\tilde{\Psi} = US' V^\dagger$, where $S'={\rm diag}(s_1, \ldots, s_{r'}, 0, \ldots)$, constructed from the largest singular values of $\Psi$. Therefore, the Schmidt decomposition of the approximate state reads
+\begin{equation}
+\ket{\tilde{\psi}} = \sum_{a=1}^{r'} s_a \ket{a}_A \ket{a}_B ,
+\label{eq:Schmidtapproximation}
+\end{equation}
+where the $s_a$ must be rescaled if normalization is desired.
+
+\subsubsection{QR decomposition}
+While SVD will be seen to cover all our needs, sometimes it is an overkill: in many cases of the expression $M=USV^\dagger$, we are only interested in the property $U^\dagger U = I$ and the product $SV^\dagger$, for example whenever the actual value of the singular values will not be used explicitly. Then there is a numerically cheaper technique, {\em QR decomposition}, which for an arbitrary matrix $M$ of dimension $(N_A \times N_B)$ gives a decomposition
+\begin{equation}
+M = QR ,
+\label{eq:QRdecomposition}
+\end{equation}
+hence the name, where $Q$ is of dimension $(N_A \times N_A)$ and unitary, $Q^\dagger Q = I = Q Q^\dagger$, and $R$ is of dimension $(N_A \times N_B)$ and upper triangular, i.e. $R_{ij}=0$ if $i>j$. This {\em full} QR decomposition can be reduced to a {\em thin} QR decomposition: assume $N_A > N_B$: then the bottom $N_A-N_B$ rows of R are zero, and we can write
+\begin{equation}
+M=Q \cdot \left[ \begin{array}{c} R_1 \\ 0 \end{array} \right] = \left[ \begin{array}{cc} Q_1 & Q_2 \end{array} \right] \left[ \begin{array}{c} R_1 \\ 0 \end{array} \right] = Q_1 R_1 ,
+\label{eq:thinQRdecomposition}
+\end{equation}
+where $Q_1$ is now of dimension $(N_A \times N_B)$, $R_1$ of dimension $(N_B \times N_B)$, and while $Q_1^\dagger Q_1 = I$, in general $Q_1 Q_1^\dagger \neq I$. Whenever I will refer to a QR decomposition in the following, I will imply the thin one. It should also be clear that the matrices $Q$ (or $Q_1$) share properties with $U$ from SVD, but are not the same in general; but as we will see that the MPS representation of states is not unique anyways, this does not matter.
+

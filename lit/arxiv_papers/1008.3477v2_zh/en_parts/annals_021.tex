@@ -1,0 +1,114 @@
+\subsection{Orders of contraction: light cones, Heisenberg picture and transverse folding}
+Let us consider the calculation of the time-dependent expectation value
+\begin{equation}
+\bra{\psi(t)} \hat{O} \hat{P} \ket{\psi(t)} = \bra{\psi} \eul^{+\imag\hat{H}t} \hat{O} \hat{P} \eul^{-\imag\hat{H}t} \ket{\psi} .
+\end{equation}
+Starting with $\ket{\psi}$, we evolve it up to time $t$, obtaining $\ket{\psi(t)}$. The expectation value then is calculated by sandwiching the two operators between $ \bra{\psi(t)}$ and $\ket{\psi(t)}$, as discussed before. But we can represent this procedure also as the (approximate) contraction over a two-dimensional tensor network as shown in Fig.~\ref{fig:2Dcontractiontime}, which is then contracted line by line along the time direction, moving inwards. 
+
+\begin{figure}
+\centering\includegraphics[scale=0.7]{PyMPS_MPSContractionTime2D.eps}
+\caption{Two-dimensional tensor network contracted for time-dependent expectation values: the top and bottom lines represent $\bra{\psi}$ and $\ket{\psi}$. The two arrays of MPOs (indicated by brackets) represent $\eul^{+\imag\hat{H}t}$ and $\eul^{-\imag\hat{H}t}$ in Trotterized form; I do not distinguish between different local MPOs such as identity operators which show up on some sites of the left- and rightmost columns. In the central line, we put identity operators (white squares) and the operators to be evaluated. The dashed line indicates the buildup of contractions in time direction.}
+\label{fig:2Dcontractiontime}
+\end{figure}
+
+Assuming $t=N\Delta t$ and $n$ MPOs per Trotter step (e.g.\ 2 in first order), we have a lattice of $L \times (2nN+3)$ sites, i.e. of width $L$ and odd height $2nN+3$. If we call $T^{[i,j]}$ the tensor located on the site in row $i$ and column $j$ (like in a matrix), and if we label indices by up $u$, down $d$, left $l$ and right $r$, and write $T^{[i,j]}$ in analogy to MPOs with indices $T^{[i,j]u,d}_{l,r}$, then we can identify, for example, for $i=1$ (location of the bra state):
+\begin{equation}
+T^{[1,1] 1,d}_{1,r} = A^{[1]d*}_{1,r} \quad
+T^{[1,j] 1,d}_{l,r} = A^{[j]d*}_{l,r} \quad
+T^{[1,L] 1,d}_{l,1} = A^{[L]d*}_{l,1}
+\end{equation}
+where $1<j<L$. Similarly for $i=2nN+3$ (location of the ket state):
+\begin{equation}
+T^{[2nN+3,1] u,1}_{1,r} = A^{[1]u}_{1,r} \quad
+T^{[2nN+3,j] u,1}_{l,r} = A^{[j]u}_{l,r} \quad
+T^{[2nN+3,L] u,1}_{l,1} = A^{[L]u}_{l,1}
+\end{equation}
+and on row $i=nN+2$ (location of the operators):
+\begin{equation}
+T^{[nN+2,j] u,d}_{1,1} = \left\{ \begin{array}{cl} \hat{O}^{u,d} & {\rm on\ operator\ location\ } j \\
+\delta_{u,d} & {\rm else} \end{array} \right\} .
+\end{equation}
+In this row, horizontally the network is a product of scalars, hence the $(1,1)$. On all other rows, the tensors $T^{[i,j]}$ are given by local MPOs such that $T^{[i,j]u,d}_{l,r}= W^{[\alpha]u,d}_{l,r}$ on all rows $nN+2 < i < 2nN+3$ (with the type $\alpha$ depending on the chosen decomposition) and 
+$T^{[i,j]u,d}_{l,r}= W^{[\alpha]d,u*}_{l,r}$ on all rows $1 < i < nN+2$, which correspond to the time evolution of the bra.
+
+\subsubsection{Light cones in time evolution}
+Considering the time evolution of bra and ket together in fact allows important simplifications. In Fig.~\ref{fig:lightcone1} I have restored the alternating pattern of bond evolutions in a first order Trotter decomposition and explicitly marked the position of unit operators by white squares. We would like to calculate $\langle \hat{O}(t) \rangle$, where the operator sits on site 2. Let us look at the last Trotter steps (rows 5 and 7). In row 5 there are several evolution operators $\eul^{+\imag \hat{h} \Delta t}$ with corresponding operators  $\eul^{-\imag \hat{h} \Delta t}$ in row 7. But this means that they cancel each other and can be replaced by unit operators, except in columns 2 and 3 because they have $\hat{O}$ interposed. If, in turn, we look now at rows 4 and 8, there are now evolution operators cancelling each other in columns 5 through 8; the other ones do not cancel, as they sandwich non-identity operators. Like this, we work our way towards the bra and ket states, until no cancellation is possible anymore. The resulting tensor network shows a large degree of replacements of complicated tensors of bond (row) dimensions larger than 1 by identity tensors with bond dimension 1, which means that contractions become trivial and no compression is needed. There remains an algorithmic {\em light cone} of evolution operators that ``see'' the presence of a non-trivial operator $\hat{O}$ to be evaluated. Note that this algorithmic light cone is not to be confused with a physical light cone: if we send $\Delta t\rightarrow 0$, the algorithmic light cone becomes infinitely wide for any fixed time $t$. Physically, the Lieb-Robinson theorem states that beyond a ``light cone'' of width $x=2ct$, where $c$ is some problem-specific ``velocity'', correlations decay exponentially fast, as opposed to the hard cut imposed by a relativistic light cone. The physical light cone and the special decay of correlations is at the basis of very interesting algorithmic extensions of the MPS/tDMRG/TEBD algorithms of the last section by Hastings\cite{Hastings09,Hastings08}, which I will not pursue here.
+
+\begin{figure}
+\centering\includegraphics[scale=0.25]{PyMPS_MPSContractionLightCone.eps}$\quad\quad$\includegraphics[scale=0.25]{PyMPS_MPSContractionLightCone2.eps}
+\vskip 1cm
+\centering\includegraphics[scale=0.25]{PyMPS_MPSContractionLightCone3.eps}$\quad\quad$\includegraphics[scale=0.25]{PyMPS_MPSContractionLightCone4.eps}
+$\quad\quad$\includegraphics[scale=0.25]{PyMPS_MPSContractionLightCone5.eps}
+
+\caption{Light cone: The diagrams are to be read from left to right, in the top and then the bottom line. On the top left, an operator is sandwiched between two time-evolved states; taking Trotter evolution into account, identity operators are marked by white squares. Working our way outward from the center towards the top and bottom, bond evolution operators cancel each other to identities, provided they do not sandwich the operator or (therefore) surviving bond operators. The result is a light cone of evolution operators, surrounded by numerically trivial identities.}
+\label{fig:lightcone1}
+\end{figure}
+
+While this structure becomes more complicated if we look, e.g.\ at $n$-point correlators, we may look at a huge algorithmic saving, even though we have to pay the price that for different locations of operators, new networks have to be considered. 
+
+What is the prize for calculating at different times, e.g.\ $\langle \hat{O} (t_1) \rangle$, $\langle \hat{O} (t_2) \rangle$ and so on? This is a very natural question, as we might be interested in the time evolution of, say, some local density. If we do not use the light cone, then we simply calculate the contraction moving inwards, calculate some average, retrieve the stored result of the contraction up to the line with the operators, add more Trotter steps, contract, calculate some average, and so on. This is exactly what we have been doing all along. Of course, the light cone generated by the operator acting at time $t_2 > t_1$ is different from and larger than that generated by the operator acting at time $t_1$. But if the Hamiltonian is time-independent, the larger light cone contains the smaller one at its tip. It therefore makes numerical sense to reverse the time evolution, and work from the future towards the past. But this corresponds to nothing else but a switch to the Heisenberg picture.
+
+\subsubsection{Heisenberg picture}
+Mathematically, the switch to the Heisenberg picture is nothing but a rebracketing:
+\begin{equation}
+\langle \hat{O}(t) \rangle = \bra{\psi(t)} \hat{O} \ket{\psi(t)} = \bra{\psi} \eul^{+\imag \hat{H} t} \hat{O} \eul^{-\imag \hat{H} t} \ket{\psi} = \bra{\psi} \hat{O}(t) \ket{\psi},
+\end{equation}
+where we have introduced the time-dependent operator
+\begin{equation}
+\hat{O}(t) =  \eul^{+\imag \hat{H} t} \hat{O} \eul^{-\imag \hat{H} t} .
+\end{equation}
+If we Trotterize the time evolutions present, we arrive exactly at the light cone structure of the last section, except that it has not been contracted yet with bra and ket; Fig.~\ref{fig:Heisenbergtime}.
+
+\begin{figure}
+\centering\includegraphics[scale=0.5]{PyMPS_MPSHeisenbergTime.eps}
+\caption{Time evolution of an operator $\hat{O}$ in the Heisenberg picture, translated to the MPS/MPO representation. Each symmetric set of layers around the operator corresponds to one time step (more precisely, part of a Trotter time step). The light cone widens as a larger and larger section of the lattice is affected by $\hat{O}$. The identity operator (white square) is inserted for reasons of symmetry, but without explicit function.}
+\label{fig:Heisenbergtime}
+\end{figure}
+
+This allows to set up time evolution in the Heisenberg picture \cite{Prosen09,Hartmann09}.Technically, one constructs a spatially growing MPO from MPO-MPO-multiplications as encountered e.g.\ in the calculation of the action of $\hat{H}^2$. If the current MPO of the time-evolved operator consists of local MPOs of the form $O^{\sigma_i \sigma'_i}_{a_{i-1},a_i}$ and bond dimension $D$ (on sites $i$ where it actually has to be considered), and if the time evolution MPO (for $\eul^{-\imag \hat{h} t}$) reads
+$W^{\sigma_i \sigma'_i}_{b_{i-1},b_i}$ with bond dimensions $D_W$, then the operator reads after (part of) the time step
+\begin{equation}
+O^{\sigma_i, \sigma'_i}_{(b_{i-1},a_{i-1},c_{i-1}), (b_i,a_i,c_i)}
+= \sum_{\sigma^{''}_i} W^{\sigma^{''}_i,\sigma_i *}_{b_{i-1},b_i} \left( \sum_{\sigma^{'''}_i}  O^{\sigma^{''}_i \sigma^{'''}_i}_{a_{i-1},a_i} W^{\sigma^{'''}_i,\sigma'_i}_{c_{i-1},c_i} \right) . 
+\end{equation}
+with bond dimensions $DD_W^2$. This operator is then compressed down to bond dimensions $D$ as explained earlier for MPOs, essentially using the method for compressing MPS.
+
+This sets up a ``conventional'' time evolution: instead of a state, an operator in MPO form is subjected to time evolution by MPOs, and compressed to manageable matrix dimensions after each time step. We can basically recycle most of the algorithm. 
+
+What are potential advantages and disadvantages of this formulation? First of all, the savings due to the algorithmic light cone are immediately incorporated. Second, we may hope that truncations are smaller: while the network contracted over is identical in the Heisenberg and Schr\"{o}dinger picture, {\em truncations} in the Schr\"{o}dinger picture do not take into account the operator and hence are less specific - one may enviseage that for ``simple'' operators like local density a lot of the fine structure of the state evolution is not really needed, and evolving the operator itself tells us which information is needed specifically for this operator. 
+
+A corresponding disadvantage is of course that calculations need to be redone for different operators, which in the Schr\"{o}dinger picture may be evaluated whenever one likes, provided the time-evolved wave function is stored. Of course, here the corresponding advantage is that for different states one may evaluate whenever one likes, provided the time-evolved operator is stored. 
+
+At the moment of writing it seems indeed that for simple operators the reachable time spans can be extended substantially, but I would find it hard to commit to some rule of thumb. 
+
+\subsubsection{Transverse contraction and folding}
+
+Of course, the iterative build up of the state as it evolves in time appeals to our intuition about the world, but there is nothing that prevents us to contract the same network in the spatial direction, i.e.\ column by column; as the order of contraction may influence efficiency quite strongly, maybe it helps. In order to recycle existing programs, one may simply rotate the current network by 90 degrees counterclockwise, and obtains a lattice of width $(2nN+3)$ and height $L$. If we continue to label tensors $T^{[i,j]}$ by the vertical before the horizontal and in the row-column logic of a matrix, then tensors in the new lattice read
+\begin{equation}
+\overline{T}^{[i,j] u,d}_{l,r} = T^{[L+1-j,i] r,l}_{u,d} ,
+\end{equation}
+as can be seen from Fig.~\ref{fig:latticerotation}. Then we can contract again line by line.
+
+As it turns out, a simple rotation (or transverse contraction) does not extend the reachable timescale. It is by an additional {\em folding} step that a strong extension of the timescale is possible \cite{Banuls09}. The folding happens parallel to the new ``time'' (i.e. real space) axis, and halves the extent of the new ``space'' (i.e. real time) domain (see Fig.~\ref{fig:latticefolding}). Instead of sites 1 through $2nN+3$ we then have double sites 1 through $nN+2$, where double site 1 comprises old sites 1 and $2nM+3$, double site 2 comprises old sites 2 and $2nN+2$; generally $i$ comprises old sites $i$ and $2nN+4-i$, up to the pair $(nN+1, nN+3)$. The site $nN+2$ is special: as we are folding an odd number of sites, one site remains single. This is site $nN+2$, which corresponds to the line that contained the operators to be evaluated at time $t$. On all the other sites, we fold tensors onto each other that correspond to ``identical'' timesteps, one forward and one backward in time.
+
+The expectation is that this folding of forward and backward timesteps leads to cancellations in entanglement buildup, such that larger times can be reached (the growth in $D$ is not as fast).
+
+To simplify notation, we define $L' = 2nN+3 \equiv 2\ell +1$.
+If we read the bottom end of the folding as an MPS, the folded state also starts with an MPS whose matrices are formed as
+\begin{equation}
+M^{f[i]\Sigma_i}_{a^f_{i-1},a^f_i} = M^{f[i]\sigma_i, \sigma_{L'+1-i}}_{(a_{i-1},a_{L'+1-i}),(a_i,a_{L'-i})}
+= \overline{T}^{[L,i]\sigma_i}_{a_{i-1},a_i} \overline{T}^{[L,L'+1-i]\sigma_{L'+1-i}}_{a_{L'-i},a_{L'+1-i}} 
+\end{equation}  
+for all $1 \leq i \leq \ell$ and 
+\begin{equation}
+M^{f[\ell+1]\Sigma_{\ell+1}}_{a^f_{\ell},1} = M^{f[\ell+1]\sigma_{\ell+1}}_{(a_{\ell},a_{\ell+1}),1} 
+=\overline{T}^{[L,\ell+1]\sigma_{\ell+1}}_{a_{\ell},a_{\ell+1}}.
+\end{equation}  
+We have defined $d^2$ ``fat'' local states $\ket{\Sigma_i} = \ket{\sigma_i}\ket{\sigma_{L'+1-i}}$ on each site, except site $\ell+1$, where it remains of dimension $d$ (for programming, one may of course introduce a dummy site). Similarly, we construct the new tensors for the folded MPOs.
+
+\begin{figure}
+\centering\includegraphics[scale=0.5]{PyMPS_LatticeRotation.eps}
+\caption{Rotating the lattice for code reusage: Assuming a space-time labeling $[i,j]$ with time $i$ and space $j$ (which after rotation refers to ficticious ``time'' and ``space'') tensor indices $u$,$d$ and $l$,$r$ exchange places as shown in the figure.}
+\label{fig:latticerotation}
+\end{figure}
+ 

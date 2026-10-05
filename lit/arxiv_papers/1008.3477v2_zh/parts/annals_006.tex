@@ -1,0 +1,164 @@
+
+如果我们允许一般矩阵，且不担心左规范、右规范或无归一化，只需把 $\Psi$-矩阵乘入相邻的某个 $A$ 或 $B$ 矩阵，就得到开边界条件下的普遍 MPS 形式（见图~\ref{fig:MPS_OBC}）：
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} M^{\sigma_1} \ldots M^{\sigma_L} \ket{\fat{\sigma}}  \quad{\rm (MPS \ for \ OBC)},
+\label{eq:MPSOBC}
+\end{equation}
+其中对归一化并{\em 不}作任何假设（正因如此我把这些矩阵记作 $M$）。由于第一个和最后一个矩阵具有矢量性质，乘积最终给出一个标量。这正是上一节已经讨论过的 MPS 形式。
+
+\begin{figure}
+\centering\includegraphics[scale=1.0]{PyMPS_MPS_OBC.eps}
+\caption{开边界条件 MPS 的图示。}
+\label{fig:MPS_OBC}
+\end{figure}
+
+至此很容易看出矩阵乘积态如何利用好量子数。让我们聚焦于磁化强度，并假设整体态的磁化强度为 $M$。这个阿贝尔量子数是可加的，$M = \sum_i M_i$。我们选取局域基 $\{ \sigma_i \}$，其状态是局域磁化强度的本征态。现在考虑从左边的生长过程。如果我们选 $\ket{a_1}$ 为局域磁化强度的本征态（例如直接取 $\ket{\sigma_1}$），那么式~(\ref{eq:basistrafoblocksite}) 使我们能够通过归纳法构造出磁化强度的本征态 $\ket{a_\ell}$，只要矩阵 $A^{\sigma_\ell}_{a_{\ell-1}, a_\ell}$ 具有分块结构，使得对每个非零矩阵元
+\begin{equation}
+M(\ket{a_{\ell-1}}) + M(\ket{\sigma_\ell}) = M(\ket{a_\ell})
+\end{equation}
+成立。这一点很容易在图示中表达出来：给图形表示（图~\ref{fig:MPS_OBC_quantumnumbers}）中的线加上方向，即画出射入和射出的箭头。规则很简单：射入线上磁化强度之和等于射出线上磁化强度之和。为了强制某个整体磁化强度 $M$，我们只需在第一个格点之前和最后一个格点之后的虚拟键上，分别给射入和射出的键赋予磁化强度值 0 和 $M$。我们可以设想 MPS 矩阵的指标是针对给定磁化强度的多重指标，允许简并，从而得到一种优雅的编码表示。键箭头的反转则直接对应于从右边生长所得 $B$-矩阵的结构，不过只要记账得当，箭头的取法有很大的自由度：反转只不过意味着符号要变号。
+
+要在实际中利用好量子数，它们必须在我们对矩阵乘积态执行的典型操作下得以保持。事实证明，所有并非显而易见地无碍、且保持好量子数的操作都可以用 SVD 表达。SVD 会作用在形如 $A_{(a_{i-1}\sigma_i),a_i}$ 的矩阵上。如果我们按好量子数对态 $\ket{a_{i-1}\sigma_i}$ 和 $\ket{a_i}$ 进行分组，$A$ 就会由若干块组成；只要适当地重排标记，就可以写出 $A = A_1 \oplus A_2 \oplus \ldots = U_1 S_1 V^\dagger_1 \oplus U_2 S_2 V^\dagger_2 \oplus \ldots$，或者 $A=USV^\dagger$，其中 $U= U_1 \oplus U_2 \oplus \ldots$，依此类推。但这意味着经由 $U$ 从 $\ket{a_{i-1}\sigma_i}$ 生成的新态也具有好量子数。当需要截断时，这个性质对保留的态当然仍然成立。如果在可行之处用 QR 分解代替 SVD 并对各个块分别进行，$A_i =Q_i R_i$，那么幺正矩阵 $Q_i$ 只在具有相同量子数的态集合内部变换，因此好量子数得以保持。
+
+\begin{figure}
+\centering\includegraphics[scale=0.85]{PyMPS_MPS_OBC_QuantumNumbers.eps}
+\caption{具有好（可加）量子数的开边界条件 MPS 的图示。物理态和键都变成有向的，使得射入线上的量子数等于射出线上的量子数。对于第一个格点之前和最后一个格点之后的虚拟键，我们取适当的值以固定整体好量子数。}
+\label{fig:MPS_OBC_quantumnumbers}
+\end{figure}
+
+现在假设我们的格点系统满足周期边界条件。在态系数 $c_{\sigma_1\ldots\sigma_L}$ 的层面上并不存在边界条件的概念，因此我们的 MPS 标准形式完全能够描述一个体现周期边界条件的态。从这个意义上说，断言式~(\ref{eq:MPSOBC}) 只对开边界条件成立实际上是错误的。它的正确之处仅在于：第一个和最后一个格点上矩阵的异常结构对周期边界条件并不方便；事实上，跨越键 $(L,1)$ 的纠缠必须编码为贯穿整条链的拉伸。这会导致数值效率极低的 MPS 表示。
+
+对于周期边界条件，MPS 形式的自然推广是让所有矩阵都具有相同的维度 $(D \times D)$；由于格点 $L$ 又连回格点 $1$，我们通过取迹使 MPS 在所有键上都与矩阵乘法自洽（见图~\ref{fig:MPS_PBC}）：
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} \tr (M^{\sigma_1} \ldots M^{\sigma_L}) \ket{\fat{\sigma}}  \quad{\rm (MPS \ for \ PBC)}.
+\label{eq:MPSforPBC}
+\end{equation}
+虽然{\em 先验地}看它并不比另一种形式更精确，但它要合适得多，在计算上也高效得多。
+\begin{figure}
+\centering\includegraphics[scale=1.0]{PyMPS_MPS_PBC.eps}
+\caption{周期边界条件 MPS 的图示；底部的长线对应于求迹操作。}
+\label{fig:MPS_PBC}
+\end{figure}
+
+本节的重点在于量子态的近似表示，而非通常无法实现的精确表示。虽然我们还没有给出如何构造这些近似表示的具体方案，但有几点评注是有必要的。
+
+即使是近似的 MPS 也仍然是希尔伯特空间中所有态的线性组合，没有任何乘积基态被舍弃。限制其实在于线性组合的形式：不再是 $d^L$ 个系数，而是 $dL$ 个维度为 $(D\times D)$ 的矩阵，加上一个给出 $LD^2$ 个标量约束的矩阵型归一化约束，因此只有 $(d-1)LD^2$ 个独立参数，这使得态的各个系数之间产生了相互依赖。
+ 
+对于给定的矩阵维度，任意量子态的最优近似的质量会随 $D$ 单调改善：取 $D<D'$，则 $D$ 所能达到的最佳近似可以写成一个键维数为 $D'$ 的 MPS，即在 $(D' \times D')$ 矩阵中嵌入 $(D \times D)$ 子矩阵，而所有新增的行和列均为零。它们为进一步改善态的近似提供了额外的参数。
+
+乘积态（对任何 Schmidt 分解 Schmidt 秩均为 1）可以用 $D=1$ 的 MPS 精确写出。包含纠缠态的真实量子物理从 $D=2$ 开始。鉴于一个量子态中系数的数目呈指数增长，可能令人惊讶的是，即便在这个最简单的非平庸情形下，竟能精确地完成有趣的量子物理！但确实存在一些重要的量子态，它们在这个新格式下能找到紧凑的精确表达式。
+
+\subsubsection{作为矩阵乘积态的 AKLT 态}
+为了让 MPS 框架不那么抽象，让我们构造一个非平庸量子态的 MPS 表示。关联物理中最有趣的量子态之一是 1987 年提出的{\em Affleck-Kennedy-Lieb-Tasaki 态}，它是 AKLT 哈密顿量\cite{Affleck87,Affleck88} 的基态
+\begin{equation}
+\ham = \sum_{i} {\bf S}_i \cdot {\bf S}_{i+1} + 
+\frac{1}{3} ({\bf S}_i \cdot {\bf S}_{i+1})^2 , 
+\label{eq:aklt_hamiltonian}
+\end{equation}
+其中本文破例处理 $S=1$ 的自旋。可以证明，这个哈密顿量的基态可以按图~\ref{fig:akltstate} 所示的方式构造。每个自旋-1 都被一对完全对称化的自旋-$\frac{1}{2}$ 所取代，也就是说，在四个可能的态中我们只考虑自然地被识别为 $S=1$ 态的三个三重态：
+\begin{eqnarray}
+\ket{+}&=&\ket{\uparrow\uparrow} \nonumber \\
+\ket{0}&=&\frac{\ket{\uparrow\downarrow}+\ket{\downarrow\uparrow}}{\sqrt{2}} 
+\label{eq:tripletmapping} \\
+\ket{-}&=&\ket{\downarrow\downarrow} \nonumber
+\end{eqnarray}
+在相邻格点上，相邻的自旋-$\frac{1}{2}$ 对以单态相连接
+\begin{equation}
+\frac{\ket{\uparrow\downarrow}-\ket{\downarrow\uparrow}}{\sqrt{2}} .
+\end{equation}
+
+事实证明，这个态可以用最低非平庸维度 $D=2$ 的矩阵乘积态编码，而且已经蕴含了大量令人振奋的物理 \cite{Affleck87,Affleck88,Fannes89}。在长度为 $\syslength$ 的链上 $2\syslength$ 个辅助自旋-$\frac{1}{2}$ 态的语言中，任意态都写成
+\begin{equation}
+    \ket{\psi} = \sum_{{\bf a}}\sum_{{\bf b}} c_{{\bf ab}} \ket{{\bf 
+    ab}}
+\end{equation}
+其中 $\ket{{\bf a}}=\ket{a_1,\ldots,a_\syslength}$ 和 $\ket{{\bf b}}=\ket{b_1,\ldots,b_\syslength}$ 分别表示每个格点上的第一个和第二个自旋-$\frac{1}{2}$。现在我们把连接格点 $i$ 和 $i+1$ 的键 $i$ 上的单态键 $\Sigma_i$ 编码为
+\begin{equation}
+\ket{\Sigma^{[i]}} = \sum_{b_i a_{i+1}} \Sigma_{ba} \ket{b_i}\ket{a_{i+1}}
+\end{equation}
+并引入一个 $2 \times 2$ 矩阵 $\Sigma$
+\begin{equation}
+\Sigma = \left[ 
+\begin{array}{cc} 0 & \frac{1}{\sqrt{2}} \\ -\frac{1}{\sqrt{2}} & 0 \end{array}
+\right] .
+\end{equation}
+于是所有键上都有单态的态为
+\begin{equation}
+\ket{\psi_\Sigma} = \sum_{{\bf a}}\sum_{{\bf b}} \Sigma_{b_1 a_2} \Sigma_{b_2 a_3} \ldots \Sigma_{b_{\syslength-1} a_\syslength}\Sigma_{b_\syslength a_1} \ket{{\bf 
+    ab}} 
+\end{equation}
+这对应周期边界条件。如果考虑开边界条件，则略去 $\Sigma_{b_\syslength a_1}$，第一个和最后一个自旋-$\frac{1}{2}$ 保持为单态。
+\begin{figure}
+\centering\includegraphics[scale=1.0]{PyMPS_AKLTState.eps}
+\caption{Affleck-Kennedy-Lieb-Tasaki（AKLT）态的构造方式是：把局域自旋-1 表示成两个完全对称化的自旋-$\frac{1}{2}$ 粒子，它们通过单态跨格点相连。图中展示的是 PBC 的情形；对于 OBC，``长''键被切断，两端各出现一个单独的自旋-$\frac{1}{2}$。}
+\label{fig:akltstate}
+\end{figure}
+
+注意，这个态是一个乘积态：只要把任意格点 $i$ 拆成它的两个组分，它就会因子化。现在我们通过引入一个{\em 映射}来编码辅助自旋的对称化态与物理自旋的对应关系：从
+两个辅助自旋-$\frac{1}{2}$ 的态 $\ket{a_i}\ket{b_i} \in \{
+\ket{\uparrow},\ket{\downarrow}\}^{\otimes 2}$ 映射到
+物理自旋-1 的态 $\ket{\sigma_i} \in \{ \ket{+},\ket{0},\ket{-} \}$。为了表示 \Eq{eq:tripletmapping}，我们引入 $M_{ab}^{\sigma}
+\ket{\sigma} \bra{ab}$，其中 $\ket{ab}$ 和 $\ket{\sigma}$ 分别表示格点 $i$ 上的辅助自旋和物理自旋。把 $M_{ab}^{\sigma}$ 写成三个 $2\times 2$ 矩阵，每个对应 $\ket{\sigma}$ 的一个取值，行与列的指标分别代表 $\ket{a}$ 和 $\ket{b}$ 的取值，我们得到
+\begin{equation}
+    M^+ = \left[ \begin{array}{cc} 1 & 0 \\ 0 & 0 \end{array} \right] \quad
+    M^0 = \left[ \begin{array}{cc} 0 & \frac{1}{\sqrt{2}} \\ 
+    \frac{1}{\sqrt{2}} & 0 \end{array} \right] \quad
+    M^- = \left[ \begin{array}{cc} 0 & 0 \\ 0 & 1 \end{array} \right] .
+\end{equation}
+自旋-1 链希尔伯特空间 $\{ \ket{\fat{\sigma}} \}$ 上的这个映射于是读作
+\begin{equation} 
+\sum_{\fat{\sigma}} \sum_{{\bf a}{\bf b}} M^{\sigma_1}_{a_1 b_1} M^{\sigma_2}_{a_2 b_2} \ldots M^{\sigma_\syslength}_{a_\syslength b_\syslength}
+\ket{\fat{\sigma}} \bra{{\bf a}{\bf b}} .
+\end{equation}
+因此 $\ket{\psi_\Sigma}$ 被映射为
+\begin{equation}
+\sum_{\fat{\sigma}} \sum_{{\bf a}{\bf b}} M^{\sigma_1}_{a_1 b_1} \Sigma_{b_1 a_2}
+M^{\sigma_2}_{a_2 b_2} \Sigma_{b_2 a_3} \ldots \Sigma_{b_{\syslength-1} a_\syslength} 
+M^{\sigma_\syslength}_{a_\syslength b_\syslength} \Sigma_{b_\syslength a_1} 
+\ket{\fat{\sigma}}
+\end{equation}
+或者
+\begin{equation}
+    \ket{\psi} = \sum_{\fat{\sigma}} \tr (M^{\sigma_{1}} \Sigma
+    M^{\sigma_{2}} \Sigma \ldots M^{\sigma_{\syslength}} \Sigma] ) \ket{\fat{\sigma}} ,
+\end{equation}
+这里使用了矩阵记法。为了进一步简化，我们引入 $\tilde{A}^\sigma= M^\sigma \Sigma$，于是
+\begin{equation}
+    \tilde{A}^+ = \left[ \begin{array}{cc} 0 & \frac{1}{\sqrt{2}} \\ 0 & 0 \end{array} \right] \quad
+    \tilde{A}^0 = \left[ \begin{array}{cc} -\frac{1}{2} & 0 \\ 
+    0 & +\frac{1}{2} \end{array} \right] \quad
+    \tilde{A}^- = \left[ \begin{array}{cc} 0 & 0 \\ -\frac{1}{\sqrt{2}} & 0 \end{array} \right] .
+    \label{eq:unnormalizeda}
+\end{equation}
+AKLT 态现在取如下形式
+\begin{equation}
+    \ket{\psi} = \sum_{\fat{\sigma}} \tr (\tilde{A}^{\sigma_{1}} 
+    \tilde{A}^{\sigma_{2}} \ldots \tilde{A}^{\sigma_{\syslength}}) \ket{\fat{\sigma}} .
+    \label{eq:akltstate}
+\end{equation}
+让我们把 $\tilde{A}^\sigma$ 左规范化。由 $\sum_\sigma \tilde{A}^{\sigma\dagger}\tilde{A}^\sigma = \frac{3}{4}I$ 可知，矩阵 $\tilde{A}$  应当
+按 $\frac{2}{\sqrt{3}}$ 重新标度，从而得到归一化的矩阵 $A$，
+\begin{equation}
+    A^+ = \left[ \begin{array}{cc} 0 & \sqrt{\frac{2}{3}} \\ 0 & 0 \end{array} \right] \quad
+    A^0 = \left[ \begin{array}{cc} -\frac{1}{\sqrt{3}} & 0 \\ 
+    0 & \frac{1}{\sqrt{3}} \end{array} \right] \quad
+    A^- = \left[ \begin{array}{cc} 0 & 0 \\ -\sqrt{\frac{2}{3}} & 0 \end{array} \right] .
+    \label{eq:normalizeda}
+\end{equation}
+这在热力学极限下把态归一化：我们有
+\begin{eqnarray*}
+\braket{\psi}{\psi} &=& \sum_{\fat{\sigma}} \tr (A^{\sigma_1} \ldots A^{\sigma_\syslength})^* \tr (A^{\sigma_1} \ldots A^{\sigma_\syslength}) \\
+&=&  \tr \left( \sum_{\sigma_1} A^{\sigma_1*} \otimes A^{\sigma_1}\right) \ldots \left( \sum_{\sigma_L} A^{\sigma_\syslength*}\otimes A^{\sigma_\syslength} \right) \\
+&=& \tr E^L = \sum_{i=1}^4 \lambda_i^L .
+\end{eqnarray*}
+在这个表达式中，$\lambda_i$ 是
+\begin{equation}
+E = \sum_\sigma A^{\sigma*} \otimes A^{\sigma} = \left[ \begin{array}{cccc} 
+\frac{1}{4} & 0 & 0 & \frac{1}{2} \\
+0 & -\frac{1}{4} & 0 & 0 \\
+0 & 0 & -\frac{1}{4} & 0 \\
+\frac{1}{2} & 0 & 0 & \frac{1}{4}
+\end{array} \right] ,
+\end{equation}
+的 4 个本征值，即 $1,-\frac{1}{3},-\frac{1}{3},-\frac{1}{3}$。于是当 $L\rightarrow\infty$ 时 $\braket{\psi}{\psi} = 1 + 3(-1/3)^L \rightarrow 1$。
+

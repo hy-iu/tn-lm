@@ -1,0 +1,112 @@
+To understand the construction, we move through an arbitrary operator string appearing in $\hat{H}$: starting from the right end, the string contains unit operators, until at one point we encounter one of (in our example) 4 non-trivial operators. For the field operator, the string part further to the left may only contain unit operators; for the interaction operators, the complementary operator must follow immediately to complete the interaction term, to be continued by unit operators further to the left. For book-keeping, we introduce 5 corresponding states of the string at some given bond: state 1: only units to the right,
+states 2,3,4: one $\hat{S}^+$, $\hat{S}^-$, $\hat{S}^z$ just to the right, state 5: completed interaction or field term $-h\hat{S}^z$ somewhere to the right. Comparing the state of a string left and right of one site, only a few transitions are allowed: $1 \rightarrow 1$ by the unit operator $\hat{I}$, $1 \rightarrow 2$ by $\hat{S}^+$, $1 \rightarrow 3$ by $\hat{S}^-$, $1 \rightarrow 4$ by $\hat{S}^z$, $1 \rightarrow 5$ by $-h\hat{S}^z$. Furthermore $2\rightarrow 5$ by $(J/2)\hat{S}^-$, $3 \rightarrow 5$ by $(J/2)\hat{S}^+$ and $4 \rightarrow 5$ by $J^z\hat{S}^z$, to complete the interaction term, and $5 \rightarrow 5$ for a completed interaction by the unit operator $\hat{I}$. Furthermore all string states must start at 1 to the right of the last site and end at 5 (i.e. the dimension $D_W$ of the MPO to be) to the left of the first site. This can now be encoded by the following operator-valued matrices:
+
+\begin{equation}
+\hat{W}^{[i]} = \left[
+\begin{array}{ccccc}
+\hat{I} & 0 & 0 & 0 & 0 \\
+\hat{S}^+ & 0 & 0 & 0 & 0 \\
+\hat{S}^- & 0 & 0 & 0 & 0 \\
+\hat{S}^z & 0 & 0 & 0 & 0 \\
+-h\hat{S}^z & (J/2)\hat{S}^- & (J/2)\hat{S}^+ & J^z\hat{S}^z & \hat{I}
+\end{array}
+\right]
+\end{equation}
+and on the first and last sites
+\begin{equation}
+\hat{W}^{[1]} = \left[
+\begin{array}{ccccc}
+-h\hat{S}^z & (J/2)\hat{S}^- & (J/2)\hat{S}^+ & J^z\hat{S}^z & \hat{I} 
+\end{array}
+\right]
+\quad\quad 
+\hat{W}^{[L]} = \left[
+\begin{array}{c}
+\hat{I} \\ \hat{S}^+ \\ \hat{S}^- \\ \hat{S}^z \\ -h\hat{S}^z 
+\end{array}
+\right] .
+\end{equation}
+Indeed, a simple multiplication shows how the Hamiltonian emerges. Inserting the explicit operator representations gives the desired $W^{\sigma\sigma'}$-matrices for the MPO. It is therefore possible to express Hamiltonians exactly in a very compact MPO form; a similar set of rules leading to the same result has been given by \cite{Crosswhite08a}.
+
+For longer-ranged Hamiltonians, further ``intermediate states'' have to be introduced. Let us consider a model with just $\hat{S}^z \hat{S}^z$-interactions, but between nearest and next-nearest neighbours,
+\begin{equation}
+\hat{H} = J_1 \sum_{i} \hat{S}^z_i \hat{S}^z_{i+1} + J_2 \sum_{i} \hat{S}^z_i \hat{S}^z_{i+2} .
+\end{equation}
+Then the bulk operator would read
+\begin{equation}
+\hat{W}^{[i]} = \left[
+\begin{array}{cccc}
+\hat{I} & 0 & 0 & 0 \\
+\hat{S}^z & 0 & 0 & 0 \\
+0 & \hat{I} & 0 & 0 \\
+0 & J_1\hat{S}^z & J_2\hat{S}^z & \hat{I}
+\end{array}
+\right] .
+\end{equation}
+While the $J_1$-interaction can be encoded as before (moving as $1 \rightarrow 2 \rightarrow 4$), for the next-nearest neighbour interaction, one has to insert an additional step between 2 and 4, an intermediate state 3, where exactly one identity is inserted (moving as $1 \rightarrow 2 \rightarrow 3 \rightarrow 4$). It merely serves as a book-keeping device. Similarly, one can construct longer-ranged interactions. Except the top-left and botton-right corner, the non-vanishing parts of $\hat{W}^{[i]}$ are all below the diagonal by construction.
+
+It might seem that for longer-ranged interactions the dimension $D_W$ will grow rapidly as more and more intermediate states are needed (one additional state per unit of interaction range and per interaction term). While this is true in general, important exceptions are known which can be formulated much more compactly \cite{Frowis10,Crosswhite08a}; consider for example the following exponentially decaying interaction strength $J(r)=J e^{-r/\xi} = J \lambda^r$, where $r>0$ and $\lambda = \exp(-1/\xi)$. An interaction term $\sum_r J(r)\hat{S}^z_i \hat{S}^z_{i+r}$ would be captured by a bulk operator
+\begin{equation}
+\hat{W}^{[i]} = \left[
+\begin{array}{ccc}
+\hat{I} & 0 & 0  \\
+\hat{S}^z & \lambda\hat{I} & 0  \\
+0 & J\lambda \hat{S}^z & \hat{I}
+\end{array}
+\right] .
+\end{equation}
+
+But even if such a simplification does not occur, it turns out that MPOs with quite small dimensions and moderate loss of accuracy can be found, either by approximating an arbitrary interaction function $J(r)$ by a sum of exponentials coded as above\cite{VerstraetePirvu08,Crosswhite08a}, minimizing the $L_2$ distance $\| J(r) - \sum_{i=1}^n \alpha_i \lambda_i^r \|$ in $\alpha_i, \lambda_i$, where $n$ is given by the $D_W$ and loss of accuracy one is willing to consider. Alternatively \cite{Frowis10}, one can of course construct the exact MPO where feasible and compress it by adapting MPS compression techniques to an acceptable $D_W$ (and loss of accuracy). 
+
+\subsection{Applying a Hamiltonian MPO to a mixed canonical state}
+\label{subsec:Hamiltonianmixedcanonical}
+Let us consider $\ket{\psi}$ in the following mixed canonical representation, identical to the single-site DMRG representation,
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} A^{\sigma_1} \ldots A^{\sigma_{\ell-1}} \Psi^{\sigma_{\ell}} B^{\sigma_{\ell+1}} \ldots B^{\sigma_L} \ket{\fat{\sigma}} 
+\end{equation}
+or 
+\begin{equation}
+\ket{\psi} = \sum_{a_{\ell-1},a_{\ell}} \ket{a_{\ell-1}}_A \Psi^{\sigma_{\ell}}_{a_{\ell-1}, a_{\ell}} \ket{a_{\ell}}_B .
+\end{equation}
+Let us now look at the matrix elements $\bra{a_{\ell-1} \sigma_{\ell} a_{\ell}} \hat{H}  \ket{a'_{\ell-1} \sigma'_{\ell} a'_{\ell}}$ obtained using the MPO representation for $\hat{H}$. By inserting twice the identity $\hat{I} = \sum_{\fat{\sigma}} \ket{\fat{\sigma}}\bra{\fat{\sigma}}$, we obtain (the sums with a star exclude site $\ell$)
+\begin{eqnarray*}
+& & \bra{a_{\ell-1} \sigma_{\ell} a_{\ell}} \hat{H}  \ket{a'_{\ell-1} \sigma'_{\ell} a'_{\ell}} \\
+&=& \sum_{\fat{\sigma}} \sum_{\fat{\sigma}'} W^{\sigma_1,\sigma'_1} \ldots W^{\sigma_L,\sigma'_L} 
+\braket{a_{\ell-1} \sigma_{\ell} a_{\ell}}{\fat{\sigma}} \braket{\fat{\sigma}'}{a'_{\ell-1} \sigma'_{\ell} a'_{\ell}} \\
+&=& \sum_{\fat{\sigma}*}\sum_{\fat{\sigma}'*} W^{\sigma_1,\sigma'_1} \ldots W^{\sigma_{\ell},\sigma'_{\ell}} \ldots W^{\sigma_L,\sigma'_L} \\
+& & \braket{a_{\ell-1}}{\sigma_1 \ldots \sigma_{\ell-1}} 
+\braket{a_{\ell}}{\sigma_{\ell+1} \ldots \sigma_L}  \braket{\sigma'_1 \ldots \sigma'_{\ell-1}}{a'_{\ell-1}}
+\braket{\sigma'_{\ell+1} \ldots \sigma'_L}{a'_{\ell}} \\
+&=& \sum_{\fat{\sigma}*}\sum_{\fat{\sigma}'*} W^{\sigma_1,\sigma'_1} \ldots W^{\sigma_{\ell},\sigma'_{\ell}} \ldots W^{\sigma_L,\sigma'_L} \\
+& & (A^{\sigma_1} \ldots A^{\sigma_{\ell-1}})^*_{1,a_{\ell-1}} (B^{\sigma_{\ell+1}} \ldots B^{\sigma_L})^*_{a_{\ell},1} (A^{\sigma'_1} \ldots A^{\sigma'_{\ell-1}})_{1,a'_{\ell-1}} (B^{\sigma'_{\ell+1}} \ldots B^{\sigma'_L})_{a'_{\ell},1} \\
+&=& \sum_{\{ a_i, b_i, a'_i\} } \left( \sum_{\sigma_1\sigma'_1} A^{\sigma_1*}_{1,a_1} W^{\sigma_1,\sigma'_1}_{1,b_1} A^{\sigma'_1}_{1,a'_1} \right) \left( \sum_{\sigma_2\sigma'_2} A^{\sigma_2*}_{a_1,a_2} W^{\sigma_2,\sigma'_2}_{b_1,b_2} A^{\sigma'_2}_{a'_1,a'_2} \right) \ldots 
+\times W^{\sigma_{\ell},\sigma'_{\ell}}_{b_{\ell-1},b_{\ell}} \times \\
+& &  \left( \sum_{\sigma_{\ell+1}\sigma'_{\ell+1}} B^{\sigma_{\ell+1}*}_{a_{\ell},a_{\ell+1}} W^{\sigma_{\ell+1},\sigma'_{\ell+1}}_{b_{\ell},b_{\ell+1}} B^{\sigma'_{\ell+1}}_{a'_{\ell},a'_{\ell+1}} \right) \ldots \left( \sum_{\sigma_L\sigma'_L} B^{\sigma_L*}_{a_{L-1},1} W^{\sigma_L,\sigma'_L}_{b_{L-1},1} B^{\sigma'_L}_{a'_{L-1},1} \right) .
+\end{eqnarray*}   
+All the beauty of the MPO formulation seems gone, but a graphical representation restores it (Fig.~\ref{fig:mpodmrghamiltonian}). It can be understood most easily from the second or third line of the explicit expressions above: the Hamilton MPO (expressed in the product basis) is projected on the block states of A and B, which have an expansion in the $\fat{\sigma}$-basis.
+
+\begin{figure}
+\centering\includegraphics[scale=0.7]{PyMPS_MPOOnDMRGState.eps}
+\caption{Representation of the DMRG expression $\bra{a_{\ell-1} \sigma_{\ell} a_{\ell}} \hat{H}  \ket{a'_{\ell-1} \sigma'_{\ell} a'_{\ell}}$ in MPO/MPS language. The Hamiltonian MPO is contracted with four block state expansions in MPS form (two bras, two kets, two on block A, two on block B). The contracted network decouples into parts $L$, $W$ and $R$, corresponding to blocks A and B and the center site.}
+\label{fig:mpodmrghamiltonian}
+\end{figure}
+
+In fact, we can also encode the obvious tripartite structure of the expression as
+\begin{equation}
+\bra{a_{\ell-1} \sigma_{\ell} a_{\ell}} \hat{H}  \ket{a'_{\ell-1} \sigma'_{\ell} a'_{\ell}} 
+= \sum_{b_{\ell-1}, b_{\ell}} L^{a_{\ell-1},a'_{\ell-1}}_{b_{\ell-1}}  W^{\sigma_{\ell},\sigma'_{\ell}}_{b_{\ell-1},b_{\ell}} R^{a_{\ell},a'_{\ell}}_{b_{\ell}} ,
+\end{equation}
+where $L$ and $R$ contain the contracted left and right parts of the graphical network: 
+\begin{eqnarray}
+L^{a_{\ell-1},a'_{\ell-1}}_{b_{\ell-1}} &=& \sum_{\{ a_i, b_i, a'_i; i<\ell-1\} } \left( \sum_{\sigma_1\sigma'_1} A^{\sigma_1*}_{1,a_1} W^{\sigma_1,\sigma'_1}_{1,b_1} A^{\sigma'_1}_{1,a'_1} \right) \ldots \left( \sum_{\sigma_{\ell-1}\sigma'_{\ell-1}} A^{\sigma_{\ell-1} *}_{a_{\ell-2},a_{\ell-1}} W^{\sigma_{\ell-1},\sigma'_{\ell-1}}_{b_{\ell-2},b_{\ell-1}} A^{\sigma'_{\ell-1}}_{a'_{\ell-2},a'_{\ell-1}} \right) 
+\label{eq:LdefineinMPO} \\
+R^{a_{\ell},a'_{\ell}}_{b_{\ell}} &=& \sum_{\{ a_i, b_i, a'_i; i>\ell\} } 
+\left( \sum_{\sigma_{\ell+1}\sigma'_{\ell+1}} B^{\sigma_{\ell+1}*}_{a_{\ell},a_{\ell+1}} W^{\sigma_{\ell+1},\sigma'_{\ell+1}}_{b_{\ell},b_{\ell+1}} B^{\sigma'_{\ell+1}}_{a'_{\ell},a'_{\ell+1}} \right) \ldots \left( \sum_{\sigma_L\sigma'_L} B^{\sigma_L*}_{a_{L-1},1} W^{\sigma_L,\sigma'_L}_{b_{L-1},1} B^{\sigma'_L}_{a'_{L-1},1} \right) 
+\end{eqnarray}
+We can now write the action of $\hat{H}$ on a state $\ket{\psi}$ in the mixed canonical or single-site DMRG representation as
+\begin{equation}
+\hat{H}\ket{\psi} = \sum_{b_{\ell-1}, b_{\ell}} \sum_{a'_{\ell-1}, \sigma'_{\ell}, a'_{\ell}}
+ L^{a_{\ell-1},a'_{\ell-1}}_{b_{\ell-1}}  W^{\sigma_{\ell},\sigma'_{\ell}}_{b_{\ell-1},b_{\ell}} R^{a_{\ell},a'_{\ell}}_{b_{\ell}} \Psi^{\sigma'_{\ell}}_{a'_{\ell-1},a'_{\ell}} \ket{a_{\ell-1}}_A \ket{\sigma_{\ell}} \ket{a_{\ell}}_B .
+\end{equation}
+As we will discuss in an instant, $\hat{H}\ket{\psi}$ is the key operation in an iterative ground state search. Evaluating this expression naively is inacceptably slow; it can be drastically accelerated on two counts: first, $L$ and $R$ can be built iteratively in order to maximally reuse available information; this involves an optimal arrangement of a network contraction. Moreover, the final action of $L$, $R$ and $W$ on $\ket{\psi}$ can also be arranged highly efficiently.
+

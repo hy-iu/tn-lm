@@ -1,0 +1,127 @@
+The purification of the infinite temperature mixed state is a simple MPS of dimension 1, because it factorizes (if we take one ladder rung as a big site):
+\begin{equation}
+\hat{\rho}_0 = \frac{1}{d^L} \hat{I} = \left(\frac{1}{d} \hat{I}\right)^{\otimes L} .
+\end{equation}
+As $\hat{\rho}_0$ factorizes, we can now purify the local mixed state on each physical site as a pure state on rung $i$ , to get $\ket{\psi_{i0}}$, then 
+$\ket{\psi_0} = \ket{\psi_{1,0}}\ket{\psi_{2,0}}\ket{\psi_{3,0}} \ldots$, a product state or an MPS of dimension 1. If we consider some rung $i$ of the ladder, with states $\ket{\sigma}_P$ and $\ket{\sigma}_Q$ on the physical site $2i-1$ and the auxiliary site $2i$, we can purify as follows:
+\begin{equation}
+\frac{1}{d} \hat{I} = \sum_{\sigma} \frac{1}{d} \phantom\langle_P\ket{\sigma}\bra{\sigma}_P = \tr_Q \left[ \left( \sum_{\sigma} \frac{1}{\sqrt{d}} \ket{\sigma}_P \ket{\sigma}_Q \right) \left( \sum_{\sigma} \frac{1}{\sqrt{d}} \bra{\sigma}_P \bra{\sigma}_Q  \right) \right] .
+\end{equation}
+Hence the purification is given by a maximally entangled state (entanglement entropy is $\log_2 d$),
+\begin{equation}
+\ket{\psi_{i0}} = \sum_{\sigma} \frac{1}{\sqrt{d}} \ket{\sigma}_P \ket{\sigma}_Q .
+\end{equation}
+It is easy to see that one can carry out local unitary transformations on both P and Q separately that leave that structure invariant. For example, for the purification of a spin-1/2 chain it is  advantageous to use the singlet state as local purification,
+\begin{equation}
+\ket{\psi_{i,0}} = \frac{1}{\sqrt{2}} [ \ket{\uparrow_P\downarrow_Q} - \ket{\downarrow_P\uparrow_Q} ],
+\end{equation}
+in case the program knows how to exploit good quantum numbers: this state would allow to conserve total $S=0$ and $S^z=0$ at the same time. In this case, the four $A$-matrices would read
+\begin{equation}
+A^{\uparrow_P\uparrow_Q} =0 \quad 
+A^{\uparrow_P\downarrow_Q} =1/\sqrt{2} \quad 
+A^{\downarrow_P\uparrow_Q} =-1/\sqrt{2} \quad 
+A^{\downarrow_P\downarrow_Q} =0  ,
+\end{equation}
+and the purified starting state $\ket{\psi_0}$ for $\beta=0$ is now given by a product of singlet bonds on a ladder. In fact, a SVD of reshaped matrix $A_{\sigma,\sigma'}$ allows us to introduce truly site-local $A$-matrices, which have dimension $(1\times 2)$ on odd and $(2\times 1)$ on even sites:
+\begin{equation}
+A^{\uparrow_{2i-1}} = [ 1\ \ 0] \quad
+A^{\downarrow_{2i-1}} = [ 0\ \ -1] \quad
+A^{\uparrow_{2i}} = [ 0\ \ 1/\sqrt{2}]^T \quad
+A^{\downarrow_{2i}} = [ 1/\sqrt{2} \ \ 0]^T \quad .
+\end{equation}
+In order to apply the pure state time evolution algorithm, it remains to find the MPO.
+ 
+\subsubsection{MPO for mixed state evolution}
+
+\begin{figure}
+\centering\includegraphics[width=250pt]{PyMPS_LadderSetup.eps}
+\caption{The time-evolution of mixed states on a chain can be seen as that of a pure state on a ladder, where the physical sites sit on the first leg and additional auxiliary sites on the second leg. This ladder is mapped to a chain. As the time evolution acts only on the physical states, next-nearest neighbour interactions arise.}
+\label{fig:laddersetup}
+\end{figure}
+
+The ladder appearing in mixed state simulations can be mapped to a chain (Fig.~\ref{fig:laddersetup}), where the physical Hamiltonian acts only on the odd sites, $1,3,5,\ldots$, and the auxiliary sites are even, $2,4,6,\ldots$. Then the only non-trivial time-evolution connects $(1,3), (3,5), (5,7)$. There are several ways of dealing with such longer-ranged interactions, one explicitly constructing the longer-ranged interaction, the other using so-called swap gates, reducing it to a nearest-neighbour interaction.
+
+The direct MPO description of the ``longer-ranged'' interaction $(1,3)$ involves necessarily a non-trivial tensor on site $2$, whereas the site $4$ is inert. Similarly for $(3,5)$, there is a non-trivial tensor on $4$, but site $6$ is inert. This suggests a Trotter decomposition $(1,2,3,4), (5,6,7,8),\ldots$ in the ``odd'' and $(3,4,5,6),(7,8,9,10),\ldots$ in the ``even'' steps.
+
+The four-site evolution operator on sites 1 through 4 then reads
+\begin{equation}
+O^{(\sigma_1\sigma_2\sigma_3\sigma_4), (\sigma'_1\sigma'_2\sigma'_3\sigma'_4)} =
+O^{(\sigma_1\sigma_2\sigma_3), (\sigma'_1\sigma'_2\sigma'_3)}\cdot \delta_{\sigma_4,\sigma'_4}
+\end{equation}
+and we can build the three-site unitary with only a slight modification of the two-site unitary which contains the actual physical time evolution:
+\begin{equation}
+O^{(\sigma_1\sigma_2\sigma_3), (\sigma'_1\sigma'_2\sigma'_3)} = O^{(\sigma_1\sigma_3), (\sigma'_1\sigma'_3)} \cdot \delta_{\sigma_2,\sigma'_2} .
+\end{equation}
+This three-site unitary is now subjected to two SVDs. For the notation, we first shift down the indices and reorder sitewise. Reshaping with subsequent SVDs then iteratively isolates $\sigma_3,\sigma'_3$, $\sigma_2,\sigma'_2$, and $\sigma_1,\sigma'_1$: 
+\begin{eqnarray*}
+& & O_{(\sigma_1\sigma_2\sigma_3), (\sigma'_1\sigma'_2\sigma'_3)} \\
+&=& P_{(\sigma_1 \sigma'_1\sigma_2\sigma'_2),(\sigma_3\sigma'_3)} \\
+&=& \sum_{k_2} U_{(\sigma_1 \sigma'_1\sigma_2\sigma'_2),k_2} S^{[2]}_{k_2,k_2} (V^\dagger_{23})_{k_2,(\sigma_3\sigma'_3)} \\
+&=&  \sum_{k_2} U_{(\sigma_1 \sigma'_1),(\sigma_2\sigma'_2 k_2)} S^{[2]}_{k_2,k_2} (V^\dagger_{23})_{k_2,(\sigma_3\sigma'_3)} \\
+&=& \sum_{k_1,k_2} U_{(\sigma_1 \sigma'_1),k_1} S^{[1]}_{k_1,k_1} (V^\dagger_{12})_{k_1, (\sigma_2\sigma'_2 k_2)} S^{[2]}_{k_2,k_2} (V^\dagger_{23})_{k_2,(\sigma_3\sigma'_3)} \\
+&=& \sum_{k_1,k_2} W^{\sigma_1 \sigma'_1}_{1,k_1} W^{\sigma_2 \sigma'_2}_{k_1,k_2} W^{\sigma_3 \sigma'_3}_{k_2,1} 
+\end{eqnarray*}
+where, with the introduction of dummy indices and the inert tensor on site 4:
+\begin{eqnarray}
+W^{\sigma_1 \sigma'_1}_{1,k_1} &=& U_{(\sigma_1 \sigma'_1),k_1} \sqrt{S^{[1]}_{k_1,k_1}} \\
+W^{\sigma_2 \sigma'_2}_{k_1,k_2} &=& \sqrt{S^{[1]}_{k_1,k_1}} (V^\dagger_{12})_{k_1, (\sigma_2\sigma'_2 k_2)} \sqrt{S^{[2]}_{k_2,k_2}} \\
+W^{\sigma_3 \sigma'_3}_{k_2,1} &=& \sqrt{S^{[2]}_{k_2,k_2}} (V^\dagger_{23})_{k_2,(\sigma_3\sigma'_3)} \\
+W^{\sigma_4 \sigma'_4}_{1,1} &=& \delta_{\sigma_4,\sigma'_4}
+\end{eqnarray}
+From this, MPOs for the entire chain can be formed as for the pure state time evolution. We have done nothing but the iterative decomposition of an MPO on 4 sites. Again, this is still manageable, as only 4 sites are involved. 
+
+Obviously, it is a straightforward step to write an evolution operator acting on all four bonds $(1,2)$, $(1,3)$, $(2,4)$ and $(3,4)$ and subject it to a similar sequence of SVDs, which would allow to consider pure state time-evolution on a real ladder. 
+
+An alternative approach to carry out interactions beyond immediate neighbours is provided by the use of {\em swap gates}\cite{Stoudenmire10}. Let us take the example of a real ladder with interactions on four bonds, two of which [$(1,3)$ and $(2,4)$] are next-nearest-neighbour interactions. But if we swapped states on sites $2 \leftrightarrow 3$, they would be nearest-neighbour interaction. Time-evolution on the ladder would then be done as follows: (i) evolve bonds $(1,2)$ and $(3,4)$; (ii) swap states on sites 2 and 3, (iii) evolve ``new'' bonds $(1,2)$ and $(3,4)$ with the evolution operators for ``old'' bonds $(1,3)$ and $(2,4)$ and (iv) swap states on sites 2 and 3 once again. In other situations, more astute schemes need to be found, preferrably generating a sequence of swaps between nearest neighbours. The swap operator for sites $i$ and $j$ is simply given by
+\begin{equation}
+\hat{S}_{ij} = \sum_{\sigma_i\sigma'_i \sigma_j\sigma'_j} S^{\sigma_i\sigma_j \sigma'_i \sigma'_j} \ket{\sigma_i\sigma_j}\bra{\sigma'_i\sigma'_j} \quad\quad 
+S^{\sigma_i\sigma_j \sigma'_i \sigma'_j} = \delta_{\sigma_i,\sigma'_j} \delta_{\sigma_j,\sigma'_i},
+\end{equation}
+is unitary and its own inverse. It swaps the physical indices of two sites in an MPS; for swaps between nearest neighbours it is easy to restore the original form of the MPS: assume that the MPS is left-normalized; a unitary applied to sites $i$ and $i+1$ affects this only on these two sites. In particular, the orthonormality of block states $\ket{a_{k<i}}_A$ and $\ket{a_{i+1}}_A$ is not affected.
+If we introduce a matrix $M_{(a_{i-1}\sigma_{i+1}),(\sigma_i a_{i+1})} = \sum_{a_i} A^{[i]\sigma_{i+1}}_{a_{i-1},a_i} A^{[i+1]\sigma_i}_{a_i,a_{i+1}}$, we can form $\tilde{M}_{(a_{i-1}\sigma_i),(\sigma_{i+1}a_{i+1})}=M_{(a_{i-1}\sigma_{i+1}),(\sigma_i a_{i+1})}$ and carry out an SVD, where $U_{(a_{i-1}\sigma_i),a_i}$ yields a new left-normalized $\tilde{A}^{\sigma_i}_{a_{i-1},a_i}$ and 
+$S_{a_i,a_i} (V^\dagger)_{a_i,(\sigma_{i+1}a_{i+1})}$ a new left-normalized $\tilde{A}^{\sigma_{i+1}}_{a_{i},a_{i+1}}$. That the latter is left-normalized follows from the left-normalization of $\tilde{A}^{\sigma_i}$ and the maintained orthonormality of the $\ket{a_{i+1}}_A$.
+
+Let me conclude this outlook on beyond-nearest-neighbour interactions with the remark that using MPO allows also other Trotter decompositions, e.g. decomposing the Heisenberg Hamiltonian in its $x$, $y$ and $z$-dependent parts, useful for long-range interactions \cite{VerstraetePirvu08}. 
+ 
+
+\subsection{tDMRG and TEBD compared to MPS time evolution: the little differences}
+A bit before time evolution with MPS (tMPS) was developed, two other algorithms were introduced to simulate the real-time dynamics of one-dimensional quantum chains, time-evolving block decimation (TEBD)\cite{Vidal03a,Vidal04b} and real-time or time-dependent DMRG (tDMRG) \cite{Daley04,WhiteFeiguin04}. Both algorithms are also based on MPS, but are different from tMPS, when one looks more closely. Before I get into that, let me stress however that all of them are based on the idea of time-evolving an MPS which was first put forward in \cite{Vidal03a,Vidal04b} and therefore are minor variations on a theme. tDMRG and TEBD are mathematically equivalent, i.e.\ should for exact arithmetic give the same results, whereas numerically they are clearly distinct algorithms, both carrying out operations that have no counterpart in the other method, with their respective advantages and disadvantages. Let us discuss first tDMRG, because its language is closer to that of tMPS, and then TEBD, to see how important (or unimportant) the little differences are.
+
+\subsubsection{Time-dependent DMRG (tDMRG)}
+The decomposition of a global time-evolution on an entire lattice into a Trotter sequence of infinitesimal time-evolutions on bonds is the same for all three algorithms discussed here.
+Let us therefore focus on one infinitesimal time-evolution $\eul^{-\imag  \hat{h}_{\ell+1} \tau}$ on sites $\ell+1$ and $\ell+2$. 
+The evolution operator expressed in the local basis is given by
+\begin{equation}
+U^{(\sigma_{\ell+1} \sigma_{\ell+2}), (\sigma'_{\ell+1} \sigma'_{\ell+2})} = \bra{\sigma_{\ell+1} \sigma_{\ell+2}} \eul^{-\imag  \hat{h}_{\ell+1} \tau} \ket{\sigma'_{\ell+1} \sigma'_{\ell+2}} .
+\end{equation}
+The current state $\psi$ is given in the two-site DMRG notation with left- and right normalized matrices as
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} A^{\sigma_1} \ldots A^{\sigma_\ell} \Psi^{\sigma_{\ell+1}\sigma_{\ell+2}} B^{\sigma_{\ell+3}} \ldots B^{\sigma_L} \ket{\fat{\sigma}} .
+\end{equation}
+The time-evolution turns $\Psi^{\sigma_{\ell+1}\sigma_{\ell+2}}$ into
+\begin{equation}
+\Phi^{\sigma_{\ell+1}\sigma_{\ell+2}}_{a_\ell, a_{\ell+2}} = \sum_{\sigma'_{\ell+1} \sigma'_{\ell+2}}
+U^{(\sigma_{\ell+1} \sigma_{\ell+2}), (\sigma'_{\ell+1} \sigma'_{\ell+2})}  \Psi^{\sigma'_{\ell+1}\sigma'_{\ell+2}}_{a_\ell, a_{\ell+2}} . 
+\end{equation} 
+This, together with the $A$ and $B$-matrices defines a valid DMRG state we call $\ket{\phi}$. In order to make progress, namely to apply $\eul^{-\imag  \hat{h}_{\ell+3} \tau}$ on the next pair of sites, we have to bring the state into the form 
+\begin{equation}
+\ket{\phi} = \sum_{\fat{\sigma}} A^{\sigma_1} \ldots A^{\sigma_{\ell+2}} \Phi^{\sigma_{\ell+3}\sigma_{\ell+4}} B^{\sigma_{\ell+5}} \ldots B^{\sigma_L} \ket{\fat{\sigma}} .
+\end{equation}
+The changes can only concern sites $\ell+1$ through $\ell+4$: on the first two sites because of the action of the evolution operator, on the last two sites because they are brought into DMRG form. Let us first generate the new $A$-matrices on sites $\ell+1$ and $\ell+2$: We reshape $\Phi^{\sigma_{\ell+1}\sigma_{\ell+2}}_{a_\ell, a_{\ell+2}} = \Phi_{(a_\ell \sigma_{\ell+1}), (\sigma_{\ell+2} a_{\ell+2})}$ and subject it to an SVD (DMRG traditionally does this by a density matrix analysis and the DMRG prediction when shifting sites, leading to the same result):
+\begin{equation}
+\Phi_{(a_\ell \sigma_{\ell+1}),(\sigma_{\ell+2} a_{\ell+2})} = \sum_{a_{\ell+1}} U_{(a_\ell \sigma_{\ell+1}),a_{\ell+1}} S_{a_{\ell+1},a_{\ell+1}} (V^\dagger)_{a_{\ell+1}, (\sigma_{\ell+2} a_{\ell+2})}.
+\end{equation}
+$U$ can immediately be reshaped into a valid $A$-matrix, but has column dimension up to $dD$, which has to be truncated down to $D$ while maintaining the best approximation to the MPS of dimension $dD$. The answer is provided as always by keeping just the $D$ largest singular values and shrinking the matrices $U$, $S$, $V^\dagger$ accordingly. Here lies the approximation of the method (beyond the obvious Trotter error). This done, we reshape as
+\begin{equation}
+\sum_{a_{\ell+1}} A^{\sigma_{\ell+1}}_{a_\ell, a_{\ell+1}}  S_{a_{\ell+1},a_{\ell+1}} (V^\dagger)^{\sigma_{\ell+2}}_{a_{\ell+1},  a_{\ell+2}}
+\end{equation}
+and form $\Phi$ shifted by one site as
+\begin{equation}
+\Phi^{\sigma_{\ell+2}\sigma_{\ell+3}}_{a_{\ell+1},a_{\ell+3}} = \sum_{a_{\ell+2}} S_{a_{\ell+1},a_{\ell+1}} (V^\dagger)^{\sigma_{\ell+2}}_{a_{\ell+1},  a_{\ell+2}} B^{\sigma_{\ell+3}}_{a_{\ell+2},  a_{\ell+3}} .
+\end{equation}
+But we have to shift by another site, which we achieve by reshaping $\Phi^{\sigma_{\ell+2}\sigma_{\ell+3}}_{a_{\ell+1},a_{\ell+3}}$ as $\Phi_{(a_{\ell+1}\sigma_{\ell+2}),(\sigma_{\ell+3} a_{\ell+3})}$, carry out an SVD as done before, keep the states corresponding to the $D$ largest out of $dD$ singular values, reshape, note down $A^{\sigma_{\ell+2}}$ and form $\Phi$ shifted by two sites as
+\begin{equation}
+\Phi^{\sigma_{\ell+3}\sigma_{\ell+4}}_{a_{\ell+2},a_{\ell+4}} = \sum_{a_{\ell+3}} S_{a_{\ell+2},a_{\ell+2}} (V^\dagger)^{\sigma_{\ell+3}}_{a_{\ell+2},  a_{\ell+3}} B^{\sigma_{\ell+4}}_{a_{\ell+3},  a_{\ell+4}} .
+\end{equation}
+The second SVD and the associated truncation down to $D$ singular values does not lose further information, because there are at most $D$ non-zero singular values, although formally there could be $dD$ of them. The reason is that before the time evolution on sites $\ell+1$ and $\ell+2$, the Schmidt rank across the bond $\ell+2$ was at most $D$ (due to the MPS construction). The Schmidt rank of two states is however identical if they are related by a unitary transformation that acts on either part A or part B. But the infinitesimal time-evolution was a unitary on part A.
+

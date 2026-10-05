@@ -1,0 +1,115 @@
+\subsubsection{任意量子态分解为 MPS}
+\label{subsubsec:MPSdecomposition}
+考虑一个由 $L$ 个格点组成的晶格，各格点 $i=1,\ldots,L$ 上有 $d$ 维局域态空间 $\{ \sigma_i \}$。事实上，虽然我们自然会想到一维晶格，但以下论述对任意维度的晶格同样成立，只要格点已被编号；然而，由高维晶格上的态生成的 MPS 在数值实践中将难以处理。晶格上最一般的纯量子态为
+\begin{equation}
+\ket{\psi} = \sum_{\sigma_1,\ldots,\sigma_L} c_{\sigma_1 \ldots \sigma_L} \ket{\sigma_1,\ldots,\sigma_L},
+\end{equation}
+其中系数 $c_{\sigma_1 \ldots \sigma_L}$ 的数目呈指数增长，而在典型的量子多体问题中它们的内容相当晦涩。让我们假定该态已归一化。能否找到一种记法，使这个态具有更局域的面貌（同时保持态的量子非定域性）？确实，SVD 恰好能做到这一点。其结果初看可能相当令人生畏，但我们将看到它与量子物理中熟悉的概念有着深刻的联系。与我们相关的做法有三种。
+
+{\em (i) 左规范矩阵乘积态。}第一步，我们把具有 $d^L$ 个分量的态矢量{\em 重排}为维数 $(d \times d^{L-1})$ 的矩阵 $\Psi$，其中系数的关系为 
+\begin{equation}
+\Psi_{\sigma_1, (\sigma_2 \ldots \sigma_L)} = c_{\sigma_1 \ldots \sigma_L}  .
+\end{equation}
+对 $\Psi$ 作 SVD 给出
+\begin{equation}
+c_{\sigma_1 \ldots \sigma_L}  = \Psi_{\sigma_1, (\sigma_2 \ldots \sigma_L)} = \sum_{a_1}^{r_1} U_{\sigma_1,a_1} S_{a_1,a_1} (V^\dagger)_{a_1, (\sigma_2 \ldots \sigma_L)} \equiv \sum_{a_1}^{r_1}  U_{\sigma_1,a_1} c_{a_1\sigma_2\ldots\sigma_L} ,
+\end{equation}
+其中在最后一个等式中 $S$ 与 $V^\dagger$ 已相乘，所得矩阵又被重排回一个矢量。秩为 $r_1 \leq d$。现在我们把矩阵 $U$ 分解为 $d$ 个行矢量 $A^{\sigma_1}$ 的集合，其矩阵元为 $A^{\sigma_1}_{a_1}=U_{\sigma_1,a_1}$。与此同时，我们把 $c_{a_1\sigma_2\ldots\sigma_L}$ 重排为维数 $(r_1 d \times d^{L-2})$ 的矩阵 $\Psi_{(a_1\sigma_2),(\sigma_3 \ldots \sigma_L)}$，得到
+\begin{equation}
+c_{\sigma_1 \ldots \sigma_L}  = \sum_{a_1}^{r_1} A^{\sigma_1}_{a_1} \Psi_{(a_1\sigma_2), (\sigma_3 \ldots \sigma_L)} .
+\end{equation}
+对 $\Psi$ 作 SVD，我们有 
+\begin{equation}
+c_{\sigma_1 \ldots \sigma_L}  = \sum_{a_1}^{r_1} \sum_{a_2}^{r_2} A^{\sigma_1}_{a_1} U_{(a_1\sigma_2),a_2} S_{a_2,a_2} (V^\dagger)_{a_2, (\sigma_3 \ldots \sigma_L)} =  
+\sum_{a_1}^{r_1} \sum_{a_2}^{r_2} A^{\sigma_1}_{a_1} A^{\sigma_2}_{a_1,a_2} \Psi_{(a_2\sigma_3), (\sigma_4 \ldots \sigma_L)} ,
+\end{equation}
+其中我们把 $U$ 换成了 $d$ 个维数为 $(r_1 \times r_2)$ 的矩阵 $A^{\sigma_2}$ 的集合，其矩阵元为 $A^{\sigma_2}_{a_1,a_2} = U_{(a_1\sigma_2),a_2}$，并把 $S$ 与 $V^\dagger$ 相乘，再重排为维数 $(r_2 d \times d ^{L-3})$ 的矩阵 $\Psi$，其中 $r_2 \leq r_1 d \leq d^2$。继续作更多的 SVD，我们得到
+\begin{equation}
+c_{\sigma_1 \ldots \sigma_L} = \sum_{a_1, \ldots, a_{L-1}} A^{\sigma_1}_{a_1} A^{\sigma_2}_{a_1,a_2} \ldots A^{\sigma_{L_1}}_{a_{L-2},a_{L-1}} A^{\sigma_{L}}_{a_{L-1}}
+\end{equation}
+或者更紧凑地写作
+\begin{equation}
+c_{\sigma_1 \ldots \sigma_L} = A^{\sigma_1} A^{\sigma_2} \ldots A^{\sigma_{L-1}} A^{\sigma_L} ,
+\end{equation}
+其中我们已经认出对 $a_1$、$a_2$ 等等的求和正是矩阵乘法。最后一组矩阵 $A^{\sigma_L}$ 实际上由列矢量组成。如果愿意，可以在第一个和最后一个 $A$ 中引入哑指标 1，把它们也变成矩阵。无论如何，这个（任意的）量子态现在已被精确地表示为{\em 矩阵乘积态：}的形式
+\begin{equation}
+\ket{\psi} = \sum_{\sigma_1,\ldots,\sigma_L} A^{\sigma_1} A^{\sigma_2} \ldots A^{\sigma_{L-1}} A^{\sigma_L} \ket{\sigma_1,\ldots,\sigma_L} .
+\end{equation}
+
+让我们研究 $A$ 矩阵的性质。矩阵维数取到最大值的条件是：每次所作的 SVD 中非零奇异值的个数都等于上界（即被分解矩阵两维中较小者）。计数表明，从第一个格点到最后一个格点，维数最大可为 $(1 \times d), (d \times d^2), \ldots, (d^{L/2-1} \times d^{L/2}), (d^{L/2} \times d^{L/2-1}), \ldots, (d^2 \times d), (d \times 1)$（这里为简单起见我假定 $L$ 为偶数）。这表明在实际计算中通常不可能显式地完成这种精确分解，因为矩阵维数会指数式地膨胀。
+
+但事情还不止于此。由于每次 SVD 都满足 $U^\dagger U = I$，把 $U$ 换成一组 $A^\sigma$ 就蕴含如下关系：
+\begin{eqnarray*}
+\delta_{a_\ell,a'_\ell} &=& \sum_{a_{\ell-1}\sigma_\ell} (U^\dagger)_{a_\ell, (a_{\ell-1}\sigma_\ell)} U_{(a_{\ell-1}\sigma_\ell), a'_\ell} \\
+&=& \sum_{a_{\ell-1}\sigma_\ell} (A^{\sigma_\ell\dagger})_{a_\ell, a_{\ell-1}} A^{\sigma_\ell}_{a_{\ell-1}, a'_\ell} \\
+&=& \sum_{\sigma_\ell} ( A^{\sigma_\ell\dagger} A^{\sigma_\ell})_{a_\ell,a'_\ell} 
+\end{eqnarray*}
+或者更简洁地写作，
+\begin{equation}
+\sum_{\sigma_\ell} A^{\sigma_\ell \dagger} A^{\sigma_\ell} = I . 
+\end{equation}
+满足这一条件的矩阵我们将称为{\em 左归一化}的，而仅由左归一化矩阵构成的矩阵乘积态我们将称为{\em 左规范}的。事实上，细看会发现最后一个格点上该条件在技术上可能不成立，但正如我们在计算 MPS 的范数时将会看到的，这对应于原来的态未归一化到 1。让我们暂且忽略这个微妙之处。
+
+鉴于 DMRG 把整个宇宙分解为 A、B 两块，把晶格分成 A、B 两部分是很有启发性的，其中 A 包含格点 $1$ 至 $\ell$，B 包含格点 $\ell+1$ 至 $L$。于是我们可以引入态
+\begin{eqnarray}
+\ket{a_\ell}_A &=& \sum_{\sigma_1,\ldots,\sigma_\ell} (A^{\sigma_1} A^{\sigma_2} \ldots A^{\sigma_\ell})_{1,a_\ell} \ket{\sigma_1,\ldots,\sigma_\ell} \\
+\ket{a_\ell}_B &=& \sum_{\sigma_{\ell+1},\ldots,\sigma_L} (A^{\sigma_{\ell+1}} A^{\sigma_{\ell+2}} \ldots A^{\sigma_L})_{a_\ell,1} \ket{\sigma_{\ell+1},\ldots,\sigma_L}
+\end{eqnarray}
+于是 MPS 可以写为
+\begin{equation}
+\ket{\psi} = \sum_{a_\ell} \ket{a_\ell}_A \ket{a_\ell}_B . 
+\end{equation}
+这种态的配对看起来与 $\ket{\psi}$ 的 Schmidt 分解极其接近，但事实并非如此。原因在于，虽然 $\{ \ket{a_\ell}_A \}$ 构成正交归一集合，$\{ \ket{a_\ell}_B \}$ 一般却不然。这是 $A$ 矩阵左归一性的直接推论。对 A 部分我们求得 
+\begin{eqnarray*}
+\phantom\langle_A \braket{a'_\ell}{a_\ell}_A &=& \sum_{\sigma_1,\ldots,\sigma_\ell} (A^{\sigma_1} \ldots A^{\sigma_\ell})^*_{1,a'_\ell} (A^{\sigma_1} \ldots A^{\sigma_\ell})_{1,a_\ell} \\
+&=& \sum_{\sigma_1,\ldots,\sigma_\ell} (A^{\sigma_1} \ldots A^{\sigma_\ell})^\dagger_{a'_\ell,1} (A^{\sigma_1} \ldots A^{\sigma_\ell})_{1,a_\ell} \\
+&=& \sum_{\sigma_1,\ldots,\sigma_\ell} (A^{\sigma_\ell\dagger} \ldots A^{\sigma_1\dagger}A^{\sigma_1} \ldots A^{\sigma_\ell})_{a'_\ell,a_\ell} \\
+&=& \delta_{a'_\ell,a_\ell} ,
+\end{eqnarray*}
+其中我们迭代地完成了从 $\sigma_1$ 到 $\sigma_\ell$ 的求和并利用了左归一性。另一方面，对 B 部分作同样的计算得到
+\begin{eqnarray*}
+\phantom\langle_B \braket{a'_\ell}{a_\ell}_B &=& \sum_{\sigma_{\ell+1},\ldots,\sigma_L} (A^{\sigma_{\ell+1}} \ldots A^{\sigma_L})^*_{a'_\ell,1} (A^{\sigma_{\ell+1}} \ldots A^{\sigma_L})_{a_\ell,1} \\
+&=& \sum_{\sigma_{\ell+1},\ldots,\sigma_L} (A^{\sigma_L\dagger} \ldots A^{\sigma_{\ell+1}\dagger})_{1,a'_\ell} (A^{\sigma_{\ell+1}} \ldots A^{\sigma_L})_{a_\ell,1} \\
+&=& \sum_{\sigma_{\ell+1},\ldots,\sigma_L} (A^{\sigma_{\ell+1}} \ldots A^{\sigma_L}A^{\sigma_L\dagger} \ldots A^{\sigma_{\ell+1}\dagger})_{a'_\ell,a_\ell},
+\end{eqnarray*}
+它无法进一步化简，因为一般来说 $\sum_\sigma A^\sigma A^{\sigma\dagger} \neq I$。
+
+态系数表示方式的改变也可以用图形来表示（图~\ref{fig:MPSBySVD}）。我们把系数 $c_{\sigma_1 \ldots \sigma_L}$ 画成一个黑箱（边角圆润），物理指标 $\sigma_1$ 至 $\sigma_L$ 垂直伸出。第一次分解之后的结果如第二行所示：左边是一个代表 $A^{\sigma_1}_{a_1}$ 的对象，右边是 $c_{a_1 \sigma_2 \ldots \sigma_L}$。辅助自由度（$a_1$）用水平线表示，规则是{\em 相连的线要求和。}第二步就显而易见了：我们有 
+$A^{\sigma_1}_{a_1}$，然后是 $A^{\sigma_2}_{a_1,a_2}$，右边是 $c_{a_2 \sigma_3 \ldots \sigma_L}$，所有相连的线都要求和。最后，我们得到 $L$ 个相乘并带物理指标标记的 $A$ 矩阵（图的最后一行）。
+
+$A$ 矩阵的图形规则——它们在第一个和最后一个格点上分别是行矢量和列矢量——总结于图~\ref{fig:ABulkEdge}：格点 $\ell$ 用实心圆表示，物理指标 $\sigma_\ell$ 用一条竖线表示，两个矩阵指标用水平线表示。
+
+\begin{figure}
+\centering\includegraphics[scale=0.6]{PyMPS_MPSBySVD.eps}
+\caption{通过一系列奇异值分解迭代构造任意量子态的精确 MPS 表示的图形表示。}
+\label{fig:MPSBySVD}
+\end{figure}
+
+\begin{figure}
+\centering\includegraphics[scale=0.6]{PyMPS_ABulkEdge.eps}
+\caption{链两端及链内部 $A$ 矩阵的图形表示：左图表示 $A\ ^{\ \sigma_{1}}_{\ 1,a_1}$，即左端的行矢量，右图表示 $A\ ^{\sigma_{L}}_{a_L,1}$，即右端的列矢量。中间则是 $A\ ^{\sigma_{\ell}}_{a_{\ell-1},a_\ell}$。}
+\label{fig:ABulkEdge}
+\end{figure}
+
+在本小节的最后，让我展示如何通过一系列 QR 分解生成左规范矩阵乘积态。我们从下式开始
+\begin{equation}
+c_{\sigma_1\ldots\sigma_L} = \Psi_{\sigma_1,(\sigma_2\ldots\sigma_L)} =
+\sum_{a_1} Q_{\sigma_1,a_1} R_{a_1,(\sigma_2\ldots\sigma_L)} =
+\sum_{a_1} A^{\sigma_1}_{1,a_1} \Psi_{(a_1\sigma_2),(\sigma_3\ldots\sigma_L)},
+\end{equation}
+其中与 SVD 步骤类似，我们把 $Q\rightarrow A$、$R\rightarrow \Psi$ 重排。下一次 QR 分解给出
+\begin{equation}
+c_{\sigma_1\ldots\sigma_L} = \sum_{a_1,a_2} A^{\sigma_1}_{1,a_1} Q_{(a_1\sigma_2),a_2} R_{a_2,(\sigma_3\ldots\sigma_L)} = \sum_{a_1,a_2} A^{\sigma_1}_{1,a_1} A^{\sigma_2}_{a_1,a_2} \Psi_{(a_2\sigma_3),(\sigma_4\ldots\sigma_L)}
+\end{equation}
+依此类推（对维数的分析表明，在链的右半部分需要用 thin QR）。$Q^\dagger Q=I$ 蕴含 $A$ 矩阵所期望的左归一性。在数值上可行的情况下，这比 SVD 更快。我们失去的是看不到奇异值的谱；而且除非使用更先进的秩显式（rank-revealing）QR 分解，我们也无法像 SVD 那样确定秩 $r_1, r_2, \ldots$。这意味着这种分解充分利用了 $A$ 矩阵的最大维数。
+
+{\em (ii) 右规范矩阵乘积态。}显然，从左边（即格点 1）开始的分解没有任何特殊之处。类似地，我们也可以从右边开始，以便得到
+\begin{eqnarray*}
+c_{\sigma_1 \ldots \sigma_L} &=& \Psi_{(\sigma_1 \ldots \sigma_{L-1}), \sigma_L} \\
+&=& \sum_{a_{L-1}} U_{(\sigma_1 \ldots \sigma_{L-1}), a_{L-1}} S_{a_{L-1},a_{L-1}} (V^\dagger)_{a_{L-1},\sigma_L} \\
+&=& \sum_{a_{L-1}} \Psi_{(\sigma_1 \ldots \sigma_{L-2}),(\sigma_{L-1} a_{L-1})} B^{\sigma_L}_{a_{L-1}} \\
+&=& \sum_{a_{L-2}, a_{L-1}} U_{(\sigma_1 \ldots \sigma_{L-2}), a_{L-2}} S_{a_{L-2},a_{L-2}} (V^\dagger)_{a_{L-2},(\sigma_{L-1}a_{L-1})} B^{\sigma_L}_{a_{L-1}} \\
+&=& \sum_{a_{L-2}, a_{L-1}} \Psi_{(\sigma_1 \ldots \sigma_{L-3}), (\sigma_{L-2} a_{L-2})} B^{\sigma_{L-1}}_{a_{L-2},a_{L-1}} B^{\sigma_L}_{a_{L-1}} = \ldots \\
+&=& \sum_{a_{1},\ldots, a_{L-1}} B^{\sigma_1}_{a_{1}} B^{\sigma_{2}}_{a_{1},a_{2}} \ldots B^{\sigma_{L-1}}_{a_{L-2},a_{L-1}} B^{\sigma_L}_{a_{L-1}}.
+\end{eqnarray*}
+

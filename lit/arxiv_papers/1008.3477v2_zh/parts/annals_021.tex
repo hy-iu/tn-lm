@@ -1,0 +1,114 @@
+\subsection{收缩的次序：光锥、海森堡绘景与横向折叠}
+让我们考虑如下含时期望值的计算
+\begin{equation}
+\bra{\psi(t)} \hat{O} \hat{P} \ket{\psi(t)} = \bra{\psi} \eul^{+\imag\hat{H}t} \hat{O} \hat{P} \eul^{-\imag\hat{H}t} \ket{\psi} .
+\end{equation}
+从 $\ket{\psi}$ 出发，将其演化到时刻 $t$，得到 $\ket{\psi(t)}$。然后如前所述，把两个算符夹在 $ \bra{\psi(t)}$ 与 $\ket{\psi(t)}$ 之间来计算期望值。但我们也可以把这一过程表示为对一个二维张量网络的（近似）收缩，如图~\ref{fig:2Dcontractiontime} 所示，随后沿时间方向逐行向内收缩。
+
+\begin{figure}
+\centering\includegraphics[scale=0.7]{PyMPS_MPSContractionTime2D.eps}
+\caption{用于计算含时期望值的二维张量网络：顶行与底行分别表示 $\bra{\psi}$ 和 $\ket{\psi}$。两列 MPO 阵列（用括号标出）以 Trotter 化形式表示 $\eul^{+\imag\hat{H}t}$ 和 $\eul^{-\imag\hat{H}t}$；我不区分不同的局域 MPO，例如出现在最左列与最右列某些格点上的恒等算符。在中央行，我们放置恒等算符（白色方块）和待求值的算符。虚线标示沿时间方向的收缩积累。}
+\label{fig:2Dcontractiontime}
+\end{figure}
+
+设 $t=N\Delta t$，每个 Trotter 步有 $n$ 个 MPO（例如一阶时为 2 个），我们便得到一个 $L \times (2nN+3)$ 个格点的点阵，即宽度为 $L$、奇数高度为 $2nN+3$。若把位于第 $i$ 行第 $j$ 列（如矩阵那样）格点上的张量记为 $T^{[i,j]}$，并把指标标记为上 $u$、下 $d$、左 $l$、右 $r$，仿照 MPO 把 $T^{[i,j]}$ 写成带指标 $T^{[i,j]u,d}_{l,r}$ 的形式，那么例如对 $i=1$（左矢态所在处）可以确认：
+\begin{equation}
+T^{[1,1] 1,d}_{1,r} = A^{[1]d*}_{1,r} \quad
+T^{[1,j] 1,d}_{l,r} = A^{[j]d*}_{l,r} \quad
+T^{[1,L] 1,d}_{l,1} = A^{[L]d*}_{l,1}
+\end{equation}
+其中 $1<j<L$。类似地，对 $i=2nN+3$（右矢态所在处）：
+\begin{equation}
+T^{[2nN+3,1] u,1}_{1,r} = A^{[1]u}_{1,r} \quad
+T^{[2nN+3,j] u,1}_{l,r} = A^{[j]u}_{l,r} \quad
+T^{[2nN+3,L] u,1}_{l,1} = A^{[L]u}_{l,1}
+\end{equation}
+而在第 $i=nN+2$ 行（算符所在处）：
+\begin{equation}
+T^{[nN+2,j] u,d}_{1,1} = \left\{ \begin{array}{cl} \hat{O}^{u,d} & {\rm on\ operator\ location\ } j \\
+\delta_{u,d} & {\rm else} \end{array} \right\} .
+\end{equation}
+在这一行中，网络在水平方向上是若干标量的乘积，因此指标为 $(1,1)$。在所有其余各行上，张量 $T^{[i,j]}$ 由局域 MPO 给出：在满足 $nN+2 < i < 2nN+3$ 的所有行上 $T^{[i,j]u,d}_{l,r}= W^{[\alpha]u,d}_{l,r}$（类型 $\alpha$ 取决于所选的分解），而
+$T^{[i,j]u,d}_{l,r}= W^{[\alpha]d,u*}_{l,r}$ 出现在满足 $1 < i < nN+2$ 的所有行上，后者对应于左矢的时间演化。
+
+\subsubsection{时间演化中的光锥}
+把左矢与右矢的时间演化放在一起考虑，实际上能带来重要的简化。在图~\ref{fig:lightcone1} 中，我恢复了一阶 Trotter 分解中键演化的交替模式，并用白色方块明确标出了单位算符的位置。我们想计算 $\langle \hat{O}(t) \rangle$，其中算符位于格点 2 上。让我们看最后几个 Trotter 步（第 5 行和第 7 行）。第 5 行有若干演化算符 $\eul^{+\imag \hat{h} \Delta t}$，第 7 行有相应的算符  $\eul^{-\imag \hat{h} \Delta t}$。这意味着它们相互抵消，可以用单位算符替换，但第 2、3 列除外，因为那里中间插有 $\hat{O}$。反过来再看第 4 行和第 8 行，此时第 5 至 8 列中出现了相互抵消的演化算符；其余那些不抵消，因为它们夹着非单位算符。就这样，我们一路向左矢和右矢态推进，直到再无抵消可能为止。所得的张量网络在很大程度上表现为：把键（行）维数大于 1 的复杂张量替换为键维数为 1 的单位张量，这意味着收缩变得平庸，无需压缩。剩下的是一个由演化算符构成的算法性 {\em 光锥}，它们能“看到”待求值的非平庸算符 $\hat{O}$ 的存在。注意，不要把这个算法光锥与物理光锥混为一谈：若令 $\Delta t\rightarrow 0$，则对任意固定时间 $t$，算法光锥都会变得无限宽。在物理上，Lieb-Robinson 定理指出，在宽度为 $x=2ct$ 的“光锥”之外（其中 $c$ 是某个依赖于问题的“速度”），关联呈指数快速衰减，这与相对论性光锥所强加的硬截断不同。物理光锥以及关联的这种特殊衰减，是上一节的 MPS/tDMRG/TEBD 算法由 Hastings\cite{Hastings09,Hastings08} 发展出的非常有趣的算法推广的基础，此处不再展开。
+
+\begin{figure}
+\centering\includegraphics[scale=0.25]{PyMPS_MPSContractionLightCone.eps}$\quad\quad$\includegraphics[scale=0.25]{PyMPS_MPSContractionLightCone2.eps}
+\vskip 1cm
+\centering\includegraphics[scale=0.25]{PyMPS_MPSContractionLightCone3.eps}$\quad\quad$\includegraphics[scale=0.25]{PyMPS_MPSContractionLightCone4.eps}
+$\quad\quad$\includegraphics[scale=0.25]{PyMPS_MPSContractionLightCone5.eps}
+
+\caption{光锥：各图应从左到右阅读，先上行、后下行。左上图中，一个算符夹在两个经时间演化的态之间；计入 Trotter 演化后，恒等算符用白色方块标出。从中心向上、下两边推进时，只要键演化算符不夹着该算符或（因而）幸存的键算符，它们就相互抵消为单位算符。结果便是一个由演化算符构成的光锥，四周围绕着在数值上平庸的单位算符。}
+\label{fig:lightcone1}
+\end{figure}
+
+虽然这一结构在我们考察例如 $n$ 点关联子时会变得更复杂，但我们可以获得巨大的算法节省，代价是：对算符的不同位置，必须考虑新的网络。
+
+若要在不同时刻（例如 $\langle \hat{O} (t_1) \rangle$、$\langle \hat{O} (t_2) \rangle$ 等）进行计算，代价是什么？这是一个很自然的问题，因为我们可能关心例如某个局域密度的时间演化。如果不用光锥，那么我们只是向内逐行计算收缩，算出某个平均值，取回存储的直到算符所在那一行的收缩结果，再加若干 Trotter 步，再收缩，再算某个平均值，如此往复。这正是我们一直以来的做法。当然，在时刻 $t_2 > t_1$ 作用的算符生成的光锥不同于且大于在时刻 $t_1$ 作用的算符生成的光锥。但如果哈密顿量不依赖于时间，较大的光锥在其尖端包含了较小的那个。因此，把时间演化反过来、由未来向过去推进，在数值上是有意义的。而这恰恰就是切换到海森堡绘景。
+
+\subsubsection{海森堡绘景}
+从数学上看，切换到海森堡绘景不过是重新加括号：
+\begin{equation}
+\langle \hat{O}(t) \rangle = \bra{\psi(t)} \hat{O} \ket{\psi(t)} = \bra{\psi} \eul^{+\imag \hat{H} t} \hat{O} \eul^{-\imag \hat{H} t} \ket{\psi} = \bra{\psi} \hat{O}(t) \ket{\psi},
+\end{equation}
+其中我们引入了含时算符
+\begin{equation}
+\hat{O}(t) =  \eul^{+\imag \hat{H} t} \hat{O} \eul^{-\imag \hat{H} t} .
+\end{equation}
+如果把其中出现的时间演化 Trotter 化，我们便恰好得到上一节的光锥结构，只是它尚未与左矢和右矢一起收缩；见图~\ref{fig:Heisenbergtime}。
+
+\begin{figure}
+\centering\includegraphics[scale=0.5]{PyMPS_MPSHeisenbergTime.eps}
+\caption{海森堡绘景中算符 $\hat{O}$ 的时间演化，转换到 MPS/MPO 表示。算符周围每一组对称的层对应一个时间步（更确切地说，是一个 Trotter 时间步的一部分）。随着点阵中越来越大的区域受到 $\hat{O}$ 的影响，光锥不断变宽。恒等算符（白色方块）是出于对称性考虑而插入的，并无实际作用。}
+\label{fig:Heisenbergtime}
+\end{figure}
+
+这使得可以在海森堡绘景中建立时间演化 \cite{Prosen09,Hartmann09}。具体而言，人们通过 MPO-MPO 乘法构造一个在空间上不断增长的 MPO，例如在计算 $\hat{H}^2$ 的作用时就会遇到这种乘法。设时间演化算符当前的 MPO 由形如 $O^{\sigma_i \sigma'_i}_{a_{i-1},a_i}$、键维数为 $D$ 的局域 MPO 组成（在其确实需要考虑的格点 $i$ 上），而时间演化 MPO（对 $\eul^{-\imag \hat{h} t}$ 而言）为
+$W^{\sigma_i \sigma'_i}_{b_{i-1},b_i}$、键维数为 $D_W$，那么经过（部分）时间步之后，该算符为
+\begin{equation}
+O^{\sigma_i, \sigma'_i}_{(b_{i-1},a_{i-1},c_{i-1}), (b_i,a_i,c_i)}
+= \sum_{\sigma^{''}_i} W^{\sigma^{''}_i,\sigma_i *}_{b_{i-1},b_i} \left( \sum_{\sigma^{'''}_i}  O^{\sigma^{''}_i \sigma^{'''}_i}_{a_{i-1},a_i} W^{\sigma^{'''}_i,\sigma'_i}_{c_{i-1},c_i} \right) . 
+\end{equation}
+键维数为 $DD_W^2$。随后按前文对 MPO 的说明，把这个算符压缩回键维数 $D$，基本上就是使用压缩 MPS 的方法。
+
+这就建立了一种“常规”时间演化：经受时间演化的不再是一个态，而是一个以 MPO 形式表示的算符，它在每个时间步之后被压缩到可控的矩阵维数。我们基本上可以复用该算法的大部分内容。
+
+这种表述有哪些潜在的优点与缺点？首先，算法光锥带来的节省被立即纳入其中。其次，我们可以指望截断更小：虽然海森堡绘景与薛定谔绘景中被收缩的网络完全相同，但薛定谔绘景中的{\em 截断}并未考虑算符，因而针对性较弱——可以设想，对于局域密度这类“简单”算符，态演化中的许多精细结构其实并不真正需要，而演化算符本身会告诉我们哪些信息是专门为这个算符所需要的。
+
+相应的缺点当然是，对不同的算符需要重新进行计算；而在薛定谔绘景中，只要存储了时间演化后的波函数，就可以随时对任意算符求值。当然，这里相应的优点是：只要存储了时间演化后的算符，就可以随时对不同的态求值。
+
+就写作之时而言，对于简单算符，可达到的时间跨度似乎确实能大幅延长，但我很难许诺某种经验法则。
+
+\subsubsection{横向收缩与折叠}
+
+当然，态随时间演化而逐步建立的做法符合我们对世界的直觉，但没有什么能阻止我们在空间方向上收缩同一网络，即逐列收缩；既然收缩次序对效率的影响可能相当大，这也许会有帮助。为了复用现有程序，可以简单地把当前网络逆时针旋转 90 度，便得到宽度为 $(2nN+3)$、高度为 $L$ 的点阵。如果我们继续按先竖后横、并按矩阵的行列逻辑来标记张量 $T^{[i,j]}$，那么新点阵中的张量为
+\begin{equation}
+\overline{T}^{[i,j] u,d}_{l,r} = T^{[L+1-j,i] r,l}_{u,d} ,
+\end{equation}
+如图~\ref{fig:latticerotation} 所示。然后我们可以再次逐行收缩。
+
+事实证明，简单的旋转（或横向收缩）并不能延长可达到的时间尺度。正是通过一个额外的{\em 折叠}步骤，时间尺度才可能被大幅延长 \cite{Banuls09}。折叠沿新的“时间”（即真实空间）轴进行，并把新的“空间”（即真实时间）区域的范围减半（见图~\ref{fig:latticefolding}）。于是我们拥有的不再是格点 1 到 $2nN+3$，而是双重格点 1 到 $nN+2$：双重格点 1 包含旧格点 1 与 $2nM+3$，双重格点 2 包含旧格点 2 与 $2nN+2$；一般地，$i$ 包含旧格点 $i$ 与 $2nN+4-i$，直到数对 $(nN+1, nN+3)$。格点 $nN+2$ 是特殊的：由于我们折叠的是奇数个格点，会有一个格点保持单独，这就是格点 $nN+2$，它对应于含有在时刻 $t$ 待求值算符的那一行。在所有其余格点上，我们把对应于“相同”时间步——一个时间上向前、一个向后——的张量相互折叠在一起。
+
+预期是，这种对向前与向后时间步的折叠会导致纠缠积累中的相消，从而能够达到更长的时间（$D$ 的增长没有那么快）。
+
+为简化记号，我们定义 $L' = 2nN+3 \equiv 2\ell +1$。
+如果把折叠的下端读作一个 MPS，那么折叠后的态同样以一个 MPS 开头，其矩阵构造为
+\begin{equation}
+M^{f[i]\Sigma_i}_{a^f_{i-1},a^f_i} = M^{f[i]\sigma_i, \sigma_{L'+1-i}}_{(a_{i-1},a_{L'+1-i}),(a_i,a_{L'-i})}
+= \overline{T}^{[L,i]\sigma_i}_{a_{i-1},a_i} \overline{T}^{[L,L'+1-i]\sigma_{L'+1-i}}_{a_{L'-i},a_{L'+1-i}} 
+\end{equation}  
+对所有 $1 \leq i \leq \ell$ 成立，而
+\begin{equation}
+M^{f[\ell+1]\Sigma_{\ell+1}}_{a^f_{\ell},1} = M^{f[\ell+1]\sigma_{\ell+1}}_{(a_{\ell},a_{\ell+1}),1} 
+=\overline{T}^{[L,\ell+1]\sigma_{\ell+1}}_{a_{\ell},a_{\ell+1}}.
+\end{equation}  
+我们在每个格点上（除格点 $\ell+1$ 外，那里维数仍为 $d$）定义了 $d^2$ 个“胖”局域态 $\ket{\Sigma_i} = \ket{\sigma_i}\ket{\sigma_{L'+1-i}}$（在编程时当然也可以引入一个虚设的格点）。类似地，我们为折叠后的 MPO 构造新的张量。
+
+\begin{figure}
+\centering\includegraphics[scale=0.5]{PyMPS_LatticeRotation.eps}
+\caption{旋转点阵以复用代码：设采用时空标记 $[i,j]$，其中 $i$ 为时间、$j$ 为空间（旋转后指虚构的“时间”与“空间”），则张量指标 $u$、$d$ 与 $l$、$r$ 按图示交换位置。}
+\label{fig:latticerotation}
+\end{figure}
+ 

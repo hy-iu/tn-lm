@@ -1,0 +1,127 @@
+无限温度混合态的纯化是一个维数为 1 的简单 MPS，因为它会因子化（若我们把梯子的一个横档取作一个大格点）：
+\begin{equation}
+\hat{\rho}_0 = \frac{1}{d^L} \hat{I} = \left(\frac{1}{d} \hat{I}\right)^{\otimes L} .
+\end{equation}
+由于 $\hat{\rho}_0$ 是因子化的，我们现在可以把每个物理格点上的局域混合态纯化为横档 $i$ 上的一个纯态，得到 $\ket{\psi_{i0}}$，于是 
+$\ket{\psi_0} = \ket{\psi_{1,0}}\ket{\psi_{2,0}}\ket{\psi_{3,0}} \ldots$，是一个乘积态，即维数为 1 的 MPS。若考虑梯子的某个横档 $i$，其物理格点 $2i-1$ 与辅助格点 $2i$ 上分别有态 $\ket{\sigma}_P$ 与 $\ket{\sigma}_Q$，则可以如下纯化：
+\begin{equation}
+\frac{1}{d} \hat{I} = \sum_{\sigma} \frac{1}{d} \phantom\langle_P\ket{\sigma}\bra{\sigma}_P = \tr_Q \left[ \left( \sum_{\sigma} \frac{1}{\sqrt{d}} \ket{\sigma}_P \ket{\sigma}_Q \right) \left( \sum_{\sigma} \frac{1}{\sqrt{d}} \bra{\sigma}_P \bra{\sigma}_Q  \right) \right] .
+\end{equation}
+因此纯化由一个最大纠缠态给出（纠缠熵为 $\log_2 d$），
+\begin{equation}
+\ket{\psi_{i0}} = \sum_{\sigma} \frac{1}{\sqrt{d}} \ket{\sigma}_P \ket{\sigma}_Q .
+\end{equation}
+容易看出，可以对 P 和 Q 各自分别作局域幺正变换而保持该结构不变。例如，对自旋-1/2 链的纯化而言，用单态作为局域纯化是有利的，
+\begin{equation}
+\ket{\psi_{i,0}} = \frac{1}{\sqrt{2}} [ \ket{\uparrow_P\downarrow_Q} - \ket{\downarrow_P\uparrow_Q} ],
+\end{equation}
+以防程序懂得利用好量子数：这种态可以同时保持总 $S=0$ 与 $S^z=0$。此时，四个 $A$ 矩阵为
+\begin{equation}
+A^{\uparrow_P\uparrow_Q} =0 \quad 
+A^{\uparrow_P\downarrow_Q} =1/\sqrt{2} \quad 
+A^{\downarrow_P\uparrow_Q} =-1/\sqrt{2} \quad 
+A^{\downarrow_P\downarrow_Q} =0  ,
+\end{equation}
+于是 $\beta=0$ 的纯化初态 $\ket{\psi_0}$ 现在由梯子上单态键的乘积给出。实际上，对重塑后的矩阵 $A_{\sigma,\sigma'}$ 作 SVD 使我们可以引入真正局域于格点的 $A$ 矩阵，它们在奇数格点上维数为 $(1\times 2)$，在偶数格点上为 $(2\times 1)$：
+\begin{equation}
+A^{\uparrow_{2i-1}} = [ 1\ \ 0] \quad
+A^{\downarrow_{2i-1}} = [ 0\ \ -1] \quad
+A^{\uparrow_{2i}} = [ 0\ \ 1/\sqrt{2}]^T \quad
+A^{\downarrow_{2i}} = [ 1/\sqrt{2} \ \ 0]^T \quad .
+\end{equation}
+为了应用纯态时间演化算法，剩下的就是找出 MPO。
+ 
+\subsubsection{混合态演化的 MPO}
+
+\begin{figure}
+\centering\includegraphics[width=250pt]{PyMPS_LadderSetup.eps}
+\caption{链上混合态的时间演化可以看作梯子上纯态的时间演化，其中物理格点位于第一条腿上，而额外的辅助格点位于第二条腿上。这个梯子被映射为一条链。由于时间演化只作用于物理态，就产生了次近邻相互作用。}
+\label{fig:laddersetup}
+\end{figure}
+
+混合态模拟中出现的梯子可以映射为一条链（图~\ref{fig:laddersetup}），其中物理哈密顿量只作用于奇数格点 $1,3,5,\ldots$，而辅助格点是偶数的 $2,4,6,\ldots$。于是唯一非平庸的时间演化连接 $(1,3), (3,5), (5,7)$。处理这类更长程的相互作用有几种办法：一种是显式地构造这种长程相互作用，另一种是使用所谓的 swap 门，把它约化为最近邻相互作用。
+
+对``更长程''相互作用 $(1,3)$ 的直接 MPO 描述必然要在格点 $2$ 上放一个非平庸的张量，而格点 $4$ 是惰性的。$(3,5)$ 同样如此：$4$ 上有一个非平庸张量，而格点 $6$ 是惰性的。这提示了一种 Trotter 分解：``奇''步骤取 $(1,2,3,4), (5,6,7,8),\ldots$，``偶''步骤取 $(3,4,5,6),(7,8,9,10),\ldots$。
+
+于是格点 1 至 4 上的四格点演化算符为
+\begin{equation}
+O^{(\sigma_1\sigma_2\sigma_3\sigma_4), (\sigma'_1\sigma'_2\sigma'_3\sigma'_4)} =
+O^{(\sigma_1\sigma_2\sigma_3), (\sigma'_1\sigma'_2\sigma'_3)}\cdot \delta_{\sigma_4,\sigma'_4}
+\end{equation}
+而且只需对包含实际物理时间演化的两格点幺正算符稍作修改，就能构造出三格点幺正算符：
+\begin{equation}
+O^{(\sigma_1\sigma_2\sigma_3), (\sigma'_1\sigma'_2\sigma'_3)} = O^{(\sigma_1\sigma_3), (\sigma'_1\sigma'_3)} \cdot \delta_{\sigma_2,\sigma'_2} .
+\end{equation}
+接着对这个三格点幺正算符作两次 SVD。为了记号方便，我们先把指标下移并逐格点重排。然后通过重塑及随后的 SVD 逐步迭代地把 $\sigma_3,\sigma'_3$、$\sigma_2,\sigma'_2$ 和 $\sigma_1,\sigma'_1$ 分离出来： 
+\begin{eqnarray*}
+& & O_{(\sigma_1\sigma_2\sigma_3), (\sigma'_1\sigma'_2\sigma'_3)} \\
+&=& P_{(\sigma_1 \sigma'_1\sigma_2\sigma'_2),(\sigma_3\sigma'_3)} \\
+&=& \sum_{k_2} U_{(\sigma_1 \sigma'_1\sigma_2\sigma'_2),k_2} S^{[2]}_{k_2,k_2} (V^\dagger_{23})_{k_2,(\sigma_3\sigma'_3)} \\
+&=&  \sum_{k_2} U_{(\sigma_1 \sigma'_1),(\sigma_2\sigma'_2 k_2)} S^{[2]}_{k_2,k_2} (V^\dagger_{23})_{k_2,(\sigma_3\sigma'_3)} \\
+&=& \sum_{k_1,k_2} U_{(\sigma_1 \sigma'_1),k_1} S^{[1]}_{k_1,k_1} (V^\dagger_{12})_{k_1, (\sigma_2\sigma'_2 k_2)} S^{[2]}_{k_2,k_2} (V^\dagger_{23})_{k_2,(\sigma_3\sigma'_3)} \\
+&=& \sum_{k_1,k_2} W^{\sigma_1 \sigma'_1}_{1,k_1} W^{\sigma_2 \sigma'_2}_{k_1,k_2} W^{\sigma_3 \sigma'_3}_{k_2,1} 
+\end{eqnarray*}
+其中，通过引入哑指标以及格点 4 上的惰性张量：
+\begin{eqnarray}
+W^{\sigma_1 \sigma'_1}_{1,k_1} &=& U_{(\sigma_1 \sigma'_1),k_1} \sqrt{S^{[1]}_{k_1,k_1}} \\
+W^{\sigma_2 \sigma'_2}_{k_1,k_2} &=& \sqrt{S^{[1]}_{k_1,k_1}} (V^\dagger_{12})_{k_1, (\sigma_2\sigma'_2 k_2)} \sqrt{S^{[2]}_{k_2,k_2}} \\
+W^{\sigma_3 \sigma'_3}_{k_2,1} &=& \sqrt{S^{[2]}_{k_2,k_2}} (V^\dagger_{23})_{k_2,(\sigma_3\sigma'_3)} \\
+W^{\sigma_4 \sigma'_4}_{1,1} &=& \delta_{\sigma_4,\sigma'_4}
+\end{eqnarray}
+由此可以像纯态时间演化那样构造整条链的 MPO。我们所做的无非是对 4 个格点上的 MPO 作迭代分解。同样，这仍然是可处理的，因为只涉及 4 个格点。 
+
+显然，直接写出作用于全部四条键 $(1,2)$、$(1,3)$、$(2,4)$ 和 $(3,4)$ 的演化算符并对其施行类似的一系列 SVD，是一步简单的推广，这样就可以考虑真实梯子上的纯态时间演化。 
+
+实现超越直接邻居的相互作用，另一种途径是使用 {\em swap 门}\cite{Stoudenmire10}。以真实梯子为例，其四条键上有相互作用，其中两条 [$(1,3)$ 和 $(2,4)$] 是次近邻相互作用。但如果交换格点 $2 \leftrightarrow 3$ 上的态，它们就变成最近邻相互作用。梯子上的时间演化于是可以如下进行：(i) 演化键 $(1,2)$ 和 $(3,4)$；(ii) 交换格点 2 和 3 上的态；(iii) 用``旧''键 $(1,3)$ 和 $(2,4)$ 的演化算符演化``新''键 $(1,2)$ 和 $(3,4)$；(iv) 再次交换格点 2 和 3 上的态。在其他情形下，需要找到更巧妙的方案，最好能生成一个只在最近邻之间进行交换的序列。格点 $i$ 与 $j$ 之间的 swap 算符简单地由下式给出
+\begin{equation}
+\hat{S}_{ij} = \sum_{\sigma_i\sigma'_i \sigma_j\sigma'_j} S^{\sigma_i\sigma_j \sigma'_i \sigma'_j} \ket{\sigma_i\sigma_j}\bra{\sigma'_i\sigma'_j} \quad\quad 
+S^{\sigma_i\sigma_j \sigma'_i \sigma'_j} = \delta_{\sigma_i,\sigma'_j} \delta_{\sigma_j,\sigma'_i},
+\end{equation}
+它是幺正的且为其自身的逆。它交换 MPS 中两个格点的物理指标；对于最近邻之间的交换，很容易恢复 MPS 的原有形式：设 MPS 是左规范的；作用在格点 $i$ 与 $i+1$ 上的幺正算符只影响这两个格点。特别地，块态 $\ket{a_{k<i}}_A$ 与 $\ket{a_{i+1}}_A$ 的正交归一性不受影响。
+如果我们引入矩阵 $M_{(a_{i-1}\sigma_{i+1}),(\sigma_i a_{i+1})} = \sum_{a_i} A^{[i]\sigma_{i+1}}_{a_{i-1},a_i} A^{[i+1]\sigma_i}_{a_i,a_{i+1}}$，就可以构成 $\tilde{M}_{(a_{i-1}\sigma_i),(\sigma_{i+1}a_{i+1})}=M_{(a_{i-1}\sigma_{i+1}),(\sigma_i a_{i+1})}$ 并作一次 SVD，其中 $U_{(a_{i-1}\sigma_i),a_i}$ 给出新的左规范 $\tilde{A}^{\sigma_i}_{a_{i-1},a_i}$，而
+$S_{a_i,a_i} (V^\dagger)_{a_i,(\sigma_{i+1}a_{i+1})}$ 给出新的左规范 $\tilde{A}^{\sigma_{i+1}}_{a_{i},a_{i+1}}$。后者是左规范的，这一点由 $\tilde{A}^{\sigma_i}$ 的左规范性以及保持不变的正交归一性 $\ket{a_{i+1}}_A$ 得出。
+
+在结束这篇关于超越最近邻相互作用的展望之前，我要指出使用 MPO 还允许其他 Trotter 分解，例如把海森堡哈密顿量分解为依赖于 $x$、$y$ 和 $z$ 的各个部分，这对长程相互作用很有用\cite{VerstraetePirvu08}。 
+ 
+
+\subsection{tDMRG、TEBD 与 MPS 时间演化的比较：微小的差别}
+在基于 MPS 的时间演化（tMPS）发展出来之前不久，另有两个算法被提出用于模拟一维量子链的实时动力学：时间演化块抽取（time-evolving block decimation, TEBD）\cite{Vidal03a,Vidal04b} 与实时或含时 DMRG（tDMRG）\cite{Daley04,WhiteFeiguin04}。这两个算法同样以 MPS 为基础，但细看之下与 tMPS 有所不同。在进入这些细节之前，我要强调：它们全都基于对 MPS 作时间演化的思想，该思想最早在 \cite{Vidal03a,Vidal04b} 中提出，因此它们都只是同一主题下的次要变体。tDMRG 与 TEBD 在数学上是等价的，即在精确算术下应给出相同的结果；但在数值上它们是明显不同的算法，各自都执行着对方方法中没有对应物的操作，各有优劣。我们先讨论 tDMRG，因为它的语言更接近 tMPS，然后再讨论 TEBD，看看这些微小差别有多重要（或者多么不重要）。
+
+\subsubsection{含时 DMRG（tDMRG）}
+把整个晶格上的全局时间演化分解为键上无穷小时间演化的 Trotter 序列，对这里讨论的三种算法都是一样的。
+因此我们聚焦于格点 $\ell+1$ 与 $\ell+2$ 上的一个无穷小时间演化 $\eul^{-\imag  \hat{h}_{\ell+1} \tau}$。 
+用局域基表示的演化算符为
+\begin{equation}
+U^{(\sigma_{\ell+1} \sigma_{\ell+2}), (\sigma'_{\ell+1} \sigma'_{\ell+2})} = \bra{\sigma_{\ell+1} \sigma_{\ell+2}} \eul^{-\imag  \hat{h}_{\ell+1} \tau} \ket{\sigma'_{\ell+1} \sigma'_{\ell+2}} .
+\end{equation}
+当前态 $\psi$ 用两格点 DMRG 记法、以左规范和右规范矩阵表示为
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} A^{\sigma_1} \ldots A^{\sigma_\ell} \Psi^{\sigma_{\ell+1}\sigma_{\ell+2}} B^{\sigma_{\ell+3}} \ldots B^{\sigma_L} \ket{\fat{\sigma}} .
+\end{equation}
+时间演化把 $\Psi^{\sigma_{\ell+1}\sigma_{\ell+2}}$ 变为
+\begin{equation}
+\Phi^{\sigma_{\ell+1}\sigma_{\ell+2}}_{a_\ell, a_{\ell+2}} = \sum_{\sigma'_{\ell+1} \sigma'_{\ell+2}}
+U^{(\sigma_{\ell+1} \sigma_{\ell+2}), (\sigma'_{\ell+1} \sigma'_{\ell+2})}  \Psi^{\sigma'_{\ell+1}\sigma'_{\ell+2}}_{a_\ell, a_{\ell+2}} . 
+\end{equation} 
+它与 $A$、$B$ 矩阵一起定义了一个合法的 DMRG 态，我们称之为 $\ket{\phi}$。为了继续推进，即把 $\eul^{-\imag  \hat{h}_{\ell+3} \tau}$ 作用于下一对格点，我们必须把态化成如下形式 
+\begin{equation}
+\ket{\phi} = \sum_{\fat{\sigma}} A^{\sigma_1} \ldots A^{\sigma_{\ell+2}} \Phi^{\sigma_{\ell+3}\sigma_{\ell+4}} B^{\sigma_{\ell+5}} \ldots B^{\sigma_L} \ket{\fat{\sigma}} .
+\end{equation}
+改变只可能涉及格点 $\ell+1$ 至 $\ell+4$：前两个格点是因为演化算符的作用，后两个格点是因为要化成 DMRG 形式。我们先在格点 $\ell+1$ 和 $\ell+2$ 上生成新的 $A$ 矩阵：把 $\Phi^{\sigma_{\ell+1}\sigma_{\ell+2}}_{a_\ell, a_{\ell+2}} = \Phi_{(a_\ell \sigma_{\ell+1}), (\sigma_{\ell+2} a_{\ell+2})}$ 重塑后作 SVD（DMRG 传统上是通过密度矩阵分析以及移动格点时的 DMRG 预言来做的，结果相同）：
+\begin{equation}
+\Phi_{(a_\ell \sigma_{\ell+1}),(\sigma_{\ell+2} a_{\ell+2})} = \sum_{a_{\ell+1}} U_{(a_\ell \sigma_{\ell+1}),a_{\ell+1}} S_{a_{\ell+1},a_{\ell+1}} (V^\dagger)_{a_{\ell+1}, (\sigma_{\ell+2} a_{\ell+2})}.
+\end{equation}
+$U$ 可以立即重塑为一个合法的 $A$ 矩阵，但其列维数高达 $dD$，必须截断到 $D$，同时保持对维数 $dD$ 的 MPS 的最佳逼近。答案一如既往：只保留最大的 $D$ 个奇异值，并相应地收缩矩阵 $U$、$S$、$V^\dagger$。方法的近似就在这里（在明显的 Trotter 误差之外）。这一步做完后，我们重塑为
+\begin{equation}
+\sum_{a_{\ell+1}} A^{\sigma_{\ell+1}}_{a_\ell, a_{\ell+1}}  S_{a_{\ell+1},a_{\ell+1}} (V^\dagger)^{\sigma_{\ell+2}}_{a_{\ell+1},  a_{\ell+2}}
+\end{equation}
+并构成移动一个格点后的 $\Phi$ 为
+\begin{equation}
+\Phi^{\sigma_{\ell+2}\sigma_{\ell+3}}_{a_{\ell+1},a_{\ell+3}} = \sum_{a_{\ell+2}} S_{a_{\ell+1},a_{\ell+1}} (V^\dagger)^{\sigma_{\ell+2}}_{a_{\ell+1},  a_{\ell+2}} B^{\sigma_{\ell+3}}_{a_{\ell+2},  a_{\ell+3}} .
+\end{equation}
+但我们还须再移动一个格点，做法是把 $\Phi^{\sigma_{\ell+2}\sigma_{\ell+3}}_{a_{\ell+1},a_{\ell+3}}$ 重塑为 $\Phi_{(a_{\ell+1}\sigma_{\ell+2}),(\sigma_{\ell+3} a_{\ell+3})}$，像前面那样作一次 SVD，从 $dD$ 个奇异值中保留对应最大的 $D$ 个的态，重塑，记下 $A^{\sigma_{\ell+2}}$，并构成移动两个格点后的 $\Phi$ 为
+\begin{equation}
+\Phi^{\sigma_{\ell+3}\sigma_{\ell+4}}_{a_{\ell+2},a_{\ell+4}} = \sum_{a_{\ell+3}} S_{a_{\ell+2},a_{\ell+2}} (V^\dagger)^{\sigma_{\ell+3}}_{a_{\ell+2},  a_{\ell+3}} B^{\sigma_{\ell+4}}_{a_{\ell+3},  a_{\ell+4}} .
+\end{equation}
+第二次 SVD 及其把奇异值截断到 $D$ 并不损失更多信息，因为非零奇异值至多有 $D$ 个，尽管形式上本可以有 $dD$ 个。原因在于，在格点 $\ell+1$ 和 $\ell+2$ 上作时间演化之前，跨越键 $\ell+2$ 的 Schmidt 秩至多为 $D$（这是 MPS 构造的结果）。而若两个态由一个只作用在 A 部或 B 部上的幺正变换相联系，则它们的 Schmidt 秩相同。但无穷小时间演化正是作用在 A 部上的幺正变换。
+

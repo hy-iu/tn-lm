@@ -1,0 +1,111 @@
+\documentclass[a4paper,10pt,oneside,onecolumn,1p,times]{elsarticle}
+
+%\documentclass[letter,10pt,oneside,onecolumn,1p,times]{elsarticle}
+
+\newcommand{\mc}{\mathcal}
+\newcommand{\ham}{\hat{H}}                          % Hamiltonian 
+\newcommand{\Tr}{{\rm Tr}}
+\newcommand{\tr}{{\rm Tr }}
+\newcommand{\diff}{{\rm d}}
+\newcommand{\eul}{{\rm e }}
+\newcommand{\imag}{{\rm i }}
+\newcommand{\obs}{{\rm obs}}
+\newcommand{\fit}{{\rm fit}}
+\newcommand{\bra}[1]{\mbox{$\langle #1  |$}} 
+\newcommand{\ket}[1]{\mbox{$| #1  \rangle$}} 
+\newcommand{\identity}{I}
+\newcommand{\braket}[2]{\mbox{$\langle #1  | #2 \rangle$}} 	% <x|y>
+\newcommand{\fat}[1]{\mbox{\boldmath$#1$\unboldmath}}	% fat also for Greek
+\newcommand{\syslength}{L}
+\newcommand{\Eq}[1]{Eq.~(\ref{#1})}
+
+
+
+\begin{document}
+\title{The density-matrix renormalization group in the age of matrix product states}
+\author{Ulrich Schollw\"{o}ck}
+\ead{schollwoeck@lmu.de}
+\address{Department of Physics, Arnold Sommerfeld Center for Theoretical Physics and Center for NanoScience, University of Munich, Theresienstrasse 37, 80333 Munich, Germany \\
+Institute for Advanced Study Berlin, Wallotstrasse 19, 14159 Berlin, Germany}
+
+\begin{abstract}
+The density-matrix renormalization group method (DMRG) has established itself over the last decade as the leading method for the simulation of the statics and dynamics of one-dimensional strongly correlated quantum lattice systems. In the further development of the method, the realization that DMRG operates on a highly interesting class of quantum states, so-called matrix product states (MPS), has allowed a much deeper understanding of the inner structure of the DMRG method, its further potential and its limitations. In this paper, I want to give a detailed exposition of current DMRG thinking in the MPS language in order to make the advisable implementation of the family of DMRG algorithms in exclusively MPS terms transparent. I then move on to discuss some directions of potentially fruitful further algorithmic development: while DMRG is a very mature method by now, I still see potential for further improvements, as exemplified by a number of recently introduced algorithms.   
+\end{abstract}
+
+\maketitle 
+
+\tableofcontents
+
+\section{Introduction}
+Strongly correlated quantum systems on low-dimensional lattices continue to pose some of the most interesting challenges of modern quantum many-body physics. In condensed matter physics,  correlation effects dominate in quantum spin chains and ladders, in frustrated magnets in one and two spatial dimensions, and in high-temperature superconductors, to name but a few physical systems of interest. More recently, the advent of highly controlled and tunable strongly interacting ultracold atom gases in optical lattices has added an entirely new direction to this field\cite{Bloch08}. 
+
+Both analytically and numerically, these systems are hard to study: only in very few cases exact analytical solutions, for example by the Bethe ansatz in one dimension, are available\cite{Bethe31,Lieb68}. Perturbation theory fails in the presence of strong interactions. Other approaches, such as field theoretical approaches, have given deep insights, for example regarding the Haldane gap physics of integer-spin antiferromagnetic chains\cite{Haldane83}, but make potentially severe approximations that must ultimately be controlled by numerical methods. Such algorithms include exact diagonalization, quantum Monte Carlo, series expansions or coupled cluster methods.
+
+Since its invention in 1992 by Steve White\cite{White92,White93}, the density-matrix renormalization group (DMRG) has firmly established itself as the currently most powerful numerical method
+in the study of one-dimensional quantum lattices\cite{Schollwoeck05,Hallberg06}. After initial studies of the static properties (energy, order parameters, $n$-point correlation functions) of low-lying eigenstates, in particular ground states, of strongly correlated Hamiltonians such as the Heisenberg, $t$-$J$ and Hubbard models, the method was extended to the study of 
+dynamic properties of eigenstates, such as dynamical structure functions or frequency-dependent conductivities\cite{Hallberg95,Ramasesha97,Kuhner99,Jeckelmann02}. At the same time, its extension to the analysis of two-dimensional classical \cite{Nishino95} and one-dimensional quantum \cite{Wang97,Shibata97} transfer matrices has given access to highly precise finite-temperature information on classical two-dimensional and quantum one-dimensional systems;  more recently the transfer matrix variant of DMRG has also been extended to dynamics at finite temperature\cite{Sirker05}. It has even been extended to the numerically much more demanding study of non-Hermitian (pseudo-) Hamiltonians emerging in the analysis of the relaxation towards classical steady states in one-dimensional systems far from equilibrium\cite{Hieida98,Carlon99,Carlon01,Henkel01}. 
+
+In many applications of DMRG, the accuracy of results is essentially limited only by machine precision, even for modest numerical resources used, quite independent of the detailed nature of the Hamiltonian. It is therefore not surprising that, beyond the extension of the algorithm to more and more problem classes, people wondered about the physical origins of the excellent performance of DMRG and also whether the success story could be extended to the study of real-time dynamics or of two-dimensional systems. 
+
+In fact, both questions are intimately related: as was realized quite soon, DMRG  is only moderately successful when applied to two-dimensional lattices: while relatively small systems can be studied with high accuracy\cite{White96,White98a,White98b,White00,White03,Chernyshev03,Chernyshev05,White07}, the amount of numerical resources needed essentially increases exponentially with system size, making large lattices inaccessible. The totally different behaviour of DMRG in one and two dimensions is, as it turned out, closely related\cite{Vidal03,Latorre04} to the different scaling of quantum entanglement in many-body states in one and two dimensions, dictated by the so-called area laws (for a recent review, see \cite{Eisert10}). 
+
+In this paper, I will stay within the framework of one-dimensional physics; while the generalizations of DMRG to higher dimensions reduce naturally to DMRG in one dimension, the emerging structures are so much richer than in one dimension that they are beyond the scope of this work.  
+  
+In an originally unrelated development, so-called {\em matrix product states} (MPS) were discovered as an interesting class of quantum states for analytical studies. In fact, the structure is so simple but powerful that it is no surprise that they have been introduced and used under a variety of names over the last fifty or more years (most notably perhaps by Baxter \cite{Baxter68}). In the present context, the most relevant prehistory is arguably given by the exact expression of the seminal one-dimensional AKLT state in this form\cite{Affleck87,Affleck88,Fannes89}, which gave rise to extensive studies of the translationally invariant subclass of MPS known as finitely correlated states\cite{Fannes92}. This form was then subsequently used in a variety of contexts for analytical variational calculations, e.g.\ for spin-1 Heisenberg antiferromagnets\cite{Klumper93,Kolezhuk96a,Kolezhuk96b,Kolezhuk98} and ferrimagnets\cite{Kolezhuk97,Kolezhuk99}.
+
+The connection between MPS and DMRG was made in two steps. In a first step, Ostlund and Rommer \cite{Ostlund95} realized that the block-growth step of the so-called infinite-system DMRG could be expressed as a matrix in the form it takes in an MPS. As in homogeneous systems this block-growth step leads to a fixed point in the thermodynamic limit, they took the fixed point matrix as building block for a translationally invariant MPS. In a further step, it was recognized that the more important finite-system DMRG leads to quantum states in MPS form, over which it variationally optimizes\cite{Dukelsky98}. It was also recognized that in traditional DMRG the state class over which is variationally optimized changes as the algorithm progresses, such that if one demands in some sense ``perfect'' variational character, a small change to the algorithm is needed, which however was found to increase (solvable) metastability problems\cite{Takasaki99,White05}. 
+
+It remains a curious historical fact that only a few of the DMRG practicioners took this development very seriously up to about 2004 when Cirac, Verstraete, Vidal and coworkers started to explore the power of MPS very systematically. While it was considered useful for conceptual purposes, surprisingly little thought was given to rethinking and reexpressing real-life DMRG implementations purely in the  MPS language; arguably, because the overwhelming majority of conventional DMRG applications (i.e.\ ground states for quantum chains with open boundary conditions) hardly profits. What was overlooked is that it easily opens up the way to powerful extensions to DMRG hard to see and express in conventional DMRG language. 
+
+A non-exhaustive list of extensions would list real-time evolutions\cite{Vidal03a,Vidal04b,Daley04,WhiteFeiguin04,VerstraeteRipoll04,Prosen09,Hartmann09,Banuls09}, also at finite temperature\cite{VerstraeteRipoll04,Feiguin05a}, the efficient use of periodic boundary conditions\cite{VerstraetePorras04,Pippan10,Pirvu10}, reliable single-site DMRG\cite{White05}, numerical renormalization group (NRG) applications\cite{Weichselbaum09},  infinite-system algorithms\cite{Vidal07,Orus08,McCulloch08}, continuous systems\cite{Verstraete10}, not talking at all about progress made in higher dimensions starting with \cite{VerstraeteCirac04} using a generalization of the MPS state class\cite{Nishino01}. 
+
+The goal of this paper cannot be to provide a full review of DMRG since 1992 as seen from the perspective of 2010, in particular given the review\cite{Schollwoeck05}, which tries to provide a fairly extensive account of DMRG as of summer 2004. I rather want to limit myself to more recent developments and phrase them entirely in the language of matrix product states, focussing rather on the nuts and bolts of the methods than showing a lot of applications. My hope would be that this review would allow newcomers to the field to be able to produce their own codes quickly and get a firm grasp of the key building blocks of MPS algorithms. It has overlaps with the introductions \cite{VerstraeteMurg08,McCulloch07} in the key methods presented, but focuses on different extensions, some of which arose after these papers, and in many places tries to be more explicit. It takes a different point of view than \cite{Peschel98}, the first comprehensive exposition of DMRG in 1998, because at that time the connection to MPS (though known) and in particular to quantum information was still in many ways unexploited, which is the focus here. Nevertheless, in a first ``historical'' step, I want to remind readers of the original way of introducing DMRG, which does not make use of the idea of matrix product states. This should make older literature easily accessible, but one can jump to Section \ref{sec:matrixproductstates} right away, if one is not interested in that. 
+ 
+In a second step, I will show that any quantum state can be written exactly in a very specific form which is given by the matrix product states already alluded to. In fact, the restriction to one dimension will come from the fact that only in this case MPS are numerically manageable. I will highlight special canonical forms of MPS and establish their connection to the singular value decomposition (SVD) as a mathematical tool and the Schmidt decomposition as a compact representation of quantum states. After this I will explain how MPS are a natural framework for decimation schemes in one dimension as they occur in schemes such as DMRG and Wilson's NRG. As a simple, but non-trivial example, I will discuss the AKLT state in its MPS form explicitly.
+We then move on to discuss explicitly operations with MPS: overlaps, normalization, operator matrix elements, expectation values and MPS addition. These are operations one would do with any quantum state; more MPS-specific are methods for bringing them into the computationally convenient canonical forms and for approximating an MPS by another one of smaller dimension. I conclude this exposition of MPS with discussing the relationship and the conversions between the MPS notation I favour here, an alternative notation due to Vidal, and the DMRG way of writing states; this relatively technical section should serve to make the literature more accessible to the reader.
+
+The MPS ideas generalize from states to the representation of operators, so I move on to discuss the use of matrix product operators (MPO)\cite{VerstraeteRipoll04,McCulloch07,VerstraetePirvu08,Crosswhite08,Frowis10}. As far as I can see, all operators of interest to us (ranging from local operators through bond evolution operators to full Hamiltonians) find a very compact and transparent formulation in terms of MPO. This leads to a much cleaner and sometimes even numerically more accurate formulation of DMRG-related algorithms, but their usage is not yet very widely spread.
+
+Admittedly, at this point the patience of the reader may have been stretched quite a bit, as no real-world algorithm e.g.\ for ground state searches or time evolutions has been formulated in MPS language yet; but it will become obvious that a lot of cumbersome numerical details of DMRG algorithms have been hidden away neatly in the MPS and MPO structures. 
+
+I will discuss ground state algorithms, discussing the equivalences and differences between DMRG with one or two center sites and fully MPS-based algorithms, including improvements to avoid trapping. I will focus on finite systems with open boundary conditions, where these methods excel.
+
+After this, I move on to time-dependent methods for dynamics, for pure and mixed states. After a discussion of the basic algorithms and their subtle differences, I will focus on the key problem of extending the time-range of such simulations: The possibility to calculate highly accurate real-time and imaginary-time evolutions of complex quantum many-body states has been particularly exciting for many people, also because it arrived just in time for studying highly tunable ultracold atom systems. While this development has already led to numerous interesting insights and applications, it was quickly realized that the time-range of  time-dependent DMRG and related methods is limited by entanglement growth in quantum states out of equilibrium, such that long-time physics is out of reach. In this context, interesting progress in trying to go beyond has been achieved recently.
+
+The review concludes with two further axes of development. I will start out by discussing the connection between DMRG and Wilson's NRG, showing how NRG can be expressed in a very concise fashion as well as be improved in various directions. This closes an interesting historical loop, as the utter failure of NRG for homogeneous one-dimensional quantum lattices as opposed to quantum impurity models mapped to special non-homogeneous one-dimensional quantum lattices was at the starting point of White's invention of DMRG\cite{WhiteNoack92}.
+
+I continue by looking at infinite-size algorithms using MPS that work directly in the thermodynamic limit, one based on time evolution (iTEBD)\cite{Vidal07}. The other (iDMRG)\cite{McCulloch08} is an extension of infinite-system DMRG algorithm, which has had an interesting history: in many early discussions of DMRG it was presented as the key aspect of DMRG, with finite-system DMRG as a practitioners' add-on to further improve numerical accuracy. Later, it was recognized that applying finite-system DMRG is essential even for qualitative correctness in many cases, and infinite-system DMRG was seen as just a warm-up procedure. Only recently, McCulloch\cite{McCulloch08} pointed out a way how to turn infinite-system DMRG into a highly efficient tool for producing thermodynamic limit states for homogeneous systems. 
+
+Last but not least, I will give an outlook on further applications of MPS that I could not cover here.
+
+\section{Density-matrix renormalization group (DMRG)}
+\subsection{Infinite-system and finite-system algorithms}
+As a toy model, let us consider an (anisotropic) $S=\frac{1}{2}$ Heisenberg antiferromagnetic ($J=1$) spin chain of length $L$ in one spatial dimension with external magnetic field $h$, 
+\begin{equation}
+\hat{H} = \sum_{i=1}^{L-1} \frac{J}{2} (\hat{S}^+_{i}  \hat{S}^-_{i+1} + \hat{S}^-_{i} \hat{S}^+_{i+1}) + J^z \hat{S}^z_{i} \hat{S}^z_{i+1} - \sum_{i=1}^L h \hat{S}^z_i .
+\label{eq:basicHam}
+\end{equation}
+We consider {\em open boundary conditions} (Fig.~\ref{fig:toymodel}), which is well worth emphasizing: analytically, periodic boundary conditions are usually more convenient; many numerical methods do not really depend strongly on boundary conditions, and some, like exact diagonalization, even become more efficient for periodic boundary conditions. DMRG, on the other hand, prefers open boundary conditions.
+
+\begin{figure}
+\centering\includegraphics[width=0.8\textwidth]{PyMPS_Toymodel.eps}
+\caption{Our toy model: a chain of length $L$ with open ends, where a spin-$\frac{1}{2}$ sits on each site and interacts with its nearest neighbours.}
+\label{fig:toymodel}
+\end{figure}
+
+It should also be emphasized that, DMRG being a variational method in a certain state class, it does not suffer from anything like the fermionic sign problem, and can be applied to bosonic and fermionic systems alike. 
+
+The starting point of DMRG is to ask for the ground state and ground state energy of $\hat{H}$. We can ask this question for the thermodynamic limit $L\rightarrow\infty$ or more modestly for finite $L$. In the first case, the answer is provided by {\em infinite-system} DMRG albeit with quite limited precision; in the second case, an answer can be read off from infinite-system DMRG, but it is more adequate to run a two-step procedure, starting with infinite-system DMRG and continuing with {\em finite-system} DMRG.
+
+In any case, the numerical stumbling block is provided by the exponential growth of the Hilbert space dimension, in our example as $d^L$, where $d=2$ is the local state space dimension of a spin-$\frac{1}{2}$. 
+
+\subsection{Infinite-system DMRG}
+
+Infinite-system DMRG deals with this problem by considering a chain of increasing length, usually $L=2$, $4$, $6$, $\ldots$, and discarding a sufficient number of states to keep Hilbert space size manageable. This {\em decimation procedure} is key to the success of the algorithm: we assume that there exists a reduced state space which can describe the relevant physics and that we can develop a procedure to identify it. The first assumption is typical for all variational methods, and we will see that indeed we are lucky in one dimension: for all short-ranged Hamiltonians in 1D there is such a reduced state space that contains the relevant physics!
+
+How is it found? In infinite-system DMRG (Fig.~\ref{fig:DMRGCombined}), the buildup is carried out as follows: we introduce left and right {\em blocks} A and B, which in a first step may consist of one spin (or site) each, such that total chain length is 2. Longer chains are now built iteratively from the left and right end, by inserting pairs of spins between the blocks, such that the chain grows to length 4, 6, and so on; at each step, previous spins are absorbed into the left and right blocks, such that block sizes grow as 1, 2, 3, and so on, leading to exponential growth of the dimension of the full block state space as $2^\ell$, where $\ell$ is the current block size. Our chains then always have a block-site-site-block structure, A$\bullet\bullet$B.
+
+Let us assume that our numerical resources are sufficient to deal with a reduced block state space of dimension $D$, where in practice $D$ will be of $O(100)$ to $O(1000)$, and that for a block A of length $\ell$ we have an effective description of block A in a $D$-dimensional reduced Hilbert space with orthonormal basis $\{ \ket{a_\ell}_A \}$. For very small blocks, the basis dimension may be less than $D$, for larger blocks some truncation must have occurred, which we take for granted at the moment. Let me mention right now that in the literature, $D$ -- which will turn out to be a key number -- comes under a variety of names: in traditional DMRG literature, it is usually referred to as $m$ (or $M$); more recent matrix product state literature knows both $D$ and $\chi$.
+
+Within this framework, we may now ask, (i) what is the ground state of the current chain of length $2\ell +2$, also referred to as {\em superblock}, and (ii) how can we find the reduced Hilbert space of dimension $D$ for the new blocks A$\bullet$ and $\bullet$B. 
+

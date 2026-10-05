@@ -1,0 +1,122 @@
+一个重要的观察是，无限系统与有限系统算法也都可以只在其中插入单个显式格点 $\bullet$ 来执行，因此人们可以研究形如 A$\bullet$B 的超块，只需对增长步骤稍作调整。这种方法的优点是大型稀疏本征值求解器可以加速大约 $d$ 倍；例如，把 $\hat{h}$ 作用到式~(\ref{eq:hamfragment}) 中的态上，将只需 $O(D^3 d)$ 次运算。
+在无限系统算法中，一个明显的缺点是超块长度会在奇偶之间来回振荡；而在有限系统算法中，二者相对优劣的问题要有趣得多，将在第 \ref{subsec:conventionalDMRGinMPS} 节详细讨论。
+
+显然，当 $D\rightarrow\infty$ 时不会发生任何截断，DMRG 变为精确方法；增大 $D$ 会减少截断，从而单调地改善观测量结果，人们把结果在 $D\rightarrow\infty$ 下外推（更好的做法是在截断误差 $\epsilon\rightarrow 0$ 下外推，因为局域观测量对 $\epsilon$ 的误差依赖往往实际上是线性的），以获得最佳结果。
+
+关于 DMRG 及其应用的更多细节，我推荐参阅 \cite{Schollwoeck05}。
+  
+\section{DMRG 与纠缠：DMRG 为何成功、为何失败}
+DMRG 算法相当自然地把人们引向对二分量子系统的考察，其两部分为 A$\bullet$ 和 $\bullet$B。对任意一个二分，$\ket{\psi} = \sum_{ij} \psi_{ij} \ket{i}_A \ket{j}_B$，其中态 $\ket{i}_A$ 和 $\ket{j}_B$ 分别构成维数为 $N_A$ 和 $N_B$ 的正交归一基。把 $\psi_{ij}$ 看作矩形矩阵 $\Psi$（维数 $N_A \times N_B$）的矩阵元，则约化密度矩阵 $\rho_A$ 与 $\rho_B$ 取如下形式
+\begin{equation}
+\rho_A = \Psi \Psi^\dagger \quad\quad \rho_B = \Psi^\dagger \Psi.
+\label{eq:ABdensityoperators}
+\end{equation}
+假设我们精确地知道 $\ket{\psi}$，但在 DMRG 中每块最多只能用 $D$ 个态来近似它，那么最优的 DMRG 近似就是保留属于最大的 $D$ 个本征值的本征态作为块态。如果我们碰巧知道 $\ket{\psi}$ 的约化密度算符的本征谱，就能容易地评估 DMRG 近似所能达到的质量；它只取决于本征值 $w_a$ 下降得多快。事实上，这类分析已在若干一维和二维的严格可解系统中进行过 \cite{Peschel99,Okunishi99,Chung00,Chung01,Chan02}。结果表明：在一维，对有能隙的系统，本征值 $w_a$ 通常呈指数式快速衰减（大致如 $\eul^{- c \ln^2 a}$），这解释了 DMRG 的成功；但在尺寸为 $L \times W$、$L\gg W$ 的二维条带几何中，$c \propto 1/W$，于是随着宽度 $W$ 增大（二维性增强），本征谱衰减如此之慢，以至于 DMRG 变得低效。
+
+通常我们对本征值谱并没有清晰的认识；但事实证明，在这种情况下
+纠缠熵可以作为"代理"量，即 von Neumann 纠缠或纠缠熵。它由 $\rho_A$ 的本征值谱的非零部分给出（如我们将在下文讨论的，它与 $\rho_B$ 的相同）：
+\begin{equation}
+S_{A|B}  = - \Tr\, \rho_A \log_2 \rho_A = - \sum_\alpha w_a \log_2 w_a .
+\end{equation}
+表面上看我们一无所获，因为我们并不知道 $w_a$，但关于纠缠标度的普遍定律是现成的。考虑一个二分 A$|$B，其中 AB 处于热力学极限，A 的大小为 $L^{\cal D}$，${\cal D}$ 为空间维数，那么所谓的{\em 面积定律}
+\cite{Eisert10,Bekenstein73,Srednicki93,Callan94,Plenio05} 预言：对具有激发能隙的短程哈密顿量的基态而言，纠缠熵不是广延量，而是正比于表面积，即 $S(A|B) \sim L^{{\cal D}-1}$，与热熵相反。这意味着在一维 $S \sim $ 常数，在二维 $S \sim L$。在临界点处，会出现远为丰富的结构：一维中，
+$S = \frac{c+\overline{c}}{6} \log_2 L + k$，其中 $c$ 和 $\overline{c}$ 是来自共形场论的（非）全息中心荷\cite{Vidal03,Latorre04}；二维中，玻色系统似乎对临界性不敏感（即 $S \propto L$）\cite{Srednicki93,Barthel06}，而费米系统在一维费米面情形会得到对数修正 $S \propto L \log_2 L$（前因子正比于费米面大小），但当费米面由点构成时，似乎只以低于对数的速度增长 \cite{Barthel06,Gioev06}。值得强调的是，基态的这些性质是非常不寻常的：在热力学极限下，从希尔伯特空间中随机抽取的一个态确实会以概率 1 展现广延的纠缠熵。
+
+现在可以用一种在数学上不严格的方式，把 DMRG 与量子纠缠的面积定律联系起来：对 A 与 B 各自的 $D$ 维态空间而言，最大纠缠为 $\log_2 D$，出现在 $\rho_A$ 的所有本征值都相同且为 $D^{-1}$ 的情形（此时 $\rho_A$ 为最大混合态）；这意味着要恰当地编码纠缠 $S$，需要一个维数为 $2^S$ 以上的态。这表明，对一维有能隙系统，系统尺寸的增大不会导致 $D$ 的急剧增大；而在二维中 $D \sim 2^L$，由于资源必须指数增长，DMRG 即使对相对较小的系统尺寸也会失效（但这并不排除对小型二维团簇或相当大的条带得到非常精确的结果）。一维临界系统是边缘情形：$D \sim L^{\frac{c+\overline{c}}{6}}$；这意味着热力学极限不可企及，但 $D$ 的增长足够缓慢（由于中心荷的典型取值，幂次通常较弱，比如 $1/3$ 或 $1/6$），因而可以达到很大的系统尺寸（$L \sim O(10^3)$）；这使人们能够进行非常精确的有限尺寸外推。
+
+显然，这一论证隐含了一个过于随意的假设，即本征值谱接近平坦，从而给出最大纠缠，这样才能对 $D$ 作出近似估计。实际上，谱由具体问题决定，而且确实远离平坦：如我们已看到的，它通常呈指数衰减。但数值上，对标准问题而言，资源 $D$ 的标度在定性层面上还是能被正确预言的。
+
+更进一步，在数学上严格的分析中，von Neumann 纠缠{\em 并不能}对资源用量作出普遍预言：这是因为人们可以构造出人工的本征值谱，它们或者允许、或者禁止高效模拟，而若按上述论证，其 von Neumann 纠缠却会给出相反的暗示 \cite{Schuch08}。然而，人们感兴趣的典型多体态并不具有这种"病态"谱。事实上，Renyi 纠缠熵——von Neumann 纠缠熵的一种推广——确实允许建立数学上严格的联系 \cite{Schuch08}，但通常难以计算，多亏共形场论，一维临界情形是个例外。
+
+\section{矩阵乘积态（MPS）}
+\label{sec:matrixproductstates}
+
+考虑我们的范式问题——一维海森堡反铁磁体，关键困难在于希尔伯特空间似乎是指数般巨大的（$d^L = 2^L$）。寻找基态因此可能像大海捞针。我们的主张是：至少对基态与第一激发态之间存在能隙的局域哈密顿量而言，这片"干草堆"并不大，与整个希尔伯特空间的大小相比实际上小到可以忽略——这一点我们从纠缠标度的奇特性质中已有领略。更重要的是，希尔伯特空间的这个相关角落可以被高效地参数化，即只需适度的数值资源，并能被高效地操作，而且确实存在 DMRG 类型的高效算法来解决量子物理中的重要问题。这一参数化就由{\em 矩阵乘积态（MPS）}给出。
+
+上面讲解的两种 DMRG 算法也许看起来实现起来非常繁琐。但事实证明，一旦我们在矩阵乘积态所提供的受限态类中做量子力学，DMRG 及其他方法几乎是自己主动浮现出来的。操纵矩阵乘积态起初似乎非常复杂，但实际上可以被优美地形式化，还配上一种图示记法，几乎能让人自动生成允许的操作；正如任何好的形式体系（比如 bra 与 ket 记号）一样，它本质上就保证了正确性。
+
+\subsection{矩阵乘积态的引入}
+
+\subsubsection{奇异值分解（SVD）与 Schmidt 分解}
+在本文余下的部分中，我们将大量使用线性代数中最多能的工具之一——所谓的{\em 奇异值分解}（SVD），它是一种非常紧凑的量子态表示的基础，适用于生活在二分宇宙 AB 中的量子态，即{\em Schmidt 分解}。让我们简要回顾一下它们的内容。
+
+对任意维数为 $(N_A \times N_B)$ 的（矩形）矩阵 $M$，SVD 保证存在如下分解
+\begin{equation}
+M =   U S V^\dagger ,
+\end{equation}
+其中 
+\begin{itemize}
+\item $U$ 的维数为 $(N_A \times \min (N_A,N_B))$，各列正交归一（即{\em 左奇异向量}），即 $U^\dagger U = I$；若 $N_A \leq N_B$，这意味着它是幺正的，并且还有 $UU^\dagger = I$。 
+\item $S$ 的维数为 $(\min (N_A,N_B) \times \min (N_A,N_B))$，是对角矩阵，其对角元为非负的 $S_{aa} \equiv s_a$。它们就是所谓的{\em 奇异值}。非零奇异值的个数 $r$ 称为 $M$ 的{\em (Schmidt) 秩}。下面我们假定奇异值按降序排列：$s_1 \geq s_2 \geq \ldots \geq s_r > 0.$
+\item $V^\dagger$ 的维数为 $(\min (N_A,N_B) \times N_B)$，各行正交归一（即{\em 右奇异向量}），即 $V^\dagger V = I$。若 $N_A \geq N_B$，这意味着它是幺正的，并且还有 $VV^\dagger  = I$。
+\end{itemize}
+这一情形示意性地画在图~\ref{fig:SVD} 中。奇异值与奇异向量有许多极为有趣的性质。其中对下文具有实用价值的一条是：$M$（秩 $r$）可以被矩阵 $M'$（秩 $r'<r$）在 Frobenius 范数 $\| M \|_F^2 = \sum_{ij} |M_{ij}|^2$ 下最优地近似，该范数由内积 $\braket{M}{N}= \tr\, M^\dagger N$ 诱导。最优近似为 
+\begin{equation}
+M' = U S' V^\dagger \quad\quad S'={\rm diag} (s_1, s_2, \ldots, s_{r'}, 0,\ldots ),
+\end{equation} 
+即把除前 $r'$ 个之外的所有奇异值都置为零（在数值实践中，还会相应地把 $U$ 的列维数和 $V^\dagger$ 的行维数缩减到 $r'$）。
+
+\begin{figure}
+\centering\includegraphics[width=\textwidth]{PyMPS_SVD.eps}
+\caption{奇异值分解（SVD）所导致的矩阵形状，对应于可能出现的两种矩形形状。奇异值对角线提醒我们，在 $M=USV^{\ \dagger}$ 中 $S$ 是纯非负对角矩阵。}
+\label{fig:SVD}
+\end{figure}
+
+作为 SVD 的第一个应用，我们用它来导出一般量子态的{\em Schmidt 分解}。AB 上的任意纯态 
+$\ket{\psi}$
+都可以写成
+\begin{equation}
+\ket{\psi} = \sum_{ij} \Psi_{ij} \ket{i}_A \ket{j}_B,
+\label{eq:generalquantumstate}
+\end{equation}
+其中 $\{ \ket{i}_A \}$ 与 $\{ \ket{j}_B \}$ 分别是 A 和 B 的维数为 $N_A$ 与 $N_B$ 的正交归一基；我们把系数读作矩阵 $\Psi$ 的矩阵元。由这一表示出发，可以导出约化密度算符 $\hat{\rho}_A = \tr_B \ket{\psi}\bra{\psi}$ 与 $\hat{\rho}_B = \tr_A \ket{\psi}\bra{\psi}$，它们在块基下取矩阵形式 
+\begin{equation} 
+\rho_A = \Psi \Psi^\dagger \quad\quad \rho_B = \Psi^\dagger\Psi .
+\end{equation}
+
+如果对式~(\ref{eq:generalquantumstate}) 中的矩阵 $\Psi$ 作 SVD，我们得到
+\begin{eqnarray}
+\ket{\psi} &=& \sum_{ij} \sum_{a=1}^{\min(N_A,N_B)} U_{ia} S_{aa} V^*_{ja} \ket{i}_A \ket{j}_B \nonumber \\
+&=& \sum_{a=1}^{\min(N_A,N_B)} \left( \sum_i U_{ia} \ket{i}_A \right) s_a \left( \sum_j V_{ja}^* \ket{j} \right) \nonumber \\
+&=& \sum_{a=1}^{\min(N_A,N_B)} s_a \ket{a}_A \ket{a}_B .
+\end{eqnarray}
+由于 $U$ 与 $V^\dagger$ 的正交归一性，集合 $\{ \ket{a}_A \}$ 与 $\{ \ket{a}_B \}$ 是正交归一的，并可扩展为 A 和 B 的正交归一基。如果把求和限制为只跑遍 $r \leq \min(N_A,N_B)$ 个正的非零奇异值，我们就得到{\em Schmidt 分解}
+\begin{equation}
+\ket{\psi} = \sum_{a=1}^r s_a \ket{a}_A \ket{a}_B .
+\end{equation}
+显而易见，$r=1$ 对应（经典）直积态，而 $r>1$ 对应纠缠的（量子）态。
+
+Schmidt 分解使我们能非常方便地读出前面引入的 A 和 B 的约化密度算符：完成偏迹运算，可得
+\begin{equation}
+\hat{\rho}_A = \sum_{a=1}^r s^2_a \ket{a}_A  \phantom\rangle_A \bra{a} \quad\quad \hat{\rho}_B = \sum_{a=1}^r s^2_a \ket{a}_B \phantom\rangle_B \bra{a} ,
+\end{equation}
+这表明二者共享谱的非零部分，但本征态不同。本征值是奇异值的平方，$w_a = s^2_a$，相应的本征向量就是左、右奇异向量。因此，von Neumann 纠缠熵可以直接从 SVD 读出，
+\begin{equation}
+S_{A|B}(\ket{\psi}) = - \tr\, \hat{\rho}_A \log_2 \hat{\rho}_A = - \sum_{a=1}^r s_a^2 \log_2 s_a^2 .
+\end{equation}
+
+考虑到希尔伯特空间的巨大尺寸，用一个只在 A 和 B 的维数仅为 $r'$ 的态空间上张成的 $\ket{\tilde{\psi}}$ 来近似 $\ket{\psi}$ 也是自然的。这个问题可以与 SVD 联系起来，因为 $\ket{\psi}$ 的 2-范数与矩阵 $\Psi$ 的 Frobenius 范数相等，
+\begin{equation}
+\| \ket{\psi} \|_2^2 = \sum_{ij} | \Psi_{ij} |^2 = \| \Psi \|_F^2 ,
+\end{equation}
+当且仅当集合 $\{ \ket{i} \}$ 与 $\{ \ket{j} \}$ 正交归一（此处正是如此）。
+因此，最优近似在 2-范数意义下就是 $\Psi$ 在 Frobenius 范数意义下被 $\tilde{\Psi}$ 的最优近似，其中 $\tilde{\Psi}$ 是秩为 $r'$ 的矩阵。如上所述，$\tilde{\Psi} = US' V^\dagger$，其中 $S'={\rm diag}(s_1, \ldots, s_{r'}, 0, \ldots)$，由 $\Psi$ 的最大的那些奇异值构成。于是，近似态的 Schmidt 分解为
+\begin{equation}
+\ket{\tilde{\psi}} = \sum_{a=1}^{r'} s_a \ket{a}_A \ket{a}_B ,
+\label{eq:Schmidtapproximation}
+\end{equation}
+若要求归一化，则 $s_a$ 还需重新标度。
+
+\subsubsection{QR 分解}
+虽然后面会看到 SVD 能覆盖我们的一切需求，但有时它有点大材小用：在 $M=USV^\dagger$ 的许多应用场景中，我们只关心性质 $U^\dagger U = I$ 以及乘积 $SV^\dagger$，例如凡是奇异值的实际数值不会被显式使用的时候。此时有一种数值上更廉价的技术，即 {\em QR 分解}：对任意维数为 $(N_A \times N_B)$ 的矩阵 $M$，它给出分解
+\begin{equation}
+M = QR ,
+\label{eq:QRdecomposition}
+\end{equation}
+此名即由此而来。其中 $Q$ 的维数为 $(N_A \times N_A)$ 且是幺正的，$Q^\dagger Q = I = Q Q^\dagger$；$R$ 的维数为 $(N_A \times N_B)$ 且是上三角的，即当 $i>j$ 时 $R_{ij}=0$。这一{\em 完全} QR 分解可以约化为{\em 精简} QR 分解：设 $N_A > N_B$，则 R 底部的 $N_A-N_B$ 行为零，于是可以写成
+\begin{equation}
+M=Q \cdot \left[ \begin{array}{c} R_1 \\ 0 \end{array} \right] = \left[ \begin{array}{cc} Q_1 & Q_2 \end{array} \right] \left[ \begin{array}{c} R_1 \\ 0 \end{array} \right] = Q_1 R_1 ,
+\label{eq:thinQRdecomposition}
+\end{equation}
+其中 $Q_1$ 的维数为 $(N_A \times N_B)$，$R_1$ 的维数为 $(N_B \times N_B)$；虽然 $Q_1^\dagger Q_1 = I$，但一般而言 $Q_1 Q_1^\dagger \neq I$。在下面的叙述中，凡我提到 QR 分解，指的都是精简版。还应当清楚的是，矩阵 $Q$（或 $Q_1$）与 SVD 中的 $U$ 具有共同的性质，但一般并不相同；不过正如我们将看到的，态的 MPS 表示本来就是非唯一的，所以这无关紧要。
+

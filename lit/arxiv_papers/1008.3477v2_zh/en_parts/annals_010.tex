@@ -1,0 +1,110 @@
+\subsection{Approximate compression of an MPS}
+
+The (rare) addition of MPS and various algorithms that can be formulated with MPS lead to a substantial increase in matrix dimensions of the result. It is therefore a recurrent issue how to approximate a given MPS with matrix dimensions $(D'_i \times D'_{i+1})$ by another MPS with 
+matrix dimensions $(D_i \times D_{i+1})$, where $D_i < D'_i$, as closely as possible. 
+
+Fundamentally, two procedures are available, {\em SVD compression} and {\em variational compression}. Both have advantages and disadvantages: for small degrees of compression, $D \sim D'$, SVD is fast, but it is never optimal; it becomes very slow if $D' \gg D$. Variational compression is optimal, but slow if the starting point is chosen randomly, can however be greatly speeded up by providing a good trial state e.g.\ from the SVD approach. Generally, issues of getting stuck in a non-optimal compression may arise in the variational ansatz.
+ 
+Depending on the specific nature of the state to be compressed, procedures can be optimized, for example if the MPS to be compressed is a sum of MPS or if it is the result of the application of a matrix product operator (MPO; Sec.\ \ref{sec:MPO}) to an MPS.
+
+\subsubsection{Compressing a matrix product state by SVD}
+Let us consider an MPS in mixed canonical representation,
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} A^{\sigma_1} A^{\sigma_2} \ldots A^{\sigma_{\ell}} \Lambda^{[\ell]} B^{\sigma_{\ell+1}} \ldots B^{\sigma_{L-1}} B^{\sigma_L}  \ket{\fat{\sigma}} ,
+\label{eq:compressionstart}
+\end{equation}
+from which we read off the Schmidt decomposition $\ket{\psi} = \sum_{a_\ell=1}^{D'} s_{a_\ell} \ket{a_\ell}_A \ket{a_\ell}_B$, where the states on A and B form orthonormal sets respectively; this follows from the canonical construction. Let us suppose there are $D'$ states each for this decomposition. We now look for the state $\ket{\tilde{\psi}}$ that approximates $\ket{\psi}$ best in the 2-norm and can be spanned by $D$ states each in A and B. We have shown that SVD provides the result by retaining the $D$ largest singular values, and the compressed state simply reads $\ket{\psi} = \sum_{a_\ell=1}^{D} s_{a_\ell} \ket{a_\ell}_A \ket{a_\ell}_B$, providing a simple truncation prescription: retain the first $D$ columns of $A^{\sigma_{\ell}}$, the first $D$ rows of  $B^{\sigma_{\ell+1}}$, and the first $D$ rows and columns of  $\Lambda^{[\ell]}$. If normalization is desired, the retained singular values must be rescaled.
+
+This procedure rests on the orthonormality of the states on A and B, therefore can only be carried out at one bond. In order to shrink all matrices, we have to work our way through all mixed canonical representations, say from right to left, truncate, and shift the boundary between left- and right-normalized matrices by one site to the left, using techniques from canonization.
+
+After the first step of right-canonization of a left-canonical state, it reads:
+\begin{equation}
+\ket{\psi^{(L-1)}} = \sum_{\fat{\sigma}} A^{\sigma_1} \ldots A^{\sigma_{L-1}} U S B^{\sigma_L} \ket{\fat{\sigma}} ,
+\end{equation}
+where I have already reshaped $B$, which is right-normalized and guarantees that states formed as $\ket{a_{L-1}}_B = \sum_{\sigma_L} (B^{\sigma_L})_{a_{L-1},1} \ket{\sigma_L}$ are orthonormal. But so are the states 
+\begin{equation}
+\ket{a_{L-1}}_A = \sum_{\sigma_1 \ldots \sigma_{L-1}} (A^{\sigma_1} \ldots A^{\sigma_{L-1}} U)_{1,a_{L-1}} \ket{\sigma_1 \ldots \sigma_{L-1}},
+\end{equation}
+as SVD guarantees $U^\dagger U = 1$: we are just doing a basis transformation within the orthonormal basis set constructed from the left-normalized $A^{\sigma_i}$. Hence, we have a correct Schmidt decomposition as
+\begin{equation}
+\ket{\psi^{(L-1)}} = \sum_{a_{L-1}} s_{a_{L-1}} \ket{a_{L-1}}_A \ket{a_{L-1}}_B .
+\end{equation}
+The difference to a right canonization is now the truncation: matrices $U$, $S$ and $B^{\sigma_L}$ are truncated (and singular values possibly renormalized) to $\tilde{U}$, $\tilde{S}$ and $\tilde{B}^{\sigma_L}$ just as explained before: retain the $D$ largest singular values. $\tilde{B}^{\sigma_L}$ is still right-normalized. The next $A^{\sigma_{L-1}}$ to the left, $\tilde{U}$ and $\tilde{S}$ are multiplied together to form $M^{\sigma_{L-1}}$. By reshaping, SVD and reshaping as 
+\begin{equation}
+M^{\sigma}_{ij} = M_{i, (\sigma j)} = \sum_k U_{ik} S_{kk} B_{k,(\sigma j)} = \sum_k U_{ik} S_{kk} B^{\sigma}_{kj} 
+\end{equation} 
+we obtain right-normalized $B^{\sigma_{L-1}}$, truncate $U$, $S$ and $B^{\sigma_{L-1}}$ to $\tilde{U}$, $\tilde{S}$ and $\tilde{B}^{\sigma_{L-1}}$, and the procedure continues:
+\begin{eqnarray*}
+\ket{\psi} &=& \sum_{\fat{\sigma}}  A^{\sigma_1} \ldots A^{\sigma_{L-3}}A^{\sigma_{L-2}} \left( A^{\sigma_{L-1}} U S \right)B^{\sigma_L}   \ket{\fat{\sigma}} \\
+&\rightarrow& \sum_{\fat{\sigma}} A^{\sigma_1} \ldots A^{\sigma_{L-3}}A^{\sigma_{L-2}}\left( A^{\sigma_{L-1}} \tilde{U} \tilde{S} \right) \tilde{B}^{\sigma_L}   \ket{\fat{\sigma}} \\
+&=&  \sum_{\fat{\sigma}} A^{\sigma_1} \ldots A^{\sigma_{L-3}}A^{\sigma_{L-2}} M^{\sigma_{L-1}} \tilde{B}^{\sigma_L}   \ket{\fat{\sigma}} \\
+&=& \sum_{\fat{\sigma}} A^{\sigma_1} \ldots A^{\sigma_{L-3}} \left( A^{\sigma_{L-2}} U S \right) B^{\sigma_{L-1}} \tilde{B}^{\sigma_L}   \ket{\fat{\sigma}} \\
+&\rightarrow& \sum_{\fat{\sigma}} A^{\sigma_1} \ldots A^{\sigma_{L-3}} \left( A^{\sigma_{L-2}} \tilde{U} \tilde{S} \right) \tilde{B}^{\sigma_{L-1}} \tilde{B}^{\sigma_L}   \ket{\fat{\sigma}} \\
+&=& \ldots
+\end{eqnarray*}
+At the end, the compressed MPS $\ket{\tilde{\psi}}$ is right-normalized and given by $\tilde{B}$-matrices. As we will see, this compression procedure is just the truncation that is carried out by (time-dependent) DMRG or TEBD as they sweep through the chain. Both methods at each bond have correctly normalized matrices (i.e.\ orthonormal states) to the left and right, carry out the cut and proceed.
+
+The disadvantage of the procedure is that a one-sided interdependence of truncations occurs: the matrix $M$ always contains a truncated $\tilde{U}$ from the previous step, hence is truncation-dependent. Generally, truncations cannot be independent of each other because for each decomposition (\ref{eq:compressionstart}) truncations of the $A$- and $B$-matrices affect the orthonormal systems, but here the dependence is one-sided and ``unbalanced'': truncations further to the left depend on those to the right, but not vice versa. If the truncation is small -- which it usually is for small time steps in time-dependent DMRG -- the introduced additional inaccuracy is minor; however, for cases where large truncations may occur, the dependence might become too strong and the truncation far from optimal. 
+
+A second concern regards efficiency: for matrix dimensions $(m\times n)$, $m\ge n$, the cost of SVD is $O(m n^2)$. This means that the SVD cost $O((D')^2 dD)$ if $D' \le dD$ and $O(D' d^2 D^2)$ otherwise; the matrix multiplications cost $O(dD(D')^2)$. In many applications, $D'\gg D$; then this method becomes quite slow. The situation is even worse if the original state is not in canonical form and has to be brought to that form first by a sequence of SVDs, that are of order $O((D')^3)$.
+
+Let me conclude this section with the remark that of course we can of course also compress by imposing some $\epsilon$ which at each truncation we accept as maximal 2-norm distance between the original and the compressed state (given by the sum of the squares of the discarded singular values), implicitly defining $D$. 
+
+\subsubsection{Compressing a matrix product state iteratively}
+The optimal approach is to start from an ansatz MPS of the desired reduced dimension, and to minimize its distance to the MPS to be approximated iteratively, i.e.\ by changing its $\tilde{M}^\sigma$ matrices iteratively. The matrices play the role of variational parameters.
+
+The mathematically precise form of optimal compression of $\ket{\psi}$ from dimension $D'$ to $\ket{\tilde{\psi}}$ with dimension $D$ is to minimize $\| \ket{\psi} - \ket{\tilde{\psi}} \|_2^2$, which means that we want to minimize $\braket{\psi}{\psi} - \braket{\tilde{\psi}}{\psi} -\braket{\psi}{\tilde{\psi}} + \braket{\tilde{\psi}}{\tilde{\psi}}$ with respect to $\ket{\tilde{\psi}}$. Let us call the matrices $M$ and $\tilde{M}$ respectively, to emphasize that we make no assumption about the normalization. Expressed in the underlying matrices $\tilde{M}$, this is a highly nonlinear optimization problem.
+
+But this can be done iteratively as follows. Start with an initial guess for $\ket{\tilde{\psi}}$, which could be an SVD-compression of $\ket{\psi}$, arguably not optimal, but a good starting point. Then we sweep through the set of $\tilde{M}^{\sigma_i}$ site by site, keeping all other matrices fixed and choosing the new $\tilde{M}^{\sigma_i}$, such that distance is minimized. The (usually justified hope) is that repeating this sweep through the matrices several times will lead to a converged optimal approximation.
+
+The new $\tilde{M}^{\sigma_i}$ is found by extremizing with respect to $\tilde{M}^{\sigma_i*}_{a_{i-1},a_{i}}$, which only shows up in $ - \braket{\tilde{\psi}}{\psi} + \braket{\tilde{\psi}}{\tilde{\psi}}$. We find
+\begin{eqnarray*}
+& & \frac{\partial}{\partial \tilde{M}^{\sigma_i*}_{a_{i-1},a_i}} ( \braket{\tilde{\psi}}{\tilde{\psi}}
+- \braket{\tilde{\psi}}{\psi} ) = \\
+& & \sum_{\fat{\sigma}*} (\tilde{M}^{\sigma_1*} \ldots \tilde{M}^{\sigma_{i-1}*})_{1, a_{i-1}}(\tilde{M}^{\sigma_{i+1}*} \ldots \tilde{M}^{\sigma_L*})_{a_i,1} \tilde{M}^{\sigma_1} \ldots \tilde{M}^{\sigma_i} \ldots \tilde{M}^{\sigma_L} -  \\
+& & \sum_{\fat{\sigma}*}
+(\tilde{M}^{\sigma_1*} \ldots \tilde{M}^{\sigma_{i-1}*})_{1, a_{i-1}}(\tilde{M}^{\sigma_{i+1}*} \ldots \tilde{M}^{\sigma_L*})_{a_i,1} M^{\sigma_1} \ldots M^{\sigma_i} \ldots M^{\sigma_L}= 0.
+\end{eqnarray*}
+The sum over $\fat{\sigma}*$ runs over all physical sites except $i$. This system looks complicated, but is in fact quite easy. Keeping the matrix to be found, $\tilde{M}^{\sigma_i}$, explicit, we may rewrite this equation as
+\begin{equation}
+\sum_{a'_{i-1}a'_i} \tilde{O}_{a_{i-1}a_i,a'_{i-1}a'_i} \tilde{M}^{\sigma_i}_{a'_{i-1}a'_i} = O^{\sigma_i}_{a_{i-1}a_i}.
+\end{equation}
+If, for each $\sigma_i$, we interpret the matrix $\tilde{M}^{\sigma_i}$ as a vector $v$ of length $D^2$, $\tilde{O}$ as a matrix $P$ of dimension $(D^2 \times D^2)$ and $O^{\sigma_i}$ as a vector $b$ of length $D^2$, we have a linear equation system
+\begin{equation}
+P v = b. 
+\end{equation}
+The result $v$ can then taken to be the matrix we are looking for. As this system is usually too big for a direct solution, an iterative solver has to be used, such as a conjugate gradient method. The system is Hermitian, as can be seen from the construction of $P$: unconjugated and conjugated $\tilde{M}$ simply reverse their role under transposition. Once again, the graphical representation is simplest (Fig.~\ref{fig:iterativecompression}). 
+
+\begin{figure}
+\centering\includegraphics[scale=0.6]{PyMPS_MPS_IterativeCompression.eps}
+\caption{Linear equation system to be solved for iterative compression of an MPS. The fatter lines correspond to the state to be compressed, the thinner lines to the compressed state. The unknown matrix is circled.}
+\label{fig:iterativecompression}
+\end{figure}
+    
+
+As in the later case of finding ground states variationally, it is important to realize that the cost of the matrix-vector multiplications in the conjugate gradient method is not $O(D^4)$ as dimensions would naively suggest. There is an obvious factorization, which becomes particularly obvious graphically, that then leads to a cost of $O(D^3)$:
+\begin{equation}
+\tilde{O}_{a_{i-1}a_i,a'_{i-1}a'_i} = \tilde{L}_{a_{i-1},a'_{i-1}} \cdot \tilde{R}_{a_{i},a'_{i}}
+\end{equation}
+where 
+\begin{equation}
+\tilde{L}_{a_{i-1},a'_{i-1}} = \left( \sum_{\sigma_{i-1}}  \tilde{M}^{\sigma_{i-1}\dagger} \left( \ldots \left( \sum_{\sigma_1}  
+\tilde{M}^{\sigma_{1}\dagger} \tilde{M}^{\sigma_{1}} \right) \ldots \right) \tilde{M}^{\sigma_{i-1}} \right)_{a_{i-1},a'_{i-1}}
+\end{equation}
+and similarly $\tilde{R}$. In the graphical representation (Fig.~\ref{fig:normalizediterativecompressionLR}), they are simply the contracted objects to the left and right of the circled $\tilde{M}$-matrix we are solving for.
+
+Then 
+\begin{equation}
+\sum_{a'_{i-1}a'_i} \tilde{O}_{a_{i-1}a_i,a'_{i-1}a'_i} \tilde{M}^{\sigma_i}_{a'_{i-1}a'_i} =
+\sum_{a'_{i-1}} \tilde{L}_{a_{i-1},a'_{i-1}} \left( \sum_{a'_i} \tilde{R}_{a_{i},a'_{i}}
+ \tilde{M}^{\sigma_i}_{a'_{i-1}a'_i} \right),
+\end{equation}
+two operations of cost $O(D^3)$.
+
+A similar decomposition simplifies the calculation of the vector $b$, which is formed from $O^{\sigma_i}_{a_{i-1}a_i}$ as
+\begin{equation}
+\sum_{a'_{i-1}a'_i} L_{a_{i-1},a'_{i-1}} M^{\sigma_i}_{a'_{i-1}a'_i} R_{a_{i},a'_{i}} , 
+\end{equation}
+with $L$ and $R$ as indicated in Fig.~\ref{fig:normalizediterativecompression}.
+In fact, calculating $L$ and $R$ is nothing but carrying out the first steps of an overlap calculation, starting from left or right. The result would then be the $C$ matrix produced there at intermediate steps. If one sweeps through the system from left to right and back one can build $L$ and $R$ iteratively from previous steps, which is the most efficient way. 
+

@@ -1,0 +1,130 @@
+Here, we have reshaped $(V^\dagger)_{a_{L-1},\sigma_L}$ into $d$ column vectors $B^{\sigma_L}_{a_{L-1}}$, $(V^\dagger)_{(a_{L-2}\sigma_{L-1}), a_{L-1}}$ into $d$ matrices $B^{\sigma_{L-1}}_{a_{L-2},a_{L-1}}$, and so on, as well as multiplied $U$ and $S$ before reshaping into $\Psi$ at each step. The obvious graphical representation is given in Fig.~\ref{fig:rightMPSbySVD}. We do not distinguish in the graphical representation between the $A$- and $B$-matrices to keep notation simple.
+
+\begin{figure}
+\centering\includegraphics[scale=0.6]{PyMPS_RightMPSBySVD.eps}
+\caption{Graphical representation of an iterative construction of an exact MPS representation of an arbitrary quantum state by a sequence of singular value decompositions, now starting from the right.}
+\label{fig:rightMPSbySVD}
+\end{figure}
+
+
+We obtain an MPS of the form
+\begin{equation}
+\ket{\psi} = \sum_{\sigma_1,\ldots,\sigma_L} B^{\sigma_1} B^{\sigma_2} \ldots B^{\sigma_{L-1}} B^{\sigma_L} \ket{\sigma_1,\ldots,\sigma_L}
+\end{equation}
+where the $B$-matrices can be shown to have the same matrix dimension bounds as the $A$ matrices and also, from $V^\dagger V =I$, to obey
+\begin{equation}
+\sum_{\sigma_\ell} B^{\sigma_\ell} B^{\sigma_\ell\dagger} = I ,
+\end{equation}
+such that we refer to them as {\em right-normalized} matrices. An MPS entirely built from such matrices we call {\em right-canonical}. 
+
+Again, we can split the lattice into parts A and B, sites 1 through $\ell$ and $\ell+1$ through $L$, and introduce states 
+\begin{eqnarray}
+\ket{a_\ell}_A &=& \sum_{\sigma_1,\ldots,\sigma_\ell} (B^{\sigma_1} B^{\sigma_2} \ldots B^{\sigma_\ell})_{1,a_\ell} \ket{\sigma_1,\ldots,\sigma_\ell} \\
+\ket{a_\ell}_B &=& \sum_{\sigma_{\ell+1},\ldots,\sigma_L} (B^{\sigma_{\ell+1}} B^{\sigma_{\ell+2}} \ldots B^{\sigma_L})_{a_\ell,1} \ket{\sigma_{\ell+1},\ldots,\sigma_L}
+\end{eqnarray}
+such that the MPS can be written as
+\begin{equation}
+\ket{\psi} = \sum_{a_\ell} \ket{a_\ell}_A \ket{a_\ell}_B . 
+\end{equation}
+This pairing of states looks again tantalizingly close to a Schmidt decomposition of $\ket{\psi}$, but this is again not the case. The reason for this is that while this time the $\{ \ket{a_\ell}_B \}$ form an orthonormal set, the $\{ \ket{a_\ell}_A \}$ in general do not, as can be shown from the right-normality of the $B$-matrices.
+
+Again, the right-normalized form can be obtained by a sequence of QR decompositions. The difference to the left-normalized form is that we do not QR-decompose $\Psi=QR$, but $\Psi^\dagger=QR$, such that $\Psi = R^\dagger Q^\dagger$. This leads directly to the right-normalization properties of the $B$-matrices, if we form them from $Q^\dagger$. Let me make the first two steps explicit; we start from
+\begin{equation}
+c_{\sigma_1\ldots\sigma_L} = \Psi_{(\sigma_1\ldots\sigma_{L-1}),\sigma_L} =
+\sum_{a_{L-1}} R^\dagger_{(\sigma_1\ldots\sigma_{L-1}),a_{L-1}} Q^\dagger_{a_{L-1},\sigma_L} =
+\sum_{a_{L-1}} \Psi_{(\sigma_1\ldots\sigma_{L-2}),(\sigma_{L-1}a_{L-1})} B^{\sigma_L}_{a_{L-1},1},
+\end{equation}
+reshaping $R^\dagger$ into $\Psi$, $Q^\dagger$ into $B$, and continue by a QR decomposition of $\Psi^\dagger$ as 
+\begin{equation}
+c_{\sigma_1\ldots\sigma_L} = \sum_{a_{L-1},a_{L-2}} R^\dagger_{(\sigma_1\ldots\sigma_{L-2}),a_{L-2}} Q^\dagger_{a_{L-2},(\sigma_{L-1}a_{L-1})}  B^{\sigma_L}_{a_{L-1},1} 
+= \sum_{a_{L-1},a_{L-2}} \Psi_{(\sigma_1\ldots\sigma_{L-3}),(\sigma_{L-2}a_{L-2})}
+B^{\sigma_{L-1}}_{a_{L-2},a_{L-1}} B^{\sigma_L}_{a_{L-1},1} .
+\end{equation}
+
+We have now obtained various different exact representations of $\ket{\psi}$ in the MPS form, which already indicates that the MPS representation of a state is {\em not unique}, a fact that we are going to exploit later on.
+
+{\em (iii) Mixed-canonical matrix product state.} We can also mix the decomposition of the state from the left and from the right. Let us assume we did a decomposition from the left up to site $\ell$, such that
+\begin{equation}
+c_{\sigma_1\ldots\sigma_L} = \sum_{a_\ell} (A^{\sigma_1} \ldots A^{\sigma_\ell})_{a_\ell} S_{a_\ell,a_\ell} (V^\dagger)_{a_\ell, (\sigma_{\ell+1} \ldots \sigma_L)} .
+\end{equation}
+We reshape $V^\dagger$ as $\Psi_{(a_\ell \sigma_{\ell+1} \ldots \sigma_{L-1}), \sigma_L}$ and carry out successive SVDs from the right as in the original decomposition from the right, up to and including site $\sigma_{\ell+2}$; in the last SVD $U_{(a_{\ell}\sigma_{\ell+1}),a_{\ell+1}} S_{a_{\ell+1},a_{\ell+1}}$ remains, which we reshape to $B^{\sigma_{\ell+1}}_{a_{\ell}a_{\ell+1}}$. Then we 
+obtain
+\begin{equation}
+(V^\dagger)_{a_\ell, (\sigma_{\ell+1} \ldots \sigma_L)} = \sum_{a_{\ell+1},\ldots,a_{L-1}} B^{\sigma_{\ell+1}}_{a_\ell, a_{\ell+1}} \ldots B^{\sigma_L}_{a_{L-1}} .
+\end{equation}
+All $B$-matrices are right-normalized. This is simply due to the SVD for sites $\ell+2$ through $L$; on site $\ell+1$, it follows from the property $V^\dagger V = I$:
+\begin{eqnarray*}
+\delta_{a_\ell,a'_\ell} &=&
+\sum_{\sigma_{\ell+1},\ldots} (V^\dagger)_{a_\ell, (\sigma_{\ell+1} \ldots \sigma_L)} V_{( \sigma_{\ell+1} \ldots \sigma_L),a'_\ell} \\
+&=& ( \sum_{\sigma_{\ell+1},\ldots} B^{\sigma_{\ell+1}} \ldots B^{\sigma_L} B^{\sigma_L\dagger} \ldots B^{\sigma_{\ell+1}\dagger} )_{a_\ell,a'_\ell} \\
+&=& ( \sum_{\sigma_{\ell+1}} B^{\sigma_{\ell+1}} B^{\sigma_{\ell+1}\dagger} )_{a_\ell,a'_\ell} ,
+\end{eqnarray*}
+where we use in the last line the right-normalization property of all the $B$-matrices on sites $\ell+2,\ldots,L$ to obtain the desired result.
+
+We therefore end up with a decomposition
+\begin{equation}
+c_{\sigma_1 \ldots \sigma_L} = A^{\sigma_1} \ldots A^{\sigma_\ell} S B^{\sigma_{\ell+1}} \ldots B^{\sigma_L} ,
+\end{equation}
+which contains the singular values on the bond $(\ell,\ell+1)$ and can be graphically represented as in Fig.~\ref{fig:bothMPSbySVD}.
+
+\begin{figure}
+\centering\includegraphics[scale=0.6]{PyMPS_BothMPSBySVD.eps}
+\caption{Graphical representation of an exact MPS obtained by a sequence of singular value decompositions, starting from the left and right. The diamond represents the diagonal singular value matrix. Matrices to the left are left-normalized, to the right are right-normalized.}
+\label{fig:bothMPSbySVD}
+\end{figure}
+
+What is more, the Schmidt decomposition into A and B, where A runs from sites 1 to $\ell$ and B from sites $\ell+1$ to $L$, can now be read off immediately. If we introduce vectors
+\begin{eqnarray}
+\ket{a_\ell}_A &=& \sum_{\sigma_1,\ldots,\sigma_\ell}
+(A^{\sigma_1} \ldots A^{\sigma_\ell})_{1,a_\ell}
+ \ket{\sigma_1,\ldots,\sigma_\ell} \\
+\ket{a_\ell}_B &=&  \sum_{\sigma_{\ell+1},\ldots,\sigma_L} 
+(B^{\sigma_{\ell+1}} \ldots B^{\sigma_L})_{a_\ell,1}
+\ket{\sigma_{\ell+1},\ldots,\sigma_L}
+\end{eqnarray}
+then the state takes the form ($s_a = S_{a,a}$)
+\begin{equation}
+\ket{\psi} = \sum_{a_\ell} s_a \ket{a_\ell}_A \ket{a_\ell}_B ,
+\end{equation}
+which is the Schmidt decomposition {\em provided the states on} A {\em and} B {\em are orthonormal respectively.} But this is indeed the case by construction.
+
+(iv) {\em Gauge degrees of freedom.} By now, we have three different ways of writing an arbitrary quantum state as an MPS, all of which present advantages and disadvantages. While these three are arguably the most important ways of writing an MPS, it is important to realise that the degree of non-uniqueness is much higher: MPS are not unique  in the sense that a gauge degree of freedom exists. Consider two adjacent sets of matrices $M^{\sigma_i}$ and $M^{\sigma_{i+1}}$ of shared column/row dimension $D$. Then the MPS is invariant for any invertible matrix $X$ of dimension $(D\times D)$ under
+\begin{equation}
+M^{\sigma_i} \rightarrow M^{\sigma_i} X, \quad \quad M^{\sigma_{i+1}} \rightarrow X^{-1}M^{\sigma_{i+1}} .
+\end{equation}
+This gauge degree of freedom can be used to simplify manipulations drastically, our three constructions are just special cases of that.
+ 
+Several questions arise. Is there a connection between this notation and more familiar concepts from many-body physics? Indeed, there is a profound connection to iterative decimation procedures as they occur in renormalization group schemes, which we will discuss in Section \ref{subsubsec:MPSsinglesitedecimation}. 
+
+The matrices can potentially be exponentially large and we will have to bound their size on a computer to some $D$. Is this possible without becoming too inaccurate in the description of the state? Indeed this is possible in one dimension: if we consider the mixed-canonical representation, we see that for the exponentially decaying eigenvalue spectra of reduced density operators (hence exponentially decaying singular values $s_a$) it is possible to cut the spectrum following Eq.~(\ref{eq:Schmidtapproximation}) at the $D$ largest singular values (in the sense of an optimal approximation in the 2-norm) without appreciable loss of precision. This argument can be generalized from the approximation incurred by a single truncation to that incurred by $L-1$ truncations, one at each bond, to reveal that the error is at worst \cite{Verstraete06}
+\begin{equation}
+\| \ket{\psi} - \ket{\psi_{{\rm trunc}}} \|_2^2 \leq 2 \sum_{i=1}^L \epsilon_i(D) ,
+\end{equation}
+where $\epsilon_i(D)$ is the truncation error (sum of discarded squared singular values) at bond $i$ incurred by truncating down to the leading $D$ singular values. So the problem of approximability is as in DMRG related to the eigenvalue spectra of reduced density operators, indicating failure in two dimensions, and (a bit more tenuously) to the existence of area laws.
+
+\subsubsection{MPS and single-site decimation in one dimension}
+\label{subsubsec:MPSsinglesitedecimation}
+
+In order to connect MPS to more conventional concepts, let us imagine that we set up an iterative growth procedure for our spin chain, $\ell \rightarrow \ell + 1$, as illustrated in Fig.~\ref{fig:BlockGrowth}, such that associated state spaces grow by a factor of $d$ at each step. In order to avoid exponential growth, we now demand that state space dimensions have a ceiling of $D$. Once the state space dimension grows above $D$, the state space has to be truncated down by some {\em as of now undefined} procedure.
+
+Assume that somehow we have arrived at such a $D$-dimensional effective basis for our system (or left block A, in DMRG language) of length $\ell-1$, $\{ \ket{a_{\ell-1}}_A \}$. If the $D$ basis states of the (left) block A of length $\ell$ after truncation are $\{ \ket{a_{\ell}}_A \}$ and the local states of the added site  $\{ \ket{\sigma_\ell} \}$, we must have
+\begin{equation}
+\ket{a_\ell}_A = \sum_{a_{\ell-1}\sigma_\ell} \phantom\langle _A \braket{a_{\ell-1}\sigma_\ell}{a_\ell}_A \,\, \ket{a_{\ell-1}}_A\ket{\sigma_\ell}
+\label{eq:basistrafoblocksite}
+\end{equation}
+for these states, with $\phantom\langle _A \braket{a_{\ell-1}\sigma_\ell}{a_\ell}_A$ as of now unspecified. We now introduce at site $\ell$ $d$ matrices $A^{[\ell]\sigma_\ell}$  of dimension $(D \times D)$ each, one for each possible local state $\ket{\sigma_\ell}$. We can then rewrite Eq.~(\ref{eq:basistrafoblocksite}) as
+\begin{equation}
+\ket{a_\ell}_A = \sum_{a_{\ell-1}\sigma_\ell} A^{[\ell]\sigma_\ell}_{a_{\ell-1}, a_\ell} \ket{a_{\ell-1}}_A  \ket{\sigma_\ell} 
+\label{eq:matrixbyRG}
+\end{equation}
+where the elements of the matrices $A^{[\ell]\sigma_\ell}$ are given by (see Fig.~\ref{fig:ABulk})
+\begin{equation}
+A^{[\ell]\sigma_\ell}_{a_{\ell-1}, a_\ell} \equiv \phantom\langle_A \braket{a_{\ell-1}\sigma_\ell}{a_\ell}_A. 
+\label{eq:Amatrixelements}
+\end{equation}
+Let us make a short remark on {\em notations} right here: in $A^{[\ell]\sigma_\ell}$, $[\ell]$ indicates which  set of $A$-matrices is considered, and $\sigma_\ell$ which $A$-matrix in particular. In the present case, this is a notational overkill, because the local state $\ket{\sigma_\ell}$ is taken from the site where the matrices were introduced. In such cases, we drop one of the two $\ell$, usually $[\ell]$:
+\begin{equation}
+A^{[\ell]\sigma_\ell} \rightarrow A^{\sigma_\ell} .
+\end{equation}
+We will, however, encounter situations where matrices $A$ are selected by local states {\em not} on the site where they were introduced. In such cases, the full notation obviously has to be restored! 
+

@@ -1,0 +1,110 @@
+The same structure has been found in the last section for the thermodynamic limit state and its two two-site transfer operators $E_L$ and $E_R$. This allows a direct transfer of the old results. Assume we want to calculate $\bra{\psi} \hat{O}_1 \hat{O}_i \ket{\psi}$; then we bring the state into the mixed-canonical form of Eq.~(\ref{eq:infinitemixedcanonical}), with $A$-matrices up to site $i$ or $i+1$ (depending on the odd-even structure), then $\Lambda^{[\ell-1]} $, followed by $B$-matrices up to infinity. Contracting from the left over all $A$-matrices up to 0 and from the right all $B$-matrices, we obtain a remaining finite network as in Fig.~\ref{fig:finitecontractionremainder}.
+This expectation value is then evaluated as in a finite network; if we use the $C^{[i]}$ and transfer operator notation, it starts from $C^{[0]}=I$. The difference is that at the end, $\Lambda^{[\ell-1]}$ shows up in the contraction and the final reduction to a scalar is done by the closing $\delta_{aa'}$ line (which can be read as a trace): assuming the last site is $i$, then the final expectation value is given in the last step as
+\begin{equation}
+\bra{\psi} O^1 \otimes \ldots O^i \ket{\psi} = \tr  \Lambda^{[\ell-1]\dagger} C^{[i]} \Lambda^{[\ell-1]} = 
+\tr   \Lambda^{[\ell-1]} \Lambda^{[\ell-1]\dagger} C^{[i]} = \tr \rho_A C^{[i]} ,
+\end{equation}
+where we have used the relationship between $\Lambda$-matrices and reduced density operators in canonical representations.
+
+\begin{figure}
+\centering\includegraphics[scale=0.7]{PyMPS_FiniteContractionRemainder.eps}
+\caption{Exploiting left- and right-normalization, the evaluation of an infinite contraction can be reduced to a finite contraction that can be dealt with as for any finite MPS.}
+\label{fig:finitecontractionremainder}
+\end{figure}
+    
+This calculation can be reduced easily to the case of the overlap of two states, which is just the matrix element of the unit operator between them. Assume that both states are in translationally invariant form, e.g. by using left-normalized matrices $A^{[1]}$ and $A^{[2]}$ (and $\tilde{A}^{[1]}$, $\tilde{A}^{[2]}$ respectively). We now carry forward an infinite overlap calculation by two sites (say 1 and 2) towards the right using $E_L$: If the current overlap matrix is $C$, it is carried forward as
+\begin{equation}
+E_L (C) = \sum_{\sigma_1\sigma_2} \tilde{A}^{[2]\sigma_2\dagger} \tilde{A}^{[1]\sigma_1\dagger} C A^{[1[\sigma_1} A^{[2]\sigma_2} .
+\end{equation}  
+If we decompose $C$ in the eigenmatrices of $E_L$, in the thermodynamic limit only the largest eigenvalue contribution will survive. For an orthonormal state, for the overlap with itself, $C=I$ and $\lambda=1$ are the dominant eigenpair. A smaller $\lambda$ in the overlap of two states can be interpreted as an overlap per site, while of course the two states are orthogonal with respect to each other in the thermodynamic limit (overlap $\lim_{L\rightarrow\infty} \lambda^L = 0$). Such thermodynamic overlaps (or fidelities) per site can be used very nicely to detect quantum phase transitions by overlapping ground states for two Hamiltonians with slightly different parameters\cite{McCulloch08}.
+ 
+\section{Conclusion: other topics to watch}
+After moving through this long list of topics, focussing on the fundamental algorithmic building blocks, ground state searches, thermodynamic limit algorithms and a wealth of real and imaginary time methods at zero and finite temperature, the possibilities of DMRG and MPS-based algorithms are far from being exhausted. A few topics that I have not touched upon, but which I would like to mention briefly (again in a non-exhaustive list), are: transfer matrix DMRG methods (cf.\ the introductory section for references), DMRG and MPS with periodic boundary conditions, and as the most recent addition, MPS for continuous space\cite{Verstraete10}, which emerge as a beautiful generalization of coherent states and should allow for interesting applications in field theories. For {\em periodic boundary conditions} quite a lot of results already exist, so let me give just a brief overview. PBC have already been treated in the DMRG framework by introducing one long-ranged interaction between sites 1 and $L$ on an open-boundary chain (see e.g.\ \cite{Schmitteckert96,Rapsch99,Meden03a,Meden03b}; however, the scaling of accuracy was consistently found to be much worse than for open boundary conditions. The underlying reason is (roughly speaking) that on a ring the surface between A and B doubles, hence the entanglement; given the exponential relationship to the MPS dimension, this means that resources have to go up from $D$ to up to $D^2$, meaning that for similar accuracy, the algorithm needs the square of time (sometimes referred to as $D^6$-scaling, referring to the open boundary condition $D$). The physically adequate ansatz for MPS for periodic boundary conditions is given by Eq. (\ref{eq:MPSforPBC}); one needs roughly the same $D$ as for OBC, but rerunning the variational ground state search algorithm on it scales as $D^5$ (because the simplification of vectors instead of matrices on sites 1 and $L$ does not occur) \cite{VerstraetePorras04}. At the same time, the simplification of the generalized to a standard eigenvalue problem does not occur, which may lead to bad conditioning. A nice feature of the MPS representation for PBC is that one can generate eigenstates of momentum: For $k = n (2\pi/L)$ and a (non-translationally invariant) MPS $\ket{\psi} = \sum_{{\fat{\sigma}}} \tr (A^{[1]\sigma_1} \ldots A^{[L]\sigma_L}) \ket{\fat{\sigma}}$, the following state is a translationally invariant eigenstate of momentum $k$: \cite{Porras06}
+\begin{equation}
+\ket{\psi_k} = \sum_{n=0}^{L-1} \eul^{\imag k n}  \tr (A^{[1]\sigma_{1+n}} \ldots A^{[L]\sigma_{L+n}}) \ket{\fat{\sigma}} .
+\end{equation}
+Recently, interesting proposals to improve the $D^5$ scaling have been made \cite{Pippan10,Pirvu10}, and this is a field of ongoing interest. Reference \cite{VerstraeteMurg08} discusses this topic quite extensively.
+
+I think one may conclude by saying that while the fundamental framework of MPS is by now very well established, and while DMRG has come of age as one of the most powerful numerical methods available for strongly correlated quantum systems, even in the well-established field of one-dimensional systems many of the algorithms presented will still allow further improvement, bringing new applications into our reach. It is in fact quite surprising that for quite a few of the methods presented (and also the others) very little is known about their detailed behaviour in real-world problems, analyzing which might give interesting further ideas. Also, the ratio between applications done and applications doable seems very favourable for future exciting research.
+
+\section{Acknowledgments}
+I would like to thank the Aspen Center for Physics, the International Center for Theoretical Physics in Trieste, Italy, and the Wissenschaftskolleg (Institute for Advanced Study), Berlin, where major parts of this work were carried out, for their hospitality. Their combination of stimulating discussions and room for withdrawal to intensive work are a physicist's dream. Thanks go of course to the many people I have discussed these subjects with and from whom I have learned a lot: Mari-Carmen Banuls, Thomas Barthel, Ignacio Cirac, Andrew Daley, Jan von Delft, Jens Eisert, Adrian Feiguin, Juanjo Garcia-Ripoll, Fabian Heidrich-Meisner, Corinna Kollath, Ian McCulloch, Valentin Murg, Volker Nebendahl, Tomotoshi Nishino, Reinhard Noack, Tobias Osborne, Lode Pollet, Matthias Troyer, Frank Verstraete, Guifre Vidal, Andreas Weichselbaum, Steve White and Tao Xiang, to name but a few. Special thanks go to Matt Hastings for pointing out an important paper of his and to Stefan Depenbrock for a very careful reading of an almost final version of this review (all remaining errors were added afterwards).
+
+\begin{thebibliography}{999}
+
+\bibitem{Bloch08}
+I.~Bloch, J.~Dalibard and W.~Zwerger, Rev.\ Mod.\ Phys.\ {\bf 80}, 885 (2008).
+
+\bibitem{Bethe31}
+H.~Bethe, Z.\ Phys.\ A {\bf 71}, 205 (1931).
+
+\bibitem{Lieb68}
+E.~H.~Lieb and F.~Y.~Wu, Phys.\ Rev.\ Lett.\ {\bf 20}, 1445 (1968).
+
+\bibitem{Haldane83}
+F.~D.~M.~Haldane, Phys.\ Rev.\ Lett.\ {\bf 50}, 1153 (1983). 
+
+\bibitem{White92}
+S.~R. White, Phys.\ Rev.\ Lett.\ {\bf 69}, 2863 (1992). 
+
+\bibitem{White93}
+S.~R. White, Phys.\ Rev.\ B {\bf 48}, 10345 (1993). 
+
+\bibitem{Schollwoeck05} U.~Schollw\"{o}ck, Rev.\ Mod.\ Phys. {\bf 77}, 259 (2005).
+
+\bibitem{Hallberg06} K.~Hallberg, Adv.\ Phys.\ {\bf 55}, 477 (2006).
+
+\bibitem{Hallberg95}
+K.~Hallberg, Phys.\ Rev.\ B {\bf 52}, 9827 (1995).
+
+\bibitem{Ramasesha97}
+S.~Ramasesha, S.~K.~Pati, H.~R.~Krishnamurthy, Z.~Shuai and J.~L.~Br{\'e}das, Synth.\ Met.\ {\bf 85}, 1019 (1997).
+
+\bibitem{Kuhner99}
+T.~D. K\"{u}hner and S.~R. White, Phys.\ Rev.\ B {\bf 60}, 335 (1999).
+
+\bibitem{Jeckelmann02}
+E.~Jeckelmann, Phys.\ Rev.\ B {\bf 66}, 045114 (2002).
+ 
+\bibitem{Nishino95}
+T.~Nishino, J. Phys.\ Soc.\ Jpn.\ {\bf 64}, 3598 (1995).
+
+\bibitem{Wang97}
+X.~Q. Wang and T.~Xiang, Phys.\ Rev.\ B {\bf 56}, 5061 (1997).
+
+\bibitem{Shibata97}
+N.~Shibata, J. Phys.\ Soc.\ Jpn. {\bf 66}, 2221 (1997).
+
+\bibitem{Sirker05}
+J.~Sirker and A.~Kl\"{u}mper, Phys.\ Rev.\ B {\bf 71}, 241101 (2005).
+
+\bibitem{Hieida98}
+Y.~Hieida, J. Phys.\ Soc.\ Jpn. {\bf 67}, 369 (1998).
+
+\bibitem{Carlon99}
+E.~Carlon, M.~Henkel and U.~Schollw\"{o}ck, Eur.\ J. Phys.\ B {\bf 12}, 99 (1999).
+
+\bibitem{Carlon01}
+E.~Carlon, M.~Henkel and U.~Schollw\"{o}ck, Phys.\ Rev.\ E {\bf 63}, 036101 (2001).
+
+\bibitem{Henkel01}
+M.~Henkel and U.~Schollw\"{o}ck, J.\ Phys.\ A {\bf 34}, 3333 (2001).
+
+\bibitem{White96}
+S.~R.~White, Phys.\ Rev.\ Lett. {\bf 77}, 3633 (1996).
+
+\bibitem{White98a} 
+S.~R.~White and D.~J.~Scalapino, Phys.\ Rev.\ Lett.\ {\bf 80}, 1272 (1998).
+
+\bibitem{White98b} 
+S.~R.~White and D.~J.~Scalapino, Phys.\ Rev.\ Lett.\ {\bf 81}, 3227 (1998).
+
+\bibitem{White00} 
+S.~R.~White and D.~J.~Scalapino, Phys.\ Rev.\ B {\bf 61}, 6320 (2000).
+
+\bibitem{White03} 
+S.~R.~White and D.~J.~Scalapino, Phys.\ Rev.\ Lett.\ {\bf 91}, 136403 (2003).
+
+\bibitem{Chernyshev03}
+A.~L.~Chernyshev, S.~R.~White and A.~H.~Castro-Neto, Phys.\ Rev.\ B {\bf 65}, 214527 (2003).
+

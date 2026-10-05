@@ -1,0 +1,114 @@
+在每个时间步之后，我们可以按标准方式计算可观测量，$\langle O(t) \rangle = \bra{\psi(t)} \hat{O} \ket{\psi(t)}$。但我们还能做得更多：我们可以如下计算含时关联子
+\begin{equation}
+\langle \hat{O}(t) \hat{P} \rangle = \bra{\psi} \eul^{+i\hat{H}t} \hat{O} \eul^{-\imag \hat{H}t} \hat{P} \ket{\psi}
+= \bra{\psi(t)} \hat{O} \ket{\phi(t)}
+\end{equation}
+其中 $\ket{\psi(t)} = \eul^{-\imag \hat{H}t}\ket{\psi}$ 以及 $\ket{\phi(t)} = \eul^{-\imag \hat{H}t} \hat{P} \ket{\psi}$。例如取 $\hat{O} = \hat{S}^z_i$ 与 $\hat{P} = \hat{S}^z_j$，我们便可以计算 
+$\langle \hat{S}^z_i(t) \hat{S}^z_j \rangle$，并经双重傅里叶变换得到结构函数
+\begin{equation}
+S^{zz}(k,\omega) \propto \int dt \sum_{n} \langle \hat{S}^z_i(t) \hat{S}^z_{i+n} \rangle \eul^{\imag kn}\eul^{-\imag \omega t},
+\end{equation}
+为使公式简洁，这里我假设了晶格的平移不变性与无限延展。
+
+对上述算法的一个简单改进是采用二阶 Trotter 分解
+\begin{equation}
+\eul^{-\imag  \hat{H}\tau} = \eul^{-\imag  \hat{H}_{{\rm odd}} \tau/2}\eul^{-\imag  \hat{H}_{{\rm even}} \tau}\eul^{-\imag  \hat{H}_{{\rm odd}} \tau/2} + O(\tau^3),
+\end{equation}
+这样每个时间步的误差又降低了一个 $\tau$ 的量级。如果我们在每个时间步之后不做计算，就可以把半步归并在一起，在不比一阶 Trotter 分解多花任何代价的情况下进行工作。
+
+一种源于量子蒙特卡罗、非常流行的四阶 Trotter 分解实现由 Suzuki\cite{Suzuki76,Suzuki91} 给出的如下公式：
+\begin{equation}
+\eul^{-\imag  \hat{H}\tau} = \hat{U}(\tau_1) \hat{U}(\tau_2) \hat{U}(\tau_3) \hat{U}(\tau_2) \hat{U}(\tau_1),  
+\end{equation}
+其中
+\begin{equation}
+\hat{U} (\tau_i) = \eul^{-\imag  \hat{H}_{{\rm odd}} \tau_i/2}\eul^{-\imag  \hat{H}_{{\rm even}} \tau_i}\eul^{-\imag  \hat{H}_{{\rm odd}}
+\tau_i/2}
+\end{equation}
+以及
+\begin{equation}
+\tau_1 = \tau_2 = \frac{1}{4-4^{1/3}} \tau  \quad\quad \tau_3 = \tau -2 \tau_1 - 2\tau_2 .
+\end{equation}
+采用对称性较低的公式\cite{McLachlan95}，可以在相近的代价下得到更小的误差。至此算法的阐述即告完成（误差分析将在讲完其他时间演化方法之后给出），现在我们需要构造各个 MPO。
+
+\subsubsection{纯态时间演化的 MPO}
+让我们考虑链上所有奇数键的 Trotter 步：
+\begin{equation}
+\eul^{-\imag  \hat{h}_1 \tau} \otimes \eul^{-\imag  \hat{h}_3 \tau} \otimes \ldots \otimes \eul^{-\imag  \hat{h}_{L-1} \tau} \ket{\psi} ;
+\label{eq:oddevolution}
+\end{equation}
+每个像 $\eul^{-\imag  \hat{h}_1 \tau}$ 这样的键演化算符都具有形式 $\sum_{\sigma_1 \sigma_2, \sigma'_1 \sigma'_2} O^{\sigma_1\sigma_2,\sigma'_1\sigma'_2} \ket{\sigma_1\sigma_2}\bra{\sigma'_1\sigma'_2}$。无论在图示还是显式的数学表示中，都可以明显看出这个算符破坏了 MPS 形式（图~\ref{fig:trotterstep}）。
+
+\begin{figure}
+\centering\includegraphics[width=250pt]{PyMPS_TrotterStep.eps}
+\caption{一个 Trotter 步：在所有奇数键上进行（无穷小的）键时间演化。这使两个格点合并，乍看之下 MPS 的简单乘积形式被破坏，但时间演化可以转写为 MPO。由于时间演化是因式化的，各 MPO 在所有偶数键上的维数为 1（细线）。}
+\label{fig:trotterstep}
+\end{figure}
+
+因此，若能把 $O^{\sigma_1\sigma_2,\sigma'_1\sigma'_2}$ 写成包含张量积 $O^{\sigma_1, \sigma'_1} \otimes O^{\sigma_2, \sigma'_2}$ 的某种形式，以保持 MPS 形式，将是理想的。为此，我们把任意态分解为 MPS 的流程加以改造，用于算符（每个格点有两个指标）。这一做法之所以可行，是因为指标数目极少。将 $O$ 重排以归组局域指标，然后进行奇异值分解：
+\begin{eqnarray*}
+O^{\sigma_1 \sigma_2, \sigma'_1 \sigma'_2} &=& P_{(\sigma_1 \sigma'_1), (\sigma_2 \sigma'_2)} \\
+&=& \sum_k U_{\sigma_1 \sigma'_1,k} S_{k,k} (V^\dagger)_{k, (\sigma_2 \sigma'_2)} \\
+&=& \sum_k U^{\sigma_1 \sigma'_1}_{k} \overline{U}^{\sigma_2 \sigma'_2}_{k} \\
+&=& \sum_k U^{\sigma_1 \sigma'_1}_{1,k} \overline{U}^{\sigma_2 \sigma'_2}_{k,1}
+\end{eqnarray*}
+其中 $U^{\sigma_1 \sigma'_1}_{k} =  U_{(\sigma_1 \sigma'_1),k}\sqrt{S_{k,k}}$ 以及
+$\overline{U}^{\sigma_2 \sigma'_2}_{k} = \sqrt{S_{k,k}} (V^\dagger)_{k, (\sigma_2 \sigma'_2)}$。在推导的最后一步中，我们引入了一个取值为 1 的哑指标，以得到 MPO 矩阵的形式。指标 $k$ 最大可取到 $d^2$，这就给出 MPO 的键维数 $D_W$。
+
+
+表示式~(\ref{eq:oddevolution}) 中算符的 MPO，即 $U^{\sigma_1\sigma'_1} \overline{U}^{\sigma_2\sigma'_2}U^{\sigma_3\sigma'_3} \overline{U}^{\sigma_4\sigma'_4}\ldots$，与原先的各幺正算符一样每隔一根键便因式化。若某个格点不参与任何键演化，我们只需给它分配作为 $(1\times 1)$-矩阵的恒等幺正算符：$I^{\sigma,\sigma'}_{1,1}=\delta_{\sigma,\sigma'}$。于是全局 MPO 可以由局域 MPO 平凡地构造出来。在所有奇数键上做时间演化的 MPO 形如
+$U\overline{U}U\overline{U}U\overline{U} \ldots$，而偶数键时间步则为 $IU\overline{U}U\overline{U}U\overline{U}\ldots I$（图~\ref{fig:oddevenTrotter}）。
+
+\begin{figure}
+\centering\includegraphics[width=250pt]{PyMPS_OddEvenTrotter.eps}
+\caption{完整的一阶 Trotter 时间步（奇数键与偶数键）。粗线与细线分别对应 MPO 键上的维数 1 与 $>1$。顶行中第一和最后格点上的 MPO 是平凡的标量恒等式 1。}
+\label{fig:oddevenTrotter}
+\end{figure}
+
+\subsection{常规时间演化：混合态}
+
+\subsubsection{混合态的纯化}
+有限温度计算可以基于对任意混合量子态的纯化\cite{VerstraeteRipoll04}来进行：若我们考虑物理空间 P 中由正交归一态构成的混合态，则可以把它理解为对 PQ 上的一个纯态的 Schmidt 分解作偏迹的结果，其中 Q 是辅助空间：
+\begin{equation}
+\hat{\rho}_P = \sum_{a=1}^r s_a^2 \ket{a}_P \bra{a}_P \rightarrow \ket{\psi} = \sum_{a=1}^r s_a \ket{a}_P \ket{a}_Q \quad \quad \hat{\rho}_P = \tr_Q \ket{\psi}\bra{\psi} .
+\end{equation}
+辅助态空间可以简单地取为原空间的一个副本，于是链上的有限温度密度算符可以表示为梯子上的纯态（见图~\ref{fig:finitetemperaturesketch}）。
+
+为了计算热密度算符 $\hat{\rho}_\beta= Z(\beta)^{-1} \eul^{-\beta \hat{H}}$，$Z(\beta) = \tr_P \eul^{-\beta \hat{H}}$，我们写
+\begin{equation}
+\hat{\rho}_\beta = Z(\beta)^{-1} \eul^{-\beta \hat{H}} = Z(\beta)^{-1} \eul^{-\beta \hat{H}/2} \cdot \hat{I} \cdot \eul^{-\beta \hat{H}/2} .
+\end{equation}
+恒等算符 $\hat{I}$ 不过就是 $Z(0) \hat{\rho}_0$，即无穷大温度下的密度算符乘以无穷大温度的配分函数。假设我们已知 $\hat{\rho}_0$ 作为 MPS 的纯化，即 $\ket{\psi_{\beta=0}}$。那么
+\begin{equation}
+\hat{\rho}_\beta = (Z(0)/Z(\beta)) \eul^{-\beta \hat{H}/2} \cdot \tr_Q \ket{\psi_0}\bra{\psi_0} \cdot \eul^{-\beta \hat{H}/2} = (Z(0)/Z(\beta)) \tr_Q \eul^{-\beta \hat{H}/2}\ket{\psi_0} \bra{\psi_0}\eul^{-\beta \hat{H}/2} .
+\end{equation}
+由于哈密顿量不作用于 Q，对 Q 的迹可以提出来。但这一结果意味着我们必须做一次虚时演化
+\begin{equation}
+\ket{\psi_\beta} = \eul^{-\beta \hat{H}/2}\ket{\psi_0} .
+\end{equation}
+期望值由
+\begin{equation}
+\langle \hat{O} \rangle_\beta = \tr_P \hat{O}\hat{\rho}_\beta =
+(Z(0)/Z(\beta)) \tr_P \hat{O} \tr_Q \ket{\psi_\beta} \bra{\psi_\beta}
+= (Z(0)/Z(\beta)) \bra{\psi_\beta} \hat{O} \ket{\psi_\beta} .
+\end{equation} 
+$(Z(0)/Z(\beta)) = (d^L/Z(\beta))$ 看似难以求得，但它可以从恒等算符的期望值轻易得到，
+\begin{equation}
+1 = \langle \hat{I} \rangle_\beta = \tr_P \hat{\rho}_\beta =
+(Z(0)/Z(\beta)) \tr_P \tr_Q \ket{\psi_\beta} \bra{\psi_\beta}
+= (Z(0)/Z(\beta)) \braket{\psi_\beta}{\psi_\beta} ,
+\end{equation} 
+因此 $Z(\beta)/Z(0)= \braket{\psi_\beta}{\psi_\beta}$，或者，与标准量子力学完全一致地，
+\begin{equation}
+\langle \hat{O} \rangle_\beta = \frac{ \bra{\psi_\beta} \hat{O}\ket{\psi_\beta}}{\braket{\psi_\beta}{\psi_\beta}} .
+\end{equation}
+但这恰好把我们带回到已知道如何计算的表达式。我们要做的只是找出 $\ket{\psi_0}$，进行虚时演化直至 $-\imag\beta/2$，然后像对纯态那样计算期望值。我们甚至可以让纯化后的态 $\ket{\psi_\beta}$ 继续经受实时演化，以处理有限 $T$ 下的时间依赖性。
+
+我们也可以很简单地处理热力学，因为 $Z(\beta)/Z(0)$ 由 $\ket{\psi_\beta}$ 的范数的平方给出，且 $Z(0)=d^L$。这意味着，只要在所有温度下保持纯化态归一化，并随着温度下降、$\beta$ 增大而累积归一化因子，就可以得到 $Z(\beta)$。由 $Z(\beta)$ 可得 $F(\beta)=-\beta^{-1} \ln Z(\beta)$。同时，$U(\beta) = \langle \hat{H} \rangle_\beta = \bra{\psi_\beta} \hat{H} \ket{\psi_\beta}$。而这又给出 $S(\beta) = \beta(U(\beta)-F(\beta))$。其余热力学量可类似地得到。
+
+\begin{figure}
+\centering\includegraphics[scale=0.7]{PyMPS_FiniteTemperatureSketch.eps}
+\caption{有限温度模拟的示意表示：不再用一条链，而是搭建一个梯子，其中包含该链的一个完全相同的副本。物理格点标号为奇数，辅助格点标号为偶数。物理腿与辅助腿上的对应格点由最大纠缠态相连。为达到逆温度 $\beta$，进行虚时演化直至``时间'' $-\imag\beta/2$。}
+\label{fig:finitetemperaturesketch}
+\end{figure}
+

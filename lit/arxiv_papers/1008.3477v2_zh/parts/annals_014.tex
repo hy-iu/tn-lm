@@ -1,0 +1,112 @@
+为了理解这一构造，我们遍历 $\hat{H}$ 中出现的任意一个算符串：从右端开始，串中只含单位算符，直到某处遇到（在我们的例子中）4 个非平凡算符之一。对于场算符，其左边更远的串部分只能含单位算符；对于相互作用算符，互补算符必须紧随其后以补全相互作用项，再往左则继续由单位算符接续。为便于记账，我们在某个给定键上引入串的 5 个相应状态：状态 1：右边只有单位算符，
+状态 2,3,4：右边紧邻处有一个 $\hat{S}^+$、$\hat{S}^-$、$\hat{S}^z$，状态 5：右边某处已有补全的相互作用项或场项 $-h\hat{S}^z$。比较一个格点左右两侧串的状态，只允许少数几种跃迁：$1 \rightarrow 1$ 由单位算符 $\hat{I}$ 实现，$1 \rightarrow 2$ 由 $\hat{S}^+$ 实现，$1 \rightarrow 3$ 由 $\hat{S}^-$ 实现，$1 \rightarrow 4$ 由 $\hat{S}^z$ 实现，$1 \rightarrow 5$ 由 $-h\hat{S}^z$ 实现。此外，$2\rightarrow 5$ 由 $(J/2)\hat{S}^-$ 实现，$3 \rightarrow 5$ 由 $(J/2)\hat{S}^+$ 实现，$4 \rightarrow 5$ 由 $J^z\hat{S}^z$ 实现，以补全相互作用项；而对已补全的相互作用，由单位算符 $\hat{I}$ 实现 $5 \rightarrow 5$。此外，所有串状态必须在最后一个格点右侧从状态 1 出发，并在第一个格点左侧终止于状态 5（即未来 MPO 的维数 $D_W$）。现在可以用下面这组取值为算符的矩阵来编码：
+
+\begin{equation}
+\hat{W}^{[i]} = \left[
+\begin{array}{ccccc}
+\hat{I} & 0 & 0 & 0 & 0 \\
+\hat{S}^+ & 0 & 0 & 0 & 0 \\
+\hat{S}^- & 0 & 0 & 0 & 0 \\
+\hat{S}^z & 0 & 0 & 0 & 0 \\
+-h\hat{S}^z & (J/2)\hat{S}^- & (J/2)\hat{S}^+ & J^z\hat{S}^z & \hat{I}
+\end{array}
+\right]
+\end{equation}
+而在第一个和最后一个格点上
+\begin{equation}
+\hat{W}^{[1]} = \left[
+\begin{array}{ccccc}
+-h\hat{S}^z & (J/2)\hat{S}^- & (J/2)\hat{S}^+ & J^z\hat{S}^z & \hat{I} 
+\end{array}
+\right]
+\quad\quad 
+\hat{W}^{[L]} = \left[
+\begin{array}{c}
+\hat{I} \\ \hat{S}^+ \\ \hat{S}^- \\ \hat{S}^z \\ -h\hat{S}^z 
+\end{array}
+\right] .
+\end{equation}
+事实上，简单的乘法即可看出哈密顿量是如何产生的。代入显式的算符表示，就得到 MPO 所需的 $W^{\sigma\sigma'}$ 矩阵。因此可以把哈密顿量精确地写成非常紧凑的 MPO 形式；\cite{Crosswhite08a} 给出了一套导致相同结果的类似规则。
+
+对于作用范围更长的哈密顿量，还须引入更多的``中间状态''。让我们考虑一个只含 $\hat{S}^z \hat{S}^z$ 相互作用、但同时包含最近邻和次近邻耦合的模型，
+\begin{equation}
+\hat{H} = J_1 \sum_{i} \hat{S}^z_i \hat{S}^z_{i+1} + J_2 \sum_{i} \hat{S}^z_i \hat{S}^z_{i+2} .
+\end{equation}
+那么体算符将形如
+\begin{equation}
+\hat{W}^{[i]} = \left[
+\begin{array}{cccc}
+\hat{I} & 0 & 0 & 0 \\
+\hat{S}^z & 0 & 0 & 0 \\
+0 & \hat{I} & 0 & 0 \\
+0 & J_1\hat{S}^z & J_2\hat{S}^z & \hat{I}
+\end{array}
+\right] .
+\end{equation}
+$J_1$ 相互作用可以像前面那样编码（按 $1 \rightarrow 2 \rightarrow 4$ 进行），而对次近邻相互作用，则必须在 2 与 4 之间插入额外一步，即中间状态 3，其中恰好插入一个单位算符（按 $1 \rightarrow 2 \rightarrow 3 \rightarrow 4$ 进行）。它仅仅起记账作用。类似地，可以构造作用范围更长的相互作用。除左上角和右下角外，$\hat{W}^{[i]}$ 的非零部分按构造都位于对角线以下。
+
+看起来，对于作用范围更长的相互作用，随着所需中间状态越来越多（每单位相互作用范围、每个相互作用项各需增加一个状态），维数 $D_W$ 将迅速增长。虽然一般情形确实如此，但已知存在一些重要例外，可以紧凑得多地表述 \cite{Frowis10,Crosswhite08a}；例如考虑如下指数衰减的相互作用强度 $J(r)=J e^{-r/\xi} = J \lambda^r$，其中 $r>0$ 且 $\lambda = \exp(-1/\xi)$。相互作用项 $\sum_r J(r)\hat{S}^z_i \hat{S}^z_{i+r}$ 将被如下体算符所涵盖
+\begin{equation}
+\hat{W}^{[i]} = \left[
+\begin{array}{ccc}
+\hat{I} & 0 & 0  \\
+\hat{S}^z & \lambda\hat{I} & 0  \\
+0 & J\lambda \hat{S}^z & \hat{I}
+\end{array}
+\right] .
+\end{equation}
+
+但即使不出现这种简化，事实表明仍然可以找到维数相当小、精度损失适度的 MPO：或者把任意相互作用函数 $J(r)$ 近似为按上述方式编码的指数和\cite{VerstraetePirvu08,Crosswhite08a}，在 $\alpha_i, \lambda_i$ 中最小化 $L_2$ 距离 $\| J(r) - \sum_{i=1}^n \alpha_i \lambda_i^r \|$，其中 $n$ 由 $D_W$ 和愿意接受的精度损失决定；或者如 \cite{Frowis10}，在可行的情况下当然可以先构造精确的 MPO，再把 MPS 压缩技术加以改造，将其压缩到可接受的 $D_W$（及精度损失）。 
+
+\subsection{将哈密顿量 MPO 作用于混合规范形式态}
+\label{subsec:Hamiltonianmixedcanonical}
+让我们考虑处于如下混合规范表示中的 $\ket{\psi}$，它与单格点 DMRG 表示相同，
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} A^{\sigma_1} \ldots A^{\sigma_{\ell-1}} \Psi^{\sigma_{\ell}} B^{\sigma_{\ell+1}} \ldots B^{\sigma_L} \ket{\fat{\sigma}} 
+\end{equation}
+或
+\begin{equation}
+\ket{\psi} = \sum_{a_{\ell-1},a_{\ell}} \ket{a_{\ell-1}}_A \Psi^{\sigma_{\ell}}_{a_{\ell-1}, a_{\ell}} \ket{a_{\ell}}_B .
+\end{equation}
+现在来看用 $\hat{H}$ 的 MPO 表示所得到的矩阵元 $\bra{a_{\ell-1} \sigma_{\ell} a_{\ell}} \hat{H}  \ket{a'_{\ell-1} \sigma'_{\ell} a'_{\ell}}$。通过两次插入恒等算符 $\hat{I} = \sum_{\fat{\sigma}} \ket{\fat{\sigma}}\bra{\fat{\sigma}}$，我们得到（带星号的求和不包括格点 $\ell$）
+\begin{eqnarray*}
+& & \bra{a_{\ell-1} \sigma_{\ell} a_{\ell}} \hat{H}  \ket{a'_{\ell-1} \sigma'_{\ell} a'_{\ell}} \\
+&=& \sum_{\fat{\sigma}} \sum_{\fat{\sigma}'} W^{\sigma_1,\sigma'_1} \ldots W^{\sigma_L,\sigma'_L} 
+\braket{a_{\ell-1} \sigma_{\ell} a_{\ell}}{\fat{\sigma}} \braket{\fat{\sigma}'}{a'_{\ell-1} \sigma'_{\ell} a'_{\ell}} \\
+&=& \sum_{\fat{\sigma}*}\sum_{\fat{\sigma}'*} W^{\sigma_1,\sigma'_1} \ldots W^{\sigma_{\ell},\sigma'_{\ell}} \ldots W^{\sigma_L,\sigma'_L} \\
+& & \braket{a_{\ell-1}}{\sigma_1 \ldots \sigma_{\ell-1}} 
+\braket{a_{\ell}}{\sigma_{\ell+1} \ldots \sigma_L}  \braket{\sigma'_1 \ldots \sigma'_{\ell-1}}{a'_{\ell-1}}
+\braket{\sigma'_{\ell+1} \ldots \sigma'_L}{a'_{\ell}} \\
+&=& \sum_{\fat{\sigma}*}\sum_{\fat{\sigma}'*} W^{\sigma_1,\sigma'_1} \ldots W^{\sigma_{\ell},\sigma'_{\ell}} \ldots W^{\sigma_L,\sigma'_L} \\
+& & (A^{\sigma_1} \ldots A^{\sigma_{\ell-1}})^*_{1,a_{\ell-1}} (B^{\sigma_{\ell+1}} \ldots B^{\sigma_L})^*_{a_{\ell},1} (A^{\sigma'_1} \ldots A^{\sigma'_{\ell-1}})_{1,a'_{\ell-1}} (B^{\sigma'_{\ell+1}} \ldots B^{\sigma'_L})_{a'_{\ell},1} \\
+&=& \sum_{\{ a_i, b_i, a'_i\} } \left( \sum_{\sigma_1\sigma'_1} A^{\sigma_1*}_{1,a_1} W^{\sigma_1,\sigma'_1}_{1,b_1} A^{\sigma'_1}_{1,a'_1} \right) \left( \sum_{\sigma_2\sigma'_2} A^{\sigma_2*}_{a_1,a_2} W^{\sigma_2,\sigma'_2}_{b_1,b_2} A^{\sigma'_2}_{a'_1,a'_2} \right) \ldots 
+\times W^{\sigma_{\ell},\sigma'_{\ell}}_{b_{\ell-1},b_{\ell}} \times \\
+& &  \left( \sum_{\sigma_{\ell+1}\sigma'_{\ell+1}} B^{\sigma_{\ell+1}*}_{a_{\ell},a_{\ell+1}} W^{\sigma_{\ell+1},\sigma'_{\ell+1}}_{b_{\ell},b_{\ell+1}} B^{\sigma'_{\ell+1}}_{a'_{\ell},a'_{\ell+1}} \right) \ldots \left( \sum_{\sigma_L\sigma'_L} B^{\sigma_L*}_{a_{L-1},1} W^{\sigma_L,\sigma'_L}_{b_{L-1},1} B^{\sigma'_L}_{a'_{L-1},1} \right) .
+\end{eqnarray*}   
+MPO 表述的一切优美之处似乎都消失了，但图形表示能将其挽回（图~\ref{fig:mpodmrghamiltonian}）。从上面显式表达式的第二行或第三行最容易理解它：哈密顿量 MPO（以乘积基表达）投影到 A 块和 B 块的块态上，而这些块态在 $\fat{\sigma}$ 基中是有展开的。
+
+\begin{figure}
+\centering\includegraphics[scale=0.7]{PyMPS_MPOOnDMRGState.eps}
+\caption{用 MPO/MPS 语言表示的 DMRG 表达式 $\bra{a_{\ell-1} \sigma_{\ell} a_{\ell}} \hat{H}  \ket{a'_{\ell-1} \sigma'_{\ell} a'_{\ell}}$。哈密顿量 MPO 与四个以 MPS 形式写出的块态展开缩并（两个左矢、两个右矢，其中两个在 A 块上、两个在 B 块上）。缩并后的网络解耦为 $L$、$W$ 和 $R$ 三部分，分别对应 A 块、B 块和中心格点。}
+\label{fig:mpodmrghamiltonian}
+\end{figure}
+
+事实上，我们也可以把该表达式显而易见的三分结构编码为
+\begin{equation}
+\bra{a_{\ell-1} \sigma_{\ell} a_{\ell}} \hat{H}  \ket{a'_{\ell-1} \sigma'_{\ell} a'_{\ell}} 
+= \sum_{b_{\ell-1}, b_{\ell}} L^{a_{\ell-1},a'_{\ell-1}}_{b_{\ell-1}}  W^{\sigma_{\ell},\sigma'_{\ell}}_{b_{\ell-1},b_{\ell}} R^{a_{\ell},a'_{\ell}}_{b_{\ell}} ,
+\end{equation}
+其中 $L$ 和 $R$ 包含图形网络缩并后的左部和右部：
+\begin{eqnarray}
+L^{a_{\ell-1},a'_{\ell-1}}_{b_{\ell-1}} &=& \sum_{\{ a_i, b_i, a'_i; i<\ell-1\} } \left( \sum_{\sigma_1\sigma'_1} A^{\sigma_1*}_{1,a_1} W^{\sigma_1,\sigma'_1}_{1,b_1} A^{\sigma'_1}_{1,a'_1} \right) \ldots \left( \sum_{\sigma_{\ell-1}\sigma'_{\ell-1}} A^{\sigma_{\ell-1} *}_{a_{\ell-2},a_{\ell-1}} W^{\sigma_{\ell-1},\sigma'_{\ell-1}}_{b_{\ell-2},b_{\ell-1}} A^{\sigma'_{\ell-1}}_{a'_{\ell-2},a'_{\ell-1}} \right) 
+\label{eq:LdefineinMPO} \\
+R^{a_{\ell},a'_{\ell}}_{b_{\ell}} &=& \sum_{\{ a_i, b_i, a'_i; i>\ell\} } 
+\left( \sum_{\sigma_{\ell+1}\sigma'_{\ell+1}} B^{\sigma_{\ell+1}*}_{a_{\ell},a_{\ell+1}} W^{\sigma_{\ell+1},\sigma'_{\ell+1}}_{b_{\ell},b_{\ell+1}} B^{\sigma'_{\ell+1}}_{a'_{\ell},a'_{\ell+1}} \right) \ldots \left( \sum_{\sigma_L\sigma'_L} B^{\sigma_L*}_{a_{L-1},1} W^{\sigma_L,\sigma'_L}_{b_{L-1},1} B^{\sigma'_L}_{a'_{L-1},1} \right) 
+\end{eqnarray}
+现在，我们可以把 $\hat{H}$ 作用于处于混合规范形式或单格点 DMRG 表示的态 $\ket{\psi}$ 的结果写为
+\begin{equation}
+\hat{H}\ket{\psi} = \sum_{b_{\ell-1}, b_{\ell}} \sum_{a'_{\ell-1}, \sigma'_{\ell}, a'_{\ell}}
+ L^{a_{\ell-1},a'_{\ell-1}}_{b_{\ell-1}}  W^{\sigma_{\ell},\sigma'_{\ell}}_{b_{\ell-1},b_{\ell}} R^{a_{\ell},a'_{\ell}}_{b_{\ell}} \Psi^{\sigma'_{\ell}}_{a'_{\ell-1},a'_{\ell}} \ket{a_{\ell-1}}_A \ket{\sigma_{\ell}} \ket{a_{\ell}}_B .
+\end{equation}
+我们马上就会讨论到，$\hat{H}\ket{\psi}$ 是迭代基态搜索中的关键操作。直接计算这个表达式慢得无法接受；可以在两个方面使其大幅加速：其一，$L$ 和 $R$ 可以迭代地构建，以最大限度地复用已有信息；这涉及网络缩并的最优安排。此外，$L$、$R$ 和 $W$ 对 $\ket{\psi}$ 的最终作用也可以安排得非常高效。
+

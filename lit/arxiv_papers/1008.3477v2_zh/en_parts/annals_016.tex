@@ -1,0 +1,112 @@
+A few remarks are in order.
+
+\begin{itemize}
+\item The problem is Hermitian; both $H$ and $N$ are Hermitian, as can be seen from the construction and the Hermiticity of the MPO employed.
+\item In general, $dD^2$ is too large for an exact diagonalization, but as we are only interested in the lowest eigenvalue and eigenstate, an iterative eigensolver that aims for the ends of the spectrum will do. Typical methods are the Lanczos or Jacobi-Davidson large sparse matrix solvers. The speed of convergence of such methods ultimately rests on the quality of the initial starting or guess vector. As this eigenproblem is part of an iterative approach to the ground state, the current $M^{\sigma_\ell}$ is a valid guess that will dramatically speed up calculations close to convergence.
+\item Generalised eigenvalue problems can be numerically very demanding, if the condition number of $N$ becomes bad. But this is no issue for open boundary conditions, if one ensures that the state is left-normalized up to site $\ell-1$ and right-normalized from site $\ell+1$ onwards. Then 
+the simplifications for $\Psi^A$ and $\Psi^B$ imply that $N$ is just the identity matrix $I$. The eigenvalue problem then simplifies to a standard one,
+\begin{equation}
+\sum_{\sigma'_\ell} \sum_{a'_{\ell-1}a'_{\ell}} \sum_{b_{\ell-1},b_\ell} 
+L^{a_{\ell-1},a'_{\ell-1}}_{b_{\ell-1}} W^{\sigma_\ell,\sigma'_\ell}_{b_{\ell-1},b_\ell} R^{a_\ell,a'_\ell}_{b_\ell}
+M^{\sigma'_\ell}_{a'_{\ell-1}, a'_\ell} - \lambda  M^{\sigma_\ell}_{a_{\ell-1}, a_{\ell}} = 0 .
+\end{equation}
+or $Hv-\lambda v=0$, as represented in Fig.~\ref{fig:normalizedequationsystem}. The evaluation of the sums will be done using the optimal bracketing for $\hat{H}\ket{\psi}$.
+To achieve this simplification, one will sweep the position $\ell$ from right to left and vice versa through the chain, such that the optimal normalization configuration can be maintained by a single step of the left or right canonization procedure after each minimization. 
+\end{itemize}
+
+\begin{figure}
+\centering\includegraphics[scale=0.7]{PyMPS_MPSNormalizedEnergyEquationSystem.eps}
+\caption{Standard eigenvalue problem for the optimization of $M^{\ \sigma_\ell}_{\ a_{\ell-1},a_\ell}$. The unknown matrix is circled on the left network.}
+\label{fig:normalizedequationsystem}
+\end{figure}
+
+The optimal algorithm then runs as follows. 
+\begin{itemize}
+\item Start from some initial guess for $\ket{\psi}$, which is right-normalized, i.e. consists of $B$-matrices only. 
+\item Calculate the $R$-expressions iteratively for all site positions $L-1$ through 1 iteratively.
+\item {\em Right sweep:} Starting from site $\ell=1$ through site $L-1$, sweep through the lattice to the right as follows: solve the standard eigenproblem by an iterative eigensolver for $M^{\sigma_\ell}$, taking its current value as starting point. Once the solution is obtained, left-normalize $M^{\sigma_\ell}$ into $A^{\sigma_\ell}$ by SVD (or QR) to maintain the desired normalization structure. The remaining matrices of the SVD are multiplied to the $M^{\sigma_{\ell+1}}$ to the right, which will be the starting guess for the eigensolver for the next site. Build iteratively the $L$ expression by adding one more site. Move on by one site, $\ell \rightarrow \ell+1$, and repeat.
+\item {\em Left sweep:} Starting from site $\ell=L$ through site $2$, sweep through the lattice to the left as follows: solve the standard eigenproblem by an iterative eigensolver for $M^{\sigma_\ell}$, taking its current value as starting point. Once the solution is obtained, right-normalize $M^{\sigma_\ell}$ into $B^{\sigma_\ell}$ by SVD (or QR) to maintain the desired normalization structure. The remaining matrices of the SVD are multiplied to the $M^{\sigma_{\ell-1}}$ to the left, which will be the starting guess for the eigensolver for the next site. Build iteratively the $R$ expression by adding one more site. Move on by one site, $\ell \rightarrow \ell-1$, and repeat.
+\item Repeat right and left sweeps, until convergence is achieved. Convergence is achieved if energy converges, but the best test is (using MPO) to consider
+$\bra{\psi} \hat{H}^2 \ket{\psi} - (\bra{\psi} \hat{H} \ket{\psi})^2$ to see whether an eigenstate has been reached; this expression should approach 0 as closely as possible.
+\end{itemize}
+
+If we call matrices $A$, $B$, $M$ depending on their normalization ($M$ always being the one on the site currently attended to), and giving them an subscript index $i$ to label the number of updates by the eigensolver they have undergone, the algorithm would formalize as
+\begin{eqnarray*}
+& & M_0 B_0 B_0 B_0 B_0 B_0 \\
+&\stackrel{diag}{\rightarrow}& M_1 B_0 B_0 B_0 B_0 B_0 
+\stackrel{SVD}{\rightarrow} A_1 M_0 B_0 B_0 B_0 B_0 \\
+&\stackrel{diag}{\rightarrow}& A_1 M_1 B_0 B_0 B_0 B_0 
+\stackrel{SVD}{\rightarrow} A_1 A_1 M_0 B_0 B_0 B_0 \\
+&\stackrel{diag}{\rightarrow}& A_1 A_1 M_1 B_0 B_0 B_0 
+\stackrel{SVD}{\rightarrow} A_1 A_1 A_1 M_0 B_0 B_0 \\
+& & \ldots \\
+&\stackrel{diag}{\rightarrow}& A_1 A_1 A_1 A_1 M_1 B_0 
+\stackrel{SVD}{\rightarrow} A_1 A_1 A_1 A_1 A_1 M_0 \\
+&\stackrel{diag}{\rightarrow}& A_1 A_1 A_1 A_1 A_1 M_1 
+\stackrel{SVD}{\rightarrow} A_1 A_1 A_1 A_1 M_1 B_1 \\
+&\stackrel{diag}{\rightarrow}& A_1 A_1 A_1 A_1 M_2 B_1 
+\stackrel{SVD}{\rightarrow} A_1 A_1 A_1 M_1 B_2 B_1 \\
+& & \ldots \\
+&\stackrel{diag}{\rightarrow}& A_1 M_2 B_2 B_2 B_2 B_1 
+\stackrel{SVD}{\rightarrow} M_1 B_2 B_2 B_2 B_2 B_1 \\
+\end{eqnarray*}
+and again moving from left to right, starting with a diagonalization step.
+
+In this iterative process, the energy can only go down, as we continuously improve by varying the parameters. Two problems occur: starting from a random state, the guesses for the $M^{\sigma_\ell}$ in the iterative eigensolvers will be very bad in the initial sweeps, leading to large iteration numbers and bad performance. Moreover, we cannot guarantee that the global minimum is actually reached by this procedure instead of being stuck in a non-global minimum.
+
+One way of addressing the first issue is to start out with infinite-system DMRG to produce an initial guess; an optimal MPS version of infinite-system DMRG is discussed in Section~\ref{sec:infinite}. While this initial guess may be far from the true solution, it will usually fare much better than a random starting state. Moreover, one can try to balance the number of iterations (high in the first sweeps) by starting with small $D$, converge in that ansatz class, enlarge $D$ and add zeros in the new matrix entries, converge again, and so on. When $D$ gets large, the guess states will hopefully be so close to the final state that only very few iterations will be needed. It turns out, however, that starting with too small $D$ may land us in a non-global minimum that we will not get out of upon increasing $D$. Quite generally, as in DMRG, one should never calculate results for just a single $D$, but increase it in various runs until results converge (they are guaranteed to be exact in the $D\rightarrow\infty$ limit).
+
+If we are looking for low-lying excited states instead of a ground state, two typical situations occur: 
+(i) The excited state is known to be the ground state of another sector of the Hilbert space decomposed according to some good quantum number. Then the calculation is just a ground state calculation in that different sector. (ii) The excited state is the first, second, or higher excitation in the sector of the ground state. Then we have to calculate these excitations iteratively, and orthonormalize the state with respect to the lower-lying states already identified; this clearly limits the approach to a few low-lying excitations. The place where the algorithm is to be modified is in the iterative eigensolver; e.g.\ in the Lanczos iterations, the next Lanczos state generated is orthonormalized not only with respect to the previous Lanczos states, but also already constructed eigenstates of the Hamiltonian. This is a standard extension of the Lanczos algorithm.
+ 
+The variational MPS algorithm just introduced is quite prone to getting stuck. How this is going to happen, actually depends a bit on how initial states are chosen in the procedure: Assume that, as is the case for the anisotropic Heisenberg chain, there is a quantum symmetry with some commuting operator $[\hat{H},\hat{O}]=0$, in this case the total magnetization operator $\hat{M}=\sum_i \hat{S}^z_i$, giving rise to magnetization $M$ as a good quantum number. Then initial states fall into two categories, whether they are eigenstates of $\hat{M}$ or not. The latter will generally be the case if the state is chosen randomly; the former is the case if it is generated by infinite-system DMRG or its MPS variant. 
+
+Decomposing the Hilbert space into eigenstates of magnetisation, ${\mathcal H} = \oplus_M {\mathcal H}_M$, we can write initial states as 
+\begin{equation}
+\ket{\psi} = \sum_M \psi_M \ket{M} \quad\quad \ket{M} \in {\mathcal H}_M .
+\end{equation}
+The ground state we are looking for is $\ket{\psi_0} \in {\mathcal H}_{\tilde{M}}$; the initial state will then have either arbitrary $\psi_M$ or $\psi_M = 0$ if $M \neq \tilde{M}$ (assuming that we don't run into the desaster of offering an initial state in the wrong symmetry sector). Let us assume that in the first case, sweeping will eliminate contributions from the wrong symmetry sectors; if they don't, the variationally optimal state can never be reached anyways because wrong admixtures survive. As an iterative ground state search by e.g.\  Lanczos is an optimized version of the power method $\lim_{n\rightarrow\infty} \hat{H}^n \ket{\psi}$ for finding the largest eigenvalue and associated eigenstate, one can show that in the full Hilbert space wrong symmetry sectors will definitely be projected out.  In our algorithm, this iterative projection proceeds in a highly constrained state space and might not be as efficient, as it looks at various wave function components sequentially. As random starting states are very inefficient, I cannot report on a lot of practical experience here.
+In any case, once we arrive in a well-defined symmetry sector, we will have, for any Schmidt decomposition $\ket{\psi} = \sum_{a_\ell} s_{a_\ell} \ket{a_\ell}_A \ket{a_\ell}_B$, that each of the states will have a good quantum number (superpositions of different quantum numbers lead immediately to a contradiction to a global good quantum number), namely $m_a^A$ and $m_a^B$ such that $m_a^A + m_a^B = \tilde{M}$, where I have simplified indices. Taking the $m_a^B$, for example, they will be distributed over some range, say 1 state with magnetization $m$, 3 states with magnetization $m'$, 5 states with magnetization $m''$ and so forth. As I will show next, this distribution stays {\em fixed} in further sweeps. This means that if it does not correspond to the distribution that the variationally optimal state would yield, it can never reach that state. In the random state approach one may hope that the slow elimination of other total magnetizations ``eases'' us into the right distributions but there is no guarantee; in the infinite-system approach one has to hope that this warm-up scheme produces the right distribution right away, which is quite unlikely to happen. 
+
+The reason why the distribution stays fixed can be seen from the SVD of $M^{\sigma_{\ell}}_{a_{\ell-1},a_{\ell}}$ to carry out one (for example) left-normalization step: reshaping matrices $M^{\sigma_{\ell}}$ into some $\Psi$ and applying an SVD gives at most $D$ non-vanishing singular values; the right-singular vectors in $V^\dagger$ are nothing but the eigenvectors of  $\Psi^\dagger \Psi$, which is block-diagonal because the states $\ket{a_{\ell}}_B$ have good quantum numbers. The right singular vectors (eigenvectors) therefore encode a basis transformation within blocks of the same quantum number, hence the number of states with a given quantum number remains the same, and so does the number of states with a given quantum number in the other part of the system because of the matching of quantum numbers required in the Schmidt decomposition. 
+
+Various ways of getting out of this potential trap have been proposed. The first one is to modify the algorithm to consider two sites at the same time, just as in conventional (two-site) DMRG; we will discuss its MPS implementation in the next section. While this approach is slower (roughly by a factor of $d$), it offers a slightly enlarged ansatz space with a subsequent truncation that allows the algorithm to be more robust against the danger of getting stuck in local energy minima in ground state searches.  In particular, the enlarged ansatz space of the two-site algorithm allows a reshuffling of the quantum number distribution due to the truncation. Once this is converged, one may switch to the single-site algorithm, as proposed by Takasaki et al. \cite{Takasaki99}, although it is not at all clear that this leads strictly to the optimal outcome\cite{McCulloch08}.
+
+Much better, there is a procedure by White \cite{White05} that protects reasonably against trapping and ensures reshuffling. It is crucial for a reliable single-site DMRG (or variational MPS, which we will show to be identical) algorithm and turns it into the state of the art form of the method. It starts from the observation that quantum numbers of a subsystem A are changed by quantum fluctuations due to those parts of the Hamiltonian that connect A to the rest of the system.  We therefore have to consider the structure of $\hat{H}\ket{\psi}$ in more detail. 
+
+Consider $\psi^{\sigma_{\ell}}_{a_{\ell-1},a_{\ell}}$ {\em after energy optimization} in the single-site algorithm. We can also write
+\begin{equation}
+\hat{H} = \sum_{b_{\ell}} \hat{H}^{A\bullet}_{b_{\ell}} \hat{H}^B_{b_{\ell}} 
+\end{equation}
+where
+\begin{equation}
+\hat{H}^{A\bullet}_{b_{\ell}} = \sum_{\fat{\sigma}, \fat{\sigma}'\in A\bullet} ( W^{\sigma_1,\sigma'_1} \ldots W^{\sigma_{\ell},\sigma'_{\ell}} )_{b_{\ell}} \quad
+\hat{H}^B_{b_{\ell}} = \sum_{\fat{\sigma}, \fat{\sigma}'\in B} ( W^{\sigma_{\ell+1},\sigma'_{\ell+1}} \ldots W^{\sigma_L,\sigma'_L} )_{b_{\ell}} ,
+\end{equation}
+such that there are $D_W$ terms in this sum. If we think in terms of block states, we would like to know which new states can be reached on A$\bullet$ by the action of $\hat{H}^{A\bullet}_{b_{\ell}}$. 
+Projecting the result of this action onto the A$\bullet$B basis it will read
+\begin{eqnarray}
+(\hat{H}^{A\bullet}_{b_{\ell}} \ket{\psi})^{a_{\ell-1}, \sigma_{\ell},a_{\ell}} &=&
+\sum_{\sigma'_{\ell}} \sum_{a'_{\ell-1},b_{\ell-1}} \sum_{\{ a_i, b_i, a'_i; i<\ell-1\} } \left( \sum_{\sigma_1\sigma'_1} A^{\sigma_1*}_{1,a_1} W^{\sigma_1,\sigma'_1}_{1,b_1} A^{\sigma'_1}_{1,a'_1} \right) \ldots \times \nonumber \\
+& & \left( \sum_{\sigma_{\ell-1}\sigma'_{\ell-1}} A^{\sigma_{\ell-1} *}_{a_{\ell-2},a_{\ell-1}} W^{\sigma_{\ell-1},\sigma'_{\ell-1}}_{b_{\ell-2},b_{\ell-1}} A^{\sigma'_{\ell-1}}_{a'_{\ell-2},a'_{\ell-1}} \right)  W^{\sigma_{\ell},\sigma'_{\ell}}_{b_{\ell-1},b_{\ell}} \Psi^{\sigma'_{\ell}}_{a'_{\ell-1},a_{\ell}} 
+\end{eqnarray}
+which is just 
+\begin{equation}
+(\hat{H}^{A\bullet}_{b_{\ell}} \ket{\psi})^{a_{\ell-1}, \sigma_{\ell},a_{\ell}} =
+\sum_{\sigma'_{\ell}} \sum_{a'_{\ell-1},b_{\ell-1}}
+L^{a_{\ell-1},a'_{\ell-1}}_{b_{\ell-1}} W^{\sigma_{\ell},\sigma'_{\ell}}_{b_{\ell-1},b_{\ell}} \Psi^{\sigma'_{\ell}}_{a'_{\ell-1},a_{\ell}} 
+\end{equation}
+using $L^{a_{\ell-1},a'_{\ell-1}}_{b_{\ell-1}}$ from Eq.~(\ref{eq:LdefineinMPO}), as can be seen graphically in Fig.~\ref{fig:Whiteimprovement}. This indicates that the actual cost of computation is very low, because we have already done the most complicated part. 
+
+\begin{figure}
+\centering\includegraphics[scale=0.7]{PyMPS_WhitePredictionObject.eps}
+\caption{$(\hat{H}^{A\bullet}_{b_\ell}\ket{\psi})^{a_{\ell-1},\sigma_{\ell},a_{\ell}}$ represented graphically: with the exception of one $W$-tensor and one $\Psi$-tensor, all the contractions have already been computed to obtain $L^{a_{\ell-1},a'_{\ell-1}}_{b_{\ell-1}}$. }
+\label{fig:Whiteimprovement}
+\end{figure}
+
+Now we would like to include the states generated by $\hat{H}^{A\bullet}_{b_{\ell}}$ into the search for a good basis for A$\bullet$. Here, DMRG offers the possibility of multiple-state targetting. The conventional algorithm would now proceed by calculating $\hat{\rho}^{A\bullet} = \tr_B \ket{\psi}\bra{\psi}$ or $\rho_{(a_{\ell-1} \sigma_{\ell}),(a'_{\ell-1}  \sigma'_{\ell})} = \sum_{a_{\ell}} \Psi^{\sigma_{\ell}}_{a_{\ell-1},a_{\ell}}\Psi^{\sigma'_{\ell}\dagger}_{a_{\ell},a'_{\ell-1}}$, finding the eigenvalues (squares of the singular values), the eigenvectors (left singular vectors), truncation and so on. But we can look at a modified density matrix, which takes also into account the new terms as
+\begin{equation}
+\hat{\rho}^{A\bullet} = \tr_B \ket{\psi}\bra{\psi} + \alpha \sum_{b_{\ell}} \tr_B \hat{H}^{A\bullet}_{b_{\ell}} \ket{\psi} \bra{\psi} \hat{H}^{A\bullet}_{b_{\ell}} ,
+\end{equation}
+where $\alpha$ is a small number, say $10^{-4}$, giving a little weight to contributions that the conventional algorithm may miss. The price paid is that at the end of the spectrum a few very-small weight states from $\ket{\psi}\bra{\psi}$ will drop out. Upon multiple sweeping, $\alpha$ will be taken slowly to zero.
+

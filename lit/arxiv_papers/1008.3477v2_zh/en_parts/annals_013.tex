@@ -1,0 +1,125 @@
+The division by singular values is a numerical headache as they can and will often be very small, in particular if a high-precision calculation is attempted and even very small singular values will be carried along. It is numerically advisable to proceed as in the calculation of the (pseudo)inverse of an almost singular matrix and set all $s_a < \epsilon$, with, say, $\epsilon=10^{-8}$, to 0 and exclude them from all sums (e.g.\ in a Schmidt decomposition). As we order $s_a$ by size, this implies shrinking matrices $U$ and $V^\dagger$ accordingly. These small singular values carry little weight in the reduced density operators (their square), hence the loss of accuracy in the state description is very small compared to the numerical pitfalls. In fact, the problem is that at various places in algorithms we implicitly rely on (ortho)normality assumptions that may no longer hold after a ``wild'' division.
+
+Let me conclude this long section by summarizing the various conversion and canonization procedures in a diagram (Fig.~\ref{fig:conversions}), where it should however be kept in mind that some conversions are only possible in theory, not in numerical practice.
+
+\begin{figure}
+\centering\includegraphics[scale=0.5]{PyMPS_MPSConversions.eps}
+\caption{Conversions of representations: $c$ is the explicit representation by the exponentially large number of state coefficients; $A$, $B$ and $\Gamma\Lambda$ stand for left-canonical, right-canonical and canonical MPS; $M$ stands for an arbitrary MPS. Solid lines indicate computationally feasible conversions, dashed lines more hypothetical ones.}
+\label{fig:conversions}
+\end{figure}
+
+\section{Matrix product operators (MPO)}
+\label{sec:MPO}
+If we consider a single coefficient $\braket{\fat{\sigma}}{\psi}$ of an MPS, 
+\[
+\braket{\fat{\sigma}}{\psi} = M^{\sigma_1}M^{\sigma_2}\ldots M^{\sigma_{L-1}}M^{\sigma_L},
+\]
+it is a natural generalization to try to write coefficients $\bra{\fat{\sigma}} \hat{O} \ket{\fat{\sigma}'}$ of operators as \cite{VerstraeteRipoll04,McCulloch07,VerstraetePirvu08,Crosswhite08,Frowis10}
+\begin{equation}
+\bra{\fat{\sigma}} \hat{O} \ket{\fat{\sigma}'} = W^{\sigma_1\sigma'_1}W^{\sigma_2\sigma'_2} \ldots
+W^{\sigma_{L-1}\sigma'_{L-1}}W^{\sigma_L\sigma'_L}
+\end{equation}
+where the $W^{\sigma\sigma'}$ are matrices just like the $M^{\sigma}$, with the only difference that as representations of operators they need both outgoing and ingoing physical states:
+\begin{equation}
+\hat{O} = \sum_{\fat{\sigma},\fat{\sigma}'} W^{\sigma_1\sigma'_1}W^{\sigma_2\sigma'_2} \ldots
+W^{\sigma_{L-1}\sigma'_{L-1}}W^{\sigma_L\sigma'_L} \ket{\fat{\sigma}}\bra{\fat{\sigma}'} ,
+\label{eq:mpoform}
+\end{equation}
+with the same extension to periodic boundary conditions as for MPS. The pictorial representation introduced for MPS can be extended in a straightforward fashion: instead of one vertical line for the physical state in the representation of $M$, we now have two vertical lines, one down, one up, for the ingoing and outgoing physical state in $W$ (Fig.~\ref{fig:singleMPO}). The complete MPO itself then looks as in Figure \ref{fig:MPO}. If we want to use good quantum numbers, the methods for MPS translate directly: we introduce an ingoing local state quantum number from the top, an outgoing one towards the bottom, and an ingoing quantum number from the left and an outgoing one to the right. The rule is, as for MPS, that the total sum of ingoing and outgoing quantum numbers must be equal, or $M(\ket{\sigma_i}) + M(\ket{b_{i-1}}) = M(\ket{\sigma'_i}) + M(\ket{b_{i}})$, where I have interpreted the bond labels as states for the notation. We may also think about dummy indices before the first and after the last site as in an MPS, which reflect in which (definite!) way the operator changes the total quantum number. For a Hamiltonian, which commutes with the corresponding operator, the change is zero, and we can ignore the dummies. The MPOs we are going to build can all be shown to have good quantum numbers on the bonds, because they originate either from SVDs (e.g. for time evolutions) or from rules that involve operators with well-defined changes of quantum numbers (e.g. for MPOs for Hamiltonians).
+
+In fact, {\em any} operator can be brought into the form of Eq.~(\ref{eq:mpoform}), because it can be written as
+\begin{eqnarray}
+\hat{O} &=& \sum_{\sigma_1,\ldots,\sigma_L,\sigma'_1,\ldots,\sigma'_L} c_{(\sigma_1\ldots\sigma_L)(\sigma'_1\ldots\sigma'_L)} \ket{\sigma_1,\ldots,\sigma_L} \bra{\sigma'_1,\ldots,\sigma'_L}  \nonumber \\ 
+&=& \sum_{\sigma_1,\ldots,\sigma_L,\sigma'_1,\ldots,\sigma'_L} c_{(\sigma_1\sigma'_1) \ldots (\sigma_L \sigma'_L)} \ket{\sigma_1,\ldots,\sigma_L} \bra{\sigma'_1,\ldots,\sigma'_L}
+\end{eqnarray}
+and we can decompose it like we did for an MPS, with the double index $\sigma_i \sigma'_i$ taking the role of the index $\sigma_i$ in an MPS.
+
+\begin{figure}
+\centering\includegraphics[width=250pt]{PyMPS_MPOElements.eps}
+\caption{Elements of a matrix product operator: (i) a corner matrix operator $W^{[1]\sigma_1\sigma'_1}_{1,b_1}$ at the left end of the chain; (ii)  a bulk matrix operator $W^{[\ell]\sigma_\ell\sigma'_\ell}_{b_{\ell-1},b_{\ell}}$; (iii) a corner operator $W^{[L]\sigma_L\sigma'_L}_{b_{L-1},1}$ at the right end: the physical indices points up and down, the matrix indices are represented by  horizontal lines.}
+\label{fig:singleMPO}
+\end{figure}
+
+\begin{figure}
+\centering\includegraphics[width=250pt]{PyMPS_MPO.eps}
+\caption{A matrix product operator acting on an entire chain: the horizontal matrix indices are contracted, and the MPO is ready to be applied to an MPS by simple contraction of vertical (physical) indices.}
+\label{fig:MPO}
+\end{figure}
+
+As for MPS, we have to ask how we operate with them and how they can be constructed in practice, because the naive decomposition might be exponentially complex. As it turns out, most operations run in perfect analogy to the MPS case.
+
+\subsection{Applying an MPO to an MPS}
+The application of a matrix product operator to a matrix product state runs as 
+\begin{eqnarray*}
+\hat{O}\ket{\psi} &=& \sum_{\fat{\sigma},\fat{\sigma}'} (W^{\sigma_1,\sigma'_1} W^{\sigma_2,\sigma'_2}\ldots)(M^{\sigma'_1} M^{\sigma'_2}\ldots) \ket{\fat{\sigma}} \\
+&=&  \sum_{\fat{\sigma},\fat{\sigma}'}\sum_{\fat{a},\fat{b}} (W^{\sigma_1,\sigma'_1}_{1,b_1} W^{\sigma_2,\sigma'_2}_{b_1,b_2}\ldots)(M^{\sigma'_1}_{1,a_1} M^{\sigma'_2}_{a_1,a_2} \ldots) \ket{\fat{\sigma}} \\
+&=& \sum_{\fat{\sigma},\fat{\sigma}'}\sum_{\fat{a},\fat{b}} (W^{\sigma_1,\sigma'_1}_{1,b_1} M^{\sigma'_1}_{1,a_1})(W^{\sigma_2,\sigma'_2}_{b_1,b_2}M^{\sigma'_2}_{a_1,a_2}) \ldots \ket{\fat{\sigma}} \\
+&=& \sum_{\fat{\sigma}}\sum_{\fat{a},\fat{b}} N^{\sigma_1}_{(1,1),(b_1,a_1)} N^{\sigma_2}_{(b_1,a_1),(b_2,a_2)} \ldots \ket{\fat{\sigma}} \\
+&=& \sum_{\fat{\sigma}} N^{\sigma_1} N^{\sigma_2} \ldots \ket{\fat{\sigma}}
+\end{eqnarray*}
+
+The beauty of an MPO is that it leaves the form of the MPS invariant, at the prize of an increase in matrix size: the new MPS dimension is the product of that of the original MPS and that of the MPO (Fig.~\ref{fig:MPOtimesMPS}).
+
+\begin{figure}
+\centering\includegraphics[width=250pt]{PyMPS_MPOtimesMPS.eps}
+\caption{A matrix product operator acting on a matrix product state: matching physical (vertical) indices are contracted, a new matrix product state emerges, with multiplied matrix dimensions and product structure in its matrices.}
+\label{fig:MPOtimesMPS}
+\end{figure}
+
+The result can be summarized as $\ket{\phi}=\hat{O}\ket{\psi}$ with $\ket{\phi}$ an MPS built from matrices $N^{\sigma_i}$ with 
+\begin{equation}
+N^{\sigma_i}_{(b_{i-1},a_{i-1}),(b_i,a_i)} = \sum_{\sigma_i'} W^{\sigma_i\sigma_i'}_{b_{i-1}b_i} M^{\sigma_i'}_{a_{i-1}a_i} .
+\end{equation}
+If we use (additive) good quantum numbers, one can show from the sum rules at each tensor that they are additive on the in- and outgoing horizontal bonds. 
+
+Once again, a seemingly exponentially complex operation (sum over exponentially many $\fat{\sigma}$) is reduced to a low-cost operation: the operational count is of order 
+$Ld^2 D_W^2 D^2$, $D_W$ being the dimension of the MPO.
+
+\subsection{Adding and multiplying MPOs}
+
+Operations with MPOs follow very much the lines of MPS. If we consider the addition of two operators, $\hat{O}$ and $\hat{P}$, that have MPO representations $W^{\sigma_i\sigma'_i}$ and 
+$\tilde{W}^{\sigma_i\sigma'_i}$, then the resulting MPO is formed exactly as in the case of MPS, by the direct sum $W^{\sigma_i\sigma'_i} \oplus \tilde{W}^{\sigma_i\sigma'_i}$ for all sites $1 < i < L$, with the same special rules for sites $1$ and $L$. In essence, we (again) just have to consider $\sigma_i$ and $\sigma'_i$ as one ``big'' physical index. 
+
+The multiplication of (or rather, subsequent operation with) two operators, $\hat{P} \hat{O}$, can also be understood easily: the application of $\hat{O}$ to some state $\ket{\psi}$ leads to a new MPS with 
+matrices $N^{\sigma_i}_{(b_{i-1}a_{i-1}),(b_i a_i)} = \sum_{\sigma'_i} W^{\sigma_i\sigma'_i}_{b_{i-1}b_i} M^{\sigma'_i}_{a_{i-1}a_i}$. Then the subsequent operation of $\hat{P}$ gives a new MPS with $K^{\sigma_i}_{(\tilde{b}_{i-1}b_{i-1}a_{i-1}),(\tilde{b}_i b_i a_i)} =  \sum_{\sigma'_i} \tilde{W}^{\sigma_i\sigma'_i}_{\tilde{b}_{i-1} \tilde{b}_i} N^{\sigma'_i}_{(b_{i-1}a_{i-1}),(b_i a_i)}$. But from this we can read off right away (and this is also obvious from the graphical representation of a sequence of two MPOs applied to a state) that the new MPO (with matrices $V^{\sigma_i\sigma'_i}$) is given by
+\begin{equation}
+V^{\sigma_i\sigma'_i}_{(\tilde{b}_{i-1}b_{i-1}),(\tilde{b}_{i}b_{i})} = \sum_{\sigma''_i} 
+\tilde{W}^{\sigma_i\sigma''_i}_{\tilde{b}_{i-1} \tilde{b}_i} W^{\sigma''_i\sigma'_i}_{b_{i-1}b_i} .
+\end{equation}
+Hence, MPO dimensions simply multiply as for tensors. If we consider an MPS as an MPO with dummy indices in one physical direction, the rule for applying an MPO to an MPS follow as a special case. 
+ 
+\subsection{Compressing MPOs and MPO-MPS products}
+
+As for MPS, the question of compressing an MPO may arise. This should be obvious from the last section, where MPO dimensions summed up or multiplied. If it is no option to shift the issue of compression to the application of an MPO to an MPS (then of dimension $D_W D$ and a natural candidate for compression), we have to compress the MPO. A typical example would be given by the representation of a longer-ranged Hamiltonian in MPO form, which quickly leads to large dimensions.
+
+But we can apply the same techniques as for compressing MPS, both by SVD and iteratively, in order to approximate the exact MPO by one with smaller $D_W$. The only change is that instead of one physical index $\sigma$, we have now two physical indices $\sigma,\sigma'$, which we may take as one single index $(\sigma,\sigma')$. The approximation is then done in the Frobenius norm, which naturally extends the 2-norm of vectors we used for MPS approximations.
+
+At this point it is worthwhile mentioning that it has been proposed \cite{Stoudenmire10} that in the special case of compressing an MPO-MPS product, an important speedup over the standard methods may be achieved: SVD may be very slow if normalization has to be carried out first at a cost $O(D_W^3 D^3)$, but a good starting point for the variational method would be essential to have. But the proposed solution from SVD compression may not be bad if the block states are almost orthonormal and it seems that in the MPO-MPS product case this is essentially true if both the MPO and the MPS were in canonical form (for the MPO again formed by looking at the double index as one big index), which can be achieved at much lower cost ($O(d D^3)$ and $O(d^2 D_W^3)$, where $D_W \ll D$ usually, versus $O(d D^3 D_W^3)$). Even if the proposed compression is not too good, it will still present a much better starting point for the variational compression. So the procedure would be: (i) bring both MPO and MPS in the same canonical form; (ii) do SVD compression, of course only multiplying out MPO and MPS matrices on the fly; (iii) use this as variational input if you don't trust the result too much. 
+
+
+ 
+\section{Ground state calculations with MPS}
+\label{sec:groundstates}
+Assume we want to find the ground state of some Hamiltonian $\hat{H}$.  In order to find the optimal approximation to it, we have to find the MPS $\ket{\psi}$ of some dimension $D$ that minimizes
+\begin{equation}
+E = \frac{\bra{\psi} \hat{H} \ket{\psi}}{\braket{\psi}{\psi}} .
+\end{equation} 
+The most efficient way of doing this (in particular compared to an imaginary time evolution starting from some random state, which is also possible) is a variational search in the MPS space. In order to make this algorithm transparent, let us first express $\hat{H}$ as an MPO.
+
+\subsection{MPO representation of Hamiltonians}
+Due to the product structure inherent in the MPO representation, it might seem a hopeless task  -- despite its guaranteed existence -- to explicitly construct a compact MPO representation for a Hamiltonian such as
+\begin{equation}
+\hat{H} = \sum_{i=1}^{L-1} \frac{J}{2}\hat{S}^+_i \hat{S}^-_{i+1} + \frac{J}{2}\hat{S}^-_i \hat{S}^+_{i+1} + J^z \hat{S}^z_i \hat{S}^z_{i+1} - h\sum_{i} \hat{S}^z_i .
+\end{equation}
+This common notation is of course an abbreviation for sums of tensor products of operators:
+\begin{eqnarray*}
+\hat{H} &=& J^z\hat{S}^z_1 \otimes \hat{S}^z_2 \otimes \hat{I} \otimes \hat{I} \otimes \hat{I} \ldots + \\
+ & & \hat{I} \otimes J^z\hat{S}^z_2 \otimes \hat{S}^z_3 \otimes \hat{I} \otimes \hat{I} \ldots + \\
+ & & \ldots
+ \end{eqnarray*}
+It is however surprisingly easy to express this sum of tensor products in MPO form \cite{McCulloch07} -- to this purpose it is convenient to reconsider the building block $W^{\sigma\sigma'}_{bb'}$ combined with its associated projector $\ket{\sigma}\bra{\sigma'}$ to become an operator-valued matrix $\hat{W}_{bb'} = \sum_{\sigma\sigma'} W^{\sigma\sigma'}_{bb'} \ket{\sigma}\bra{\sigma'}$ such that the MPO takes the simple form
+\begin{equation}
+\hat{O} = \hat{W}^{[1]}\hat{W}^{[2]} \ldots \hat{W}^{[L]} .
+\end{equation}
+Each $\hat{W}^{[i]}$ acts on a different local Hilbert space at site $i$, whose tensor product gives the global Hilbert space. Multiplying such operator-valued matrices yields sums of tensor products of operators such that expressing $\hat{H}$ in a compact form seems feasible. 
+

@@ -1,0 +1,124 @@
+下一节的方法现在可以用来解析地求出 AKLT 态的关联子：反铁磁关联函数呈指数衰减，$\langle S^z_i S^z_j \rangle \propto (-1/3)^{i-j}$，而弦关联函数在 $j-i>2$ 时为 $\langle S^z_i \eul^{\imag \pi\sum_{i<k<j} S^z_k}S^z_j \rangle =-4/9$，这表明存在隐藏序。
+
+总而言之，AKLT 态可以被表达为一个 $D=2$ 的矩阵乘积态，即最简单的非平凡 MPS！事实上，把由最大纠缠态（这里是单态）连接起来的辅助自旋的较大态空间投影到较小的物理态空间，这一做法也可以作为引入 MPS 及其高维推广的出发点\cite{VerstraetePorras04,VerstraeteCirac04}。
+
+\subsection{重叠、期望值与矩阵元}
+
+现在我们转向对 MPS 的各种操作，从期望值的计算开始。
+期望值显然是广义矩阵元的特例，此时态 $\ket{\psi}$ 与 $\ket{\phi}$ 相同。为保持一般性，让我们考虑态 $\ket{\psi}$ 与 $\ket{\phi}$ 之间的重叠，它们分别由矩阵 $M$ 和 $\tilde{M}$ 描述，并集中于开边界条件的情形。
+
+取 $\ket{\phi}$ 的伴随，并注意到波函数系数是标量，重叠为
+\begin{equation}
+\braket{\phi}{\psi} = \sum_{\fat{\sigma}} \tilde{M}^{\sigma_1*} \ldots \tilde{M}^{\sigma_L*} M^{\sigma_1} \ldots M^{\sigma_L} .
+\end{equation}
+把由 $\tilde{M} \ldots \tilde{M}$ 构成的标量转置（这是恒等操作），我们得到顺序颠倒的伴随：
+\begin{equation}
+\braket{\phi}{\psi} = \sum_{\fat{\sigma}} \tilde{M}^{\sigma_L\dagger} \ldots \tilde{M}^{\sigma_1\dagger} M^{\sigma_1} \ldots M^{\sigma_L} .
+\label{eq:finaloverlap}
+\end{equation}
+在图形表示中（图~\ref{fig:overlap}），如果我们遵循所有键指标都要求和这一规则，此计算会变得简单得多。
+\begin{figure}
+\centering\includegraphics[width=\textwidth]{PyMPS_Overlap.eps}
+\caption{态 $\ket{\phi}$ 与 $\ket{\psi}$ 之间的重叠。所有对相同指标的收缩（求和）用箭头标出。}
+\label{fig:overlap}
+\end{figure}
+
+\subsubsection{收缩的高效求值}
+
+详细求值表达式（\ref{eq:finaloverlap}）表明，在矩阵网络或更一般的张量网络中，找到{\em 正确的（最优的）收缩次序}十分重要。我们要做的收缩，既有矩阵乘法中隐含的对矩阵指标的收缩，也有对物理指标的收缩。如果决定先收缩矩阵指标、再收缩物理指标，就必须对 $d^L$ 组矩阵乘法串求和，其代价是指数级的。但我们可以如下重组这些求和：
+\begin{equation}
+\braket{\phi}{\psi} = \sum_{\sigma_L} 
+\tilde{M}^{\sigma_L\dagger} \left( 
+\ldots \left( 
+\sum_{\sigma_2}  \tilde{M}^{\sigma_2 \dagger} \left(
+\sum_{\sigma_1} \tilde{M}^{\sigma_1\dagger} M^{\sigma_1}\right) 
+M^{\sigma_2}\right) 
+ \ldots  \right) 
+ M^{\sigma_L} .
+\end{equation}
+这意味着，在（特殊的）第一步中，我们把列向量与行向量 $\tilde{M}^{\sigma_1\dagger}$ 和 $M^{\sigma_1}$ 相乘得到一个矩阵，并对（第一个）物理指标求和。下一步，我们对第二个物理指标收缩一个三矩阵乘积，依此类推（图~\ref{fig:overlaporder}）。重要的观察是，从第二步起复杂度不再增长。此外，把矩阵乘积 $ABC$ 分解为 $(AB)C$ 或 $A(BC)$ 当然也是最高效的做法。这样我们共进行 $(2L-1)d$ 次乘法，每次复杂度为 $O(D^3)$，这里暂且为简单起见忽略矩阵一般不是方阵的事实。决定性的一点在于：复杂度从指数级降为弱多项式级，总运算次数为 $O(LD^3 d)$。
+
+\begin{figure}
+\centering\includegraphics[width=\textwidth]{PyMPS_OverlapOrder.eps}
+\caption{态 $\ket{\phi}$ 与 $\ket{\psi}$ 之间的重叠，并标明了最优收缩次序，它像拉链一样沿链推进。}
+\label{fig:overlaporder}
+\end{figure}
+
+
+同样立即可见的是，对于范数计算 $\braket{\psi}{\psi}$，在开边界条件下，若态处于左规范或右规范形式，则立即意味着其范数为 1。从上面的计算可以看出，对于左规范矩阵 $A$，最内层的求和正是左规范化条件，给出 $I$，因而该项消去，接着下一个左规范化条件显现，如此继续直到走完整条链（图~\ref{fig:overlaplnormalized}）：
+\begin{eqnarray*}
+\braket{\psi}{\psi} &=& \sum_{\sigma_L} A^{\sigma_L\dagger} \left( \ldots \left( \sum_{\sigma_2}  A^{\sigma_2 \dagger} \left(\sum_{\sigma_1} A^{\sigma_1\dagger} A^{\sigma_1}\right) A^{\sigma_2}\right)  \ldots  \right) A^{\sigma_L} \\
+&=&  \sum_{\sigma_L} A^{\sigma_L\dagger} \left( \ldots \left( \sum_{\sigma_2}  A^{\sigma_2 \dagger}  A^{\sigma_2}\right)  \ldots  \right) A^{\sigma_L} = \ldots \\
+&=& \sum_{\sigma_L} A^{\sigma_L\dagger} A^{\sigma_L} = 1.
+\end{eqnarray*}
+
+\begin{figure}
+\centering\includegraphics[width=\textwidth]{PyMPS_OverlapLNormalized.eps}
+\caption{对{\em 左规范}态 $\ket{\psi}$ 计算范数的各步骤：依次应用左规范 $A$-矩阵的收缩规则。}
+\label{fig:overlaplnormalized}
+\end{figure}
+
+为计算一般矩阵元，我们考虑 $\bra{\phi} \hat{O}^{[i]} \hat{O}^{[j]} \ldots \ket{\psi}$，即作用于格点 $i$ 和 $j$ 的张量积算符。这类算符的矩阵元取自
+\begin{equation}
+ \hat{O}^{[\ell]} = \sum_{\sigma_\ell,\sigma'_\ell} O^{\sigma_\ell,\sigma'_\ell} \ket{\sigma_\ell} \bra{\sigma'_\ell} .
+\end{equation}
+让我们把它推广为每个格点上都放一个算符，实际上几乎所有格点上都是恒等算符，例如对于局域期望值或两格点关联子就是如此。因此我们考虑的是算符矩阵元 $O^{\sigma_1,\sigma'_1} O^{\sigma_2,\sigma'_2} \cdots  O^{\sigma_L,\sigma'_L}$。
+在解析表达式中，我们再次把（现在是双重的）对局域态的求和转置并分配开（$M$-矩阵的矩阵乘法与之前相同）：
+\begin{eqnarray*}
+& & \sum_{\fat{\sigma},\fat{\sigma}'} \tilde{M}^{\sigma_1*} \ldots \tilde{M}^{\sigma_L*} 
+O^{\sigma_1,\sigma'_1} O^{\sigma_2,\sigma'_2} \cdots  O^{\sigma_L,\sigma'_L}
+M^{\sigma'_1} \ldots M^{\sigma'_L} \\
+&=& \sum_{\sigma_L,\sigma'_L} O^{\sigma_L,\sigma'_L} \tilde{M}^{\sigma_L\dagger}  \left( \ldots \left( \sum_{\sigma_2,\sigma'_2}  O^{\sigma_2,\sigma'_2} \tilde{M}^{\sigma_2 \dagger} \left(\sum_{\sigma_1,\sigma'_1} O^{\sigma_1,\sigma'_1} \tilde{M}^{\sigma_1\dagger} M^{\sigma'_1}\right) M^{\sigma'_2}\right)  \ldots  \right) M^{\sigma'_L}
+\end{eqnarray*}
+这与重叠的计算完全相同，唯一的例外是形式上对物理指标的单重求和变成了双重求和（图~\ref{fig:matrixelement}）。对于典型的关联子，双重求和在大多数格点上会平凡地约化为单重求和，因为大多数格点上作用的只是恒等算符 $\hat{O}^{[i]}=\hat{I}$；在少数非平凡格点上，多达 $d^2$ 个矩阵元中，对常规算符而言大多数为零，这强烈限制了项数，因此本质上运算次数仍为 $O(LD^3 d)$。
+
+\begin{figure}
+\centering\includegraphics[scale=1.0]{PyMPS_MatrixElement.eps}
+\caption{态 $\ket{\phi}$ 与 $\ket{\psi}$ 之间的矩阵元按与重叠相同的方式计算，只需在正确位置插入算符，如箭头所示，在这些位置产生物理指标的双重求和。}
+\label{fig:matrixelement}
+\end{figure}
+
+\begin{figure}
+\centering\includegraphics[scale=1.0]{PyMPS_LocalOverlap.eps}
+\caption{$\bra{\psi} \hat{O}^{[\ell]} \ket{\psi}$，其中态 $\ket{\psi}$ 在格点 $\ell$ 左侧的矩阵为左规范、右侧的矩阵为右规范。}
+\label{fig:localoverlap}
+\end{figure}
+
+对期望值 $\bra{\psi} \hat{O}^{[\ell]} \ket{\psi}$ 可以做重要简化，应尽可能加以利用：假设我们考察局域算符 $\hat{O}^{[\ell]}$，且规范化使得格点 $\ell$ 左侧的所有矩阵都是左规范的、格点 $\ell$ 右侧的所有矩阵都是右规范的；格点 $\ell$ 本身的状态任意。于是可以利用左规范和右规范，像 图~\ref{fig:overlaplnormalized} 中那样无需显式计算地收缩网络，使得只剩下两个矩阵（图~\ref{fig:localoverlap}）。剩下的计算就是
+\begin{equation}
+\bra{\psi} \hat{O}^{[\ell]} \ket{\psi} = \sum_{\sigma_\ell \sigma'_\ell} O^{\sigma_\ell \sigma'_\ell} \tr
+(M^{\sigma_\ell \dagger} M^{\sigma'_\ell}),
+\end{equation} 
+这是一个 $O(D^2 d^2)$ 量级的运算，在计算时间上节省了一个 $D$ 的量级。由于我们将会遇到态处于这种混合规范表示的算法，“在扫描中”计算可观测量是有意义的。这与 DMRG 中在显式格点上计算期望值完全相同。
+    
+计算重叠、期望值和矩阵元的一个常用记法，是把括号的层级结构解读为对一个矩阵的迭代更新，最终给出标量结果。现在我们引入矩阵 $C^{[\ell]}$，其中 $C^{[0]}$ 是哑矩阵，即标量 1。于是重叠 $\braket{\phi}{\psi}$ 可以通过让 $\ell$ 从 1 取到 $L$ 迭代地进行：
+\begin{equation}
+C^{[\ell]} = \sum_{\sigma_\ell} \tilde{M}^{\sigma_{\ell}\dagger} C^{[\ell-1]} M^{\sigma_{\ell}} ,
+\end{equation}
+其中 $C^{[L]}$ 又是一个标量，包含着结果。对于插入两态之间的算符，这一方法的自然推广是
+\begin{equation}
+C^{[\ell]} = \sum_{\sigma_\ell,\sigma'_\ell} O^{\sigma_\ell,\sigma'_\ell} \tilde{M}^{\sigma_{\ell}\dagger} C^{[\ell-1]} M^{\sigma'_{\ell}} .
+\end{equation}
+同样，求值矩阵乘积的正确次序对效率影响巨大：
+\begin{equation}
+C^{[\ell]}_{a_\ell,a'_\ell} = \sum_{\sigma_\ell,a_{\ell-1}}  \tilde{M}^{\sigma_{\ell}*}_{a_{\ell-1},a_\ell} \left( \sum_{\sigma'_\ell} O^{\sigma_\ell,\sigma'_\ell} 
+\left( \sum_{a'_{\ell-1}} C^{[\ell-1]}_{a_{\ell-1},a'_{\ell-1}} 
+M^{\sigma'_{\ell}}_{a'_{\ell-1},a'_\ell} \right) \right) 
+\end{equation}
+把一个 $O(D^4 d^2)$ 的运算约化为 $O(D^3 d) + O(D^2d^2) + O(D^3 d)$。
+
+当然，我们也可以从右端出发，引入矩阵 $D^{[\ell]}$，从标量
+$D^{[L]}=1$ 开始。为此，我们交换 $\braket{\phi}{\psi}$ 中标量的次序，
+\begin{equation}
+\braket{\phi}{\psi} = \sum_{\fat{\sigma}}M^{\sigma_1} \ldots M^{\sigma_L}  \tilde{M}^{\sigma_1*} \ldots \tilde{M}^{\sigma_L*}  ,
+\end{equation}
+并再次转置 $\tilde{M}$-矩阵，得到一个带括号求和的层级结构，其中对 $\sigma_L$ 的求和位于最内层。从 $\ell=L$ 跑到 $\ell=1$ 的迭代于是为：
+\begin{equation}
+D^{[\ell-1]} = \sum_{\sigma_\ell}  M^{\sigma_{\ell}} D^{[\ell]} \tilde{M}^{\sigma_{\ell}\dagger} ,
+\end{equation}
+可以把它推广用来计算矩阵元：
+\begin{equation}
+D^{[\ell-1]} = \sum_{\sigma_\ell,\sigma'_\ell}  O^{\sigma_\ell,\sigma'_\ell} M^{\sigma'_{\ell}} D^{[\ell]} \tilde{M}^{\sigma_{\ell}\dagger} .
+\end{equation}
+结果就包含在 $D^{[0]}$ 中。
+

@@ -1,0 +1,117 @@
+此处应当指出，iDMRG 可以与更早的、以 PWFRG（乘积波函数重正化群，product wave function renormalization group）为名的算法途径联系起来 \cite{NishinoOkunishi95,Hieida97,Ueda06}，它们已经包含了上述思想的一部分；iDMRG 则把这些思想推进到其自然的完成形态 \cite{Ueda08,Ueda10}。
+
+\subsection{iTEBD：热力学极限中的时间演化}
+在本节中，我改用 $\Gamma\Lambda$ 记法，尽管这些公式可以很容易地转写成 $A,B$ 形式。利用我们的态片段 $\Lambda^{[\ell-1]} \Gamma^{[\ell]\sigma_\ell^A} \Lambda^{[\ell]} \Gamma^{[\ell]\sigma_\ell^B}$，我们可以搭建一条无限链
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} \ldots (\Lambda^A \Gamma^{A \sigma_i} \Lambda^B \Gamma^{B \sigma_{i+1}})(\Lambda^A \Gamma^{A \sigma_{i+2}} \Lambda^B \Gamma^{B \sigma_{i+3}}) \ldots \ket{\fat{\sigma}} ,
+\end{equation}
+与上一节中一样，其中 $\Gamma^{A\sigma}= \Gamma^{[\ell]\sigma_\ell^A}$，
+$\Gamma^{B\sigma}= \Gamma^{[\ell]\sigma_\ell^B}$、$\Lambda^A=\Lambda^{[\ell-1]}$ 且
+$\Lambda^B=\Lambda^{[\ell]}$。该片段可以是已收敛的基态计算的结果，也可以来自某个能够精确构造的简单起始态。
+
+现在我们可以按 Trotter 形式写下时间演化：先对所有奇数键（我将其称为 AB）施加一个无穷小时间步，然后再对所有偶数键（我将其称为 BA）施加。键演化算符与 tMPS/tDMRG/TEBD 情形中的完全相同，我将把它们记为 $U_{AB} = \sum_{\sigma_A\sigma_B\sigma'_A\sigma'_B} U_{AB}^ {\sigma_A\sigma_B, \sigma'_A\sigma'_B} \ket{\sigma_A\sigma_B} \bra{\sigma'_A\sigma'_B}$，类似地还有 $U_{BA}$。
+
+正如我们已经看到的 [参见式~(\ref{eq:guess2sites})]，一个完整的两格点片段由五个矩阵的乘积构成，
+$\Lambda^A \Gamma^{A \sigma_A} \Lambda^B \Gamma^{B \sigma_{B}} \Lambda^A$。于是在键 AB 上的时间演化给出一组矩阵
+\begin{equation}
+M^{\sigma_A\sigma_{B}} = \sum_{\sigma'_A\sigma'_{B}} U_{AB}^ {\sigma_A\sigma_{B}, \sigma'_A\sigma'_{B}}  \Lambda^A \Gamma^{A \sigma'_A} \Lambda^B \Gamma^{B \sigma'_{B}} \Lambda^A .
+\end{equation}
+经过如今已是标准做法的重整形，我们通过 SVD 得到
+\begin{equation}
+M^{\sigma_A\sigma_{B}}=A^{\sigma_A} \Lambda^B B^{\sigma_{B}} ,
+\end{equation}
+其中新的 $\Lambda^B$（相应地还有 $A^{\sigma_A}$ 和 $B^{\sigma_{B}}$）像在 tDMRG 或 TEBD 中那样被截断，用以替换旧的。利用 $\Lambda^A$（仍取自上一轮迭代），我们可以定义新的 $\Gamma^{A \sigma_A}$ 和 $\Gamma^{B \sigma_{B}} $（通过 $A^{\sigma_A} = \Lambda^A \Gamma^{A \sigma_A}$ 及
+$B^{\sigma_{B}} = \Gamma^{B \sigma_{B}} \Lambda^A$）。这就定义了一个新的“单胞”。
+
+如果把它写下来并在后面再接上一个，我们可以读出两个 AB 单胞中央处的键 BA，即
+$ \Lambda^B \Gamma^{B \sigma_{B}} \Lambda^A \Gamma^{A \sigma_{A}} \Lambda^B$，对它作时间演化得到
+\begin{equation}
+N^{\sigma_{B}\sigma_{A}} = \sum_{\sigma'_{B}\sigma'_{A}} U_{BA}^ {\sigma_{B}\sigma_{A}, \sigma'_{B}\sigma'_{A}}  \Lambda^B \Gamma^{B \sigma'_{B}} \Lambda^A \Gamma^{A \sigma'_{A}} \Lambda^B .
+\end{equation}
+重整形并作 SVD 给出
+\begin{equation}
+N^{\sigma_{B}\sigma_{A}}=A^{\sigma_{B}} \Lambda^A B^{\sigma_{A}} ,
+\end{equation}
+其中 $\Lambda^A$（相应地还有其他矩阵）再次被截断并替换旧的。利用 $\Lambda^B$（仍取自上一轮迭代），我们可以定义新的 $\Gamma^{B \sigma_{B}}$ 和 $\Gamma^{A \sigma_{A}} $（通过 $B^{\sigma_{A}} =   \Gamma^{A \sigma_{A}} \Lambda^B$ 及 $A^{\sigma_{B}} =\Lambda^B \Gamma^{B \sigma_{B}}$）。除以小奇异值带来的麻烦可以用针对 TEBD 已经讨论过的简单修改来避免 \cite{Hastings09}。
+
+因此，通过依次施加无穷小的键演化算符，我们可以在热力学极限下建立实时或虚时演化。这一算法被称为 {\em iTEBD}，因为它给出了 TEBD 的无限尺寸推广 \cite{Vidal07}。
+
+正交归一的问题再次出现 \cite{Orus08}。假设初始态满足正交归一判据。纯实时演化会生成一串作用于该态的幺正算符，这保持正交归一性质。但每个时间步之后不可避免的截断会破坏这一性质，哪怕截断可能很小。为了把这一方法变成可行的算法，我们必须像 iDMRG 那样，在每一步之后处理热力学极限下的正交化问题。
+
+在此我想提到，McCulloch\cite{McCulloch08} 已经证明，只要把中心键上的极小化替换为中心键上的时间演化，就可以把 iDMRG 变成 iTEBD，这相对原始 iTEBD 算法有一些概念上的优点。
+
+最后用几句话谈谈外推，以此结束本节。在有限系统 DMRG（或 MPS）中，惯常做法是对每个有限长度 $L$ 先在 $D$ 上外推结果以使精度最大化，然后再把这些结果在 $L$ 上外推到热力学极限。而在这里，我们直接在热力学极限下工作（假设 iDMRG 已被带到收敛），剩下的只是对 $D$ 的外推。有趣的是，在临界点处，这种对 $D$ 的外推与纠缠熵标度及临界指数有着深刻而有用的联系 \cite{Tagliacozzo08}。实际上，有限的矩阵维数在临界系统中引入了一个有限的关联长度，这与有限系统 DMRG 的情形颇为相似：在那里，MPS 特有的指数叠加能够恰当地模拟幂律的长度标度也随 $D$ 的某个幂次标度 \cite{Andersson99}。
+
+\subsection{热力学极限态的正交化}
+
+在有限系统上做 iDMRG 时，$A$ 矩阵和 $B$ 矩阵保持左规范和右规范；这意味着左块态与右块态彼此正交，如前所示。我们将稍微不按惯例地把具有这种性质的态称为 {\em 正交}态。正如上一节所见，我们可以使用片段
+\begin{equation}
+A^{[\ell]\sigma_\ell^A}\Lambda^{[\ell]} B^{[\ell]\sigma_\ell^B} (\Lambda^{[\ell-1]})^{-1}
+\end{equation}
+我们可以重复它来搭建一条无限长链，
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} \ldots A^{\sigma_i}\Lambda^{[\ell]} B^{\sigma_{i+1}} (\Lambda^{[\ell-1]})^{-1}A^{\sigma_{i+2}}\Lambda^{[\ell]} B^{\sigma_{i+3}} (\Lambda^{[\ell-1]})^{-1}A^{\sigma_{i+4}}\Lambda^{[\ell]} B^{\sigma_{i+5}} (\Lambda^{[\ell-1]})^{-1} \ldots \ket{\fat{\sigma}} ,
+\end{equation}
+这里我简化了 $A$、$B$ 的记号。这些态的问题在于，对任意分成两块的二分，左块和右块上的态一般来说{\em 并不正交}：如果我们按上述方式把 $\Lambda^{[\ell]} B$ 变换为 $\tilde{A} \Lambda_R^{[\ell]}$，链将变成
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} \ldots A^{\sigma_1}\tilde{A}^{\sigma_{2}} P
+A^{\sigma_{3}} \tilde{A}^{\sigma_{4}} P A^{\sigma_{5}}\tilde{A}^{\sigma_{6}} P \ldots \ket{\fat{\sigma}} ,
+\end{equation}
+其中 $P= \Lambda_R^{[\ell]} (\Lambda^{[\ell-1]})^{-1}$。如果把 $P$ 吸收到它左边的 $\tilde{A}$ 中，即 $\tilde{A}P \rightarrow \overline{A}$，归一化条件就变成
+\begin{equation}
+\sum_\sigma \overline{A}^{\sigma\dagger} \overline{A}^{\sigma} = P^\dagger \sum_\sigma \tilde{A}^{\sigma\dagger} \tilde{A}^\sigma P = P^\dagger P.
+\end{equation}
+然而一般而言 $P^\dagger P \neq I$。这不仅出现在 $\ell$ 较小、我们离无限系统不动点还很远的情形；只要丢弃态权重有限——在 DMRG 计算中通常就是如此，即使它非常小——在不动点处也是如此。
+
+正如 Orus 和 Vidal\cite{Orus08} 所指出的（这里沿用 \cite{McCulloch08} 的表述），检测正交归一的一个条件是检验单位算符在两个块态 $\ket{a}$、$\ket{a'}$ 之间的期望值是否为 $\delta_{a,a'}$（见 图~\ref{fig:infiniteorthogonalization}）。考虑像有限系统那样的期望值收缩，并假设我们已从左边的 $-\infty$ 一路收缩到格点 $0$。结果将是一个矩阵状的对象 $C_{a'a}$，对应于开放的腿。现在考虑操作 $E_L(C)$，它把收缩再向前推进两步，即跨过格点 1 和 2。这个{\em 转移算符}为 [参见第~\ref{subsubsec:transferoperator}~节]
+\begin{equation}
+E_L(C) = \sum_{\sigma_1\sigma_2} P^\dagger \tilde{A}^{\sigma_2\dagger} A^{\sigma_1\dagger} C A^{\sigma_1} \tilde{A}^{\sigma_2} P.
+\end{equation}
+对于正交归一的态，我们希望 $E_L(I) = I$，这正是单位算符对正交归一块态产生的期望值矩阵。然而，利用左规范条件，我们实际得到的是 $E_L(I)=P^\dagger P$。当系统延伸至无穷时，$E_L(I) = I$ 必须与最大本征值相联系；整个态的可归一化意味着最大本征值必须为 1。$E_L$ 的“二次”形式意味着与之相应的本征矩阵 $V_L$ 是厄米的且非负。借助本征值分解或奇异值分解，可以把它分解为 $V_L = X^\dagger X$，其中 $X$ 可逆。我们可以在每个 $P$ 之后插入 $X^{-1}X$，使单胞变成 $X A^{\sigma_1} \tilde{A}^{\sigma_2} P X^{-1}$，而新的转移算符为
+\begin{equation}
+E'_L(C) = \sum_{\sigma_1\sigma_2} X^{-1\dagger}P^\dagger \tilde{A}^{\sigma_2\dagger} A^{\sigma_1\dagger} X^\dagger C X A^{\sigma_1} \tilde{A}^{\sigma_2} P X^{-1}.
+\end{equation}
+于是
+\begin{equation}
+E'_L(I) = X^{-1\dagger} V_L X^{-1} = I
+\end{equation}
+这由 $V_L$ 相对于 $E_L$ 的本征矩阵性质得出。
+（如果 $E_L$ 的最大本征值碰巧不为 1，则须对 $X$ 作适当缩放。）
+
+把 $P$ 的定义代入 $X A^{\sigma_1}\tilde{A}^{\sigma_2}P X^{-1}$，撤销到 $\tilde{A}$ 的变换，并作变换 $A^{\sigma_1} \Lambda^{[\ell]} \rightarrow \Lambda^{[\ell]}_L \tilde{B}^{\sigma_1}$，单胞变成 $X \Lambda^{[\ell]}_L \tilde{B}^{\sigma_1} B^{\sigma_2} (\Lambda^{[\ell-1]})^{-1} X^{-1}$。把单胞的起点移位后，它变成 $(\Lambda^{[\ell-1]})^{-1} X^{-1} X \Lambda^{[\ell]}_L \tilde{B}^{\sigma_1} B^{\sigma_2} = Q \tilde{B}^{\sigma_1} B^{\sigma_2}$，其中 $Q = (\Lambda^{[\ell-1]})^{-1} X^{-1} X \Lambda_L^{[\ell]} = (\Lambda^{[\ell-1]})^{-1} \Lambda_L^{[\ell]}$，与 $X$ 无关。从右边计算收缩得到转移算符
+\begin{equation}
+E_R(C) = \sum_{\sigma_1\sigma_2} Q \tilde{B}^{\sigma_1} B^{\sigma_2} C B^{\sigma_2\dagger} \tilde{B}^{\sigma_1\dagger} Q^\dagger .
+\end{equation}
+与前面相同的本征值/本征矩阵论证给出主导本征矩阵 $V_R = YY^\dagger$（$Y$ 可逆）以及单胞 $Y^{-1}Q \tilde{B}^{\sigma_1} B^{\sigma_2} Y$。
+这又给出 $E'_R(C)$，且 $E'_R(I)=I$。
+
+如果把 $Q$ 的定义代入单胞，从 $\tilde{B}^{\sigma_1}$ 回到 $A^{\sigma_1}$，并把 $Q$ 显式写出，单胞即为
+$Y^{-1}  (\Lambda^{[\ell-1]})^{-1} X^{-1} X A^{\sigma_1} \Lambda^{[\ell]} B^{\sigma_2} Y$，移动其原点后我们得到
+\begin{equation}
+X A^{\sigma_1} \Lambda^{[\ell]} B^{\sigma_2} Y Y^{-1}  (\Lambda^{[\ell-1]})^{-1} X^{-1} ,
+\end{equation}
+通过令
+$A^{\sigma_1} \leftarrow XA^{\sigma_1}$、$B^{\sigma_2} \leftarrow B^{\sigma_2}Y$ 及 $\Lambda^{[\ell-1]} \leftarrow X\Lambda^{[\ell-1]}Y$，可以把它带回到单胞的原始形式，但现在{\em 恰当地保证了左规范和右规范。}
+
+更精确地说，新的单胞给出 $E_L(I)=I$ 和 $E_R(I)=I$。但要注意，$E_L$ 和 $E_R$ 是由略有移位的单胞构造的：如图所示，$E_L$ 用的是 $A^{\sigma_1} \Lambda^{[\ell]} B^{\sigma_2} (\Lambda^{[\ell-1]})^{-1}$，而 $E_R$ 用的是 $(\Lambda^{[\ell-1]})^{-1} A^{\sigma_1} \Lambda^{[\ell]} B^{\sigma_2}$。我们可以把第一个和第二个单胞合并成左规范和右规范的两格点矩阵 $A^{\sigma_1\sigma_2}$ 与 $B^{\sigma_1\sigma_2}$。然后可以用标准方式把它们分解为左规范和右规范的矩阵，得到 $A^{[1]\sigma_1}A^{[2]\sigma_2}$ 和 $B^{[1]\sigma_1}B^{[2]\sigma_2}$。注意，这些矩阵当然不同于我们最初所拥有的那些。
+
+\begin{figure}
+\centering\includegraphics[scale=0.7]{PyMPS_InfiniteSystemOrthogonalization.eps}
+\caption{若矩阵得到恰当的归一化，热力学极限拟设会同时生成左规范条件和右规范条件。注意，两个转移算符定义在热力学极限态的两个不同的两格点单胞上。}
+\label{fig:infiniteorthogonalization}
+\end{figure}
+
+热力学极限态现在可以写为
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} \ldots A^{[1]\sigma_1} A^{[2]\sigma_2} A^{[1]\sigma_3} A^{[2]\sigma_4} \ldots \ket{\fat{\sigma}}
+\end{equation}
+或者类似地用 $B^{[1,2]}$ 写出，分别对应左规范和右规范形式。对计算期望值而言特别有意义的是混合规范形式，即左边为 $A$ 矩阵、右边为 $B$ 矩阵。如果考察其背后的两个单胞，就会看到在边界处，两者都想并入同一个 $(\Lambda^{[\ell-1]})^{-1}$ 来生成 $A$ 和 $B$ 矩阵。这个问题可以通过在出问题的 $(\Lambda^{[\ell-1]})^{-1}$ 之后插入恒等式 $I = \Lambda^{[\ell-1]} (\Lambda^{[\ell-1]})^{-1}$ 来解决。于是我们可以立即写下混合规范形式
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} \ldots A^{[1]\sigma_1} A^{[2]\sigma_2} A^{[1]\sigma_3} A^{[2]\sigma_4} \Lambda^{[\ell-1]}
+B^{[1]\sigma_5} B^{[2]\sigma_6} B^{[1]\sigma_7} B^{[2]\sigma_8}
+\ldots \ket{\fat{\sigma}} .
+\label{eq:infinitemixedcanonical}
+\end{equation}
+\subsubsection{热力学极限中期望值的计算}
+在有限系统中，我们已经看到如何通过传递一个对象 $C^{[i]}$ 来计算期望值：它以哑标量 $C^{[0]}=1$ 出发，借助转移算符 $E^{[i]}_O$ 从 $C^{[i]}$ 传递到 $C^{[i+1]}$，其中 $hat{O}$ 是期望值结构中局域作用的算符（大多是恒等算符，除非——比如说——在考察两点关联子时作用在两个格点上）。在恒等算符的情形，对左规范矩阵而言，从左到右的转移算符把恒等算符映射为恒等算符；类似地，若由右规范矩阵构成，从右到左的转移算符也把恒等算符映射为恒等算符。
+

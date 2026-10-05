@@ -1,0 +1,115 @@
+这种方法对簿记非常有用，因为在 DMRG 中我们需要左块和右块的算符矩阵元，而这正是块 A 和块 B 的 $C$-矩阵与 $D$-矩阵所给出的内容。随着块迭代式地增长，上述矩阵序列也会随着块的增长方便地一同生成。
+
+\subsubsection{转移算符与关联结构}
+\label{subsubsec:transferoperator}
+让我们把上一节中 $C^{[\ell]}$-矩阵的迭代构建再稍作形式化，因为引入一个转移（超）算符 $\hat{E}^{[\ell]}$ 有助于理解 MPS 中关联的本质，它是从定义在长度 $\ell-1$ 的块 A 上的算符到定义在长度 $\ell$ 的块 A 上的算符的一个映射，
+\begin{equation}
+\{ \ket{a_{\ell-1}} \bra{a'_{\ell-1}} \} \rightarrow \{ \ket{a_{\ell}} \bra{a'_{\ell}} \},
+\end{equation}
+其定义为
+\begin{equation}
+\hat{E}^{[\ell]} = \sum_{a_{\ell-1},a'_{\ell-1}} \sum_{a_\ell,a'_\ell} \left( \sum_{\sigma_\ell} M^{[\ell]\sigma_\ell *} \otimes M^{[\ell]\sigma_\ell} \right)_{(a_{\ell-1}a'_{\ell-1}),(a_\ell,a'_\ell)} (\ket{a_{\ell-1}} \bra{a'_{\ell-1}}) (\ket{a_{\ell}} \bra{a'_{\ell}}),
+\end{equation}
+其中括号中的表达式应读作 $E^{[\ell]}$ 的矩阵元，其维数为 $(D^2_{\ell-1} \times D^2_{\ell})$，即相应键上 $M$-矩阵的维数。它可以推广为在格点 $\ell$ 处插入一个算符后的收缩：
+\begin{equation}
+E^{[\ell]}_O = \sum_{\sigma_\ell,\sigma'_\ell} O^{\sigma_\ell,\sigma'_\ell} M^{[\ell]\sigma_\ell *} \otimes M^{[\ell]\sigma'_\ell} .
+\end{equation}
+$\hat{E}^{[\ell]} $ 是如何作用的？由显式写法
+\begin{equation}
+E^{[\ell]}_{(a_{\ell-1}a'_{\ell-1}),(a_{\ell}a'_{\ell})} = \sum_{\sigma_\ell} M^{[\ell]\sigma_\ell *}_{a_{\ell-1},a_\ell} \cdot M^{[\ell]\sigma_\ell}_{a'_{\ell-1},a'_\ell}
+\end{equation}
+我们可以把 $\hat{E}^{[\ell]}[ \hat{O}^{[\ell-1]}]$ 读作对矩阵 $O^{[\ell-1]}_{a,a'}$ 的一种操作，
+\begin{equation}
+E^{[\ell]} [O^{[\ell-1]}]  = \sum_{\sigma_\ell} M^{\sigma_\ell\dagger} O^{[\ell-1]} M^{\sigma_\ell}
+\end{equation}
+或者是对长度为 $D_{\ell-1}^2$、系数为 $v_{aa'} = O^{[\ell-1]}_{a,a'}$ 的行向量从左边乘的一种操作，
+\begin{equation}
+\sum_{\sigma_\ell} \sum_{a_{\ell-1},a'_{\ell-1}} v_{a_{\ell-1}a'_{\ell-1}} M^{\sigma_\ell*}_{a_{\ell-1},a_\ell} M^{\sigma_\ell}_{a'_{\ell-1},a'_\ell} .
+\end{equation}
+于是上一节的 $C$-矩阵之间有如下关系
+\begin{equation}
+C^{[\ell]} = E^{[\ell]} [C^{[\ell-1]}]  ,
+\end{equation}
+但我们现在要把这一结果用于数值方便之外的目的：若 $D_{\ell-1}=D_\ell$，我们还可以等价地谈论本征值、本征矩阵以及（左或右）本征矢。在此背景下我们得到 $E$ 最重要的性质：若它由左规范矩阵 $A$ 或右规范矩阵 $B$ 构成，则所有本征值满足 $|\lambda_k| \leq 1$。
+
+事实上，当 $\lambda_1=1$ 且 $A$-矩阵为左规范时，相应的左本征矢为 $v_{aa'}=\delta_{aa'}$，这可以通过直接计算看出，或者平凡地把它翻译为单位矩阵：
+\begin{equation}
+E[I] = \sum_\sigma A^{\sigma\dagger} \cdot I \cdot A^{\sigma} = 1 \cdot I .
+\end{equation}
+由左规范 $A$ 矩阵构造的 $E$ 的右本征矢是非平凡的，但我们暂且忽略它。对于右规范的 $B$ 矩阵，情形正好反过来：显式计算表明 $v_{aa'}=\delta_{aa'}$ 此时是本征值 $\lambda_1=1$ 的右本征矢，而左本征矢是非平凡的。
+
+为了证明 1 是最大本征值\cite{Weichselbaum05}，我们考虑 $C' = E[C]$。思路是：若 $E$ 由左规范或右规范矩阵构成，则可以证明 $C'$ 与 $C$ 的最大奇异值满足 $s'_1 \leq s_1$。这立即意味着 $E$ 的所有本征值满足 $|\lambda_i| \leq 1$：$C'=\lambda_i C$ 意味着 $s'_1 = |\lambda_i| s_1$，因此 $|\lambda_i|>1$ 将与前面的论断矛盾。无法排除存在多个 $|\lambda_i|=1$ 的情形。
+证明进行如下（此处针对左规范矩阵）：考虑 SVD $C = U^\dagger S V$。$C$ 是方阵，故 $U^\dagger U = UU^\dagger = V^\dagger V = VV^\dagger = I$。于是我们可以写
+\begin{equation}
+C' = \sum_\sigma A^{\sigma\dagger} U^\dagger S V A^{\sigma} =
+\left[ \begin{array}{ccc} (UA^1)^\dagger & \ldots  & (UA^d)^\dagger \end{array} \right]
+\left[ \begin{array}{ccc} S & & \\ & S & \\ & & S \end{array} \right]
+\left[ \begin{array}{c} VA^1 \\ \vdots \\ VA^d \end{array} \right] = P^\dagger \left[ \begin{array}{ccc} S & & \\ & S & \\ & & S \end{array} \right] Q .
+\end{equation}
+若 $A^\sigma$ 是左规范的，我们有 $P^\dagger P = I$ 和 $Q^\dagger Q = I$（但 $PP^\dagger \neq I$，$QQ^\dagger \neq I$）：$P^\dagger P =\sum_\sigma A^{\sigma\dagger} U^\dagger U A^\sigma = \sum_\sigma A^{\sigma\dagger} A^\sigma = I$，对 $Q$ 亦然；因此它们是到正交归一子空间的约化基底变换，故 $C'$ 的最大奇异值必小于等于 $S$ 的最大奇异值，也就是 $s_1$。
+
+与归一化方式无关，重叠的计算变为
+\begin{equation}
+\braket{\psi}{\psi} = E^{[1]} E^{[2]} E^{[3]} \ldots E^{[L-2]} E^{[L-1]} E^{[L]}  ,
+\end{equation}
+而在用 $\braket{\psi}{\psi}$ 正确归一化之前的期望值计算则应读作
+\begin{equation}
+\bra{\psi} \hat{O}^{[1]} \hat{O}^{[2]} \ldots \hat{O}^{[L-1]} \hat{O}^{[L]}\ket{\psi} = E^{[1]}_{O_1} E^{[2]}_{O_2} E^{[3]}_{O_3} \ldots E^{[L-2]}_{O_{L-2}} E^{[L-1]}_{O_{L-1}} E^{[L]}_{O_L}  .
+\end{equation}
+在数值上，这种记法若按字面直接使用并不太有用，因为它意味着 $O(D^6)$ 的运算量；当然，若计及其内部的乘积结构，我们就回到前面讨论过的 $O(D^3)$ 运算量。但在解析上，它揭示了非常有趣的洞见。让我们考虑一个具有周期边界条件、由左规范且与格点无关的 $A$-矩阵构成的平移不变态（因而 $E$ 也与格点无关）。于是在极限 $L\rightarrow\infty$ 下我们得到
+\begin{eqnarray*}
+\bra{\psi} \hat{O}^{[i]}\hat{O}^{[j]} \ket{\psi} &=& \tr E^{[1]} \ldots E^{[i-1]} E^{[i]}_O E^{[i+1]} \ldots E^{[j-1]}
+E^{[j]}_O E^{[j+1]} \ldots E^{[L]} \\
+&=& \tr E^{[i]}_O E^{j-i-1} E^{[j]}_O E^{L-j+i-1} \\
+&=& \sum_{l,k} \bra{l} E^{[i]}_O \ket{k} \lambda_k^{j-i-1} \bra{k} E^{[j]}_O \ket{l} \lambda_l^{L-j+i-1}\\
+&=& \sum_k \bra{1} E^{[i]}_O \ket{k} \lambda_k^{j-i-1} \bra{k} E^{[j]}_O \ket{1} \quad (L\rightarrow\infty)
+\end{eqnarray*}
+其中 $\lambda_k$ 是 $E$ 的本征值。我们用到了由归一化矩阵构成的 $E$ 满足 $|\lambda_k|\leq 1$，以及 $\lambda_1=1$ 是唯一的模为 1 的本征值；但放宽后一（并不必然成立的）假设只会带来微小的修改。$\ket{k}$ 和 $\bra{k}$ 是（非厄米的）$E$ 对本征值 $\lambda_k$ 的右本征矢和左本征矢。$\bra{1}$ 对应于由左规范 $A$ 构成的 $E$ 的本征算符 $I$。
+
+决定性的观察是：关联子既可以是长程的（若矩阵元 $ \bra{1} E^{[i]}_O \ket{1}$ 有限），也可以是衰减长度为 $\xi_k = -1/ \ln \lambda_k$ 的若干指数衰减的叠加，于是 MPS 的两点关联子取如下的一般形式
+\begin{equation}
+\frac{\bra{\psi} \hat{O}^{[i]} \hat{O}^{[j]} \ket{\psi}}{\braket{\psi}{\psi}} = c_1 + \sum_{k=2}^{D^2} c_k \eul^{-r/\xi_k} ,
+\end{equation}
+其中 $r=|j-i-1|$，且当 $i<j$ 时 $c_k = \bra{1} E^{[i]}_O \ket{k} \bra{k} E^{[j]}_O \ket{1}$。
+
+一个简单的例子可以从上一节的 AKLT 态中提取。$E$ 的本征值此前已求得为 $1,-1/3,-1/3,-1/3$。对自旋算符而言，对应长程序的矩阵元为零，因此当 $j>i$ 时关联为 $\langle \hat{S}_i^z \hat{S}_j^z \rangle = (12/9)(-1)^{j-i} \eul^{-(j-i)\ln 3}$，是关联长度 $\xi = 1/\ln 3= 0.9102$ 的纯指数衰减。另一方面，对弦关联子而言，长程矩阵元是有限的，长程序在弦关联子中出现。
+
+MPS 关联子的形式有重要的后果：在一维量子系统的热力学极限下，关联子通常取的形式要么是 Ornstein-Zernike 形式
+\begin{equation}
+\langle O_0 O_x \rangle \sim \frac{\eul^{-x/\xi}}{\sqrt{x}}
+\end{equation}
+要么是临界幂律形式（可能带有对数修正），
+\begin{equation}
+\langle O_0 O_x \rangle \sim x^{-\alpha} .
+\end{equation}
+AKLT 态属于一个非常特殊的态类，其关联函数模仿空间维数更低的量子系统（所谓的维数约化），从而去掉了 $\sqrt{x}$ 项；AKLT 态恰好位于所谓的无序线上，这类现象正是在那里发生 \cite{Garel96}。
+
+因此，任何有限维的 MPS 都只能用指数衰减的叠加来逼近真实的关联子。事实证明，这在短距离上效果非常好，甚至对幂律也是如此。数值上观察到的是：随着 $D$ 的增大，真实关联函数会在越来越长的长度尺度上被准确表示。最终，最慢的指数衰减将存活下来，使关联变成带 $\xi =  -1/\ln \lambda$ 的纯指数衰减，其中 $\lambda$ 是对关联子有贡献的 $E$ 的最大本征值。因此，比较不同 $D$ 值的曲线是评估关联函数收敛性以及收敛已达成的长度尺度的一个极佳工具。
+
+\subsubsection{MPS 与约化密度算符}
+正如我们在 DMRG 中已经看到的，约化密度算符的概念在多个方面都很重要。让我们用 MPS 记法来表达它们。我们有
+\begin{equation}
+\ket{\psi}\bra{\psi} = \sum_{\fat{\sigma},\fat{\sigma}'} A^{\sigma_1} \ldots A^{\sigma_L} A^{\sigma'_1*} \ldots A^{\sigma'_L*} \ket{\fat{\sigma}} \bra{\fat{\sigma}'} =
+\sum_{\fat{\sigma},\fat{\sigma}'} A^{\sigma_1} \ldots A^{\sigma_L} A^{\sigma'_L\dagger} \ldots A^{\sigma'_1\dagger} \ket{\fat{\sigma}} \bra{\fat{\sigma}'} .
+\label{eq:fullstateprojector}
+\end{equation}
+我们现在把它二分为 A 和 B，其中 A 包含格点 1 至 $\ell$，B 包含格点 $\ell+1$ 至 $L$。在上式中对 B 的自由度求迹，我们得到
+\begin{equation}
+\hat{\rho}_A^{[\ell]} = \tr_B \ket{\psi}\bra{\psi} = \sum_{\fat{\sigma},\fat{\sigma}'\in A}
+A^{\sigma_1} \ldots A^{\sigma_\ell} \rho_A^{[\ell]} A^{\sigma'_\ell\dagger} \ldots A^{\sigma'_1\dagger} \ket{\fat{\sigma}} \bra{\fat{\sigma}'} ,
+\end{equation}
+其中
+\begin{equation}
+\rho_A^{[\ell]} =  \sum_{\fat{\sigma}\in B} A^{\sigma_{\ell+1}} \ldots A^{\sigma_L} A^{\sigma_L\dagger} \ldots A^{\sigma_{\ell+1}\dagger} .
+\end{equation}
+这个方程立即给出不同约化密度矩阵之间的一个递推关系，即
+\begin{equation}
+\rho_A^{[\ell-1]} = \sum_{\sigma_\ell} A^{\sigma_\ell} \rho_A^{[\ell]} A^{\sigma_\ell\dagger} .
+\label{eq:rhoarecursion}
+\end{equation}
+在平移不变系统的热力学极限 $L\rightarrow\infty$、$\ell\rightarrow\infty$ 下，我们可以由此追问是否满足如下不动点关系
+\begin{equation}
+\rho_A^f = \sum_{\sigma} A^{\sigma} \rho_A^{f} A^{\sigma\dagger}
+\end{equation}
+。
+

@@ -1,0 +1,110 @@
+We can now continue with the next infinitesimal local time-evolution step, in the spirit of tMPS.   
+\subsubsection{Time-evolving block decimation (TEBD)}
+Here, we assume that we have $\ket{\psi}$ in the $\Gamma\Lambda$-notation,
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} 
+\Gamma^{\sigma_1} \Lambda^{[1]} \Gamma^{\sigma_2} \Lambda^{[2]} \ldots
+\Gamma^{\sigma_{\ell}} \Lambda^{[\ell]}  \Gamma^{\sigma_{\ell+1}} \Lambda^{[\ell+1]}
+\Gamma^{\sigma_{\ell+2}} \Lambda^{[\ell+2]}  \Gamma^{\sigma_{\ell+3}} \Lambda^{[\ell+3]} \ldots
+\Gamma^{\sigma_L}   
+\ket{\fat{\sigma}}.
+\label{eq:TEBDstart}
+\end{equation}
+This state can be immediately connected to the two-site DMRG notation. In particular,
+\begin{equation}
+\Psi^{\sigma_{\ell+1} \sigma_{\ell+2}} = \Lambda^{[\ell]}  \Gamma^{\sigma_{\ell+1}} \Lambda^{[\ell+1]}
+\Gamma^{\sigma_{\ell+2}} \Lambda^{[\ell+2]}  .
+\end{equation}
+This is identical to the DMRG $\Psi$, so is the evolution operator $U^{(\sigma_{\ell+1} \sigma_{\ell+2}), (\sigma'_{\ell+1} \sigma'_{\ell+2})}$, hence also  
+\begin{equation}
+\Phi^{\sigma_{\ell+1}\sigma_{\ell+2}}_{a_\ell, a_{\ell+2}} = \sum_{\sigma'_{\ell+1} \sigma'_{\ell+2}}
+U^{(\sigma_{\ell+1} \sigma_{\ell+2}), (\sigma'_{\ell+1} \sigma'_{\ell+2})}  \Psi^{\sigma_{\ell+1}'\sigma_{\ell+2}'}_{a_\ell, a_{\ell+2}} . 
+\end{equation} 
+In order to proceed, the $\Gamma\Lambda$-notation has to be restored on the two active sites. In perfect analogy to tDMRG, one obtains by SVD
+\begin{equation}
+\Phi_{(a_\ell \sigma_{\ell+1}), (\sigma_{\ell+2} a_{\ell+2})} = \sum_{a_{\ell+1}} U_{(a_\ell \sigma_{\ell+1}),a_{\ell+1}} \Lambda^{[\ell+1]}_{a_{\ell+1},a_{\ell+1}} (V^\dagger)_{a_{\ell+1}, (\sigma_{\ell+2} a_{\ell+2})} ,
+\end{equation}
+What is missing are $\Lambda^{[\ell]}$ and $\Lambda^{[\ell+2]}$. We therefore write (reshaping $U$ and $V^\dagger$ and omitting the $a$-indices)
+\begin{equation}
+\Phi^{\sigma_{\ell+1}\sigma_{\ell+2}} = \Lambda^{[\ell]} (\Lambda^{[\ell]})^{-1} U^{\sigma_{\ell+1}} 
+ \Lambda^{[\ell+1]} V^{\sigma_{\ell+2}\dagger} ( \Lambda^{[\ell+2]})^{-1}  \Lambda^{[\ell+2]} .
+\end{equation}
+Now, as in tDMRG, there are up to $dD$ singular values in $ \Lambda^{[\ell+1]}$, which we truncate down to the $D$ largest ones, just as in tDMRG, also truncating the neighbouring matrices accordingly. We now introduce
+\begin{equation}
+\Gamma^{\sigma_{\ell+1}}_{a_\ell,a_{\ell+1}} =  (\Lambda^{[\ell]})^{-1}_{a_\ell,a_\ell} U^{\sigma_{\ell+1}}_{a_\ell,a_{\ell+1}} \quad 
+\Gamma^{\sigma_{\ell+2}}_{a_{\ell+1},a_{\ell+2}} =  V^{\sigma_{\ell+2}\dagger}_{a_{\ell+1},a_{\ell+2}} ( \Lambda^{[\ell+2]})^{-1}_{a_{\ell+2},a_{\ell+2}} 
+\end{equation}
+and obtain
+\begin{equation}
+\Phi^{\sigma_{\ell+1}\sigma_{\ell+2}} = \Lambda^{[\ell]}  \Gamma^{\sigma_{\ell+1}} 
+ \Lambda^{[\ell+1]} \Gamma^{\sigma_{\ell+2}}  \Lambda^{[\ell+2]} ,
+\end{equation}
+back to the canonical form. In order to consider the time-evolution on the next bond, we have to carry out no SVDs, but just group
+\begin{equation}
+\Psi^{\sigma_{\ell+3} \sigma_{\ell+4}} = \Lambda^{[\ell+2]}  \Gamma^{\sigma_{\ell+3}} \Lambda^{[\ell+3]}
+\Gamma^{\sigma_{\ell+4}} \Lambda^{[\ell+4]}  
+\end{equation}
+and continue. As in tDMRG, no loss of information is associated with this step, but this is more explicit here.
+
+When $D$ becomes very large in high-precision calculations, singular values will tend to be very small, and dividing by them is, as mentioned previously, a source of numerical instability. In the context of the thermodynamic limit iTEBD method, which we will discuss later, Hastings has proposed an elegant workaround that comes at very low numerical cost\cite{Hastings09}, but it can be easily adapted to finite-system TEBD. Let us assume that we start with a state in representation (\ref{eq:TEBDstart}). We then group all pairs into right-normalized $B$-matrices,
+\begin{equation}
+B^{\sigma_i} = \Gamma^{\sigma_i} \Lambda^{[i]} ,
+\end{equation}
+but remember the $\Lambda^{[i]}$ for later use. We then form
+\begin{equation}
+\overline{\Psi}^{\sigma_{\ell+1} \sigma_{\ell+2}} = B^{\sigma_{\ell+1}} B^{\sigma_{\ell+2}} =  \Gamma^{\sigma_{\ell+1}} \Lambda^{[\ell+1]}
+\Gamma^{\sigma_{\ell+2}} \Lambda^{[\ell+2]} ,
+\end{equation}
+hence $\Psi^{\sigma_{\ell+1} \sigma_{\ell+2}} = \Lambda^{[\ell]} \overline{\Psi}^{\sigma_{\ell+1} \sigma_{\ell+2}}$. We carry out the time-evolution on $\overline{\Psi}^{\sigma_{\ell+1} \sigma_{\ell+2}}$ to obtain
+\begin{equation}
+\overline{\Phi}^{\sigma_{\ell+1}\sigma_{\ell+2}}_{a_\ell, a_{\ell+2}} = \sum_{\sigma'_{\ell+1} \sigma'_{\ell+2}}
+U^{(\sigma_{\ell+1} \sigma_{\ell+2}), (\sigma'_{\ell+1} \sigma'_{\ell+2})}  \overline{\Psi}^{\sigma_{\ell+1}'\sigma_{\ell+2}'}_{a_\ell, a_{\ell+2}} .
+\end{equation} 
+Then $\Phi^{\sigma_{\ell+1} \sigma_{\ell+2}} = \Lambda^{[\ell]} \overline{\Phi}^{\sigma_{\ell+1} \sigma_{\ell+2}}$. As before, we carry out an SVD on $\Phi^{\sigma_{\ell+1} \sigma_{\ell+2}}$, to obtain 
+\begin{equation}
+\Phi_{(a_\ell \sigma_{\ell+1}), (\sigma_{\ell+2} a_{\ell+2})} = \sum_{a_{\ell+1}} U_{(a_\ell \sigma_{\ell+1}),a_{\ell+1}} \Lambda^{[\ell+1]}_{a_{\ell+1},a_{\ell+1}} (V^\dagger)_{a_{\ell+1}, (\sigma_{\ell+2} a_{\ell+2})} = A^{\sigma_{\ell+1}} \Lambda^{[\ell+1]} B^{\sigma_{\ell+2}} .
+\end{equation}
+Truncating down to the $D$ largest singular values, we have found the new $\Lambda^{[\ell+1]}$, to be retained for further usage, and the new $B^{\sigma_{\ell+2}}$. The new $B^{\sigma_{\ell+1}}$
+is given by 
+\begin{equation}
+B^{\sigma_{\ell+1}} = \sum_{\sigma_{\ell+2}}  \overline{\Phi}^{\sigma_{\ell+1}\sigma_{\ell+2}}
+B^{\sigma_{\ell+2}\dagger},
+\end{equation}
+hence costs a simple matrix multiplication; divisions have been avoided. For the last equation, we use right-normalization of $B^{\sigma_{\ell+2}}$, hence $\sum_{\sigma_{\ell+2}} \Phi^{\sigma_{\ell+1}\sigma_{\ell+2}} B^{\sigma_{\ell+2}\dagger} =  A^{\sigma_{\ell+1}} \Lambda^{[\ell+1]}$. At the same time, $B^{\sigma_{\ell+1}} = \Gamma^{\sigma_{\ell+1}} \Lambda^{[\ell+1]} = (\Lambda^{[\ell]})^{-1} A^{\sigma_{\ell+1}}  \Lambda^{[\ell+1]}$. Combining these two identities with $\Phi^{\sigma_{\ell+1} \sigma_{\ell+2}} = \Lambda^{[\ell]} \overline{\Phi}^{\sigma_{\ell+1} \sigma_{\ell+2}}$ gives the result.
+
+\subsubsection{Comparing the algorithms}
+Comparing TEBD and tDMRG step by step, one sees immediately the complete mathematical equivalence of the methods. The second SVD in tDMRG does nothing but shifting the boundary between left- and right-normalized matrices, which in TEBD is simply achieved by a rebracketing of $\Gamma$ and $\Lambda$. Nevertheless, there are differences: tDMRG carries out two costly SVD decompositions (or density matrix analyses, which is equivalent) per bond evolution, where TEBD does only one. On the other hand, TEBD encounters divisions by potentially very small singular values, which is a strong source of potential numerical inaccuracies; but these can be eliminated \cite{Hastings09} at low numerical cost. From a numerical point of view, tDMRG is not just a translation of TEBD, which came first, but an algorithm of its own, with strengths and weaknesses.
+
+Both methods share the central feature that time evolution and truncation are intertwined: after each bond evolution, there is a truncation by SVD. By contrast, tMPS evolves all bonds first, and then truncates the entire state by compression of matrix dimensions $d^2 D \rightarrow D$ by SVD or iteratively. 
+
+tMPS is the cleaner approach, but it can also be shown to be more precise. In fact, for real-time evolution it relates to tDMRG or TEBD exactly as iterative variational compression to compression by SVD, which implies that for small state changes (e.g.\ for very small time steps) the difference goes down, as the interdependence of truncations becomes less severe, there being only very benign truncations. That the above relationship exists can be seen from compressing a tMPS state not variationally, but by SVD only: 
+
+Take $\ket{\psi}$ to be right-canonical, and do a tDMRG/TEBD step on the first bond or tMPS steps on all odd bonds. The truncation is now to be carried out by SVD and my claim is that SVD does not see a difference between the two very different time-evolved states. On the first bond itself, all methods produce the same structure, but they differ on all other sites. Whereas
+\begin{equation}
+\ket{\phi}_{{\rm tDMRG}} = \sum_{\fat{\sigma}} \Psi^{\sigma_1\sigma_2} B^{\sigma_3} B^{\sigma_4} \ldots \ket{\fat{\sigma}}  
+\end{equation}
+is 
+\begin{equation}
+\ket{\phi}_{{\rm tMPS}} = \sum_{\fat{\sigma}} \Psi^{\sigma_1\sigma_2} \overline{B}^{\sigma_3} \overline{B}^{\sigma_4} \ldots \ket{\fat{\sigma}}  ,
+\end{equation}
+where the $\overline{B}$-matrices come from the contraction with the time evolution bond operators. The SVDs on the first bonds are equivalent for both states provided both sets $\{ B \}$ and $\{ \overline{B} \}$ generate sets of orthonormal states. This is indeed the case, because the $B$-matrices do this by definition, and the states generated by the $\overline{B}$-matrices are related to the first set of orthonormal states by a unitary transformation (real-time evolution!). This observation of the equivalence of methods also holds for bonds further down the chain.
+
+Hence, the difference between the three algorithms becomes only visible at the level of variational compression.
+ 
+\subsection{How far can we go?} 
+In this section, I have described basic algorithms for the time evolution of pure and mixed states. There were two sources of error. One of them is the Trotter decomposition, which for an $n$th order decomposition generated an error $O(\tau^{n+1})$ for each time step $\tau$. As there are $t/\tau$ time steps, the error will ultimately be $O(\tau^n t)$, i.e.\ linear in time. This means it is only growing moderately in time and can be scaled down by smaller time steps and/or higher-order decompositions. This is common to all current methods \cite{Vidal03a,Vidal04b,Daley04,WhiteFeiguin04,VerstraeteRipoll04}.  In fact, there are other methods of calculating matrix exponentials such as the Krylov method\cite{Schmitteckert04} or lookahead procedures such as in \cite{Feiguin05}, which reduce this error even more. In any case, it is not very worrisome in the long run. 
+
+On the other hand, there is the error due to the truncation of the blown-up bond dimensions of the MPS after each time step. This error is serious; early on it could be shown to lead to errors exponentially blowing up in time \cite{Gobert05}. Yet truncation errors are only the symptom, not the fundamental problem: the real reason is that -- following the Lieb-Robertson theorem -- entanglement $S$ can grow up to linearly in time for an out-of-equilibrium evolution of a quantum state: $S(t) \leq S(0) + c t$, where $c$ is some constant related to the propagation speed of excitations in the lattice\cite{Calabrese06}. This linear bound is actually reached for many quantum quenches, where a Hamiltonian parameter is abruptly changed such that the global energy changes extensively.
+Both from $D \sim 2^S$ and from a rigorous analysis \cite{Osborne06} it follows that in such cases the matrix dimensions will have to go up exponentially in time, $D(t) \sim 2^t$, or that for fixed matrix dimensions precision will deteriorate exponentially. 
+
+Nevertheless, in many circumstances matrix size growth is slow enough that numerical resources are sufficient to observe the time-dependent phenomenon of interest: Time-dependent DMRG has been used extensively in the meantime and found to open completely new perspectives on the non-equilibrium behaviour of strongly correlated one-dimensional systems (to name a few:\cite{WhiteFeiguin04,Feiguin05a,Feiguin05,Gobert05,Kollath05,Trebst06,Cramer08,Barthel09a,Kollath06}).
+ 
+\section{Time-dependent Simulation: Extending The Range}
+\label{sec:beyondtime}
+
+Time evolution -- whether it is done by TEBD, tDMRG or tMPS, to give the historical order -- is fundamentally limited by the times that can be reached. The underlying reason is the (at worst) linear buildup of entanglement in time in an out-of-equilibrium quantum state, that translates itself into an (at worst) exponential growth of bond dimensions $D(t)$ if a given precision is desired. A ``time wall'' is hit exponentially fast. Can one push it further into the future? A similar issue arises for finite-temperature calculations. While they are not necessarily about dynamics, seen as imaginary time evolutions they raise their own problems, regarding the $T\rightarrow 0$ limit for static or thermodynamic calculations, and regarding dynamics, there in particular at high temperatures.
+
+A second issue that we have not covered so far concerns {\em dissipative} time evolution where we are not looking at a closed quantum system as in pure Hamiltonian dynamics but at an open quantum system. If the dynamics is Markovian (i.e.\ the bath has no memory, a highly non-trivial assumption in many cases), then the most general dynamics is given by the Lindblad equation. While it is easy to show that formally this can be simulated using MPS quite easily, in actual practice this is numerically involved and simpler schemes are highly desirable. 
+
+In this section we will first consider attempts to extend the time range of simulation by different schemes for evaluating the time evolution tensor networks. As we have already seen for simple examples like the evaluation of wave function overlaps, the order of contractions may hugely change the computational effort. In a second step, we will look at a prediction method that picks up on numerical raw data and extrapolates them very successfully over an order of magnitude, provided they meet a certain mathematical form, taking the case of finite temperature as an example. In a third step, we will look at an altogether different way of finite temperature simulations. In a last step, I will take up the issue of dissipative dynamics and show neat progress made in that field.
+

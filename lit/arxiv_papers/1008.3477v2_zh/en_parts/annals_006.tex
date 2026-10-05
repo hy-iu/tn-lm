@@ -1,0 +1,164 @@
+
+If we allow general matrices and don't worry about left, right or no normalization, we can simply multiply the $\Psi$-matrix into one of the adjacent $A$ or $B$ matrices, such that the general MPS for open boundary conditions appears (see Fig.~\ref{fig:MPS_OBC}):
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} M^{\sigma_1} \ldots M^{\sigma_L} \ket{\fat{\sigma}}  \quad{\rm (MPS \ for \ OBC)},
+\label{eq:MPSOBC}
+\end{equation}
+where {\em no} assumption about the normalization is implied (which is why I call matrices $M$). Due to the vectorial nature of the first and last matrices the product results in a scalar. This is exactly the form of an MPS already discussed in the last section. 
+
+\begin{figure}
+\centering\includegraphics[scale=1.0]{PyMPS_MPS_OBC.eps}
+\caption{Representation of an open boundary condition MPS.}
+\label{fig:MPS_OBC}
+\end{figure}
+
+At this point it is easy to see how a matrix product state can exploit good quantum numbers. Let us focus on magnetization and assume that the global state has magnetization $M$. This Abelian quantum number is additive, $M = \sum_i M_i$. We choose local bases $\{ \sigma_i \}$ whose states are eigenstates of local magnetization. Consider now the growth process from the left. If we choose the states $\ket{a_1}$ to be eigenstates of local magnetization (e.g.\ by taking just the $\ket{\sigma_1}$), then Eq.~(\ref{eq:basistrafoblocksite}) allows us to construct by induction states $\ket{a_\ell}$ that are eigenstates of magnetization, provided the matrices $A^{\sigma_\ell}_{a_{\ell-1}, a_\ell}$ obtain a block structure such that for each non-zero matrix element 
+\begin{equation}
+M(\ket{a_{\ell-1}}) + M(\ket{\sigma_\ell}) = M(\ket{a_\ell})
+\end{equation}
+holds. This can be represented graphically easily by giving directions to the lines of the graphical representation (Fig.~\ref{fig:MPS_OBC_quantumnumbers}), with ingoing and outgoing arrows. The rule is then simply that the sum of the magnetizations on the ingoing lines equals that on the outgoing lines. In order to enforce some global magnetization $M$, we may simply give magnetization values 0 and $M$ to the ingoing and outgoing dummy bonds before the first and after the last site. We may envisage that the indices of the MPS matrices are multiindices for a given magnetization allowing degeneracy, leading to elegant coding representation. An inversion of the bond arrows would directly tie in with the structure of $B$-matrices from the growth from the right, but proper book-keeping gives us lots of freedom for the arrows: an inversion means that the sign has to be reversed.
+
+In order to use good quantum numbers in practice, they have to survive under the typical operations we carry out on matrix product states. It turns out that all operations that are not obviously unproblematic and maintain good quantum numbers can be expressed by SVDs. An SVD will be applied to matrices like $A_{(a_{i-1}\sigma_i),a_i}$. If we group states $\ket{a_{i-1}\sigma_i}$ and $\ket{a_i}$ according to their good quantum number, $A$ will consist of blocks; if we rearrange labels appropriately, we can write $A = A_1 \oplus A_2 \oplus \ldots = U_1 S_1 V^\dagger_1 \oplus U_2 S_2 V^\dagger_2 \oplus \ldots$ or $A=USV^\dagger$ where $U= U_1 \oplus U_2 \oplus \ldots$ and so forth. But this means that the new states generated from $\ket{a_{i-1}\sigma_i}$ via $U$ will also have good quantum numbers. When the need for truncation arises, this property of course still holds for the retained states. If we replace SVD by QR where possible and carry it out on the individual blocks, $A_i =Q_i R_i$, the unitary matrices $Q_i$ transform within sets of states of the same quantum numbers, hence they remain good quantum numbers.
+
+\begin{figure}
+\centering\includegraphics[scale=0.85]{PyMPS_MPS_OBC_QuantumNumbers.eps}
+\caption{Representation of an open boundary condition MPS with good (additive) quantum numbers. Physical states and bonds become directed, such that the quantum numbers on the ingoing lines equal those on the outgoing lines. For the dummy bonds before the first and after the last site we set suitable values to fix the global good quantum number.}
+\label{fig:MPS_OBC_quantumnumbers}
+\end{figure}
+
+Let us now assume that our lattice obeys periodic boundary conditions. At the level of the state coefficients $c_{\sigma_1\ldots\sigma_L}$ there is no notion of the boundary conditions, hence our standard form of an MPS is capable to describe a state that reflects periodic boundary conditions. In that sense it is in fact wrong to say that Eq.~(\ref{eq:MPSOBC}) holds only for open boundary conditions. It is true in the sense that the anomalous structure of the matrices on the first and last sites is not convenient for periodic boundary conditions; indeed, the entanglement across the bond $(L,1)$ must be encoded as stretching through the entire chain. This leads to numerically very inefficient MPS representations.
+
+For periodic boundary conditions the natural generalization of the MPS form is to make all matrices of equal dimensions $(D \times D)$; as site $L$ connects back to site $1$, we make the MPS consistent with matrix multiplications on all bonds by taking the trace (see Fig.~\ref{fig:MPS_PBC}):
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} \tr (M^{\sigma_1} \ldots M^{\sigma_L}) \ket{\fat{\sigma}}  \quad{\rm (MPS \ for \ PBC)}.
+\label{eq:MPSforPBC}
+\end{equation}
+While {\em a priori} not more accurate than the other, it is much better suited and computationally  far more efficient.
+\begin{figure}
+\centering\includegraphics[scale=1.0]{PyMPS_MPS_PBC.eps}
+\caption{Representation of a periodic boundary condition MPS; the long line at the bottom corresponds to the trace operation.}
+\label{fig:MPS_PBC}
+\end{figure}
+
+In this section, our emphasis has been on approximate representations of quantum states rather than on usually unachievable exact representations. While we have no prescription yet how to construct these approximate representations, some remarks are in order.
+
+Even an approximate MPS is still a linear combination of all states of the Hilbert space, no product basis state has been discarded. The limiting constraint is rather on the form of the linear combinations: instead of $d^L$ coefficients, $dL$ matrices of dimension $(D\times D)$ with a matrix-valued normalization constraint that gives $LD^2$ scalar constraints have $(d-1)LD^2$ independent parameters only, generating interdependencies of the coefficients of the state.
+ 
+The quality of the optimal approximation of any quantum state for given matrix dimensions will improve monotonically with $D$: take $D<D'$, then the best approximation possible for $D$ can be written as an MPS with $D'$ with $(D \times D)$ submatrices in the $(D' \times D')$ matrices and all additional rows and columns zero. They give further parameters for improvement of the state approximation.
+
+Product states (with Schmidt rank 1 for any Schmidt decomposition) can be written exactly using $D=1$ MPS. Real quantum physics with entangled states starts at $D=2$. Given the exponential number of coefficients in a quantum state, it may be a surprise that even in this simplest non-trivial case interesting quantum physics can be done exactly! But there are important quantum states that find a compact exact expression in this new format.
+
+\subsubsection{The AKLT state as a matrix product state} 
+In order to make the MPS framework less abstract, let us construct the MPS representation of a non-trivial quantum state. One of the most interesting quantum states in correlation physics is the {\em Affleck-Kennedy-Lieb-Tasaki state} introduced in 1987, which is the ground state of  the AKLT Hamiltonian\cite{Affleck87,Affleck88}
+\begin{equation}
+\ham = \sum_{i} {\bf S}_i \cdot {\bf S}_{i+1} + 
+\frac{1}{3} ({\bf S}_i \cdot {\bf S}_{i+1})^2 , 
+\label{eq:aklt_hamiltonian}
+\end{equation}
+where we deal, exceptionally in this paper, with $S=1$ spins. It can be shown that the ground state of this Hamiltonian can be constructed as shown in Fig.~\ref{fig:akltstate}. Each individual spin-1 is replaced by a pair of spin-$\frac{1}{2}$ which are completely symmetrized, i.e. of the four possible states we consider only the three triplet states naturally identified as $S=1$ states:
+\begin{eqnarray}
+\ket{+}&=&\ket{\uparrow\uparrow} \nonumber \\
+\ket{0}&=&\frac{\ket{\uparrow\downarrow}+\ket{\downarrow\uparrow}}{\sqrt{2}} 
+\label{eq:tripletmapping} \\
+\ket{-}&=&\ket{\downarrow\downarrow} \nonumber
+\end{eqnarray}
+On neighbouring sites, adjacent pairs of spin-$\frac{1}{2}$ are linked in a singlet state
+\begin{equation}
+\frac{\ket{\uparrow\downarrow}-\ket{\downarrow\uparrow}}{\sqrt{2}} .
+\end{equation}
+
+As it turns out, this state can be encoded by a matrix product state of the lowest non-trivial dimension $D=2$ and contains already lots of exciting physics \cite{Affleck87,Affleck88,Fannes89}. In the language of the auxiliary $2\syslength$ spin-$\frac{1}{2}$ states on a chain of length $\syslength$ any state is given as
+\begin{equation}
+    \ket{\psi} = \sum_{{\bf a}}\sum_{{\bf b}} c_{{\bf ab}} \ket{{\bf 
+    ab}}
+\end{equation}
+with $\ket{{\bf a}}=\ket{a_1,\ldots,a_\syslength}$ and $\ket{{\bf b}}=\ket{b_1,\ldots,b_\syslength}$ representing the first and second spin-$\frac{1}{2}$ on each site. We now encode the singlet bond $\Sigma_i$ on bond $i$ connecting sites $i$ and $i+1$ as 
+\begin{equation}
+\ket{\Sigma^{[i]}} = \sum_{b_i a_{i+1}} \Sigma_{ba} \ket{b_i}\ket{a_{i+1}}
+\end{equation}
+introducing a $2 \times 2$ matrix $\Sigma$
+\begin{equation}
+\Sigma = \left[ 
+\begin{array}{cc} 0 & \frac{1}{\sqrt{2}} \\ -\frac{1}{\sqrt{2}} & 0 \end{array}
+\right] .
+\end{equation}
+Then the state with singlets on all bonds reads
+\begin{equation}
+\ket{\psi_\Sigma} = \sum_{{\bf a}}\sum_{{\bf b}} \Sigma_{b_1 a_2} \Sigma_{b_2 a_3} \ldots \Sigma_{b_{\syslength-1} a_\syslength}\Sigma_{b_\syslength a_1} \ket{{\bf 
+    ab}} 
+\end{equation}
+for periodic boundary conditions. If we consider open boundary conditions, $\Sigma_{b_\syslength a_1}$ is omitted and the first and last spin-$\frac{1}{2}$ remain single.
+\begin{figure}
+\centering\includegraphics[scale=1.0]{PyMPS_AKLTState.eps}
+\caption{The Affleck-Kennedy-Lieb-Tasaki (AKLT) state is built from expressing the local spin-1 as two totally symmetrized spin-$\frac{1}{2}$ particles which are linked across sites by singlet states. The picture shows the case of PBC, for OBC the ``long'' bond is cut, and two single spins-$\frac{1}{2}$ appear at the ends.}
+\label{fig:akltstate}
+\end{figure}
+
+Note that this state is a product state factorizing upon splitting any site $i$ into its two constituents. We now encode the identification of the symmetrized states of the auxiliary spins with the physical spin by introducing a {\em mapping} from the 
+states of the two auxiliary spins-$\frac{1}{2}$, $\ket{a_i}\ket{b_i} \in \{ 
+\ket{\uparrow},\ket{\downarrow}\}^{\otimes 2}$ to the states of the 
+physical spin-1, $\ket{\sigma_i} \in \{ \ket{+},\ket{0},\ket{-} \}$. To represent \Eq{eq:tripletmapping}, we introduce $M_{ab}^{\sigma} 
+\ket{\sigma} \bra{ab}$, with $\ket{ab}$ and $\ket{\sigma}$ representing the auxiliary spins and the physical spin on site $i$. Writing $M_{ab}^{\sigma}$ as three $2\times 2$  matrices, one for each value of $\ket{\sigma}$, with rows and column indices standing for the values of $\ket{a}$ and $\ket{b}$, we find
+\begin{equation}
+    M^+ = \left[ \begin{array}{cc} 1 & 0 \\ 0 & 0 \end{array} \right] \quad
+    M^0 = \left[ \begin{array}{cc} 0 & \frac{1}{\sqrt{2}} \\ 
+    \frac{1}{\sqrt{2}} & 0 \end{array} \right] \quad
+    M^- = \left[ \begin{array}{cc} 0 & 0 \\ 0 & 1 \end{array} \right] .
+\end{equation}
+The mapping on the spin-1 chain Hilbert space $\{ \ket{\fat{\sigma}} \}$ then reads
+\begin{equation} 
+\sum_{\fat{\sigma}} \sum_{{\bf a}{\bf b}} M^{\sigma_1}_{a_1 b_1} M^{\sigma_2}_{a_2 b_2} \ldots M^{\sigma_\syslength}_{a_\syslength b_\syslength}
+\ket{\fat{\sigma}} \bra{{\bf a}{\bf b}} .
+\end{equation}
+$\ket{\psi_\Sigma}$ therefore is mapped to 
+\begin{equation}
+\sum_{\fat{\sigma}} \sum_{{\bf a}{\bf b}} M^{\sigma_1}_{a_1 b_1} \Sigma_{b_1 a_2}
+M^{\sigma_2}_{a_2 b_2} \Sigma_{b_2 a_3} \ldots \Sigma_{b_{\syslength-1} a_\syslength} 
+M^{\sigma_\syslength}_{a_\syslength b_\syslength} \Sigma_{b_\syslength a_1} 
+\ket{\fat{\sigma}}
+\end{equation}
+or
+\begin{equation}
+    \ket{\psi} = \sum_{\fat{\sigma}} \tr (M^{\sigma_{1}} \Sigma
+    M^{\sigma_{2}} \Sigma \ldots M^{\sigma_{\syslength}} \Sigma] ) \ket{\fat{\sigma}} ,
+\end{equation}
+using the matrix notation. To simplify further, we introduce $\tilde{A}^\sigma= M^\sigma \Sigma$, such that
+\begin{equation}
+    \tilde{A}^+ = \left[ \begin{array}{cc} 0 & \frac{1}{\sqrt{2}} \\ 0 & 0 \end{array} \right] \quad
+    \tilde{A}^0 = \left[ \begin{array}{cc} -\frac{1}{2} & 0 \\ 
+    0 & +\frac{1}{2} \end{array} \right] \quad
+    \tilde{A}^- = \left[ \begin{array}{cc} 0 & 0 \\ -\frac{1}{\sqrt{2}} & 0 \end{array} \right] .
+    \label{eq:unnormalizeda}
+\end{equation}
+The AKLT state now takes the form 
+\begin{equation}
+    \ket{\psi} = \sum_{\fat{\sigma}} \tr (\tilde{A}^{\sigma_{1}} 
+    \tilde{A}^{\sigma_{2}} \ldots \tilde{A}^{\sigma_{\syslength}}) \ket{\fat{\sigma}} .
+    \label{eq:akltstate}
+\end{equation}
+Let us left-normalize the $\tilde{A}^\sigma$. $\sum_\sigma \tilde{A}^{\sigma\dagger}\tilde{A}^\sigma = \frac{3}{4}I$, which implies that the matrices $\tilde{A}$  should 
+be rescaled by $\frac{2}{\sqrt{3}}$, such that we obtain normalized matrices $A$,
+\begin{equation}
+    A^+ = \left[ \begin{array}{cc} 0 & \sqrt{\frac{2}{3}} \\ 0 & 0 \end{array} \right] \quad
+    A^0 = \left[ \begin{array}{cc} -\frac{1}{\sqrt{3}} & 0 \\ 
+    0 & \frac{1}{\sqrt{3}} \end{array} \right] \quad
+    A^- = \left[ \begin{array}{cc} 0 & 0 \\ -\sqrt{\frac{2}{3}} & 0 \end{array} \right] .
+    \label{eq:normalizeda}
+\end{equation}
+This normalizes the state in the thermodynamic limit: we have
+\begin{eqnarray*}
+\braket{\psi}{\psi} &=& \sum_{\fat{\sigma}} \tr (A^{\sigma_1} \ldots A^{\sigma_\syslength})^* \tr (A^{\sigma_1} \ldots A^{\sigma_\syslength}) \\
+&=&  \tr \left( \sum_{\sigma_1} A^{\sigma_1*} \otimes A^{\sigma_1}\right) \ldots \left( \sum_{\sigma_L} A^{\sigma_\syslength*}\otimes A^{\sigma_\syslength} \right) \\
+&=& \tr E^L = \sum_{i=1}^4 \lambda_i^L .
+\end{eqnarray*}
+In this expression, the $\lambda_i$ are the 4 eigenvalues of 
+\begin{equation}
+E = \sum_\sigma A^{\sigma*} \otimes A^{\sigma} = \left[ \begin{array}{cccc} 
+\frac{1}{4} & 0 & 0 & \frac{1}{2} \\
+0 & -\frac{1}{4} & 0 & 0 \\
+0 & 0 & -\frac{1}{4} & 0 \\
+\frac{1}{2} & 0 & 0 & \frac{1}{4}
+\end{array} \right] ,
+\end{equation}
+namely $1,-\frac{1}{3},-\frac{1}{3},-\frac{1}{3}$. But then $\braket{\psi}{\psi} = 1 + 3(-1/3)^L \rightarrow 1$ for $L\rightarrow\infty$.
+

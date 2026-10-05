@@ -1,0 +1,110 @@
+\subsection{MPS 的近似压缩}
+
+MPS 的（少见的）相加以及各种能够用 MPS 表述的算法，会使结果的矩阵维数大幅增加。因此，一个反复出现的问题就是：如何把一个矩阵维数为 $(D'_i \times D'_{i+1})$ 的给定 MPS，
+尽可能好地用另一个矩阵维数为 $(D_i \times D_{i+1})$（其中 $D_i < D'_i$）的 MPS 来近似。
+
+原则上存在两种做法：{\em SVD 压缩}和{\em 变分压缩}。二者各有优劣：当压缩程度不大（$D \sim D'$）时，SVD 很快，但绝非最优；若 $D' \gg D$，它会变得非常慢。变分压缩是最优的，但若起点随机选取则很慢；不过，如果提供一个好的试探态（例如来自 SVD 方法），它可以大大加速。一般说来，变分拟设中可能出现陷入非最优压缩的问题。
+ 
+根据待压缩态的具体性质，可以把步骤进一步优化，例如当待压缩的 MPS 是若干 MPS 之和，或者是把矩阵乘积算符（MPO；第~\ref{sec:MPO}~节）作用到某个 MPS 上的结果时。
+
+\subsubsection{用 SVD 压缩矩阵乘积态}
+考虑一个处于混合规范表示中的 MPS，
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} A^{\sigma_1} A^{\sigma_2} \ldots A^{\sigma_{\ell}} \Lambda^{[\ell]} B^{\sigma_{\ell+1}} \ldots B^{\sigma_{L-1}} B^{\sigma_L}  \ket{\fat{\sigma}} ,
+\label{eq:compressionstart}
+\end{equation}
+从中读出 Schmidt 分解 $\ket{\psi} = \sum_{a_\ell=1}^{D'} s_{a_\ell} \ket{a_\ell}_A \ket{a_\ell}_B$，其中 A 与 B 上的态各自构成正交归一集合；这由规范构造直接得出。设此分解双方各有 $D'$ 个态。我们现在寻找在 2-范数意义下最好地逼近 $\ket{\psi}$、且在 A 与 B 中各能由 $D$ 个态张成的态 $\ket{\tilde{\psi}}$。前面已经证明，SVD 通过保留 $D$ 个最大的奇异值给出结果，压缩后的态简单地为 $\ket{\psi} = \sum_{a_\ell=1}^{D} s_{a_\ell} \ket{a_\ell}_A \ket{a_\ell}_B$，由此得到一个简单的截断处方：保留 $A^{\sigma_{\ell}}$ 的前 $D$ 列、$B^{\sigma_{\ell+1}}$ 的前 $D$ 行，以及 $\Lambda^{[\ell]}$ 的前 $D$ 行和列。若需要归一化，保留的奇异值必须重新标度。
+
+这一步骤依赖于 A 与 B 上态的正交归一性，因此只能在单个键上执行。为了缩小所有矩阵，我们必须遍历所有混合规范表示——比如从右到左——进行截断，并借助规范化技术把左规范与右规范矩阵之间的边界向左移动一个格点。
+
+对一个左规范的态做右规范化的第一步之后，它变为：
+\begin{equation}
+\ket{\psi^{(L-1)}} = \sum_{\fat{\sigma}} A^{\sigma_1} \ldots A^{\sigma_{L-1}} U S B^{\sigma_L} \ket{\fat{\sigma}} ,
+\end{equation}
+其中我已经把 $B$ 重排成形，它是右规范的，并保证形如 $\ket{a_{L-1}}_B = \sum_{\sigma_L} (B^{\sigma_L})_{a_{L-1},1} \ket{\sigma_L}$ 的态是正交归一的。但如下这些态也是正交归一的
+\begin{equation}
+\ket{a_{L-1}}_A = \sum_{\sigma_1 \ldots \sigma_{L-1}} (A^{\sigma_1} \ldots A^{\sigma_{L-1}} U)_{1,a_{L-1}} \ket{\sigma_1 \ldots \sigma_{L-1}},
+\end{equation}
+因为 SVD 保证 $U^\dagger U = 1$：我们只是在由左规范的 $A^{\sigma_i}$ 所构造的正交归一基集合之内做一次基变换。于是我们得到一个正确的 Schmidt 分解
+\begin{equation}
+\ket{\psi^{(L-1)}} = \sum_{a_{L-1}} s_{a_{L-1}} \ket{a_{L-1}}_A \ket{a_{L-1}}_B .
+\end{equation}
+与右规范化的区别现在在于截断：矩阵 $U$、$S$ 和 $B^{\sigma_L}$ 按照前面的说明被截断（奇异值可能重新归一化）为 $\tilde{U}$、$\tilde{S}$ 和 $\tilde{B}^{\sigma_L}$：保留 $D$ 个最大的奇异值。$\tilde{B}^{\sigma_L}$ 仍是右规范的。左边下一个 $A^{\sigma_{L-1}}$ 与 $\tilde{U}$、$\tilde{S}$ 相乘构成 $M^{\sigma_{L-1}}$。通过如下的重排、SVD、再重排
+\begin{equation}
+M^{\sigma}_{ij} = M_{i, (\sigma j)} = \sum_k U_{ik} S_{kk} B_{k,(\sigma j)} = \sum_k U_{ik} S_{kk} B^{\sigma}_{kj} 
+\end{equation} 
+我们得到右规范的 $B^{\sigma_{L-1}}$，把 $U$、$S$ 和 $B^{\sigma_{L-1}}$ 截断为 $\tilde{U}$、$\tilde{S}$ 和 $\tilde{B}^{\sigma_{L-1}}$，然后步骤继续：
+\begin{eqnarray*}
+\ket{\psi} &=& \sum_{\fat{\sigma}}  A^{\sigma_1} \ldots A^{\sigma_{L-3}}A^{\sigma_{L-2}} \left( A^{\sigma_{L-1}} U S \right)B^{\sigma_L}   \ket{\fat{\sigma}} \\
+&\rightarrow& \sum_{\fat{\sigma}} A^{\sigma_1} \ldots A^{\sigma_{L-3}}A^{\sigma_{L-2}}\left( A^{\sigma_{L-1}} \tilde{U} \tilde{S} \right) \tilde{B}^{\sigma_L}   \ket{\fat{\sigma}} \\
+&=&  \sum_{\fat{\sigma}} A^{\sigma_1} \ldots A^{\sigma_{L-3}}A^{\sigma_{L-2}} M^{\sigma_{L-1}} \tilde{B}^{\sigma_L}   \ket{\fat{\sigma}} \\
+&=& \sum_{\fat{\sigma}} A^{\sigma_1} \ldots A^{\sigma_{L-3}} \left( A^{\sigma_{L-2}} U S \right) B^{\sigma_{L-1}} \tilde{B}^{\sigma_L}   \ket{\fat{\sigma}} \\
+&\rightarrow& \sum_{\fat{\sigma}} A^{\sigma_1} \ldots A^{\sigma_{L-3}} \left( A^{\sigma_{L-2}} \tilde{U} \tilde{S} \right) \tilde{B}^{\sigma_{L-1}} \tilde{B}^{\sigma_L}   \ket{\fat{\sigma}} \\
+&=& \ldots
+\end{eqnarray*}
+最终，压缩后的 MPS $\ket{\tilde{\psi}}$ 是右规范的，由 $\tilde{B}$ 矩阵给出。后面会看到，这一压缩步骤正是（含时）DMRG 或 TEBD 扫描经过链时所执行的截断。这两种方法在每个键的左右两侧都拥有正确归一化的矩阵（即正交归一态），执行切割后继续前进。
+
+该方法的缺点是会出现截断之间的单侧相互依赖：矩阵 $M$ 总是包含来自上一步的截断后的 $\tilde{U}$，因此依赖于截断。一般而言，各次截断不可能彼此独立，因为对每个分解 (\ref{eq:compressionstart})，$A$ 矩阵和 $B$ 矩阵的截断都会影响正交归一系；但这里的依赖是单侧且``不平衡''的：越靠左的截断依赖于越靠右的截断，反之则不然。如果截断很小——在含时 DMRG 中对小时间步长通常如此——引入的额外不精确性是次要的；但在可能出现大截断的情形中，这种依赖可能变得过强，截断也就远非最优。
+
+第二个问题关乎效率：对维数为 $(m\times n)$、$m\ge n$ 的矩阵，SVD 的代价是 $O(m n^2)$。这意味着当 $D' \le dD$ 时 SVD 代价为 $O((D')^2 dD)$，否则为 $O(D' d^2 D^2)$；矩阵乘法的代价是 $O(dD(D')^2)$。在许多应用中 $D'\gg D$；此时该方法变得相当慢。若原始态不在规范形式、必须先通过一串阶为 $O((D')^3)$ 的 SVD 化为规范形式，情况还要更糟。
+
+最后以一点评论结束本节：当然，我们也可以通过施加某个 $\epsilon$ 来压缩——在每次截断时把它接受为原态与压缩态之间 2-范数距离的最大值（由被丢弃奇异值的平方和给出），从而隐式地定义 $D$。
+
+\subsubsection{迭代压缩矩阵乘积态}
+最优的做法是从一个具有期望的约化维数的拟设 MPS 出发，迭代地极小化它与待近似 MPS 的距离，也就是说，通过迭代地改动它的 $\tilde{M}^\sigma$ 矩阵。这些矩阵扮演变分参数的角色。
+
+把 $\ket{\psi}$ 从维数 $D'$ 最优压缩为维数 $D$ 的 $\ket{\tilde{\psi}}$，其数学上的精确表述是极小化 $\| \ket{\psi} - \ket{\tilde{\psi}} \|_2^2$，也就是说，我们要关于 $\ket{\tilde{\psi}}$ 极小化 $\braket{\psi}{\psi} - \braket{\tilde{\psi}}{\psi} -\braket{\psi}{\tilde{\psi}} + \braket{\tilde{\psi}}{\tilde{\psi}}$。把这两组矩阵分别记为 $M$ 和 $\tilde{M}$，以强调我们对归一化不作任何假设。用底层的矩阵 $\tilde{M}$ 表出时，这是一个高度非线性的优化问题。
+
+但这可以按如下方式迭代进行。先给 $\ket{\tilde{\psi}}$ 一个初始猜测，它可以取 $\ket{\psi}$ 的 SVD 压缩，虽未必最优，却是一个不错的起点。然后我们逐格点扫描 $\tilde{M}^{\sigma_i}$ 集合：保持所有其他矩阵固定，选取新的 $\tilde{M}^{\sigma_i}$ 使距离极小。（通常可以指望的是）把这样的矩阵扫描重复若干次，就会收敛到最优近似。
+
+新的 $\tilde{M}^{\sigma_i}$ 由对 $\tilde{M}^{\sigma_i*}_{a_{i-1},a_{i}}$ 取极值得到，它只出现在 $ - \braket{\tilde{\psi}}{\psi} + \braket{\tilde{\psi}}{\tilde{\psi}}$ 中。我们求得
+\begin{eqnarray*}
+& & \frac{\partial}{\partial \tilde{M}^{\sigma_i*}_{a_{i-1},a_i}} ( \braket{\tilde{\psi}}{\tilde{\psi}}
+- \braket{\tilde{\psi}}{\psi} ) = \\
+& & \sum_{\fat{\sigma}*} (\tilde{M}^{\sigma_1*} \ldots \tilde{M}^{\sigma_{i-1}*})_{1, a_{i-1}}(\tilde{M}^{\sigma_{i+1}*} \ldots \tilde{M}^{\sigma_L*})_{a_i,1} \tilde{M}^{\sigma_1} \ldots \tilde{M}^{\sigma_i} \ldots \tilde{M}^{\sigma_L} -  \\
+& & \sum_{\fat{\sigma}*}
+(\tilde{M}^{\sigma_1*} \ldots \tilde{M}^{\sigma_{i-1}*})_{1, a_{i-1}}(\tilde{M}^{\sigma_{i+1}*} \ldots \tilde{M}^{\sigma_L*})_{a_i,1} M^{\sigma_1} \ldots M^{\sigma_i} \ldots M^{\sigma_L}= 0.
+\end{eqnarray*}
+对 $\fat{\sigma}*$ 的求和跑遍除 $i$ 以外的所有物理格点。这个方程组看起来复杂，实际上相当容易。把待求的矩阵 $\tilde{M}^{\sigma_i}$ 显式地分离出来，可以把这个方程改写为
+\begin{equation}
+\sum_{a'_{i-1}a'_i} \tilde{O}_{a_{i-1}a_i,a'_{i-1}a'_i} \tilde{M}^{\sigma_i}_{a'_{i-1}a'_i} = O^{\sigma_i}_{a_{i-1}a_i}.
+\end{equation}
+如果对每个 $\sigma_i$，我们把矩阵 $\tilde{M}^{\sigma_i}$ 解释为长度 $D^2$ 的向量 $v$，把 $\tilde{O}$ 解释为维数 $(D^2 \times D^2)$ 的矩阵 $P$，把 $O^{\sigma_i}$ 解释为长度 $D^2$ 的向量 $b$，就得到一个线性方程组
+\begin{equation}
+P v = b. 
+\end{equation}
+所得的 $v$ 即可取作我们要找的矩阵。由于这个方程组通常太大而无法直接求解，必须使用迭代求解器，例如共轭梯度法。该方程组是厄米的，从 $P$ 的构造可以看出：非共轭与共轭的 $\tilde{M}$ 在转置下恰好互换角色。图示表示再次最为简单（图~\ref{fig:iterativecompression}）。
+
+\begin{figure}
+\centering\includegraphics[scale=0.6]{PyMPS_MPS_IterativeCompression.eps}
+\caption{MPS 迭代压缩时需求解的线性方程组。较粗的线对应待压缩的态，较细的线对应压缩后的态。未知矩阵被圈出。}
+\label{fig:iterativecompression}
+\end{figure}
+    
+
+正如后面变分求基态的情形一样，必须认识到共轭梯度法中矩阵--向量乘法的代价并不是按维数天真估计的 $O(D^4)$。存在一个明显的因式分解，它在图示中格外一目了然，可以把代价降到 $O(D^3)$：
+\begin{equation}
+\tilde{O}_{a_{i-1}a_i,a'_{i-1}a'_i} = \tilde{L}_{a_{i-1},a'_{i-1}} \cdot \tilde{R}_{a_{i},a'_{i}}
+\end{equation}
+其中
+\begin{equation}
+\tilde{L}_{a_{i-1},a'_{i-1}} = \left( \sum_{\sigma_{i-1}}  \tilde{M}^{\sigma_{i-1}\dagger} \left( \ldots \left( \sum_{\sigma_1}  
+\tilde{M}^{\sigma_{1}\dagger} \tilde{M}^{\sigma_{1}} \right) \ldots \right) \tilde{M}^{\sigma_{i-1}} \right)_{a_{i-1},a'_{i-1}}
+\end{equation}
+对 $\tilde{R}$ 亦类似。在图示表示（图~\ref{fig:normalizediterativecompressionLR}）中，它们不过是待解的带圈 $\tilde{M}$ 矩阵左右两边已缩并的对象。
+
+于是
+\begin{equation}
+\sum_{a'_{i-1}a'_i} \tilde{O}_{a_{i-1}a_i,a'_{i-1}a'_i} \tilde{M}^{\sigma_i}_{a'_{i-1}a'_i} =
+\sum_{a'_{i-1}} \tilde{L}_{a_{i-1},a'_{i-1}} \left( \sum_{a'_i} \tilde{R}_{a_{i},a'_{i}}
+ \tilde{M}^{\sigma_i}_{a'_{i-1}a'_i} \right),
+\end{equation}
+两次代价为 $O(D^3)$ 的操作。
+
+一个类似的分解简化了向量 $b$ 的计算，它由 $O^{\sigma_i}_{a_{i-1}a_i}$ 按下式构成：
+\begin{equation}
+\sum_{a'_{i-1}a'_i} L_{a_{i-1},a'_{i-1}} M^{\sigma_i}_{a'_{i-1}a'_i} R_{a_{i},a'_{i}} , 
+\end{equation}
+其中 $L$ 和 $R$ 如图~\ref{fig:normalizediterativecompression} 所示。
+事实上，计算 $L$ 和 $R$ 无非就是从左端或右端开始执行重叠（overlap）计算的头几步，其结果正是该计算在中间步骤产生的 $C$ 矩阵。如果从左到右再折返地扫描整个系统，就可以利用前面各步迭代地构建 $L$ 和 $R$，这是最有效率的方式。
+

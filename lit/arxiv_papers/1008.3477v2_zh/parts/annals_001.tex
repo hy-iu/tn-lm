@@ -1,0 +1,128 @@
+超块 A$\bullet\bullet$B 的任意态都可以描述为
+\begin{equation}
+\ket{\psi}= \sum_{a_A \sigma_A \sigma_B a_B} \psi_{a_A \sigma_A \sigma_B a_B} \ket{a}_A \ket{\sigma}_A \ket{\sigma}_B \ket{a}_B \equiv \sum_{i_A j_B} \psi_{i_A j_B} \ket{i}_A \ket{j}_B,
+\label{US:eq:DMRGstate}
+\end{equation}
+其中紧邻 A 的格点的态位于局域态空间维数为 $d$ 的集合 $\{ \ket{\sigma}_A \}$ 中，紧邻 B 的格点的态亦然。通过数值对角化，我们求出使能量
+\begin{equation}
+E = \frac{\bra{\psi} \hat{H}_{{\rm A}\bullet\bullet{\rm B}} \ket{\psi}}{\braket{\psi}{\psi}}
+\end{equation}
+相对于超块的哈密顿量取极小的 $\ket{\psi}$，这就回答了 (i)。为此，我们需要某种迭代法稀疏矩阵本征值求解器，例如 Lanczos 方法或 Jacobi-Davidson 方法所提供的那些。鉴于我们的哈密顿量 [式~(\ref{eq:basicHam})] 是在全张量积空间中给出的，这一极小化当然预设了它能够方便地在超块基中表达出来。这个问题我们先搁置一下，因为它与块的生长及其态空间的状态抽取紧密相关。由于矩阵维数为 $d^2 D^2$，对典型的 $D$ 而言，即使假定利用了量子对称性，该本征值问题也大得无法直接求解。短程哈密顿量的大多数矩阵元为零，矩阵因而是稀疏的，这样迭代法稀疏矩阵本征值求解器所需的基本矩阵—矢量乘法就可以非常高效地实现。我们在下文还会进一步讨论这个问题。
+
+如果我们现在取态 $\{ \ket{i}_A \}$ 作为下一个更大的左块 A$\bullet$ 的基，基维数就增长到 $dD$。为避免指数增长，我们按如下步骤把这个基截断回 $D$ 个态（对块 A$\bullet$ 这样做，对 $\bullet$B 同理）：我们考虑 A$\bullet$ 的 {\em 约化密度算符}，即
+\begin{equation}
+\hat{\rho}_{A\bullet} = \Tr_{\bullet B} \ket{\psi}\bra{\psi} 	\quad\quad (\rho_{A\bullet})_{ii'} = \sum_j \psi_{ij}\psi^*_{i'j} .
+\end{equation}
+$\hat{\rho}_{A\bullet}$ 的本征系统由精确对角化确定；做法是保留关联本征值 $w$ 最大的那 $D$ 个正交归一本征态作为约化基。若把它们记为 $\ket{b}_A$，则矢量的分量不过是在先前的块—格点基中的展开系数 $_A \braket{a \sigma}{b}_A$。
+
+在把 A$\bullet$ 上所有需要的算符（近似地）变换到新基之后，系统尺寸就可以再次增大，直到达到想要的最终尺寸。B 同时生长，对反射对称的系统只需简单地镜像即可。
+
+截断步骤的动机有二。第一个理由基础较弱：我们关心的是 A$\bullet$ 中对基态贡献最大的那些态，这里的基态是指 A$\bullet$ 嵌入在最终的、大得多的乃至无限大的系统中时的基态。我们以目前所知，用 A$\bullet\bullet$B——即我们能高效构造的最大超块——的基态来近似这个尚不知晓的最终系统基态。在这个意义上，我们是在做自举（bootstrap），而正如我们将看到的，有限系统 DMRG 会处理由此可能带来的大近似。
+这里我要立即指出，在无限系统 DMRG 的 MPS 表述中，一幅清晰得多的图景将会浮现。选取态的第二个动机则根基牢固得多：上述方案既可以由统计物理的论证得出，也可以由如下要求导出：当前基态 $\ket{\psi}$ 与其到维数为 $D$ 的截断块基上的投影 $\ket{\psi}_{{\rm trunc}}$ 之间的 2-范数距离 $\| \ket{\psi} - \ket{\psi}_{{\rm trunc}} \|_2$ 为最小。最透明的证明来自对矩阵 $\Psi$ 的奇异值分解，其矩阵元 $\Psi_{(a_A \sigma_A), (\sigma_B a_B)}$ 由波函数系数 $\psi_{a_A \sigma_A\sigma_B a_B}$ 构成。DMRG 的整体成功建立在如下观察之上：即使对于中等的 $D$（常常只有几百），被截断的本征值的总权重——若假定 $w_a$ 按降序排列，则由 {\em 截断误差} $\epsilon=1-\sum_{a>D} w_a$ 给出——也极其接近 0，比如说 $10^{-10}$ 或更小。
+
+在算法上，我们当然也可以固定一个我们愿意接受的（小的）$\epsilon$，并在每次截断时选取足够大的 $D$ 来满足这一要求。这样计算资源的利用更为高效（典型地，链两端附近量子涨落减弱，那里的 $D$ 会稍小一些），当然，为实现这种灵活性所需的编程工作量也要更高一些。
+
+提升任何量子算法性能的一个重要方面是利用量子对称性：从离散对称性（如当哈密顿量在从左到右的镜像变换下不变时的 $Z_2$ 镜像对称），到阿贝尔对称性（如粒子数（``电荷''）守恒或磁化强度守恒的 $U(1)$ 对称性），再到非阿贝尔对称性（如旋转不变性的 {\em SU}(2) 对称性）\cite{McCulloch07,SierraNishino97,McCulloch00,McCulloch01,McCulloch02}。大量这类对称性已在众多应用中得到成功使用，最常见的是电荷守恒与磁化强度守恒这两个 $U(1)$ 对称性，但也有 {\em SU}(2) 对称性\cite{McCulloch08a,Smerat09,Langer09,Holzner09}。让我们聚焦于磁化强度，并假定总磁化强度 $\hat{M} = \sum_i \hat{S}^z_i$ 与哈密顿量对易，$[\hat{H},\hat{M}]=0$，于是 $\hat{H}$ 的本征态可以选成 $\hat{M}$ 的本征态。特别地，我们假定基态的好量子数为 $M=0$。若块态与格点态都是磁化强度的本征态，则仅当 $M (\ket{a}_A) +  M (\ket{\sigma}_A) + M (\ket{\sigma}_B) + M (\ket{a}_B) = 0$ 时才有 $\psi_{a_A \sigma_A \sigma_B a_B} \neq 0$；
+这里 $M$ 是相应块和格点磁化强度的简写，前提是这些态以磁化强度为好量子数。这一约束使我们能把大量系数从计算中排除，从而带来计算上的巨大加速以及（较次要的）内存节省。
+
+决定性的一点是：如果态 $\ket{a}_A$ 和 $\ket{\sigma}_A$ 是磁化强度的本征态，那么约化密度算符 $\hat{\rho}_{A\bullet}$ 的本征态也将是，而这些本征态正是增大后的块的态 $\ket{a}_A$。由于局域格点态可以选成这样的本征态，且生长过程中的第一个块仅由一个局域格点组成，本征态性质便由此贯穿整个算法。为证明这一论断，我们考虑 $(\rho_{A\bullet})_{ii'} = \sum_j \psi_{ij} \psi^*_{i'j}$。态 $\ket{i}_A$ 和 $\ket{j}_B$ 按构造就是磁化强度的本征态，故
+$M (\ket{i}_A) + M(\ket{j}_B) = 0 = M (\ket{i'}_A) + M (\ket{j}_B)$，即 $M (\ket{i}_A) = M (\ket{i'}_A)$。因此密度矩阵分解为若干块，每块由磁化强度相同的态构成，可以在这些集合内逐块对角化，于是其本征态也是磁化强度的本征态。
+
+在实际实现中，使用这类好量子数的做法是：把算符的矩阵表示排列成以好量子数标记的块结构，再将它们组合起来以满足局域与全局的约束。这在概念上容易，但编码会更为复杂，此处不打算具体展开；在 MPS 各节中会给出提示。
+
+到此为止，我们一直搁置着如何把作用在块上的算符表达在当前块基中的问题，而这是构造哈密顿量和所关心的可观测量所必需的。考虑作用在格点 $\ell$ 上的算符 $\hat{O}$，其矩阵元为 $O^{\sigma_\ell,\sigma'_\ell}=\bra{\sigma_\ell} \hat{O}_{\ell} \ket{\sigma'_\ell}$。不失一般性，设格点 $\ell$ 在左侧并被并入块 A。那么当块 A 从 $\ell-1 \rightarrow \ell$ 生长时，它的构造初始化为
+\begin{equation}
+\bra{a_\ell} \hat{O} \ket{a'_\ell} = \sum_{a_{\ell-1},\sigma_\ell,\sigma'_\ell}
+\braket{a_\ell}{a_{\ell-1}\sigma_\ell} \bra{\sigma_\ell} \hat{O} \ket{\sigma'_\ell} \braket{a_{\ell-1}\sigma'_\ell}{a'_\ell} .
+\end{equation}
+这里 $\ket{a_\ell}$ 和 $\ket{a_{\ell-1}}$ 分别是长度为 $\ell$ 和 $\ell-1$ 的块的有效基态。当然，在块 A 进一步的生长步骤中还需要更新，例如
+\begin{equation}
+\bra{a_{\ell+1}} \hat{O} \ket{a'_{\ell+1}} = \sum_{a_{\ell},a'_{\ell}\sigma_{\ell+1}}
+\braket{a_{\ell+1}}{a_{\ell}\sigma_{\ell+1}} \bra{a_\ell} \hat{O} \ket{a'_\ell} \braket{a'_{\ell}\sigma_{\ell+1}}{a'_{\ell+1}} .
+\label{eq:update}
+\end{equation}
+重要的是要意识到，式~(\ref{eq:update}) 中的求和必须拆分为
+\begin{equation}
+\sum_{a_{\ell}\sigma_{\ell+1}} \braket{a_{\ell+1}}{a_{\ell}\sigma_{\ell+1}} \left( \sum_{a'_{\ell}}
+ \bra{a_\ell} \hat{O} \ket{a'_\ell} \braket{a'_{\ell}\sigma_{\ell+1}}{a'_{\ell+1}} \right),
+\end{equation}
+从而把计算量从 $O(D^4 d)$ 降到 $2O(D^3 d)$。
+
+在哈密顿量中会出现算符乘积 $\hat{O}\hat{P}$。把量子力学的恒等式插入当前块基并写成下式虽然诱人，但由于截断步骤众多而极不精确：
+\begin{equation}
+\bra{a_\ell} \hat{O}\hat{P} \ket{a'_\ell} = \sum_{\tilde{a}_\ell} \bra{a_\ell} \hat{O} \ket{\tilde{a}_\ell} \bra{\tilde{a}_\ell} \hat{P} \ket{a'_\ell} . \quad\quad {\rm NO!}
+\end{equation}
+正确的做法是：不断更新第一个算符（对左块 A 从左往右数），直到到达第二个算符所在的格点，再把它并入如下：
+\begin{equation}
+\bra{a_\ell} \hat{O} \hat{P} \ket{a'_\ell} = \sum_{a_{\ell-1},a'_{\ell-1},\sigma_\ell,\sigma'_\ell}
+\braket{a_\ell}{a_{\ell-1}\sigma_\ell}  \bra{a_{\ell-1}} \hat{O} \ket{a'_{\ell-1}} \bra{\sigma_\ell} \hat{P} \ket{\sigma'_\ell} \braket{a'_{\ell-1}\sigma'_\ell}{a'_\ell} .
+\label{eq:incorporate}
+\end{equation}
+其后的更新与单个算符的情形相同。显然，我们看到的是一串直截了当的（约化）基变换，只是记号略显繁琐；但这些公式在 MPS 语言中会显得简单多少，将会是一件有趣的事，尽管内容完全相同。
+
+
+
+期望值的最终计算在生长过程结束时由下式给出
+\begin{equation}
+\bra{\psi} \hat{O} \ket{\psi} = \sum_{a_A a'_A \sigma_A \sigma_B a_B} \braket{\psi}{a_A \sigma_A \sigma_B a_B} \bra{a_A} \hat{O} \ket{a'_A} \braket{a'_A \sigma_A \sigma_B a_B}{\psi},
+\end{equation}
+其中通过适当的加括号方式，这成为 $O(D^3 d^2)$ 阶的运算。一个重要的特例是：当我们要计算作用在最终的块—格点构型中某个自由格点 $\bullet$ 上的局域算符的期望值时。此时
+\begin{equation}
+\bra{\psi} \hat{O} \ket{\psi} = \sum_{a_A \sigma_A \sigma'_A \sigma_B a_B} \braket{\psi}{a_A \sigma_A \sigma_B a_B} \bra{\sigma_A} \hat{O} \ket{\sigma'_A} \braket{a_A \sigma'_A \sigma_B a_B}{\psi},
+\end{equation}
+这是 $O(D^2 d^3)$ 阶的表达式（对许多算符而言甚至只有 $O(D^2 d^2)$）。鉴于在实际应用中总有 $D \gg d$，这类计算在计算上是极为有利的。
+
+在结束这些较为技术性的讨论时我要指出：要从这类算符高效地构造 $\hat{H}$，关键在于 {\em 绝不}把它造成一个完整矩阵，而是利用其特定的块—格点—格点—块结构。例如，设某项含一个作用在 A 上的算符和一个作用在 B 上的算符（这实际上是最复杂的情形），$\hat{h}=\hat{O}_A \hat{O}_B$。那么
+\begin{equation}
+\bra{a_A \sigma_A \sigma_B a_B} \hat{h}\ket{\psi} = \sum_{a'_A}
+\bra{a_A}\hat{O}_A\ket{a'_A} \left( \sum_{a'_B} \bra{a_B}\hat{O}_B\ket{a'_B}  \braket{a'_A \sigma_A \sigma_B a'_B}{\psi} \right),
+\label{eq:hamfragment}
+\end{equation}
+这是两次 $O(D^3 d^2)$ 乘法的序列（而非一次朴素的 $O( D^4 d^2)$ 计算），对所有系数 $\bra{a_A \sigma_A \sigma_B a_B} \hat{h}\ket{\psi}$ 皆如此，其他各项也类似。
+
+如果我们在某个超块尺寸 $L$ 处停止无限系统 DMRG，可以用两种方式解读最终的波函数。我们可以把它视为尺寸为 $L$ 的超块的精确态的近似，并计算期望值。其精度不仅受截断的限制，还受如下事实的影响：最初的几次截断是在极小的超块上进行的：为短块挑选的相关态，很可能与把这些短块嵌入长度为 $L$ 的最终系统时所选出的态相差不小。
+
+另一种做法是忽略这些边界效应，聚焦于中央格点，把它们当作无限大系统行为的近似，前提是 $L$ 足够大，并且对结果向 $L\rightarrow\infty$ 作了仔细的外推。这要做到非常可控并不简单，但正如我们将看到的，无限系统 DMRG 可用来构造高度可控的、平移不变的（在相差比如说一个长度为 2 的单胞的意义下）热力学极限态。
+
+\subsection{有限系统 DMRG}
+
+一旦无限系统 DMRG 达到了想要的最终系统尺寸，除了最平凡的应用之外，重要的是接着进行所谓的有限系统 DMRG 步骤。这不只会给我们的结果带来一些微小的定量改进，还可能使其彻底改观：参见 \cite{Schollwoeck03} 中的一个例子，其中连核心的物理结论都变了：对于一个梯子上的 $t$-$J$-$V$-$V'$ 模型、中等空穴掺杂 $\delta=0.1$，无限系统 DMRG 计算表明在方格（plaquette）上存在交替环流，由梯子左端的一个无穷小电流所触发，这是一种所谓 $d$-密度波态的信号。只有在应用有限系统算法之后才变得明显：这个电流实际上向体内指数衰减，从而排除了这种类型的序（图~\ref{fig:PlaquetteCurrent}）。
+
+\begin{figure}
+\centering\includegraphics[width=\textwidth]{PyMPS_DMRGCombined.eps}
+\caption{图的左半部分与右半部分分别展示无限系统与有限系统 DMRG 步骤中的迭代过程。在两种情形下，新块都是通过把一个格点并入块而形成的，并按照 DMRG 的密度矩阵方案作态空间截断。在无限系统版本中，这种生长发生在链的两侧，导致链变长；而在有限系统算法中，生长只发生在一侧，以牺牲另一侧为代价，链长保持不变。}
+\label{fig:DMRGCombined}
+\end{figure}
+
+有限系统算法所修正的，是在某个超块的背景下为约化基所作的选择——该超块并非所关心的系统（最终长度 $L$），而只是它的某种较小的替身。
+
+\begin{figure}
+\centering\includegraphics[width=250pt]{PyMPS_PlaquetteCurrent.eps}
+\caption{$t$-$J$-$V$-$V'$ 梯子上的方格（plaquette）电流，$J=0.4t$，$V=3t$，$V'=t$（$V$ 为最近邻、$V'$ 为次近邻相互作用），空穴掺杂 $\delta=0.1$，系统尺寸 $2\times 60$，由横杆 $1$ 上的有限边界电流诱导。图中显示的是电流的绝对强度；无限系统 DMRG 与第一次扫描都表明产生了长程图样，而完全收敛的计算（此处为 6 到 7 次扫描之后）则揭示出向体内的指数衰减。取自文献~\cite{Schollwoeck03}。}
+\label{fig:PlaquetteCurrent}
+\end{figure}
+
+有限系统算法所做的事情如下（Figure \ref{fig:DMRGCombined}）：它按照与之前相同的方案继续（比如说）块 B 的生长过程：求超块系统的基态，确定约化密度算符，求本征系统，为下一个更大的块保留权重最高的 $D$ 个本征态。但这是以牺牲块 A 为代价的，A 收缩（即复用旧的较短的块 A）。如此继续，直到 A 小到具有完整的希尔伯特空间，即维数不超过 $D$（也可以一直继续到 A 只剩一个格点长；结果不受影响）。然后生长方向反转：A 以牺牲 B 为代价生长，包括为 A 重新确定基态和选取基，直到 B 小到具有完整的希尔伯特空间，这又导致生长方向再次反转。
+
+这种贯穿系统的 {\em 扫描}一直继续，直到能量（或者更准确地说，波函数）收敛。这个（实践中极为成功的）步骤的直观动机是：每完成一次扫描，块 A 或 B 都是在一个不断改善的嵌入环境中确定的。
+
+在实践中，这个算法涉及大量簿记工作，因为我们需要的所有算符都必须在当前的有效基中维护，而这些基会一步步改变。这意味着每一步之后都要执行所确定的截断基变换；所有基中的算符表示都必须存储下来，因为收缩中的块还会再次用到它们。
+
+另一个重要特点是：为每个 A$\bullet\bullet$B 构型求基态 $\ket{\psi}$ 时，使用的是某种迭代法大型稀疏矩阵本征值求解器，它基于把 $\hat{H}$ 逐次作用于某个初始起始矢量。为加速算法中这个最耗时的部分，非常希望有一个好的起始矢量预测，即尽可能接近最终解。这可以通过（近似地）把上一步的结果变换到移动后的 A$\bullet\bullet$B 构型 \cite{White96} 来实现，办法是施加两次基变换：例如向右扫描时作 A$\bullet\rightarrow$A 和 B$\rightarrow\bullet$B。显式公式（见 \cite{Schollwoeck05,White96}）可以这样导出：写出
+\begin{equation}
+\ket{\psi} = \sum_{a_\ell\sigma_{\ell+1}\sigma_{\ell+2}b_{\ell+2}} \psi_{a_\ell\sigma_{\ell+1}\sigma_{\ell+2}b_{\ell+2}} \ket{a_\ell}_A \ket{\sigma_{\ell+1}} \ket{\sigma_{\ell+2}} \ket{b_{\ell+2}}_B,
+\end{equation}
+其中 $\ket{a_\ell}_A$ 和 $\ket{b_{\ell+2}}_B$ 分别是包含格点 1 到 $\ell$ 的块 A 与包含格点 $\ell+3$ 到 $L$ 的块 B 的块态（块态的标记取自其末端所截的键的标记；见 图~\ref{fig:labelling}），并两次插入近似恒等式，即 $\hat{I} = \sum_{a_{\ell+1}} \ket{a_{\ell+1}}_A {\,}_A\bra{a_{\ell+1}}$ 与
+$\hat{I} = \sum_{\sigma_{\ell+3} b_{\ell+3}} \ket{\sigma_{\ell+3}}\ket{b_{\ell+3}}_B {\, }_B \bra{b_{\ell+3}} \bra{\sigma_{\ell+3}}$。
+于是得到
+\begin{equation}
+\ket{\psi} = \sum_{a_{\ell+1}\sigma_{\ell+2}\sigma_{\ell+3}b_{\ell+3}} \psi_{a_{\ell+1}\sigma_{\ell+2}\sigma_{\ell+3}b_{\ell+3}} \ket{a_{\ell+1}}_A \ket{\sigma_{\ell+2}} \ket{\sigma_{\ell+3}} \ket{b_{\ell+3}}_B,
+\end{equation}
+其中
+\begin{equation}
+\psi_{a_{\ell+1}\sigma_{\ell+2}\sigma_{\ell+3}b_{\ell+3}} =
+\sum_{a_\ell \sigma_{\ell+1} b_{\ell+2}}
+\psi_{a_\ell\sigma_{\ell+1}\sigma_{\ell+2}b_{\ell+2}}
+\braket{a_{\ell+1}}{a_\ell \sigma_{\ell+1}} \braket{b_{\ell+3}\sigma_{\ell+3}}{b_{\ell+2}} .
+\end{equation}
+上面最后一个等式所需的基变换都可以从 DMRG 步骤中先前的步骤获得。类似的操作也可以用于向左的扫描。正如我们将看到的，这一巧妙步骤——它曾使 DMRG 的性能大幅提升——在把 DMRG 改写为 MPS 语言时已经隐含其中，所以我们不在此详细讨论。

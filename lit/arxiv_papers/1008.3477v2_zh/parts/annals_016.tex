@@ -1,0 +1,112 @@
+有几点评注需要说明。
+
+\begin{itemize}
+\item 该问题是厄米的；从构造方式以及所用 MPO 的厄米性可以看出，$H$ 和 $N$ 都是厄米的。
+\item 一般来说，$dD^2$ 对于精确对角化而言太大了，但由于我们只关心最低的本征值和本征态，一个瞄准谱端部的迭代本征求解器就足够了。典型的方法有 Lanczos 或 Jacobi-Davidson 大型稀疏矩阵求解器。这类方法的收敛速度最终取决于初始出发向量或猜测向量的质量。由于这个本征值问题是迭代求基态方法的一部分，当前的 $M^{\sigma_\ell}$ 就是一个有效的猜测，在接近收敛时会大大加快计算。
+\item 当 $N$ 的条件数变差时，广义本征值问题在数值上可能非常苛刻。但对于开边界条件，只要保证态在格点 $\ell-1$ 及其之前是左规范的、从格点 $\ell+1$ 起是右规范的，这就不成问题。于是
+对 $\Psi^A$ 和 $\Psi^B$ 的种种简化意味着 $N$ 就是单位矩阵 $I$。本征值问题随之简化为一个标准问题，
+\begin{equation}
+\sum_{\sigma'_\ell} \sum_{a'_{\ell-1}a'_{\ell}} \sum_{b_{\ell-1},b_\ell}
+L^{a_{\ell-1},a'_{\ell-1}}_{b_{\ell-1}} W^{\sigma_\ell,\sigma'_\ell}_{b_{\ell-1},b_\ell} R^{a_\ell,a'_\ell}_{b_\ell}
+M^{\sigma'_\ell}_{a'_{\ell-1}, a'_\ell} - \lambda  M^{\sigma_\ell}_{a_{\ell-1}, a_{\ell}} = 0 .
+\end{equation}
+即 $Hv-\lambda v=0$，如图~\ref{fig:normalizedequationsystem} 所示。各求和的计算将利用 $\hat{H}\ket{\psi}$ 的最优加括号方式来完成。
+为实现这一简化，需让位置 $\ell$ 沿链从右到左再反向往复扫描，使得每次极小化之后只需执行一步左规范化或右规范化程序，就能维持最优的规范化配置。
+\end{itemize}
+
+\begin{figure}
+\centering\includegraphics[scale=0.7]{PyMPS_MPSNormalizedEnergyEquationSystem.eps}
+\caption{用于优化 $M^{\ \sigma_\ell}_{\ a_{\ell-1},a_\ell}$ 的标准本征值问题。未知矩阵在左侧网络中被圈出。}
+\label{fig:normalizedequationsystem}
+\end{figure}
+
+于是最优算法按如下方式进行。
+\begin{itemize}
+\item 从对 $\ket{\psi}$ 的某个初始猜测出发，该态是右规范的，即仅由 $B$ 矩阵组成。
+\item 迭代地计算从格点位置 $L-1$ 到 1 的所有 $R$ 表达式。
+\item {\em 右扫描：}从格点 $\ell=1$ 到格点 $L-1$，按如下方式沿晶格向右扫描：用迭代本征求解器求解 $M^{\sigma_\ell}$ 的标准本征值问题，以其当前值作为出发点。得到解之后，通过 SVD（或 QR）把 $M^{\sigma_\ell}$ 左规范化为 $A^{\sigma_\ell}$，以维持所需的规范化结构。SVD 余下的矩阵被乘到右边的 $M^{\sigma_{\ell+1}}$ 上，作为下一格点本征求解器的初始猜测。通过再纳入一个格点迭代地构造 $L$ 表达式。前进一个格点，$\ell \rightarrow \ell+1$，然后重复。
+\item {\em 左扫描：}从格点 $\ell=L$ 到格点 $2$，按如下方式沿晶格向左扫描：用迭代本征求解器求解 $M^{\sigma_\ell}$ 的标准本征值问题，以其当前值作为出发点。得到解之后，通过 SVD（或 QR）把 $M^{\sigma_\ell}$ 右规范化为 $B^{\sigma_\ell}$，以维持所需的规范化结构。SVD 余下的矩阵被乘到左边的 $M^{\sigma_{\ell-1}}$ 上，作为下一格点本征求解器的初始猜测。通过再纳入一个格点迭代地构造 $R$ 表达式。前进一个格点，$\ell \rightarrow \ell-1$，然后重复。
+\item 重复右扫描和左扫描，直至达到收敛。只要能量收敛即认为达到收敛，但最好的检验是（利用 MPO）考察
+$\bra{\psi} \hat{H}^2 \ket{\psi} - (\bra{\psi} \hat{H} \ket{\psi})^2$，看是否已经得到某个本征态；这个表达式应尽可能地接近 0。
+\end{itemize}
+
+如果我们根据各自的规范化情况把矩阵记为 $A$、$B$、$M$（$M$ 始终指当前正在处理的格点上的那个矩阵），并给它们加上下标 $i$ 以标记它们被本征求解器更新的次数，则该算法可形式化为
+\begin{eqnarray*}
+& & M_0 B_0 B_0 B_0 B_0 B_0 \\
+&\stackrel{diag}{\rightarrow}& M_1 B_0 B_0 B_0 B_0 B_0
+\stackrel{SVD}{\rightarrow} A_1 M_0 B_0 B_0 B_0 B_0 \\
+&\stackrel{diag}{\rightarrow}& A_1 M_1 B_0 B_0 B_0 B_0
+\stackrel{SVD}{\rightarrow} A_1 A_1 M_0 B_0 B_0 B_0 \\
+&\stackrel{diag}{\rightarrow}& A_1 A_1 M_1 B_0 B_0 B_0
+\stackrel{SVD}{\rightarrow} A_1 A_1 A_1 M_0 B_0 B_0 \\
+& & \ldots \\
+&\stackrel{diag}{\rightarrow}& A_1 A_1 A_1 A_1 M_1 B_0
+\stackrel{SVD}{\rightarrow} A_1 A_1 A_1 A_1 A_1 M_0 \\
+&\stackrel{diag}{\rightarrow}& A_1 A_1 A_1 A_1 A_1 M_1
+\stackrel{SVD}{\rightarrow} A_1 A_1 A_1 A_1 M_1 B_1 \\
+&\stackrel{diag}{\rightarrow}& A_1 A_1 A_1 A_1 M_2 B_1
+\stackrel{SVD}{\rightarrow} A_1 A_1 A_1 M_1 B_2 B_1 \\
+& & \ldots \\
+&\stackrel{diag}{\rightarrow}& A_1 M_2 B_2 B_2 B_2 B_1
+\stackrel{SVD}{\rightarrow} M_1 B_2 B_2 B_2 B_2 B_1 \\
+\end{eqnarray*}
+然后再一次从左向右移动，从一次对角化步骤开始。
+
+在这一迭代过程中，能量只会下降，因为我们通过改变参数不断地改进。会出现两个问题：若从随机态出发，最初几次扫描中迭代本征求解器对 $M^{\sigma_\ell}$ 的猜测会非常糟糕，导致迭代次数很大、性能很差。此外，我们无法保证这一过程真正达到全局极小，而不是陷在一个非全局的极小之中。
+
+解决第一个问题的一种办法是先用无限系统 DMRG 产生一个初始猜测；无限系统 DMRG 的一个最优 MPS 版本将在第~\ref{sec:infinite} 节讨论。这个初始猜测虽然可能离真正的解还很远，但通常会比随机的出发态好得多。此外，可以尝试平衡迭代次数（最初几次扫描中很高）：先从小的 $D$ 出发，在该拟设类中收敛，然后增大 $D$ 并在新矩阵元处补零，再次收敛，如此往复。当 $D$ 变大时，猜测态有望已经非常接近最终态，从而只需很少的迭代。然而结果表明，若以过小的 $D$ 起步，可能落入一个非全局极小，并且在增大 $D$ 之后也无法脱身。很一般地，正如在 DMRG 中那样，绝不要只对单个 $D$ 计算结果，而应在多次运行中逐步增大它，直到结果收敛（在 $D\rightarrow\infty$ 极限下结果保证是精确的）。
+
+如果我们寻找的是低能激发态而非基态，会出现两种典型情形：
+(i) 已知该激发态是希尔伯特空间按某个好量子数分解后另一扇区的基态。那么计算不过是在那个不同扇区中做基态计算。(ii) 该激发态是基态所在扇区中的第一、第二或更高阶激发。那么我们必须迭代地计算这些激发，并让所求的态相对已经找到的更低能态保持正交归一；这显然把该方法限制在少数低能激发上。需要修改算法的地方在迭代本征求解器之中；例如在 Lanczos 迭代里，新生成的下一个 Lanczos 态不仅要相对先前的 Lanczos 态正交归一，还要相对已经构造出的哈密顿量本征态正交归一。这是 Lanczos 算法的一个标准推广。
+
+刚刚介绍的变分 MPS 算法相当容易陷入困境。究竟会怎样陷入，实际上与过程中初始态的选取方式有一定关系：假定像各向异性海森堡链的情形那样，存在某个量子对称性，即有与之对易的算符 $[\hat{H},\hat{O}]=0$，此处即总磁化强度算符 $\hat{M}=\sum_i \hat{S}^z_i$，它使磁化强度 $M$ 成为一个好量子数。于是初始态分为两类，取决于它们是不是 $\hat{M}$ 的本征态。若态是随机选取的，通常属于后者；若由无限系统 DMRG 或其 MPS 变体生成，则属于前者。
+
+把希尔伯特空间按磁化强度的本征态分解，${\mathcal H} = \oplus_M {\mathcal H}_M$，我们可以把初始态写成
+\begin{equation}
+\ket{\psi} = \sum_M \psi_M \ket{M} \quad\quad \ket{M} \in {\mathcal H}_M .
+\end{equation}
+我们要找的基态是 $\ket{\psi_0} \in {\mathcal H}_{\tilde{M}}$；于是初始态要么具有任意的 $\psi_M$，要么在 $M \neq \tilde{M}$ 时 $\psi_M = 0$（这里假定我们不会遭遇在错误对称扇区中给出初始态这一灾难）。让我们假定在第一种情形下，扫描会消去来自错误对称扇区的贡献；如果做不到，那么由于错误的混入得以幸存，变分最优态无论如何都无法达到。由于通过例如 Lanczos 进行的迭代基态搜索是求最大本征值及相应本征态的幂方法 $\lim_{n\rightarrow\infty} \hat{H}^n \ket{\psi}$ 的优化版本，可以证明在全希尔伯特空间中，错误的对称扇区一定会被投影掉。而在我们的算法中，这种迭代投影是在一个高度受限的态空间中进行的，由于它按顺序逐个查看各波函数分量，效率可能不高。由于随机的出发态效率极低，我在这里无法报告太多实际经验。
+无论如何，一旦我们进入一个确定的对称扇区，对任意 Schmidt 分解 $\ket{\psi} = \sum_{a_\ell} s_{a_\ell} \ket{a_\ell}_A \ket{a_\ell}_B$ 而言，每个态都会带有好量子数（不同量子数的叠加会立即与全局好量子数矛盾），即 $m_a^A$ 和 $m_a^B$ 满足 $m_a^A + m_a^B = \tilde{M}$，这里我对指标做了简化。以 $m_a^B$ 为例，它们会分布在某个范围内，比如说 1 个态带磁化强度 $m$，3 个态带磁化强度 $m'$，5 个态带磁化强度 $m''$，依此类推。正如我接下来要展示的，这一分布在后续扫描中保持{\em 不变}。这意味着，如果它不对应于变分最优态所给出的分布，就永远无法到达那个态。在随机态方案中，人们或许指望其他总磁化强度被缓慢消去能把我们``抚顺''到正确的分布上，但这没有任何保证；在无限系统方案中，人们只能指望这种热身方案立刻产生正确的分布，而这相当不可能发生。
+
+这一分布保持不变的原因，可以从对 $M^{\sigma_{\ell}}_{a_{\ell-1},a_{\ell}}$ 做 SVD 以执行一步（例如）左规范化中看出来：把矩阵 $M^{\sigma_{\ell}}$ 重新整理成某个 $\Psi$ 并做 SVD，至多给出 $D$ 个非零奇异值；$V^\dagger$ 中的右奇异向量正是 $\Psi^\dagger \Psi$ 的本征向量，而后者是块对角的，因为态 $\ket{a_{\ell}}_B$ 带有好量子数。因此，右奇异向量（本征向量）编码的是同一量子数的块内部的基变换，于是具有给定量子数的态的数目保持不变；又由于 Schmidt 分解所要求的量子数匹配，系统另一部分中具有该量子数的态的数目也保持不变。
+
+人们已经提出了多种摆脱这一潜在陷阱的办法。第一种是修改算法以同时考虑两个格点，就像常规（两格点）DMRG 那样；我们将在下一节讨论其 MPS 实现。这一做法虽然更慢（大约慢一个 $d$ 因子），但它提供了稍稍扩大的拟设空间以及随之而来的截断，使算法在基态搜索中更不易陷入局部能量极小。特别地，两格点算法扩大了的拟设空间允许通过截断对量子数分布进行重组。一旦这一步收敛，就可以切换到单格点算法，正如 Takasaki 等人 \cite{Takasaki99} 所建议的那样，尽管这样做是否严格地导向最优结果并不清楚\cite{McCulloch08}。
+
+好得多的是，White \cite{White05} 提出了一种能相当可靠地防止陷入并保证重组的程序。它对于可靠的单格点 DMRG（或变分 MPS，我们将证明二者等价）算法至关重要，并使之成为该方法的最新最高水平形式。它始于这样一个观察：子系 A 的量子数会因哈密顿量中把 A 与系统其余部分连接起来的那些部分所引起的量子涨落而改变。因此我们必须更仔细地考察 $\hat{H}\ket{\psi}$ 的结构。
+
+考虑单格点算法中{\em 能量优化之后}的 $\psi^{\sigma_{\ell}}_{a_{\ell-1},a_{\ell}}$。我们也可以写成
+\begin{equation}
+\hat{H} = \sum_{b_{\ell}} \hat{H}^{A\bullet}_{b_{\ell}} \hat{H}^B_{b_{\ell}}
+\end{equation}
+其中
+\begin{equation}
+\hat{H}^{A\bullet}_{b_{\ell}} = \sum_{\fat{\sigma}, \fat{\sigma}'\in A\bullet} ( W^{\sigma_1,\sigma'_1} \ldots W^{\sigma_{\ell},\sigma'_{\ell}} )_{b_{\ell}} \quad
+\hat{H}^B_{b_{\ell}} = \sum_{\fat{\sigma}, \fat{\sigma}'\in B} ( W^{\sigma_{\ell+1},\sigma'_{\ell+1}} \ldots W^{\sigma_L,\sigma'_L} )_{b_{\ell}} ,
+\end{equation}
+使得这个求和中共有 $D_W$ 项。如果从块态的角度思考，我们想知道在 $\hat{H}^{A\bullet}_{b_{\ell}}$ 的作用下，A$\bullet$ 上能到达哪些新的态。
+把这一作用的结果投影到 A$\bullet$B 基上，它就是
+\begin{eqnarray}
+(\hat{H}^{A\bullet}_{b_{\ell}} \ket{\psi})^{a_{\ell-1}, \sigma_{\ell},a_{\ell}} &=&
+\sum_{\sigma'_{\ell}} \sum_{a'_{\ell-1},b_{\ell-1}} \sum_{\{ a_i, b_i, a'_i; i<\ell-1\} } \left( \sum_{\sigma_1\sigma'_1} A^{\sigma_1*}_{1,a_1} W^{\sigma_1,\sigma'_1}_{1,b_1} A^{\sigma'_1}_{1,a'_1} \right) \ldots \times \nonumber \\
+& & \left( \sum_{\sigma_{\ell-1}\sigma'_{\ell-1}} A^{\sigma_{\ell-1} *}_{a_{\ell-2},a_{\ell-1}} W^{\sigma_{\ell-1},\sigma'_{\ell-1}}_{b_{\ell-2},b_{\ell-1}} A^{\sigma'_{\ell-1}}_{a'_{\ell-2},a'_{\ell-1}} \right)  W^{\sigma_{\ell},\sigma'_{\ell}}_{b_{\ell-1},b_{\ell}} \Psi^{\sigma'_{\ell}}_{a'_{\ell-1},a_{\ell}}
+\end{eqnarray}
+而这正是
+\begin{equation}
+(\hat{H}^{A\bullet}_{b_{\ell}} \ket{\psi})^{a_{\ell-1}, \sigma_{\ell},a_{\ell}} =
+\sum_{\sigma'_{\ell}} \sum_{a'_{\ell-1},b_{\ell-1}}
+L^{a_{\ell-1},a'_{\ell-1}}_{b_{\ell-1}} W^{\sigma_{\ell},\sigma'_{\ell}}_{b_{\ell-1},b_{\ell}} \Psi^{\sigma'_{\ell}}_{a'_{\ell-1},a_{\ell}}
+\end{equation}
+其中用了来自式~(\ref{eq:LdefineinMPO}) 的 $L^{a_{\ell-1},a'_{\ell-1}}_{b_{\ell-1}}$，如图~\ref{fig:Whiteimprovement} 所直观显示。这表明实际的计算代价非常低，因为最复杂的部分我们已经完成了。
+
+\begin{figure}
+\centering\includegraphics[scale=0.7]{PyMPS_WhitePredictionObject.eps}
+\caption{$(\hat{H}^{A\bullet}_{b_\ell}\ket{\psi})^{a_{\ell-1},\sigma_{\ell},a_{\ell}}$ 的图形表示：除一个 $W$ 张量和一个 $\Psi$ 张量之外，为得到 $L^{a_{\ell-1},a'_{\ell-1}}_{b_{\ell-1}}$ 所需的全部缩并都已经计算过了。}
+\label{fig:Whiteimprovement}
+\end{figure}
+
+现在我们想把 $\hat{H}^{A\bullet}_{b_{\ell}}$ 生成的那些态纳入为 A$\bullet$ 寻找好基的过程之中。这里，DMRG 提供了瞄准多个态的可能性。常规算法接下来会计算 $\hat{\rho}^{A\bullet} = \tr_B \ket{\psi}\bra{\psi}$ 或 $\rho_{(a_{\ell-1} \sigma_{\ell}),(a'_{\ell-1}  \sigma'_{\ell})} = \sum_{a_{\ell}} \Psi^{\sigma_{\ell}}_{a_{\ell-1},a_{\ell}}\Psi^{\sigma'_{\ell}\dagger}_{a_{\ell},a'_{\ell-1}}$，求出本征值（奇异值的平方）、本征向量（左奇异向量），然后截断等等。但我们可以考察一个修改过的密度矩阵，它也把新的项考虑进来：
+\begin{equation}
+\hat{\rho}^{A\bullet} = \tr_B \ket{\psi}\bra{\psi} + \alpha \sum_{b_{\ell}} \tr_B \hat{H}^{A\bullet}_{b_{\ell}} \ket{\psi} \bra{\psi} \hat{H}^{A\bullet}_{b_{\ell}} ,
+\end{equation}
+其中 $\alpha$ 是一个小数，比如 $10^{-4}$，它给常规算法可能遗漏的贡献赋予一点权重。付出的代价是：谱的末端会有少数几个来自 $\ket{\psi}\bra{\psi}$ 的权重极小的态被舍弃。经过多次扫描之后，$\alpha$ 会被缓慢地趋于零。
+

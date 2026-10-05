@@ -1,0 +1,118 @@
+We can however {\em drastically} simplify the compression procedure if we exploit the canonical form! Assume that $\ket{\tilde{\psi}}$ is in mixed canonical form $\tilde{A}^{\sigma_1} \ldots \tilde{A}^{\sigma_{i-1}} \tilde{M}^{\sigma_i} \tilde{B}^{\sigma_{i+1}}  \ldots \tilde{B}^{\sigma_L}$ and we want to update $\tilde{M}^{\sigma_i}$: to the left of the matrix to be updated, everything is left-normalized, to the right everything is right-normalized and the form of $\tilde{M}^{\sigma_i}$ does not matter, as it will be recalculated anyways. 
+
+Then $\tilde{L}_{a_{i-1},a'_{i-1}} = \delta_{a_{i-1},a'_{i-1}}$ because of left normalization, and similarly $\tilde{R}_{a_{i},a'_{i}} = \delta_{a_{i},a'_{i}}$ because of right normalization, hence 
+$\tilde{O}_{a_{i-1}a_i,a'_{i-1}a'_i} = \delta_{a_{i-1},a'_{i-1}} \delta_{a_{i},a'_{i}}$. In the linear equation system this means that $P=I$ and we have trivially
+\begin{equation}
+v = b,
+\end{equation}
+so there is no need to solve a large equation system (Fig.~\ref{fig:normalizediterativecompression}). 
+
+\begin{figure}
+\centering\includegraphics[scale=0.6]{PyMPS_MPS_NormalizedIterativeCompression.eps}
+\caption{Equation for iterative compression of an MPS for a suitably normalized state. The fatter lines correspond to the state to be compressed, the thinner lines to the compressed state.}
+\label{fig:normalizediterativecompression}
+\end{figure}
+
+\begin{figure}
+\centering\includegraphics[scale=0.6]{PyMPS_MPS_IterativeCompressionLRObjects.eps}
+\caption{Iteratively constructed objects $\tilde{L}$ and $\tilde{R}$ for compression.}
+\label{fig:normalizediterativecompressionLR}
+\end{figure}
+
+
+To make this work for an entire chain, we have to shift the boundary between the left and right normalized matrices as we move through the chain. Assume we begin with all left-normalized matrices. Then we move through the chain from right to left, start by solving on the last site for $\tilde{M}^{\sigma_L}$, right-normalize it via SVD (or, as we do not need the singular values, more cheaply by QR) as before, to obtain $\tilde{A}^{\sigma_1} \ldots \tilde{A}^{\sigma_{L-2}} \tilde{M}^{\sigma_{L-1}} \tilde{B}^{\sigma_{L}}$ where $\tilde{M}^{\sigma_{L-1}}$ is in general without normalization. It is now optimized as
+\begin{equation}
+\tilde{M}^{\sigma_i}_{a_{i-1},a_i} =  \sum_{a'_{i-1}} L_{a_{i-1},a'_{i-1}} \left( \sum_{a'_i} R_{a_{i},a'_{i}}
+M^{\sigma_i}_{a'_{i-1},a'_i} \right), 
+\label{eq:compressionrhs}
+\end{equation}
+where 
+\begin{equation}
+L_{a_{i-1},a'_{i-1}} = \left( \sum_{\sigma_{i-1}}  \tilde{M}^{\sigma_{i-1}\dagger} \left( \ldots \left( \sum_{\sigma_1}  
+\tilde{M}^{\sigma_{1}\dagger} M^{\sigma_{1}} \right) \ldots \right) M^{\sigma_{i-1}} \right)_{a_{i-1},a'_{i-1}}
+\end{equation}
+and similarly $R$, the result is right-normalized, and so on as we go through the chain. At the end, all matrices are right-normalized, and we restart from the left.
+
+In order to assess convergence, we can monitor at each step $\| \ket{\psi} - \ket{\tilde{\psi}} \|^2$, and observe the convergence of this value; if necessary, $D$ has to be increased. The calculation may seem costly, but isn't. If we keep $\ket{\tilde{\psi}}$ in proper mixed normalization, and use Eq.~(\ref{eq:compressionrhs}) to simplify the overlap $\braket{\psi}{\tilde{\psi}}$, we find
+\begin{equation}
+\| \ket{\psi} - \ket{\tilde{\psi}} \|^2 = 1 - \sum_{\sigma_i} \tr (\tilde{M}^{\sigma_i\dagger}\tilde{M}^{\sigma_i}) , 
+\end{equation}
+which is easy to calculate. The subtracted sum is just $\braket{\tilde{\psi}}{\tilde{\psi}}$; at the end, this allows us to normalize the state $\ket{\tilde{\psi}}$ by simple rescaling. 
+
+As already hinted at for single-site DMRG -- and we will discuss this issue at length in Sec. \ref{sec:groundstates} -- there is a danger that this variational ansatz gets stuck in a non-global minimum for the distance between the compressed and the original state. Often (but not always) it is helpful to consider two sites at the same time, by analogy to two-site DMRG, for optimization. An operation count shows that this is somewhat slower. Assume the compressed $\ket{\tilde{\psi}}$ is in a mixed-canonical representation
+\begin{equation}
+\ket{\tilde{\psi}} = \sum_{{\fat \sigma}} \tilde{A}^{\sigma_1} \ldots \tilde{A}^{\sigma_{\ell-1}} \tilde{M}^{\sigma_{\ell}\sigma_{\ell+1}} \tilde{B}^{\sigma_{\ell+2}} \ldots \tilde{B}^{\sigma_L}  \ket{{\fat \sigma}}.
+\end{equation}
+Running through the same arguments as before, optimizing with respect to $\tilde{M}^{\sigma_{\ell}\sigma_{\ell+1}*}_{a_{\ell-1},a_{\ell+1}}$, yields an equation as in Fig.~\ref{fig:twositecompression} for $\tilde{M}^{\sigma_{\ell}\sigma_{\ell+1}}_{a_{\ell-1},a_{\ell+1}}$. The major change occurs now: we reshape the new $\tilde{M}^{\sigma_{\ell}\sigma_{\ell+1}}$ as $\tilde{M}_{(a_{\ell-1}\sigma_{\ell}),(\sigma_{\ell+1}a_{\ell+1})}$, carry out an SVD to obtain 
+\begin{equation}
+\sum_{a_\ell} \tilde{U}_{(a_{\ell-1}\sigma_\ell), a_\ell} S_{a_\ell} (V^\dagger)_{a_\ell, (\sigma_{\ell+1}a_{\ell+1})} = \sum_{a_\ell} \tilde{M}^{\sigma_\ell}_{a_{\ell-1}, a_\ell} B^{\sigma_{\ell+1}}_{a_\ell, a_{\ell+1}} ,
+\end{equation}
+where the $\tilde{M}$ is formed from reshaping $\tilde{U} S$. In fact, it is discarded because we shift one site towards the left, looking for $\tilde{M}^{\sigma_{\ell-1}\sigma_{\ell}}$. We can also use a cheaper QR decomposition of $\tilde{M}^\dagger$ instead, to obtain $B$ from $Q^\dagger$.
+
+\begin{figure}
+\centering\includegraphics[scale=0.6]{PyMPS_MPS_TwoSiteCompression.eps}
+\caption{Equation for iterative compression of an MPS in a two-site approach.}
+\label{fig:twositecompression}
+\end{figure}
+
+
+Let me conclude this section on compression by discussing the relative merits of the methods. If the compression is only small, the interdependency of the SVD approach will not matter too much. Still, the variational ansatz is superior; its only weakness is that because of its iterative nature one has to provide an initial guess for the compressed state. Taken randomly, the method will waste a lot of time on just getting into the right vicinity. Therefore, the smart proposal is to take the SVD-compressed state as the first input into the iterative method. How can we avoid the potentially high costs due to $D'$ at least partially? 
+
+In practice, compressions occur mainly in two situations: (i) MPS have been added, hence the matrix dimensions have been added; (ii) a matrix product operator (MPO) has been applied to an MPS; we will see that this leads to the multiplication of the matrix dimensions of MPS and MPO.
+
+In the first case, the variational compression can be speeded up by using the fact that $\ket{\psi} = \ket{\phi_1} + \ket{\phi_2} + \ldots \ket{\phi_n}$. Then we may rewrite the variational equation as
+\begin{equation}
+ \frac{\partial}{\partial \tilde{M}^{\sigma_i*}_{a_{i-1}a_i}} ( \braket{\tilde{\psi}}{\tilde{\psi}}
+- \braket{\tilde{\psi}}{\psi} ) =  \frac{\partial}{\partial \tilde{M}^{\sigma_i*}_{a_{i-1}a_i}} ( \braket{\tilde{\psi}}{\tilde{\psi}} - \braket{\tilde{\psi}}{\phi_1}
+- \braket{\tilde{\psi}}{\phi_2} - \ldots - \braket{\tilde{\psi}}{\phi_n}) = 0 .
+\end{equation}
+If we work out the equation (assuming mixed canonical representation), the right-hand side consists now of a sum of $n$ overlaps involving $D$-dimensional matrices, instead of one overlap involving $D$- and $nD$-dimensional matrices (costing up to $O(n^2D^3)$ and $O(nD^3)$ in the two types of matrix multiplications occurring in the overlap) we now have $n$ overlaps costing $O(D^3)$. For large $n$, the ``decomposed'' approach should be up to $n$ times faster.
+
+The second case we postpone for details until we have discussed MPOs. The idea is to carry out an SVD compression, but without the particularly costly step of previously ensuring correct normalization; if for some reason the block states are almost orthonormal nevertheless, the outcome should be quite reasonable (and can be brought into canonical form, which is cheap after compression) or can at least serve as a reasonable input for the variational method \cite{Stoudenmire10}.
+
+\subsection{Notations and conversions}
+So far, we have explored an MPS notation based on one set of matrices per site; special normalization properties for these matrices were exploited to arrive at MPS with attractive additional features (like the generation of orthonormal sets of states or the encoding of a Schmidt decomposition). If we consider our lattice with sites $1$ through $L$, it would be useful in view of the DMRG construction to be able to access easily all $L-1$ possible bipartitionings of the system AB that can be obtained with a single cut. 
+
+Such a notation has been introduced by Vidal\cite{Vidal03a} and takes the following form:
+\begin{equation}
+\ket{\psi} = \sum_{\sigma_1,\ldots,\sigma_L} \Gamma^{\sigma_1} \Lambda^{[1]}  \Gamma^{\sigma_2} \Lambda^{[2]}  \Gamma^{\sigma_3} \Lambda^{[3]} \ldots  \Gamma^{\sigma_{L-1}} \Lambda^{[L-1]}  \Gamma^{\sigma_L} \ket{\sigma_1,\ldots,\sigma_L} ,
+\label{eq:canonicalform}
+\end{equation} 
+where we introduce on each site $\ell$ a set of $d$ matrices $\Gamma^{\sigma_\ell}$ and on each bond $\ell$ one diagonal matrix $\Lambda^{[\ell]}$. The matrices are specified by the demand that for arbitrary $1\leq \ell < L$ we can read off the Schmidt decomposition
+\begin{equation}
+\ket{\psi} = \sum_{a_\ell} s_{a_\ell} \ket{a_\ell}_A \ket{a_\ell}_B
+\end{equation}
+where the Schmidt coefficients are the diagonal elements of $\Lambda^{[\ell]}$, $s_{a_\ell} = \Lambda^{[\ell]}_{a_\ell,a_\ell}$ and the states on A and B are given as
+\begin{eqnarray}
+\ket{a_\ell}_A &=& \sum_{\sigma_1,\ldots,\sigma_\ell}
+ (\Gamma^{\sigma_1}\Lambda^{[1]}\Gamma^{\sigma_2} \ldots \Lambda^{[\ell-1]} \Gamma^{\sigma_\ell})_{a_{\ell}}
+\ket{\sigma_1,\ldots,\sigma_\ell}, \\
+\ket{a_\ell}_B &=& \sum_{\sigma_{\ell+1},\ldots,\sigma_L} 
+(\Gamma^{\sigma_{\ell+1}}\Lambda^{[\ell+1]}\Gamma^{\sigma_{\ell+2}} \ldots \Lambda^{[L-1]} \Gamma^{\sigma_L})_{a_\ell}
+\ket{\sigma_{\ell+1},\ldots,\sigma_L},
+\end{eqnarray}
+where the states on A and on B are orthonormal respectively, reminding of similar constructions from $A$- and $B$-matrices. Graphically, the new notation can be represented as in Fig.~\ref{fig:vidalmps}. It is obviously a more explicit version of the $A$-matrix notation with the advantage of keeping explicit reference to the singular values, reduced density matrix eigenvalues and entanglement: Cutting bond $\ell$, the reduced density operators $\hat{\rho}_A$ and $\hat{\rho}_B$ read in eigenbasis representation
+\begin{equation}
+\rho_A^{[\ell]} = \rho_B^{[\ell]} = (\Lambda^{[\ell]})^2 ,
+\end{equation}
+more precisely (but irrelevant for real and diagonal $\Lambda^{[\ell]}$) $\rho_A^{[\ell]} = \Lambda^{[\ell]}\Lambda^{[\ell]\dagger}$ and $\rho_B^{[\ell]} = \Lambda^{[\ell]\dagger}\Lambda^{[\ell]}$,
+where the eigenstates of $\rho_A^{[\ell]}$ and $\rho_B^{[\ell]}$ are given by $\{ \ket{a_\ell}_A \}$ and $\{ \ket{a_\ell}_B \}$ respectively. The von Neumann entropy of entanglement can be read off directly from $\Lambda^{[\ell]}$ as $S_{A|B} = -\tr (\Lambda^{[\ell]})^2 \log_2 (\Lambda^{[\ell]})^2$. 
+
+Before exploring the connections to other notations, let us first show that any quantum state can indeed be brought into that form by a procedure in close analogy to the one that decomposed $\ket{\psi}$ into a product of $A$-matrices (or $B$-matrices, for that matter). Starting from coefficients $c_{\sigma_1\ldots\sigma_L}$, we reshape to $\Psi_{\sigma_1, (\sigma_2 \ldots \sigma_L)}$, which is SVDed iteratively. We label the singular value matrices $\Lambda^{[i]}$. After the first SVD, we rename $A^{\sigma_1}$ to $\Gamma^{\sigma_1}$. In the subsequent SVDs, as before we form the next matrix to be SVDed by multiplying $\Lambda$ and $V^\dagger$ into $\Psi$, reshaping such that there is always one $a$- and one $\sigma$-index for the rows. Using the reshaping of $U_{(a_{\ell-1}\sigma_\ell), a_{\ell}} \rightarrow A^{\sigma_\ell}_{a_{\ell-1},a_\ell}$ already used, we obtain
+\begin{eqnarray*}
+c_{\sigma_1\ldots\sigma_L} &=& \Psi_{\sigma_1, (\sigma_2 \ldots \sigma_L)} \\
+&=& \sum_{a_1} A^{\sigma_1}_{a_1} \underbrace{\Lambda^{[1]}_{a_1,a_1} (V^\dagger)_{a_1, (\sigma_2 \ldots \sigma_L)}} \\
+&=& \sum_{a_1} \Gamma^{\sigma_1}_{a_1} \Psi_{(a_1\sigma_2), (\sigma_3 \ldots \sigma_L)} \\
+&=& \sum_{a_1,a_2} \Gamma^{\sigma_1}_{a_1} A^{\sigma_2}_{a_1,a_2} \underbrace{\Lambda^{[2]}_{a_2,a_2} (V^\dagger)_{a_2, (\sigma_3 \ldots \sigma_L)}} \\
+&=& \sum_{a_1,a_2} \Gamma^{\sigma_1}_{a_1} \overbrace{\Lambda^{[1]}_{a_1,a_1} \Gamma^{\sigma_2}_{a_1,a_2}} \Psi_{(a_2\sigma_3), (\sigma_4 \ldots \sigma_L)} \\
+&=& \sum_{a_1,a_2,a_3} \Gamma^{\sigma_1}_{a_1} \Lambda^{[1]}_{a_1,a_1} \Gamma^{\sigma_2}_{a_1,a_2} A^{\sigma_3}_{a_2,a_3}  \underbrace{\Lambda^{[3]}_{a_3,a_3} (V^\dagger)_{a_3, (\sigma_4 \ldots \sigma_L)}} \\ 
+&=& \sum_{a_1,a_2,a_3} \Gamma^{\sigma_1}_{a_1} \Lambda^{[1]}_{a_1,a_1} \Gamma^{\sigma_2}_{a_1,a_2} \overbrace{\Lambda^{[2]}_{a_2,a_2} \Gamma^{\sigma_3}_{a_2,a_3}}  \Psi_{(a_3\sigma_4), (\sigma_5 \ldots \sigma_L)} 
+\end{eqnarray*}
+and so on. The crucial difference to the decomposition into $A$-matrices is that each $A$ is decomposed, using the knowledge of $\Lambda^{[\ell-1]}$ obtained in the previous step, into 
+\begin{equation}
+A^{\sigma_\ell}_{a_{\ell-1},a_\ell} = \Lambda^{[\ell-1]}_{a_{\ell-1},a_{\ell-1}} \Gamma^{\sigma_\ell}_{a_{\ell-1},a_\ell} ,
+\label{eq:agammalambda}
+\end{equation}
+which implies a division by the diagonal elements of $\Lambda^{[\ell-1]}$. If in our SVD we keep only the non-zero singular values, this is a mathematically valid operation, albeit potentially fraught with numerical difficulty. Ignoring this issue in this conceptual demonstration, we do arrive at a decomposition of the desired form; in order to prove that it is indeed correct, we have to show that at each iteration we indeed obtain a Schmidt decomposition. But this is easy to see: The matrices to the left of any $\Lambda^{[\ell]}$ can all be grouped into (or rather, have been generated from) left-normalized $A$-matrices, which generate a set of orthonormal states on the part of the lattice ranging from site 1 to $\ell$. On the right hand side of any $\Lambda^{[\ell]}$, there is a matrix $V^\dagger$ with orthonormal rows, which means that the states $\ket{a_\ell}_B = \sum_{\sigma_{\ell+1},\ldots}
+(V^\dagger)_{a_\ell, \sigma_{\ell+1} \ldots} \ket{\sigma_{\ell+1} \ldots}$ are also orthonormal. Hence, the SVD giving $\Lambda^{[\ell]}$ indeed leads to a valid Schmidt decomposition.
+

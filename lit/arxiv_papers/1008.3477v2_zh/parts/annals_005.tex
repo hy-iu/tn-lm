@@ -1,0 +1,111 @@
+类似地，当态处于块 A 上这一事实无关紧要或完全显而易见时，我们将把 $\ket{a_\ell}_A \rightarrow \ket{a_\ell}$ 加以简写。
+
+\begin{figure}
+\centering\includegraphics[scale=0.8]{PyMPS_BlockGrowth.eps}
+\caption{长度为 $\ell-1$ 的块通过添加一个格点 $\ell$ 向右生长为长度为 $\ell$ 的块。}
+\label{fig:BlockGrowth}
+\end{figure}
+
+\begin{figure}
+\centering\includegraphics[scale=0.8]{PyMPS_ABulk.eps}
+\caption{$A$ 矩阵的图形表示：左图表示 $A\ ^{\sigma_{\ell}}_{a_{\ell-1},a_\ell}$，右图表示{\em 共轭}的 $A\ ^{\sigma_{\ell}*}_{a_{\ell-1},a_\ell}$。实心圆代表格点，竖线代表物理指标，横线代表矩阵指标。}
+\label{fig:ABulk}
+\end{figure}
+
+矩阵记法的优点——其中的状态抽取步骤尚未具体给出——在于它允许从长度为 $\ell$ 的块出发，进行简单的{\em 递归}，一直到最小的、即消失的块。以这种方式得到的量子态具有非常特殊的形式：
+\begin{eqnarray}
+\ket{a_{\ell}}_A &=& \sum_{a_{\ell-1}} \sum_{\sigma_\ell} A^{\sigma_\ell}_{a_{\ell-1}, a_{\ell}} \ket{a_{\ell-1}}_A \ket{\sigma_{\ell}} \nonumber \\
+&=& \sum_{a_{\ell-1},a_{\ell-2}} \sum_{\sigma_{\ell-1},\sigma_\ell} 
+A^{\sigma_{\ell-1}}_{a_{\ell-2}, a_{\ell-1}} A^{\sigma_\ell}_{a_{\ell-1}, a_{\ell}} \ket{a_{\ell-2}}_A \ket{\sigma_{\ell-1}}\ket{\sigma_{\ell}} = \ldots \nonumber \\
+&=& \sum_{a_1,a_2,\ldots,a_{\ell-1}} \sum_{\sigma_1,\sigma_2,\ldots,\sigma_\ell} A^{\sigma_1}_{1,a_1} A^{\sigma_2}_{a_1,a_2} \ldots A^{\sigma_\ell}_{a_{\ell-1},a_\ell} \ket{\sigma_1}\ket{\sigma_2} \ldots \ket{\sigma_\ell} \nonumber \\
+&=& \sum_{\sigma_i \in {\rm A}}  (A^{\sigma_1}A^{\sigma_2}\ldots A^{\sigma_\ell})_{1,a_\ell}  \ket{\sigma_1}\ket{\sigma_2} \ldots \ket{\sigma_\ell} ,
+\end{eqnarray}
+其中 $i$ 遍历块 A 的所有格点。指标 'A' 表明我们所考虑的是正在构建的链左侧的态。在第一个格点上，为了与矩阵记法保持一致，我们引入了一个哑行指标 1：块长为 1 的态由格点 1 上的局域态与长度为 0 的“块”的块态构成，对后者我们引入一个哑态及指标 1。这意味着 $A^{\sigma_1}$ 实际上是一个（行）矢量（见图~\ref{fig:ABulkEdge}）。我们还看到，$A$ 的左指标即行指标，对应于由右指标即列指标所标记的那些态“左侧”的态。相当一般地，我们可以如图~\ref{fig:BlockByMPS} 那样展示这一构造，只要——如前所述——我们引入规则：所有相连的腿都要求和（收缩）。矩阵记法的优点在于可以把求和隐藏在矩阵乘法之中。
+
+\begin{figure}
+\centering\includegraphics[scale=0.8]{PyMPS_BlockByMPS.eps}
+\caption{通过 $A$ 矩阵的收缩（相乘）递归构造态 $\ket{a{\,}_\ell}$ 的图形表示。收缩遍历所有相连的腿。}
+\label{fig:BlockByMPS}
+\end{figure}
+
+类似地，我们也可以让块向左而不是向右生长（图~\ref{fig:BlockGrowth_Right}）：我们有
+\begin{equation}
+\ket{a_\ell}_B = \sum_{a_{\ell+1}\sigma_{\ell+1}} \phantom\langle_B \braket{a_{\ell+1} \sigma_{\ell+1}}{a_\ell}_B \,\, \ket{a_{\ell+1}}_B \ket{\sigma_{\ell+1}} 
+\end{equation}
+或
+\begin{equation}
+\ket{a_\ell}_B = \sum_{a_{\ell+1}\sigma_{\ell+1}}B^{[\ell+1]\sigma_{\ell+1}}_{a_\ell, a_{\ell+1}}  \ket{a_{\ell+1}}_B \ket{\sigma_{\ell+1}} 
+\end{equation}
+其中
+\begin{equation}
+B^{[\ell+1]\sigma_{\ell+1}}_{a_\ell, a_{\ell+1}} = \phantom\langle_B \braket{a_{\ell+1} \sigma_{\ell+1}}{a_\ell}_B .
+\end{equation}
+我们把这些矩阵记为 $B$，以表明它们源自向左的生长过程；用 DMRG 的语言来说，这对应于块 B。递归给出
+\begin{equation}
+\ket{a_{\ell}}_B = \sum_{\sigma_i \in {\rm B}}  (B^{\sigma_{\ell+1}}B^{\sigma_{\ell+2}}\ldots B^{\sigma_L})_{a_{\ell+1},1}  \ket{\sigma_{\ell+1}}\ket{\sigma_{\ell+2}} \ldots \ket{\sigma_L}, 
+\end{equation}   
+其中 $i$ 从 $\ell+1$ 遍历到 $L$，即块 B 的格点。与位置 1 处类似，在位置 $L$ 处也引入了一个类似的哑指标，此处 $B$ 矩阵是一个（列）矢量。
+
+注意与 $A$ 矩阵相比记法上的细微不对称：为了日后能把块 A 与块 B 拼接起来，我们按照块态所终止的键来标记它们：键 $\ell$ 连接格点 $\ell$ 与 $\ell+1$，于是得到如图~\ref{fig:labelling} 所示的标记方式。
+
+\begin{figure}
+\centering\includegraphics[width=\textwidth]{PyMPS_BlockGrowth_Right.eps}
+\caption{长度为 $L-\ell-1$ 的块 B 通过添加格点 $\ell+1$ 向左生长为长度为 $L-\ell$ 的块 B。}
+\label{fig:BlockGrowth_Right}
+\end{figure}
+
+\begin{figure}
+\centering\includegraphics[scale=1.0]{PyMPS_Labelling.eps}
+\caption{块 A（格点 1 到 $\ell$）与块 B（格点 $\ell+1$ 到 $L$）在键 $\ell$ 处相接。态标记为 $\ket{a\ _{\ell}}_A$ 与 $\ket{a'_\ell}_B$。}
+\label{fig:labelling}
+\end{figure}
+
+如果以这种方式引入 $A$ 矩阵与 $B$ 矩阵，可以看到它们具有非常特殊的性质。考虑从左边的生长，即 $A$ 矩阵，并合理地要求所选的态对每个块长都彼此正交归一，则利用 式~(\ref{eq:matrixbyRG}) 可得
+\begin{eqnarray}
+\delta_{a'_\ell, a_\ell} = \phantom\langle_A \braket{a'_\ell}{a_\ell}_A &=& \sum_{\sigma'_\ell,\sigma_\ell} \sum_{a'_{\ell-1},a_{\ell-1}} A^{\sigma'_\ell*}_{a'_{\ell-1}, a'_\ell} A^{\sigma_\ell}_{a_{\ell-1},a_\ell} 
+ \phantom\langle_A\braket{a'_{\ell-1} \sigma'_\ell}{a_{\ell-1} \sigma_\ell}_A \\
+&=& \sum_{\sigma_\ell} \sum_{a_{\ell-1}} A^{\sigma_\ell \dagger}_{a'_\ell,a_{\ell-1}} A^{\sigma_\ell}_{a_{\ell-1},a_\ell} = \sum_{\sigma_\ell}
+(A^{\sigma_\ell \dagger}A^{\sigma_\ell})_{a'_{\ell},a_{\ell}} .
+\end{eqnarray}
+总结起来，我们发现 $A$ 矩阵是{\em 左规范}的：
+\begin{equation}
+\sum_{\sigma} A^{\sigma\dagger} A^\sigma = I .
+\end{equation}
+图~\ref{fig:LeftNormalization} 给出了图形表示：该乘法也可以解读为 $A$ 与 $A^*$ 在 $\sigma$ 及其左指标上的收缩。
+
+类似地，对于从右边构建的块 B 的 $B$ 矩阵，可以推导出{\em 右规范}恒等式
+\begin{equation}
+\sum_{\sigma} B^\sigma B^{\sigma\dagger} = I
+\end{equation}
+成立（通常用 $A$ 与 $B$ 来区分这两种情形）。见 图~\ref{fig:RightNormalization}。这意味着正交归一的态总可以按 MPS 的意义分解为左规范或右规范的矩阵，而且凡由左规范或右规范矩阵构造出来的态都构成正交归一集，只要规范化的类型与生长的方向相匹配。
+
+\begin{figure}
+\centering\includegraphics[scale=1.0]{PyMPS_LeftNormalization.eps}
+\caption{若把两个{\em 左}规范的 $A$ 矩阵沿其{\em 左}指标与物理指标收缩，就会得到一条 $\delta\ _{a'_\ell,a_\ell}$ 线。}
+\label{fig:LeftNormalization}
+\end{figure}
+
+\begin{figure}
+\centering\includegraphics[scale=1.0]{PyMPS_RightNormalization.eps}
+\caption{若把两个{\em 右}规范的 $B$ 矩阵沿其{\em 右}指标与物理指标收缩，就会得到一条 $\delta\ _{a'_\ell,a_\ell}$ 线。}
+\label{fig:RightNormalization}
+\end{figure}
+
+让我们更仔细地考察矩阵的维数。从左边生长时，矩阵维数依次为 $(1 \times d)$、$(d \times d^2)$、$(d^2 \times d^3)$、$(d^3 \times D)$，这里我假定了 $d^4 > D$。此后维数保持在 $(D \times D)$。在右端，维数将依次为 $(D \times D)$、$(D \times d^3)$、$(d^3 \times d^2)$、$(d^2 \times d)$ 和 $(d \times 1)$。
+
+现在我们又可以写下一个矩阵乘积态了。把一条长度为 $L$ 的链由长度为 $\ell$ 的（左）块 A（格点 $1$ 到 $\ell$）与长度为 $L-\ell$ 的（右）块 B（格点 $\ell+1$ 到 $L$）拼合起来，就可以构成一般的叠加
+\begin{equation}
+\ket{\psi} = \sum_{a_\ell, a'_\ell} \Psi_{a_\ell, a'_\ell} \ket{a_\ell}_A \ket{a'_\ell}_B .
+\end{equation}
+把态显式地代入，我们发现
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} (A^{\sigma_1} \ldots A^{\sigma_\ell})_{1,a_\ell} \Psi_{a_\ell, a'_\ell} 
+ (B^{\sigma_{\ell+1}} \ldots B^{\sigma_L})_{a'_\ell,1} \ket{\fat{\sigma}} .
+\end{equation}
+粗体的 $\fat{\sigma}$ 代表所有局域态指标，$\ket{\fat{\sigma}} =\ket{\sigma_1,\sigma_2,\ldots,\sigma_L}$。这一记法提示我们把 $\Psi$ 解释为一个矩阵；于是记法简化为
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} A^{\sigma_1} \ldots A^{\sigma_\ell}\Psi
+ B^{\sigma_{\ell+1}} \ldots B^{\sigma_L} \ket{\fat{\sigma}} .
+ \label{eq:MPSwithPsi}
+\end{equation}
+

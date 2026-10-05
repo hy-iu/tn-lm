@@ -1,0 +1,110 @@
+即使 MPS 的矩阵并非左规范，所有这些等式依然成立。若它们是左规范的，我们就可以直接在由 $A$ 矩阵生成的正交归一基中表达密度算符，即
+\begin{equation}
+\hat{\rho}_A^{[\ell]} = \sum_{a_\ell, a'_\ell} (\rho_A^{[\ell]})_{a_\ell, a'_\ell} \ket{a_\ell}_A \phantom{{}}_A\bra{a'_\ell} .
+\end{equation}
+
+对 B 的约化密度算符也有类似的关系式，其中（现在使用 $B$ 矩阵）我们得到
+\begin{equation}
+\hat{\rho}_B^{[\ell]} = \tr_A \ket{\psi}\bra{\psi} = \sum_{\fat{\sigma},\fat{\sigma}'\in B} 
+B^{\sigma'_L\dagger} \ldots B^{\sigma'_{\ell+1}\dagger} \rho_B^{[\ell]} B^{\sigma_{\ell+1}} \ldots B^{\sigma_L} \ket{\fat{\sigma}} \bra{\fat{\sigma}'} ,
+\end{equation}
+其中
+\begin{equation}
+\rho_B^{[\ell]} =  \sum_{\fat{\sigma}\in A} B^{\sigma_{\ell}\dagger} \ldots B^{\sigma_1\dagger} B^{\sigma_1} \ldots B^{\sigma_{\ell} }
+\end{equation}
+以及递推关系
+\begin{equation}
+\rho_B^{[\ell]} = \sum_{\sigma_\ell} B^{\sigma_\ell\dagger} \rho_B^{[\ell-1]} B^{\sigma_\ell} .
+\label{eq:rhobrecursion}
+\end{equation}
+由此产生一个潜在的不动点关系
+\begin{equation}
+\rho_B^f = \sum_{\sigma} B^{\sigma\dagger} \rho_B^{f} B^{\sigma} .
+\end{equation}
+同样，所有这些关系对任意的 MPS 矩阵都成立，但如果它们是右规范的，我们又会得到一个在正交归一基中的表达式，此时该基由 $B$ 矩阵生成，
+\begin{equation}
+\hat{\rho}_B^{[\ell]} = \sum_{a_\ell, a'_\ell} (\rho_B^{[\ell]})_{a_\ell, a'_\ell} \ket{a_\ell}_B \phantom{{}}_B\bra{a'_\ell} .
+\end{equation}
+对于混合规范形式的态$\ket{\psi}=\sum_{\fat{\sigma}} A^{\sigma_1}\ldots A^{\sigma_\ell}\Psi B^{\sigma_{\ell+1}} \ldots B^{\sigma_L} \ket{\fat{\sigma}}$，重新进行一遍计算表明
+\begin{equation}
+\hat{\rho}^{[\ell]}_A = \Psi \Psi^\dagger
+\end{equation}
+而
+\begin{equation}
+\hat{\rho}^{[\ell]}_B = \Psi^\dagger\Psi ,
+\end{equation}
+均在正交归一基中表达。
+
+\subsection{两个矩阵乘积态的相加}
+
+在实践中相对较少用到的一种操作是两个 MPS 的相加。我们先考虑较容易的 PBC 情形。取两个不作归一化假设的 MPS，
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} \tr (M^{\sigma_1} \ldots M^{\sigma_L}) \ket{\fat{\sigma}} 
+\quad\quad
+\ket{\phi} = \sum_{\fat{\sigma}} \tr (\tilde{M}^{\sigma_1} \ldots \tilde{M}^{\sigma_L}) \ket{\fat{\sigma}} 
+\end{equation}
+我们可以写出
+\begin{equation}
+\ket{\psi} + \ket{\phi} = \sum_{\fat{\sigma}} \tr (N^{\sigma_1} \ldots N^{\sigma_L}) \ket{\fat{\sigma}}
+\end{equation}
+其中
+\begin{equation}
+N^{\sigma_i} =  M^{\sigma_i} \oplus \tilde{M}^{\sigma_i} .
+\end{equation} 
+这意味着我们只是把 $M$ 和 $\tilde{M}$ 取为矩阵 $N$ 的对角块。对角块结构意味着，将各 $N$ 矩阵相乘后结果仍是对角的，第一块中是 $MMMMM\ldots$，第二块中是 $\tilde{M}\tilde{M}\tilde{M}\tilde{M}\tilde{M}\ldots$。于是迹可以拆开，我们又回到了原来的两个态：
+\begin{equation}
+\tr (NNNNNN) = \tr \left( \begin{array}{cc} MMMMMM & 0 \\ 0 & \tilde{M}\tilde{M}\tilde{M}\tilde{M}\tilde{M}\tilde{M} \end{array} \right) = \tr (MMMMMM) + \tr (\tilde{M}\tilde{M}\tilde{M}\tilde{M}\tilde{M}\tilde{M}).
+\end{equation} 
+
+在 OBC 情形下，我们可以完全照搬同样的做法。在第一个和最后一个格点上必须有特殊处理：若不加斟酌，首末两处的维数会升到 2，标量性质随之丧失。但在物理上这些指标本来就是无足轻重的哑指标。因此我们要做的（一个简单的计算表明这确实可行）是：利用原来两个态的行向量与列向量，在首末格点处构造出行向量 $[ M\ \tilde{M}]$ 和列向量 $[M\ \tilde{M}]^T$。
+
+因此，MPS 相加会得到维数为 $D_N = D_M + D_{\tilde{M}}$ 的新矩阵，也就是说具有一定维数的 MPS 在加法下并不封闭。同样显而易见的是，在许多情况下这种描述新态的方式是不经济的：极端情形是相加 $\ket{\psi}+\ket{\psi}$，所得的态其实与原态相同，只是带一个前因子 2，矩阵维数本不应增大。所以在相加之后，值得考虑把 MPS 重新{\em 压缩}到较低的维数；视被加的态而定，这一步可能（也可能不，如上例那样）造成信息损失。
+
+\subsection{把矩阵乘积态化为规范形式}
+
+对于一般的矩阵乘积态，除了维数必须恰当匹配之外，对矩阵 $M^{\sigma_i}$ 并无特别的要求。有几类矩阵是值得优先采用的，即左规范和右规范矩阵，它们分别给出左规范和右规范的 MPS：某些收缩变得平庸，正交归一的约化基自动生成。
+
+为了把任意 MPS 化为规范形式，我们利用这样一个事实：SVD 产生的或者是幺正矩阵，或者是行、列正交归一的矩阵，可以证明后者满足左规范或右规范条件。
+
+\subsubsection{左规范 MPS 的生成}
+从一个不作归一化假设的一般 MPS 出发，把收缩显式地写出来，
+\begin{equation}
+\ket{\psi}= \sum_{\fat{\sigma}} \sum_{a_1,\ldots} M^{\sigma_ 1}_{1,a_1} M^{\sigma_2}_{a_1,a_2} M^{\sigma_3}_{a_2,a_3} \ldots \ket{\fat{\sigma}}
+\end{equation}
+我们将物理指标与左（行）指标合并，对 $M^{\sigma_ 1}_{1,a_1}$ 进行重排，然后对新矩阵 $M$ 作 SVD，得到 $M=ASV^\dagger$：
+\begin{eqnarray}
+& & \sum_{\fat{\sigma}} \sum_{a_1,\ldots} M_{(\sigma_ 1,1),a_1} M^{\sigma_2}_{a_1,a_2} M^{\sigma_3}_{a_2,a_3} \ldots \ket{\fat{\sigma}} \nonumber \\
+&=&  \sum_{\fat{\sigma}} \sum_{a_1,\ldots} \sum_{s_1} A_{(\sigma_ 1,1),s_1} S_{s_1,s_1} V^\dagger_{s_1,a_1}  M^{\sigma_2}_{a_1,a_2}  \ldots \ket{\fat{\sigma}} \nonumber \\
+&=& \sum_{\fat{\sigma}} \sum_{a_2,\ldots} \sum_{s_1} A^{\sigma_1}_{1,s_1} \left( \sum_{a_1} S_{s_1,s_1} V^\dagger_{s_1,a_1}  M^{\sigma_2}_{a_1,a_2} \right) M^{\sigma_3}_{a_2,a_3} \ldots \ket{\fat{\sigma}} \nonumber \\
+&=& \sum_{\fat{\sigma}} \sum_{a_2,\ldots} \sum_{s_1} A^{\sigma_1}_{1,s_1} \tilde{M}^{\sigma_2}_{s_1,a_2} M^{\sigma_3}_{a_2,a_3} \ldots \ket{\fat{\sigma}} .
+\end{eqnarray}
+由于 SVD 保证 $A^\dagger A = I$，重排为 $A^{\sigma_1}$ 之后，$A^{\sigma_1}$ 满足左规范条件。SVD 其余的两个矩阵则被乘入 $M^{\sigma_2}$，于是生成一个新的 MPS，其中
+$\tilde{M}^{\sigma_2}_{s_1,a_2} = \sum_{a_1} S_{s_1,s_1} V^\dagger_{s_1,a_1}  M^{\sigma_2}_{a_1,a_2}$ is generated. 
+
+现在这一步骤可以迭代进行：把 $\tilde{M}^{\sigma_2}_{s_1,a_2}$ 重排为 $\tilde{M}_{(\sigma_2,s_1),a_2}$（图~\ref{fig:Mreshaping}），作奇异值分解 $ASV^\dagger$，生成 $A_{(\sigma_2,s_1),s_2}$，再重排为左规范的 $A^{\sigma_2}_{s_1,s_2}$。SVD 右边的两个矩阵又被乘入下一个待分解的矩阵，如此继续。最后一步之后，所有格点上都驻留着左规范矩阵 $A^{\sigma_i}_{s_{i-1},s_i}$。$S_{1,1} (V^\dagger)_{1,1}$——由于 $A^{\sigma_L}$ 是列向量，它是一个标量——留在最后一个格点上，但这个标量不过是 $\ket{\psi}$ 的范数。如果想使用非归一化的态，可以把它单独保存。
+
+\begin{figure}
+\centering\includegraphics[scale=0.6]{PyMPS_MatrixReshaping.eps}
+\caption{为实现规范化，把同一格点上的矩阵集合合并为一个矩阵。}
+\label{fig:Mreshaping}
+\end{figure}
+    
+这一过程可以轻而易举地推广到归一化：我们找出态的前因子，但不存储它，而是简单地把它设为 1。由于我们并不显式地使用奇异值，上述过程可以按照第 \ref{subsubsec:MPSdecomposition} 节的思路，用 QR 分解轻松地重新表述。然而标准 QR 分解无法告诉我们所用矩阵是否大于必要的尺寸，即是否含有为零的奇异值，从而可以把矩阵裁剪到更小的尺寸而不损失精度；要做到这一点只能使用秩显现（rank revealing）QR 分解；不过对许多 MPS 而言，从其背后的物理可以清楚地知道奇异值谱具有长尾，因此这个问题不会出现。同样的论证也适用于右规范 MPS 的生成，下面就来讨论。
+    
+\subsubsection{右规范 MPS 的生成}
+同样的步骤也可用来得到由右规范矩阵构成的态：对重排后的矩阵 $\{ M^\sigma \} \rightarrow M=USB$ 从右端开始依次作一列 SVD，把 $B$ 拆分成右规范的矩阵 $B^\sigma$（由于 $BB^\dagger = I$），并把 $U$ 和 $S$ 乘到左边，构成下一个待作奇异值分解的矩阵：
+
+\begin{eqnarray}
+& & \sum_{\fat{\sigma}} \sum_{\ldots,a_{L-1}}  \ldots M^{\sigma_{L-2}}_{a_{L-3},a_{L-2}} M^{\sigma_{L-1}}_{a_{L-2},a_{L-1}} M^{\sigma_{L}}_{a_{L-1},1}  \ket{\fat{\sigma}} \nonumber \\
+&=& \sum_{\fat{\sigma}} \sum_{\ldots,a_{L-1}}  \ldots M^{\sigma_{L-2}}_{a_{L-3},a_{L-2}} M^{\sigma_{L-1}}_{a_{L-2},a_{L-1}} M_{a_{L-1},(\sigma_{L},1)}  \ket{\fat{\sigma}} \nonumber \\
+&=&  \sum_{\fat{\sigma}} \sum_{\ldots a_{L-1}} \sum_{s_{L-1}}  \ldots M^{\sigma_{L-2}}_{a_{L-3},a_{L-2}} M^{\sigma_{L-1}}_{a_{L-2},a_{L-1}} 
+U_{a_{L-1},s_{L-1}} S_{s_{L-1},s_{L-1}} B_{s_{L-1},(\sigma_L,1)}   \ket{\fat{\sigma}} \nonumber \\
+&=& \sum_{\fat{\sigma}} \sum_{\ldots a_{L-2}} \sum_{s_{L-1}} 
+\ldots M^{\sigma_{L-2}}_{a_{L-3},a_{L-2}} \left( \sum_{a_{L-1}} M^{\sigma_{L-1}}_{a_{L-2},a_{L-1}} U_{a_{L-1},s_{L-1}} S_{s_{L-1},s_{L-1}}\right) 
+B_{s_{L-1},(\sigma_L,1)}   \ket{\fat{\sigma}} \nonumber \\
+&=& \sum_{\fat{\sigma}} \sum_{\ldots a_{L-2}} \sum_{s_{L-1}}
+\ldots M^{\sigma_{L-2}}_{a_{L-3},a_{L-2}} \tilde{M}^{\sigma_{L-1}}_{a_{L-2},s_{L-1}} B^{\sigma_L}_{s_{L-1},1}   \ket{\fat{\sigma}} ,
+\end{eqnarray}
+按照前面的方式继续进行，仅有的差别是：(i) 方向相反；(ii) 重排时现在把物理指标与列指标（而不是行指标）合并：$\tilde{M}^{\sigma_i}_{a_{i-1},s_{i}} \rightarrow \tilde{M}_{a_{i-1},(\sigma_i s_i)} \rightarrow B_{s_{i-1},(\sigma_i s_i)} \rightarrow B^{\sigma_i}_{s_{i-1},s_i}$。
+    
+    

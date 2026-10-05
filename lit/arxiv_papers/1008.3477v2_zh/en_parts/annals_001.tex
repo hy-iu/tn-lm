@@ -1,0 +1,128 @@
+Any state of the superblock A$\bullet\bullet$B can be described by 
+\begin{equation}
+\ket{\psi}= \sum_{a_A \sigma_A \sigma_B a_B} \psi_{a_A \sigma_A \sigma_B a_B} \ket{a}_A \ket{\sigma}_A \ket{\sigma}_B \ket{a}_B \equiv \sum_{i_A j_B} \psi_{i_A j_B} \ket{i}_A \ket{j}_B,
+\label{US:eq:DMRGstate}
+\end{equation} 
+where the states of the site next to A are in the set $\{ \ket{\sigma}_A \}$ of local state space dimension $d$, and analogously those of the site next to B. By numerical diagonalization we find the $\ket{\psi}$ that minimizes the energy
+\begin{equation}
+E = \frac{\bra{\psi} \hat{H}_{{\rm A}\bullet\bullet{\rm B}} \ket{\psi}}{\braket{\psi}{\psi}}
+\end{equation}
+with respect to the Hamiltonian of the superblock, answering (i). To this purpose, we need some iterative sparse matrix eigensolver such as provided by the Lanczos or Jacobi-Davidson methods. Given that our Hamiltonian [Eq.~(\ref{eq:basicHam})] is available in the full tensor product space, this minimization of course assumes that it can be expressed readily in the superblock basis. Let us postpone this question, as it is intimately related to growing blocks and decimating their state space. As the matrix dimension is $d^2 D^2$, for typical $D$ the eigenproblem is too large for direct solution, even assuming the use of quantum symmetries. As most matrix elements of short-ranged Hamiltonians are zero, the matrix is sparse, such that the basic matrix-vector multiplication of iterative sparse matrix eigensolvers can be implemented very efficiently. We will discuss this question also further below. 
+
+If we now take states $\{ \ket{i}_A \}$ as the basis of the next larger left block A$\bullet$, the basis dimension grows to $dD$. To avoid exponential growth, we truncate this basis back to $D$ states, using the following procedure for block A$\bullet$ and similarly for $\bullet$B: we consider the {\em reduced density operator} for A$\bullet$, namely
+\begin{equation}
+\hat{\rho}_{A\bullet} = \Tr_{\bullet B} \ket{\psi}\bra{\psi} 	\quad\quad (\rho_{A\bullet})_{ii'} = \sum_j \psi_{ij}\psi^*_{i'j} .  
+\end{equation}
+The eigensystem of $\hat{\rho}_{A\bullet}$ is determined by exact diagonalization; the choice is to retain as reduced basis those $D$ orthonormal eigenstates that have the largest associated eigenvalues $w$. If we call them $\ket{b}_A$, the vector entries are simply the expansion coefficients in the previous block-site basis, $_A \braket{a \sigma}{b}_A$. 
+
+After an (approximate) transformation of all desired operators on A$\bullet$ into the new basis, the system size can be increased again, until the final desired size is reached. B is grown at the same time, for reflection-symmetric systems by simple mirroring.
+
+The motivation of the truncation procedure is twofold. The first one, which is on a weaker basis, is that we are interested in the states of A$\bullet$ contributing most to the ground state for A$\bullet$ embedded in the final, much larger, even infinitely large system. We approximate this final system ground state, which we don't know yet, to the best of our knowledge by that of A$\bullet\bullet$B, the largest superblock we can efficiently form. In that sense, we are bootstrapping, and the finite-system DMRG will, as we will see, take care of the large approximations this possibly incurs. 
+Let me remark right now that in the MPS formulation of infinite-system DMRG a much clearer picture will emerge. The second motivation for the choice of states is on much firmer foundation: the above prescription follows both from statistical physics arguments or from demanding that the 2-norm distance $\| \ket{\psi} - \ket{\psi}_{{\rm trunc}} \|_2$ between the current ground state $\ket{\psi}$ and its projection onto truncated block bases of dimension $D$, $\ket{\psi}_{{\rm trunc}}$, is minimal. The most transparent proof follows from a singular value decomposition of the matrix $\Psi$ with matrix elements $\Psi_{(a_A \sigma_A), (\sigma_B a_B)}$ formed from the wave function coefficients $\psi_{a_A \sigma_A\sigma_B a_B}$. The overall success of DMRG rests on the observation that even for moderate $D$ (often only a few 100) the total weight of the truncated eigenvalues, given by the {\em truncation error} $\epsilon=1-\sum_{a>D} w_a$ if we assume descending order of the $w_a$, is extremely close to 0, say $10^{-10}$ or less. 
+
+Algorithmically, we may of course also fix a (small) $\epsilon$ we are willing to accept and at each truncation choose $D$ sufficiently large as to meet this requirement. Computational resources are used more efficiently (typically, we will have a somewhat smaller $D$ towards the ends of chains because of reduced quantum fluctuations), the programming effort to obtain this flexibility is of course somewhat higher.
+
+An important aspect of improving the performance of any quantum algorithm is the exploitation of quantum symmetries, ranging from discrete symmetries like a $Z_2$ mirror symmetry if the Hamiltonian is invariant under mirroring from left to right through Abelian symmetries like the $U(1)$ symmetry of particle number (``charge'') or magnetization conservation to non-Abelian symmetries like the {\em SU}(2) symmetry of rotational invariance\cite{McCulloch07,SierraNishino97,McCulloch00,McCulloch01,McCulloch02}. A huge range of these symmetries have been used successfully in numerous applications, with the most common ones being the two $U(1)$ symmetries of charge and magnetization conservation, but also {\em SU}(2) symmetries\cite{McCulloch08a,Smerat09,Langer09,Holzner09}. Let us focus on magnetization and assume that the total magnetization, $\hat{M} = \sum_i \hat{S}^z_i$, commutes with the Hamiltonian, $[\hat{H},\hat{M}]=0$, such that eigenstates of $\hat{H}$ can be chosen to be eigenstates of $\hat{M}$. Let us assume in particular that the good quantum number of the ground state is $M=0$. If the block and site states are eigenstates of magnetization, then $\psi_{a_A \sigma_A \sigma_B a_B} \neq 0$ only if $M (\ket{a}_A) +  M (\ket{\sigma}_A) + M (\ket{\sigma}_B) + M (\ket{a}_B) = 0$;
+$M$ is a short-hand for the magnetization of the respective blocks and sites, assuming that the states have magnetization as a good quantum number. This constraint allows to exclude a large number of coefficients from the calculation, leading to a huge speedup of the calculation and (less important) savings in memory.
+
+The decisive point is that if the states $\ket{a}_A$ and $\ket{\sigma}_A$ are eigenstates of magnetization, so will be the eigenstates of the reduced density operator $\hat{\rho}_{A\bullet}$, which in turn will be the states $\ket{a}_A$ of the enlarged block. As the local site states can be chosen to be such eigenstates and as the first block in the growth process consists of one local site, the eigenstate property then propagates through the entire algorithm. To prove the claim, we consider $(\rho_{A\bullet})_{ii'} = \sum_j \psi_{ij} \psi^*_{i'j}$. The states $\ket{i}_A$ and $\ket{j}_B$ are eigenstates of magnetization by construction, hence 
+$M (\ket{i}_A) + M(\ket{j}_B) = 0 = M (\ket{i'}_A) + M (\ket{j}_B)$ or $M (\ket{i}_A) = M (\ket{i'}_A)$. The density matrix therefore decomposes into blocks that are formed from states of equal magnetization and can be diagonalized block by block within these sets, such that its eigenstates are also eigenstates of magnetization.
+
+In practical implementations, the use of such good quantum numbers will be done by arranging matrix representations of operators into block structures labelled by good quantum numbers, which are then combined to satisfy local and global constraints. While this is conceptually easy, the coding becomes more complex and will not be laid out here explicitly; hints will be given in the MPS sections.
+ 
+So far, we have postponed the question of expressing operators acting on blocks in the current block bases, in order to construct the Hamiltonian and observables of interest. Let us consider an operator $\hat{O}$ acting on site $\ell$, with matrix elements $O^{\sigma_\ell,\sigma'_\ell}=\bra{\sigma_\ell} \hat{O}_{\ell} \ket{\sigma'_\ell}$. Without loss of generality, assume that site $\ell$ is on the left-hand side and added into block A. Its construction is then initialized when block A grows from $\ell-1 \rightarrow \ell$, as 
+\begin{equation}
+\bra{a_\ell} \hat{O} \ket{a'_\ell} = \sum_{a_{\ell-1},\sigma_\ell,\sigma'_\ell}
+\braket{a_\ell}{a_{\ell-1}\sigma_\ell} \bra{\sigma_\ell} \hat{O} \ket{\sigma'_\ell} \braket{a_{\ell-1}\sigma'_\ell}{a'_\ell} .
+\end{equation}
+Here, $ \ket{a_\ell}$ and $\ket{a_{\ell-1}}$ are the effective basis states of blocks of length $\ell$ and $\ell-1$ respectively. Of course, updates are necessary during the further growth steps of block A, e.g.\
+\begin{equation}
+\bra{a_{\ell+1}} \hat{O} \ket{a'_{\ell+1}} = \sum_{a_{\ell},a'_{\ell}\sigma_{\ell+1}}
+\braket{a_{\ell+1}}{a_{\ell}\sigma_{\ell+1}} \bra{a_\ell} \hat{O} \ket{a'_\ell} \braket{a'_{\ell}\sigma_{\ell+1}}{a'_{\ell+1}} .
+\label{eq:update}
+\end{equation}
+It is important to realize that the sum in Eq.~(\ref{eq:update}) must be split as 
+\begin{equation}
+\sum_{a_{\ell}\sigma_{\ell+1}} \braket{a_{\ell+1}}{a_{\ell}\sigma_{\ell+1}} \left( \sum_{a'_{\ell}}
+ \bra{a_\ell} \hat{O} \ket{a'_\ell} \braket{a'_{\ell}\sigma_{\ell+1}}{a'_{\ell+1}} \right),
+\end{equation}
+reducing the calculational load from $O(D^4 d)$ to $2O(D^3 d)$. 
+
+In Hamiltonians, operator products $\hat{O}\hat{P}$ occur. It is tempting, but due to the many truncation steps highly imprecise, to insert the quantum mechanical one in the current block basis and to write
+\begin{equation}
+\bra{a_\ell} \hat{O}\hat{P} \ket{a'_\ell} = \sum_{\tilde{a}_\ell} \bra{a_\ell} \hat{O} \ket{\tilde{a}_\ell} \bra{\tilde{a}_\ell} \hat{P} \ket{a'_\ell} . \quad\quad {\rm NO!}
+\end{equation}
+The correct way is to update the first operator (counting from the left for a left block A) until the site of the second operator is reached, and to incorporate it as
+\begin{equation}
+\bra{a_\ell} \hat{O} \hat{P} \ket{a'_\ell} = \sum_{a_{\ell-1},a'_{\ell-1},\sigma_\ell,\sigma'_\ell}
+\braket{a_\ell}{a_{\ell-1}\sigma_\ell}  \bra{a_{\ell-1}} \hat{O} \ket{a'_{\ell-1}} \bra{\sigma_\ell} \hat{P} \ket{\sigma'_\ell} \braket{a'_{\ell-1}\sigma'_\ell}{a'_\ell} .
+\label{eq:incorporate}
+\end{equation}
+The further updates are then as for single operators. Obviously, we are looking at a straightforward sequence of (reduced) basis transformations, with a somewhat cumbersome notation, but it will be interesting to see how much simpler these formulae will look in the MPS language, albeit identical in content.
+
+
+The ultimate evaluation of expectation values is given at the end of the growth procedure as 
+\begin{equation}
+\bra{\psi} \hat{O} \ket{\psi} = \sum_{a_A a'_A \sigma_A \sigma_B a_B} \braket{\psi}{a_A \sigma_A \sigma_B a_B} \bra{a_A} \hat{O} \ket{a'_A} \braket{a'_A \sigma_A \sigma_B a_B}{\psi},
+\end{equation}
+where suitable bracketing turns this into an operation of order $O(D^3 d^2)$. An important special case is given if we are looking for the expectation value of a local operator that acts on one of the free sites $\bullet$ in the final block-site configuration. Then 
+\begin{equation}
+\bra{\psi} \hat{O} \ket{\psi} = \sum_{a_A \sigma_A \sigma'_A \sigma_B a_B} \braket{\psi}{a_A \sigma_A \sigma_B a_B} \bra{\sigma_A} \hat{O} \ket{\sigma'_A} \braket{a_A \sigma'_A \sigma_B a_B}{\psi},
+\end{equation}
+which is an expression of order $O(D^2 d^3)$ (for many operators, even $O(D^2 d^2)$). Given that $D \gg d$ in all practical applications, such evaluations are computationally highly advantageous.
+
+Let me conclude these more technical remarks by observing that for an efficient construction of  $\hat{H}$ from such operators, it is essential {\em never} to build it as a full matrix, but to make use of the specific block-site-site-block structure. Assume, for example, a term which contains one operator acting on A and one on B (this is in fact the most complicated case), $\hat{h}=\hat{O}_A \hat{O}_B$. Then
+\begin{equation}
+\bra{a_A \sigma_A \sigma_B a_B} \hat{h}\ket{\psi} = \sum_{a'_A} 
+\bra{a_A}\hat{O}_A\ket{a'_A} \left( \sum_{a'_B} \bra{a_B}\hat{O}_B\ket{a'_B}  \braket{a'_A \sigma_A \sigma_B a'_B}{\psi} \right),
+\label{eq:hamfragment}
+\end{equation}
+which is a sequence of two $O(D^3 d^2)$ multiplications (instead of one naive $O( D^4 d^2)$ calculation) for all coefficients $\bra{a_A \sigma_A \sigma_B a_B} \hat{h}\ket{\psi}$ and similarly for all other terms.
+
+If we stop infinite-system DMRG at some superblock size $L$, we can interpret the final wavefunction in two ways. We can take it as an approximation to the exact state for the superblock of size $L$ and evaluate expectation values. The accuracy is limited not only by the truncations, but also by the fact that the first truncations were carried out for extremely small superblocks: the choice of relevant short block states is likely to be a not too good approximation to those one would have chosen for these short blocks embedded in the final system of length $L$.
+
+Alternatively, we may ignore these boundary effects and focus on the central sites as an approximation to the behaviour of an infinitely large system, provided $L$ is large enough and careful extrapolations of results to $L\rightarrow\infty$ are done. This is not so simple to do in a very controlled fashion, but as we will see, infinite-system DMRG can be used to build highly controlled translationally invariant (modulo, say, a unit cell of length 2) thermodynamic limit states.
+
+\subsection{Finite-system DMRG}
+
+Once the desired final system size is reached by infinite-system DMRG, it is important in all but the most trivial applications to follow up on it by the so-called finite-system DMRG procedure. This will not merely lead to some slight quantitative improvements of our results, but may change them completely: consider \cite{Schollwoeck03} for an example where even the central physical statement changes: for a $t$-$J$-$V$-$V'$ model on a ladder with moderate hole-doping $\delta=0.1$, an infinite-system DMRG calculation indicates the existence of alternately circulating currents on plaquettes that are triggered by an infinitesimal current at the left end of the ladder, a signal of a so-called $d$-density wave state. Only after applying the finite-system algorithm it becomes obvious that this current is in fact exponentially decaying into the bulk, excluding this type of order (Fig.~\ref{fig:PlaquetteCurrent}). 
+
+\begin{figure}
+\centering\includegraphics[width=\textwidth]{PyMPS_DMRGCombined.eps}
+\caption{The left and right half of the figure present the iterations taken in the infinite-system and finite-system DMRG procedures respectively. In both cases, new blocks are formed from integrating a site into a block, with a state space truncation according to the density-matrix prescription of DMRG. Whereas in the infinite-system version this growth happens on both sides of the chain, leading to chain growth, in the finite-system algorithm it happens only for one side at the expense of the other, leading to constant chain length.}
+\label{fig:DMRGCombined}
+\end{figure}
+ 
+The finite-system algorithm corrects the choices made for reduced bases in the context of a superblock that was not the system of interest (of final length $L$), but some sort of smaller proxy for it.   
+ 
+\begin{figure}
+\centering\includegraphics[width=250pt]{PyMPS_PlaquetteCurrent.eps}
+\caption{Plaquette current on a $t$-$J$-$V$-$V'$-ladder, $J=0.4t$, $V=3t$, $V'=t$ ($V$ nearest, $V'$ next-nearest neighbour interaction) at hole doping $\delta=0.1$, system size $2\times 60$, as induced by a finite boundary current on rung $1$. The absolute current strength is shown;  whereas infinite-system DMRG and the first sweep indicate the generation of a long-ranged pattern, a fully converged calculation (here after 6 to 7 sweeps) reveals an exponential decay into the bulk. Taken from Ref.~\cite{Schollwoeck03}.}
+\label{fig:PlaquetteCurrent}
+\end{figure}
+ 
+What the finite-system algorithm does is the following (Figure \ref{fig:DMRGCombined}): it continues the growth process of (say) block B following the same prescription as before: finding the ground state of the superblock system, determining the reduced density operator, finding the eigensystem, retaining the $D$ highest weight eigenstates for the next larger block. But it does so at the expense of block A, which shrinks (i.e.\ old shorter blocks A are reused). This is continued until A is so small as to have a complete Hilbert space, i.e.\ of dimension not exceeding $D$ (one may also continue until A is merely one site long; results are not affected). Then the growth direction is reversed: A grows at the expense of B, including new ground state determinations and basis choices for A, until B is small enough to have a complete Hilbert space, which leads to yet another reversal of growth direction.
+
+This {\em sweeping} through the system is continued until energy (or, more precisely, the wave function) converges. The intuitive motivation for this (in practice highly successful) procedure is that after each sweep, blocks A or B are determined in the presence of an ever improved embedding.
+
+In practice, this algorithm involves a lot of book-keeping, as all the operators we need have to be maintained in the current effective bases which will change from step to step. This means that the truncated basis transformations determined have to be carried out after each step; operator representations in all bases have to be stored, as they will be needed again for the shrinking block. 
+
+Another important feature is that for finding the ground state $\ket{\psi}$ for each A$\bullet\bullet$B configuration one employs some iterative large sparse matrix eigensolver based on sequential applications of $\hat{H}$ on some initial starting vector. To speed up this most time-consuming part of the algorithm, it is highly desirable to have a good prediction for a starting vector, i.e.\ as close as possible to the ultimate solution. This can be achieved by (approximately) transforming the result of the last step into the shifted  A$\bullet\bullet$B configuration \cite{White96} by applying two basis transformations: e.g.\ A$\bullet\rightarrow$A and B$\rightarrow\bullet$B for a sweep to the right. The explicit formulae (see \cite{Schollwoeck05,White96}) can be derived by writing
+\begin{equation}
+\ket{\psi} = \sum_{a_\ell\sigma_{\ell+1}\sigma_{\ell+2}b_{\ell+2}} \psi_{a_\ell\sigma_{\ell+1}\sigma_{\ell+2}b_{\ell+2}} \ket{a_\ell}_A \ket{\sigma_{\ell+1}} \ket{\sigma_{\ell+2}} \ket{b_{\ell+2}}_B,
+\end{equation}
+where $\ket{a_\ell}_A$ and $\ket{b_{\ell+2}}_B$ are the block states for block A comprising sites 1 through $\ell$ and block B comprising sites $\ell+3$ through $L$ (the label of the block states is taken from the label of the bond their ends cut; see Fig.~\ref{fig:labelling}), and inserting twice an approximate identity, namely $\hat{I} = \sum_{a_{\ell+1}} \ket{a_{\ell+1}}_A {\,}_A\bra{a_{\ell+1}}$ and
+$\hat{I} = \sum_{\sigma_{\ell+3} b_{\ell+3}} \ket{\sigma_{\ell+3}}\ket{b_{\ell+3}}_B {\, }_B \bra{b_{\ell+3}} \bra{\sigma_{\ell+3}}$.
+One then obtains
+\begin{equation}
+\ket{\psi} = \sum_{a_{\ell+1}\sigma_{\ell+2}\sigma_{\ell+3}b_{\ell+3}} \psi_{a_{\ell+1}\sigma_{\ell+2}\sigma_{\ell+3}b_{\ell+3}} \ket{a_{\ell+1}}_A \ket{\sigma_{\ell+2}} \ket{\sigma_{\ell+3}} \ket{b_{\ell+3}}_B,
+\end{equation}
+with
+\begin{equation}
+\psi_{a_{\ell+1}\sigma_{\ell+2}\sigma_{\ell+3}b_{\ell+3}} =
+\sum_{a_\ell \sigma_{\ell+1} b_{\ell+2}} 
+\psi_{a_\ell\sigma_{\ell+1}\sigma_{\ell+2}b_{\ell+2}}  
+\braket{a_{\ell+1}}{a_\ell \sigma_{\ell+1}} \braket{b_{\ell+3}\sigma_{\ell+3}}{b_{\ell+2}} . 
+\end{equation}
+The basis transformations required in the last equation are all available from previous steps in the DMRG procedure. A similar operation can be carried out for a sweep to the left. As we will see, this astute step, which led to drastic improvements in DMRG performance, is already implicit if one rewrites DMRG in the MPS language, such that we will not discuss it here at length.
+

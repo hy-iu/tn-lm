@@ -1,0 +1,114 @@
+After each time step, we may evaluate observables in the standard way, $\langle O(t) \rangle = \bra{\psi(t)} \hat{O} \ket{\psi(t)}$. But we can do more: we can calculate time-dependent correlators as
+\begin{equation}
+\langle \hat{O}(t) \hat{P} \rangle = \bra{\psi} \eul^{+i\hat{H}t} \hat{O} \eul^{-\imag \hat{H}t} \hat{P} \ket{\psi}
+= \bra{\psi(t)} \hat{O} \ket{\phi(t)}
+\end{equation}
+where $\ket{\psi(t)} = \eul^{-\imag \hat{H}t}\ket{\psi}$ and $\ket{\phi(t)} = \eul^{-\imag \hat{H}t} \hat{P} \ket{\psi}$. If we take e.g.\ $\hat{O} = \hat{S}^z_i$ and $\hat{P} = \hat{S}^z_j$, we can calculate 
+$\langle \hat{S}^z_i(t) \hat{S}^z_j \rangle$ and by a double Fourier transformation the structure function
+\begin{equation}
+S^{zz}(k,\omega) \propto \int dt \sum_{n} \langle \hat{S}^z_i(t) \hat{S}^z_{i+n} \rangle \eul^{\imag kn}\eul^{-\imag \omega t},
+\end{equation}
+where I have assumed translational invariance and infinite extent of the lattice for simplicity of the formula.
+
+A simple improvement on the algorithm given above is to do a second-order Trotter decomposition 
+\begin{equation}
+\eul^{-\imag  \hat{H}\tau} = \eul^{-\imag  \hat{H}_{{\rm odd}} \tau/2}\eul^{-\imag  \hat{H}_{{\rm even}} \tau}\eul^{-\imag  \hat{H}_{{\rm odd}} \tau/2} + O(\tau^3),
+\end{equation}
+where the error per timestep is reduced by another order of  $\tau$. If we do not do evaluations after each time step, we can group half steps, and work at no additional expense compared to a first-order Trotter decomposition.
+
+A very popular implementation of a fourth order-Trotter decomposition that originates in quantum Monte Carlo would be given by the following formula due to Suzuki\cite{Suzuki76,Suzuki91}:
+\begin{equation}
+\eul^{-\imag  \hat{H}\tau} = \hat{U}(\tau_1) \hat{U}(\tau_2) \hat{U}(\tau_3) \hat{U}(\tau_2) \hat{U}(\tau_1),  
+\end{equation}
+where 
+\begin{equation}
+\hat{U} (\tau_i) = \eul^{-\imag  \hat{H}_{{\rm odd}} \tau_i/2}\eul^{-\imag  \hat{H}_{{\rm even}} \tau_i}\eul^{-\imag  \hat{H}_{{\rm odd}}
+\tau_i/2}
+\end{equation}
+and
+\begin{equation}
+\tau_1 = \tau_2 = \frac{1}{4-4^{1/3}} \tau  \quad\quad \tau_3 = \tau -2 \tau_1 - 2\tau_2 .
+\end{equation}
+Even smaller errors can be achieved at similar cost using less symmetric formulae\cite{McLachlan95}. This completes the exposition of the algorithm (an error analysis will be given after the other methods for time evolution have been explained), and we now have to construct the MPOs.
+
+\subsubsection{MPO for pure state evolution}
+Let us consider the Trotter step for all odd bonds of a chain:
+\begin{equation}
+\eul^{-\imag  \hat{h}_1 \tau} \otimes \eul^{-\imag  \hat{h}_3 \tau} \otimes \ldots \otimes \eul^{-\imag  \hat{h}_{L-1} \tau} \ket{\psi} ;
+\label{eq:oddevolution}
+\end{equation}
+each bond-evolution operator like $\eul^{-\imag  \hat{h}_1 \tau}$ takes the form $\sum_{\sigma_1 \sigma_2, \sigma'_1 \sigma'_2} O^{\sigma_1\sigma_2,\sigma'_1\sigma'_2} \ket{\sigma_1\sigma_2}\bra{\sigma'_1\sigma'_2}$. Both in the pictorial and the explicit mathematical representation it is obvious that this operator destroys the MPS form (Fig.~\ref{fig:trotterstep}).
+
+\begin{figure}
+\centering\includegraphics[width=250pt]{PyMPS_TrotterStep.eps}
+\caption{A Trotter step: On all odd bonds, an (infinitesimal) bond time evolution is carried out. This merges two sites, such that the simple product form of MPS is lost at first sight, but the time evolution can be translated into MPOs. As the time evolution factorizes, the MPOs have dimension 1 on all even bonds (thin lines).}
+\label{fig:trotterstep}
+\end{figure}
+
+It would therefore be desirable to have $O^{\sigma_1\sigma_2,\sigma'_1\sigma'_2}$ in some form containing tensor products $O^{\sigma_1, \sigma'_1} \otimes O^{\sigma_2, \sigma'_2}$, to maintain the MPS form. To this purpose, we carry out the procedure for decomposing an arbitrary state into an MPS, adapted to an operator (two indices per site). It works because there are so few indices. One reorders $O$ to group local indices and carries out a singular value decomposition:
+\begin{eqnarray*}
+O^{\sigma_1 \sigma_2, \sigma'_1 \sigma'_2} &=& P_{(\sigma_1 \sigma'_1), (\sigma_2 \sigma'_2)} \\
+&=& \sum_k U_{\sigma_1 \sigma'_1,k} S_{k,k} (V^\dagger)_{k, (\sigma_2 \sigma'_2)} \\
+&=& \sum_k U^{\sigma_1 \sigma'_1}_{k} \overline{U}^{\sigma_2 \sigma'_2}_{k} \\
+&=& \sum_k U^{\sigma_1 \sigma'_1}_{1,k} \overline{U}^{\sigma_2 \sigma'_2}_{k,1}
+\end{eqnarray*}
+where $U^{\sigma_1 \sigma'_1}_{k} =  U_{(\sigma_1 \sigma'_1),k}\sqrt{S_{k,k}}$ and 
+$\overline{U}^{\sigma_2 \sigma'_2}_{k} = \sqrt{S_{k,k}} (V^\dagger)_{k, (\sigma_2 \sigma'_2)}$. In the very last step of the derivation, we have introduced a dummy index taking value 1 to arrive at the form of an MPO matrix. The index $k$ may run up to $d^2$, giving the bond dimension $D_W$ of the MPO.
+
+
+The MPO representing the operator in Eq.~(\ref{eq:oddevolution}), $U^{\sigma_1\sigma'_1} \overline{U}^{\sigma_2\sigma'_2}U^{\sigma_3\sigma'_3} \overline{U}^{\sigma_4\sigma'_4}\ldots$, factorizes on every second bond, as do the original unitaries. If one site does not participate in any bond evolution, we simply assign it the identity unitary as a $(1\times 1)$-matrix: $I^{\sigma,\sigma'}_{1,1}=\delta_{\sigma,\sigma'}$. Then the global MPO can be formed trivially from local MPOs. The MPO for time evolution on all odd bonds would read
+$U\overline{U}U\overline{U}U\overline{U} \ldots$, whereas the even-bond time step reads $IU\overline{U}U\overline{U}U\overline{U}\ldots I$ (Fig.~\ref{fig:oddevenTrotter}).
+
+\begin{figure}
+\centering\includegraphics[width=250pt]{PyMPS_OddEvenTrotter.eps}
+\caption{A complete first-order Trotter time step (odd and even bonds). Fat and thin lines correspond to dimension1 and $>1$ on MPO bonds. The MPOs in the top line on the first and last site are trivial scalar identities 1.}
+\label{fig:oddevenTrotter}
+\end{figure}
+
+\subsection{Conventional time evolution: mixed states}
+
+\subsubsection{Purification of mixed states}
+Finite temperature calculations can be carried out based on the purification of an arbitrary mixed quantum state\cite{VerstraeteRipoll04}: if we consider a mixed state in physical space P formed from orthonormal states, we can interpret it as the result of a partial trace over a Schmidt decomposition of a pure state on PQ, where Q is an auxiliary space:
+\begin{equation}
+\hat{\rho}_P = \sum_{a=1}^r s_a^2 \ket{a}_P \bra{a}_P \rightarrow \ket{\psi} = \sum_{a=1}^r s_a \ket{a}_P \ket{a}_Q \quad \quad \hat{\rho}_P = \tr_Q \ket{\psi}\bra{\psi} .
+\end{equation}
+The auxiliary state space can simply be taken as a copy of the original one, so finite-temperature density operators on a chain can be expressed as pure states on a ladder (see Fig.~\ref{fig:finitetemperaturesketch}).
+
+To calculate a thermal density operator $\hat{\rho}_\beta= Z(\beta)^{-1} \eul^{-\beta \hat{H}}$, $Z(\beta) = \tr_P \eul^{-\beta \hat{H}}$, we write
+\begin{equation}
+\hat{\rho}_\beta = Z(\beta)^{-1} \eul^{-\beta \hat{H}} = Z(\beta)^{-1} \eul^{-\beta \hat{H}/2} \cdot \hat{I} \cdot \eul^{-\beta \hat{H}/2} .
+\end{equation}
+The identity $\hat{I}$ is nothing but $Z(0) \hat{\rho}_0$, the infinite temperature density operator times the infinite temperature partition function. Assume we know the purification of $\hat{\rho}_0$ as an MPS, $\ket{\psi_{\beta=0}}$. Then
+\begin{equation}
+\hat{\rho}_\beta = (Z(0)/Z(\beta)) \eul^{-\beta \hat{H}/2} \cdot \tr_Q \ket{\psi_0}\bra{\psi_0} \cdot \eul^{-\beta \hat{H}/2} = (Z(0)/Z(\beta)) \tr_Q \eul^{-\beta \hat{H}/2}\ket{\psi_0} \bra{\psi_0}\eul^{-\beta \hat{H}/2} .
+\end{equation}
+The trace over Q can be pulled out as the Hamiltonian does not act on Q. But the result means that we have to do an imaginary time evolution
+\begin{equation}
+\ket{\psi_\beta} = \eul^{-\beta \hat{H}/2}\ket{\psi_0} .
+\end{equation}
+Expectation values are given by 
+\begin{equation}
+\langle \hat{O} \rangle_\beta = \tr_P \hat{O}\hat{\rho}_\beta =
+(Z(0)/Z(\beta)) \tr_P \hat{O} \tr_Q \ket{\psi_\beta} \bra{\psi_\beta}
+= (Z(0)/Z(\beta)) \bra{\psi_\beta} \hat{O} \ket{\psi_\beta} .
+\end{equation} 
+$(Z(0)/Z(\beta)) = (d^L/Z(\beta))$ may seem difficult to obtain, but follows trivially from the expectation value of the identity, 
+\begin{equation}
+1 = \langle \hat{I} \rangle_\beta = \tr_P \hat{\rho}_\beta =
+(Z(0)/Z(\beta)) \tr_P \tr_Q \ket{\psi_\beta} \bra{\psi_\beta}
+= (Z(0)/Z(\beta)) \braket{\psi_\beta}{\psi_\beta} ,
+\end{equation} 
+hence $Z(\beta)/Z(0)= \braket{\psi_\beta}{\psi_\beta}$, or, in complete agreement with standard quantum mechanics,
+\begin{equation}
+\langle \hat{O} \rangle_\beta = \frac{ \bra{\psi_\beta} \hat{O}\ket{\psi_\beta}}{\braket{\psi_\beta}{\psi_\beta}} .
+\end{equation}
+But this takes us right back to expressions we know how to calculate. All we have to do is to find $\ket{\psi_0}$, carry out imaginary time evolution up to $-\imag\beta/2$, and calculate expectation values as for a pure state. We can even subject the purified state $\ket{\psi_\beta}$ to subsequent real time evolutions, to treat time dependence at finite $T$.
+
+We can also do thermodynamics quite simply, as $Z(\beta)/Z(0)$ is given by the square of the norm of $\ket{\psi_\beta}$ and $Z(0)=d^L$. This means that we can obtain $Z(\beta)$ by keeping the purified state normalized at all temperatures and by accumulating normalization factors as temperature goes down and $\beta$ increases. From $Z(\beta)$, we have $F(\beta)=-\beta^{-1} \ln Z(\beta)$. At the same time, $U(\beta) = \langle \hat{H} \rangle_\beta = \bra{\psi_\beta} \hat{H} \ket{\psi_\beta}$. But this in turn gives us $S(\beta) = \beta(U(\beta)-F(\beta))$. Further thermodynamic quantities follow similarly.
+
+\begin{figure}
+\centering\includegraphics[scale=0.7]{PyMPS_FiniteTemperatureSketch.eps}
+\caption{Schematic representation of finite-temperature simulations: instead of a chain, one sets up a ladder with an identical copy of the chain. Physical sites have odd, auxiliary sites have even labels. Equivalent sites on the physical and auxiliary leg are linked by maximally entangled states. To reach inverse temperature $\beta$, an imaginary time evolution is carried out up to ``time'' $-\imag\beta/2$.}
+\label{fig:finitetemperaturesketch}
+\end{figure}
+

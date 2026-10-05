@@ -1,0 +1,114 @@
+\begin{figure}
+\centering\includegraphics[scale=0.5]{PyMPS_LatticeFolding.eps}
+\caption{旋转后的点阵此时沿``空间''（原来的时间）轴折叠，该轴有 $2nN+3 \equiv L^{'}$ 个格点。对应同一时刻的各条线彼此重叠（用椭圆标示）；在末时刻对算符求值的那条线在弯折处保持单独。}
+\label{fig:latticefolding}
+\end{figure}
+
+如果我们假设原点阵以及作用在其上的哈密顿量是平移不变的（至少对平移偶数个格点是如此），就可以方便地用转移算符写出这些收缩。若把折叠点阵第一行（第一个``时间''切片）上的态记为 $\ket{\psi_L}$（对应原点阵的格点 $L$），把最下面一行（最后一个``时间''切片）上的态记为 $\bra{\psi_1}$，则（为简单起见取 $i$ 为奇数）
+\begin{equation}
+\langle \hat{O}_i \rangle = \frac{\bra{\psi_L} E^{(i-3)/2} E_O E^{(L-i-1)/2} \ket{\psi_1}}{ \bra{\psi_L}  E^{(L-2)/2} \ket{\psi_1}} .
+\end{equation}
+这里我们引入了作用在长为 $\ell$、宽为 2 的条带上的转移算符 $E$ 与 $E_O$，如图~\ref{fig:bigtransferoperator} 所示（为便于表示，画的是未折叠、未旋转的形式）。$E_O$ 由 $E$ 得来：把格点 $\ell+1$ 处的单位算符换成 $\hat{O}$。
+
+\begin{figure}
+\centering\includegraphics[scale=0.5]{PyMPS_BigTransferOperator.eps}
+\caption{转移算符 $E$（虚线矩形；注意作用方向）在时间演化网络的未折叠、未旋转表示中的示意。除对算符求值的格点被相应修改外，它通过平移两个格点在整个点阵中重复出现。}
+\label{fig:bigtransferoperator}
+\end{figure}
+
+对于空间上有限的点阵，这可以通过迭代收缩与压缩来求值，但也可以取热力学极限。设 $E$ 有本征矢分解
+\begin{equation}
+E = \sum_{i} \lambda_i \ket{i} \bra{i} .
+\end{equation}
+注意 $E$ 不是厄米的，因此 $\ket{i}$ 与 $\bra{i}$ 不是互为伴随，而是各自不同的右本征矢与左本征矢。由二者的双正交归一性，
+\begin{equation}
+\lim_{L\rightarrow\infty} E^L = \lim_{L\rightarrow\infty} 
+\sum_i \lambda_i^L \ket{i} \bra{i} = \lambda_0^L \ket{R}\bra{L},
+\end{equation}
+其中我假定最大本征值 $\lambda_0$ 非简并（通常正是如此），并把相应的右、左本征矢的记号改为 $\ket{R}$ 与 $\bra{L}$。
+
+于是在热力学极限下得到期望值
+\begin{equation}
+\langle \hat{O}_i \rangle =  \frac{\bra{L} E_O \ket{R}}{\lambda_0} ,
+\end{equation}
+其中 $\lambda_0 = \bra{L} E \ket{R}$。两点关联子则由下式给出
+\begin{equation}
+\langle \hat{O}_i \hat{P}_j \rangle =  \frac{\bra{L} E_O E^r E_P \ket{R}}{\lambda_0^{r+2}},
+\end{equation}
+其中 $r$ 是格点 $i$ 与 $j$ 之间转移算符的个数。
+
+为了对这类表达式求值，我们显然需要 $\lambda_0$、$\ket{R}$ 与 $\bra{L}$。由于 $E$ 的矩阵元是显式已知的，我们同样容易构造其转置，从而把问题全部化为求两个右本征矢。既然要找的是最大本征值，幂法（把 $E$ 反复作用到一个猜测矢量上）即可奏效。但也可以把 $E$ 看作某个非厄米算符的 MPO 表示，复用迭代的基态搜索技术，只需两处修改：求最低本征值改为求最高本征值，且常规 Lanczos 算法必须换成非厄米方法，即双正交 Lanczos 算法或 Arnoldi 方法。
+
+虽然编码比标准时间演化更为复杂，但可达到的时间尺度大幅延长，3 到 5 倍似乎很容易实现。
+  
+\subsection{线性预测与谱函数}
+谱函数 $S(k,\omega)$ 是多体物理中最重要的理论与实验量之一。虽然在 $T=0$ 下有非常精确的直接计算方法 \cite{Hallberg95,Ramasesha97,Kuhner99,Jeckelmann02}，但也有一种间接方法，由 \cite{WhiteFeiguin04} 开创：先计算实时实空间关联子如 $\langle \hat{S}^+_i(t) \hat{S}^-_j(0) \rangle$，再作到动量空间与频率空间的双重傅里叶变换。该方法的优点是可以无缝推广到有限 $T$，但受限于可达到的长度与时间尺度。
+
+其中时间的限制严重得多，原因在于纠缠随时间迅速增长。可达到的时间尺度大多十分有限，以至于直接做傅里叶变换会产生强烈的混叠，或者必须对原始数据加窗而使谱信息被明显抹平。不过，这一限制可以借助线性预测技术在极低的数值代价下规避，无论 $T=0$\cite{Pereira08,White08} 还是 $T>0$\cite{Barthel09b}；该技术延长了可达到的 $t$，从而大大细化频域中的结果。
+
+对于由 DMRG 得到的、在等间隔时刻 $t_n=n\*\Delta t$（最大时间 $t_\obs:= N \Delta t$）处的复数据时间序列 $x_0, x_1, \ldots, x_n, \ldots, x_N$，我们对 $x_{N+1}, x_{N+2}, \ldots$ 作预测。
+对于 $t=t_\obs$ 之后的数据点，线性预测作如下拟设
+\begin{equation}\label{eq:predictionAnsatz}
+\tilde{x}_n = - \sum_{i=1}^p a_i x_{n-i} .
+\end{equation}
+时间步 $n$ 处的（预测）值 $\tilde{x}_n$ 被假定为前面 $p$ 个值 $\{x_{n-1},\dots,x_{n-p}\}$ 的线性组合。$a_i$ 一旦由已知数据确定，就被用来计算所有 $n>N$ 的 $x_n$（的近似）。
+
+系数 $a_i$ 的确定方法是：在已知数据的子区间 $t_n \in (t_\obs-t_\fit,t_\obs]$（对应集合 $\Omega = \{ n\, |\, t_\obs - t_\fit < n\Delta t \leq t_\obs \}$）上最小化预测的最小二乘误差，即最简单的做法是最小化 $E\equiv\sum_{n\in\Omega} |\tilde x_n-x_n|^2$。$t_\fit=t_\obs/2$ 常是稳健的选择，既能减小短时间的影响，又有足够多的数据点。对 $a_i$ 最小化 $E$ 得到线性方程组
+\begin{equation}
+\label{eq:linPred:stationaryError}
+R \vec{a} = -\vec{r},
+\end{equation}
+其中 $R$ 与 $\vec{r}$ 是自关联
+$R_{ji} = \sum_{n\in\Omega} x^*_{n-j} x_{n-i}$ 与 $r_{j} = \sum_{n\in\Omega} x^*_{n-j} x_n$。
+式~(\ref{eq:linPred:stationaryError}) 的解为 $\vec{a}=-R^{-1}\vec{r}$。
+
+人们或许会问，为什么朝无限时间的外推能够以这种方式实现。
+如下文所示，线性预测生成的是振荡项与指数衰减（或增长）项的叠加，这正是多体物理中自然出现的一类时间依赖性：
+典型形式为 $G(k,\omega) = (\omega - \epsilon_k - \Sigma(k,\omega))^{-1}$ 的格林函数在时间-动量表示中由极点主导；例如对于位于 $\omega=\omega_1 -\imag \eta_1$、留数为 $c_1$ 的单个单极点，格林函数将为
+$G(k,t) = c_1 \eul^{-\imag \omega_1 t - \eta_1 t}$，而对更复杂的极点结构，它也类似地是这类项的叠加。通常只有少数极点起作用，线性预测的拟设很适合我们所关心的响应量的典型性质。当这样的拟设不成立时，该方法多半不适用。
+
+为看出预测所生成时间序列的特殊形式，
+我们引入矢量 $\vec{x}_n := [x_{n}, \ldots, x_{n-p+1}]^T$，使得 (\ref{eq:predictionAnsatz}) 取如下形式
+\begin{equation}
+\tilde{\vec{x}}_{n+1} = A \* \vec{x}_n,	
+\end{equation}
+ 其中
+\begin{equation}\label{eq:predictionMatrix}
+A\equiv
+\left[
+\begin{array}{ccccc}
+ -a_1&-a_2&-a_3&\cdots&-a_p\\
+  1  & 0  & 0  &\cdots& 0  \\
+  0  & 1  & 0  &\cdots& 0  \\
+\vdots&\ddots&\ddots&\ddots&\vdots\\
+  0   &\cdots& 0  & 1  & 0
+\end{array}  
+\right] ,
+\end{equation}
+其中 $a_i$ 就是上面求得的矢量 $\vec{a}$ 的元素。
+预测因此对应于把 $A$ 的幂作用到初始矢量 $\vec{x}_N$ 上。对 $A$ 作（非厄米的）本征矢分解，本征值为 $\alpha_i$，得到
+\begin{equation}
+\tilde x_{N+m} = [A^m \* \vec{x}_N]_1=\sum_{i=1}^p c_i \alpha_i^m,
+\end{equation}
+其中系数 $c_i$ 由 $\vec{x}_N$ 与 $A$ 的本征矢确定。本征值 $\alpha_i$ 编码了物理共振频率与阻尼。二者的联系为
+$\alpha_i = \eul^{\imag  \omega_i \Delta t - \eta_i \Delta t}$。
+可能出现 $|\alpha_i|\geq 1$ 的伪本征值，但可以按 \cite{Barthel09b} 所述加以处理。
+
+在 $T=0$ 下，临界一维系统的时间关联子呈幂律衰减。此时用指数衰减的叠加来模拟这些幂律 \cite{Pereira08}。在有限温度下，时间关联子 $S(k,t)$ 在长时间后典型地呈指数衰减（源于热致展宽），这使线性预测特别适合这种情形。这也接近典型的实验情形，例如一维磁链的非弹性中子散射。
+
+作为例子，我们考虑无外场、$J^z=0$（$XY$ 链）与 $J^z=1$ 的海森堡反铁磁体。前一情形允许精确的解析解。结果表明，预测可以把时间序列 $S(k,t)$ 延长一个数量级以上而精度无明显损失。在频率空间中，这对应于极高精度的谱线形（图 \ref{fig:xychain}）。
+
+\begin{figure}
+\centering\includegraphics[width=250pt]{PyMPS_TransIsing.eps}
+\caption{线与点分别表示 $XY$ 链谱函数 $S^{+-}(k,\omega)$ 的线形在温度 $\beta=10$ 与 $\beta=50$（宽与窄线形）、（自左向右）$k=\pi/8$、$k=\pi/3 $、$k=3\pi/4 $ 处的精确解析解与数值解。虚线是如果不作预测、而是在傅里叶变换前对原始数据加窗时，从 $\beta=10$ 模拟中能最优提取出的线形。改编自 \cite{Barthel09b}。}
+\label{fig:xychain}
+\end{figure}
+
+由于 $XY$ 链的色散关系只是一条简单的磁振子线，其自能结构非常简单，因此预测方法很容易应用。作为更有挑战性的例子，我们考虑各向同性 $S=1/2$ 链的自旋子连续谱；见图~\ref{fig:USHAFM}。在零温极限下，结果与 Bethe 拟设结果符合极好（残余差异难以归因：这里的 Bethe 拟设只能近似求值 \cite{Caux06}）。在有限温度下，不同精度的模拟表明结果已完全收敛且本质精确。这让我们有理由期待该方法将成为例如模拟中子散射实验结果的有力工具。
+
+\begin{figure}
+\centering\includegraphics[height=200pt]{PyMPS_HAFM.eps}
+\caption{各向同性海森堡链在两个动量、四个不同温度下的谱函数。在 $T=0$ 时，Bethe 拟设（B.A.）与数值结果符合极好。改编自 \cite{Barthel09b}。}
+\label{fig:USHAFM}
+\end{figure}
+

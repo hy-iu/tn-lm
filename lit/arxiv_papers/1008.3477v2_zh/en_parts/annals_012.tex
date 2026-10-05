@@ -1,0 +1,114 @@
+An alternative way of obtaining this notation would be to carry out a standard left-normalized decomposition, and store all singular value matrices generated (and previously discarded) as $\Lambda^{[i]}$, and to insert afterwards the identities $\Lambda^{[i]}(\Lambda^{[i]})^{-1}$ between all neighbouring $A$-matrices $A^{\sigma_i}$ and $A^{\sigma_{i+1}}$. Then using Eq.~(\ref{eq:agammalambda}) leads to the same result. 
+
+\begin{figure}
+\centering\includegraphics[width=\textwidth]{PyMPS_VidalMPS.eps}
+\caption{Representation of an MPS in Vidal's notation. Singular values remain explicit on bonds (diamonds). $\Lambda$ sit on bonds, $\Gamma$ on sites. By construction, adjacent $\Lambda$ and $\Gamma$ can be contracted to $A$ or $B$ matrices, that are either left- or right-normalized. The state can be trivially grouped into a string of $A$ (giving orthonormal block states), a singular value matrix, and a string of $B$ (giving orthonormal block states). }
+\label{fig:vidalmps}
+\end{figure}
+
+Similarly, starting the decomposition from the right using the right-normalization of $B$-matrices the same state is obtained with a grouping
+\begin{equation}
+B^{\sigma_\ell}_{a_{\ell-1},a_{\ell}} = \Gamma^{\sigma_\ell}_{a_{\ell-1},a_\ell} \Lambda^{[\ell]}_{a_\ell,a_\ell} ,
+\label{eq:bgammalambda}
+\end{equation}
+where for notational simplification for this and for the corresponding equation for the $A$-matrix, Eq.~(\ref{eq:agammalambda}), it is useful to introduce dummies $\Lambda^{[0]}$ and $\Lambda^{[L]}$ that are both scalar 1.
+
+The groupings for $A$ and $B$-matrices allow to reexpress the left- and right-normalization conditions in the $\Gamma\Lambda$-language: The left-normalization condition reads 
+\begin{equation}
+I = \sum_{\sigma_i} A^{\sigma_i\dagger} A^{\sigma_i} = \sum_{\sigma_i} \Gamma^{\sigma_i\dagger} \Lambda^{[i-1]\dagger} \Lambda^{[i-1]} \Gamma^{\sigma_i}
+\end{equation}
+or, more compactly,
+\begin{equation}
+\sum_{\sigma_i}  \Gamma^{\sigma_i\dagger} \rho_B^{[i-1]} \Gamma^{\sigma_i} = I .
+\label{eq:leftnormalizevidal}
+\end{equation}
+The right-normalization condition reads
+\begin{equation}
+\sum_{\sigma_i} \Gamma^{\sigma_i} \rho_A^{[i]} \Gamma^{\sigma_i\dagger} = I . 
+\label{eq:rightnormalizevidal}
+\end{equation}
+Interestingly, Eqns.~(\ref{eq:leftnormalizevidal}) and (\ref{eq:rightnormalizevidal}) also arise if we translate the density operator recursions Eqns.~(\ref{eq:rhoarecursion}) and (\ref{eq:rhobrecursion}) using Eqns.~(\ref{eq:agammalambda}) and  (\ref{eq:bgammalambda}). 
+A matrix product state in the form of Eq.~(\ref{eq:canonicalform}) which meets the constraints Eq.~(\ref{eq:leftnormalizevidal}) and Eq.~(\ref{eq:rightnormalizevidal}) is called {\em canonical}.
+
+Conversions between the $AB$-notation, the $\Gamma\Lambda$-notation and also the block-site notation of DMRG are possible, albeit fraught with some numerical pitfalls.
+
+{\em Conversion} $\Gamma\Lambda \rightarrow A,B$: The conversion from $\Gamma\Lambda \rightarrow A,B$ is easy. If one introduces an additional dummy scalar $\Lambda^{[0]} = 1$ as a ``matrix'' to the very left of $\ket{\psi}$, we can use the above defining Eq.~(\ref{eq:agammalambda}) to group 
+\begin{equation}
+(\Lambda^{[0]} \Gamma^{\sigma_1})
+(\Lambda^{[1]} \Gamma^{\sigma_2})(\Lambda^{[2]} \Gamma^{\sigma_3})
+ \ldots \rightarrow A^{\sigma_1}A^{\sigma_2}A^{\sigma_3}\ldots 
+ \end{equation}
+or using Eq.~(\ref{eq:bgammalambda}) 
+\begin{equation}
+(\Gamma^{\sigma_1}\Lambda^{[1]})
+(\Gamma^{\sigma_2}\Lambda^{[2]} )(\Gamma^{\sigma_3}\Lambda^{[3]})
+ \ldots \rightarrow B^{\sigma_1}B^{\sigma_2}B^{\sigma_3}\ldots 
+ \end{equation}
+
+In view of what DMRG and other MPS methods actually do, it is interesting to consider {\em mixed} conversions. Consider bond $\ell$ between sites $\ell$ and $\ell+1$. We could contract $\Lambda \Gamma \rightarrow A$ starting from the left, giving left-normalized matrices, and $\Gamma\Lambda \rightarrow B$ from the right, giving right normalized matrices, leaving out just $\Lambda^{[\ell]}$ in the center (Fig.~\ref{fig:dmrg0mps}):
+\begin{figure}
+\centering\includegraphics[width=\textwidth]{PyMPS_DMRG0MPS.eps}
+\caption{Vidal's MPS notation, $A$, $B$-matrix MPS notation, and DMRG block notation. The $A$-matrices generate the left block states, the $B$ matrices generate the right block states. The matrix $\Lambda^{[\ell]}$ connects them via singular values.}
+\label{fig:dmrg0mps}
+\end{figure}
+
+\begin{figure}
+\centering\includegraphics[width=\textwidth]{PyMPS_DMRG1MPS.eps}
+\caption{Representation of a state in single-site DMRG: translating Vidal's MPS notation and $A,B$-matrix MPS notation into DMRG block notation. The $A$-matrices generate the left block states, the $B$ matrices generate the right block states. The matrix elements of $\Psi^{\sigma_\ell}$ are just the coefficients of the DMRG state.}
+\label{fig:dmrg1mps}
+\end{figure}
+
+
+\begin{equation}
+(\Lambda^{[0]}\Gamma)(\Lambda^{[1]}\Gamma)\ldots(\Lambda^{[\ell-2]}\Gamma)(\Lambda^{[\ell-1]}\Gamma) \Lambda^{[\ell]} (\Gamma\Lambda^{[\ell+1]})(\Gamma\Lambda^{[\ell+2]}) \ldots (\Gamma\Lambda^{[L]}) .
+\end{equation}
+As the bracketing to the left of bond $\ell$ generates left-normalized $A$-matrices and right-normalized matrices $B$ on the right, we can multiply them out as done in the recursions of the previous Section to arrive at orthonormal block bases for A and B, hence at a Schmidt decomposition
+\begin{equation}
+\ket{\psi} = \sum_{a_{\ell}} \ket{a_\ell}_A s_{a_\ell} \ket{a_\ell}_B .
+\end{equation}
+What is more, we can also take one site ($\ell$) or two sites ($\ell,\ell+1$) and multiply all matrices into one there (Fig.~\ref{fig:dmrg1mps} and Fig.~\ref{fig:dmrg2mps}):
+\begin{figure}
+\centering\includegraphics[width=\textwidth]{PyMPS_DMRG2MPS.eps}
+\caption{Representation of a state in two-site DMRG: translating Vidal's MPS notation and $A,B$-matrix MPS notation into DMRG block notation. The $A$-matrices generate the left block states, the $B$ matrices generate the right block states. The elements of matrix $\Psi^{\sigma_{\ell}\sigma_{\ell+1}}$ are just the coefficients of the DMRG state.}
+\label{fig:dmrg2mps}
+\end{figure}
+
+
+\begin{equation}
+(\Lambda^{[0]}\Gamma)(\Lambda^{[1]}\Gamma)\ldots(\Lambda^{[\ell-2]}\Gamma)(\Lambda^{[\ell-1]}\Gamma \Lambda^{[\ell]}) (\Gamma\Lambda^{[\ell+1]})(\Gamma\Lambda^{[\ell+2]}) \ldots (\Gamma\Lambda^{[L]}) .
+\end{equation}
+Calling the central matrix $\Psi^{\sigma_\ell}= \Lambda^{[\ell-1]}\Gamma^{\sigma_\ell} \Lambda^{[\ell]}$, we can write 
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} A^{\sigma_1} \ldots A^{\sigma_{\ell-1}} \Psi^{\sigma_\ell} B^{\sigma_{\ell+1}} \ldots B^{\sigma_L}
+\ket{\fat{\sigma}}
+\end{equation}
+or, again building block bases,
+\begin{equation}
+\ket{\psi} = \sum_{a_{\ell-1},a_{\ell},\sigma_\ell} \ket{a_{\ell-1}}_A \Psi^{\sigma_\ell}_{a_{\ell-1}a_\ell} \ket{a_\ell}_B .
+\end{equation}
+If we group even two sites, we have
+\begin{equation}
+(\Lambda^{[0]}\Gamma)(\Lambda^{[1]}\Gamma)\ldots(\Lambda^{[\ell-2]}\Gamma)(\Lambda^{[\ell-1]}\Gamma \Lambda^{[\ell]} \Gamma\Lambda^{[\ell+1]})(\Gamma\Lambda^{[\ell+2]}) \ldots (\Gamma\Lambda^{[L]}) 
+\end{equation}
+or, with central matrix $\Psi^{\sigma_\ell \sigma_{\ell+1}}=\Lambda^{[\ell-1]}\Gamma^{\sigma_\ell} \Lambda^{[\ell]} \Gamma^{\sigma_{\ell+1}}\Lambda^{[\ell+1]}$,
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} A^{\sigma_1} \ldots A^{\sigma_{\ell-1}} \Psi^{\sigma_\ell \sigma_{\ell+1}} B^{\sigma_{\ell+2}} \ldots B^{\sigma_L} \ket{\fat{\sigma}}
+\end{equation}
+or, using block bases,
+\begin{equation}
+\ket{\psi} = \sum_{a_{\ell-1},a_{\ell+1},\sigma_\ell,\sigma_{\ell+1}} \ket{a_{\ell-1}}_A \Psi^{\sigma_\ell \sigma_{\ell+1}}_{a_{\ell-1}a_{\ell+1}} \ket{a_{\ell+1}}_B .
+\end{equation}
+These are just the states considered by ``single-site'' and the original ``two-site'' DMRG, which keep one or two sites explicit between two blocks.
+
+{\em Conversion} $A,B \rightarrow \Gamma\Lambda$: Conversion in the other direction $A,B \rightarrow \Gamma\Lambda$ is more involved. The idea is to obtain iteratively the Schmidt decompositions (hence singular values) of a state, hence the diagonal matrices $\Lambda^{[\ell]}$, from which the $\Gamma^{\sigma}$-matrices can be calculated. The procedure is in fact very similar to that used to show the existence of a canonical $\Gamma\Lambda$ representation for an arbitrary quantum state.
+
+Let us assume that $\ket{\psi}$ is right-normalized, then state coefficients take the form $B^{\sigma_1}B^{\sigma_2}B^{\sigma_3}B^{\sigma_4}\ldots$. Then we can proceed by a sequence of SVDs as
+\begin{eqnarray*}
+& & B^{\sigma_1}B^{\sigma_2}B^{\sigma_3}B^{\sigma_4} \ldots \\
+&=& (A^{\sigma_1} \Lambda^{[1]} V^\dagger) B^{\sigma_2}B^{\sigma_3}B^{\sigma_4} \ldots \\
+&=& \Gamma^{\sigma_1} M^{\sigma_2} B^{\sigma_3}B^{\sigma_4} \ldots \\
+&=& \Gamma^{\sigma_1} (A^{\sigma_2}  \Lambda^{[2]} V^\dagger) B^{\sigma_3}B^{\sigma_4} \ldots \\
+&=& \Gamma^{\sigma_1} \Lambda^{[1]} \Gamma^{\sigma_2} M^{\sigma_3} B^{\sigma_4} \ldots \\
+\end{eqnarray*} 
+and so forth. Here, the to-be-SVDed matrices $M^{\sigma_\ell} = \Lambda^{[\ell-1]} V^\dagger B^{\sigma_\ell}$. The $\Gamma^{\sigma_\ell}$-matrices are obtained from the $A^{\sigma_\ell}$-matrices by remembering $\Lambda^{[\ell-1]}$ and using Eq.~(\ref{eq:agammalambda}), which implies a division by singular values.
+

@@ -1,0 +1,130 @@
+这里，我们把 $(V^\dagger)_{a_{L-1},\sigma_L}$ 重排成 $d$ 个列向量 $B^{\sigma_L}_{a_{L-1}}$，把 $(V^\dagger)_{(a_{L-2}\sigma_{L-1}), a_{L-1}}$ 重排成 $d$ 个矩阵 $B^{\sigma_{L-1}}_{a_{L-2},a_{L-1}}$，依此类推，并且在每一步重排为 $\Psi$ 之前先将 $U$ 与 $S$ 相乘。显而易见的图形表示见图~\ref{fig:rightMPSbySVD}。为使记号简单，我们在图形表示中不对 $A$ 矩阵和 $B$ 矩阵加以区分。
+
+\begin{figure}
+\centering\includegraphics[scale=0.6]{PyMPS_RightMPSBySVD.eps}
+\caption{通过一列奇异值分解迭代构造任意量子态的精确 MPS 表示的图形表示，这次从右侧开始。}
+\label{fig:rightMPSbySVD}
+\end{figure}
+
+
+我们得到形如
+\begin{equation}
+\ket{\psi} = \sum_{\sigma_1,\ldots,\sigma_L} B^{\sigma_1} B^{\sigma_2} \ldots B^{\sigma_{L-1}} B^{\sigma_L} \ket{\sigma_1,\ldots,\sigma_L}
+\end{equation}
+其中可以证明 $B$ 矩阵具有与 $A$ 矩阵相同的矩阵维数上界，并且由 $V^\dagger V =I$ 还可证明它们满足
+\begin{equation}
+\sum_{\sigma_\ell} B^{\sigma_\ell} B^{\sigma_\ell\dagger} = I ,
+\end{equation}
+因此我们称它们为{\em 右规范化}矩阵。完全由这类矩阵构造而成的 MPS 我们称之为{\em 右规范}的。
+
+同样，我们可以把格子分成 A 和 B 两部分，即格点 1 到 $\ell$ 和 $\ell+1$ 到 $L$，并引入态
+\begin{eqnarray}
+\ket{a_\ell}_A &=& \sum_{\sigma_1,\ldots,\sigma_\ell} (B^{\sigma_1} B^{\sigma_2} \ldots B^{\sigma_\ell})_{1,a_\ell} \ket{\sigma_1,\ldots,\sigma_\ell} \\
+\ket{a_\ell}_B &=& \sum_{\sigma_{\ell+1},\ldots,\sigma_L} (B^{\sigma_{\ell+1}} B^{\sigma_{\ell+2}} \ldots B^{\sigma_L})_{a_\ell,1} \ket{\sigma_{\ell+1},\ldots,\sigma_L}
+\end{eqnarray}
+这样 MPS 就可以写成
+\begin{equation}
+\ket{\psi} = \sum_{a_\ell} \ket{a_\ell}_A \ket{a_\ell}_B . 
+\end{equation}
+这种态的配对看起来又一次诱人地接近 $\ket{\psi}$ 的 Schmidt 分解，但同样并非如此。原因在于，虽然这次 $\{ \ket{a_\ell}_B \}$ 构成正交归一集合，但 $\{ \ket{a_\ell}_A \}$ 一般并非如此，这可以由 $B$ 矩阵的右规范性得到证明。
+
+同样，右规范化形式也可以通过一列 QR 分解得到。与左规范化形式的区别在于，我们不是对 $\Psi=QR$ 作 QR 分解，而是对 $\Psi^\dagger=QR$ 作 QR 分解，于是 $\Psi = R^\dagger Q^\dagger$。如果我们用 $Q^\dagger$ 来构造这些矩阵，这就直接给出 $B$ 矩阵的右规范化性质。让我把头两步明确写出；我们从
+\begin{equation}
+c_{\sigma_1\ldots\sigma_L} = \Psi_{(\sigma_1\ldots\sigma_{L-1}),\sigma_L} =
+\sum_{a_{L-1}} R^\dagger_{(\sigma_1\ldots\sigma_{L-1}),a_{L-1}} Q^\dagger_{a_{L-1},\sigma_L} =
+\sum_{a_{L-1}} \Psi_{(\sigma_1\ldots\sigma_{L-2}),(\sigma_{L-1}a_{L-1})} B^{\sigma_L}_{a_{L-1},1},
+\end{equation}
+把 $R^\dagger$ 重排为 $\Psi$、$Q^\dagger$ 重排为 $B$，然后继续对 $\Psi^\dagger$ 作 QR 分解，得
+\begin{equation}
+c_{\sigma_1\ldots\sigma_L} = \sum_{a_{L-1},a_{L-2}} R^\dagger_{(\sigma_1\ldots\sigma_{L-2}),a_{L-2}} Q^\dagger_{a_{L-2},(\sigma_{L-1}a_{L-1})}  B^{\sigma_L}_{a_{L-1},1} 
+= \sum_{a_{L-1},a_{L-2}} \Psi_{(\sigma_1\ldots\sigma_{L-3}),(\sigma_{L-2}a_{L-2})}
+B^{\sigma_{L-1}}_{a_{L-2},a_{L-1}} B^{\sigma_L}_{a_{L-1},1} .
+\end{equation}
+
+至此我们已经得到了 $\ket{\psi}$ 的多种不同的精确 MPS 形式表示，这已经表明一个态的 MPS 表示{\em 并不唯一}，我们后面将利用这一事实。
+
+{\em (iii) 混合规范矩阵乘积态。}我们也可以把从左和从右对态的分解混合起来。假设我们已经从左分解到格点 $\ell$，使得
+\begin{equation}
+c_{\sigma_1\ldots\sigma_L} = \sum_{a_\ell} (A^{\sigma_1} \ldots A^{\sigma_\ell})_{a_\ell} S_{a_\ell,a_\ell} (V^\dagger)_{a_\ell, (\sigma_{\ell+1} \ldots \sigma_L)} .
+\end{equation}
+我们把 $V^\dagger$ 重排为 $\Psi_{(a_\ell \sigma_{\ell+1} \ldots \sigma_{L-1}), \sigma_L}$，并像原先从右分解那样从右进行逐次 SVD，直到并包括格点 $\sigma_{\ell+2}$；在最后一次 SVD 中剩下 $U_{(a_{\ell}\sigma_{\ell+1}),a_{\ell+1}} S_{a_{\ell+1},a_{\ell+1}}$，我们把它重排为 $B^{\sigma_{\ell+1}}_{a_{\ell}a_{\ell+1}}$。于是我们
+得到
+\begin{equation}
+(V^\dagger)_{a_\ell, (\sigma_{\ell+1} \ldots \sigma_L)} = \sum_{a_{\ell+1},\ldots,a_{L-1}} B^{\sigma_{\ell+1}}_{a_\ell, a_{\ell+1}} \ldots B^{\sigma_L}_{a_{L-1}} .
+\end{equation}
+所有 $B$ 矩阵都是右规范化的。对格点 $\ell+2$ 到 $L$ 而言，这只是 SVD 的直接结果；在格点 $\ell+1$ 上，则由性质 $V^\dagger V = I$ 得到：
+\begin{eqnarray*}
+\delta_{a_\ell,a'_\ell} &=&
+\sum_{\sigma_{\ell+1},\ldots} (V^\dagger)_{a_\ell, (\sigma_{\ell+1} \ldots \sigma_L)} V_{( \sigma_{\ell+1} \ldots \sigma_L),a'_\ell} \\
+&=& ( \sum_{\sigma_{\ell+1},\ldots} B^{\sigma_{\ell+1}} \ldots B^{\sigma_L} B^{\sigma_L\dagger} \ldots B^{\sigma_{\ell+1}\dagger} )_{a_\ell,a'_\ell} \\
+&=& ( \sum_{\sigma_{\ell+1}} B^{\sigma_{\ell+1}} B^{\sigma_{\ell+1}\dagger} )_{a_\ell,a'_\ell} ,
+\end{eqnarray*}
+其中最后一行利用了格点 $\ell+2,\ldots,L$ 上所有 $B$ 矩阵的右规范化性质，从而得到所要的结果。
+
+于是我们最终得到分解
+\begin{equation}
+c_{\sigma_1 \ldots \sigma_L} = A^{\sigma_1} \ldots A^{\sigma_\ell} S B^{\sigma_{\ell+1}} \ldots B^{\sigma_L} ,
+\end{equation}
+它包含键 $(\ell,\ell+1)$ 上的奇异值，可以像图~\ref{fig:bothMPSbySVD} 那样作图形表示。
+
+\begin{figure}
+\centering\includegraphics[scale=0.6]{PyMPS_BothMPSBySVD.eps}
+\caption{由一列奇异值分解从左和从右出发得到的精确 MPS 的图形表示。菱形表示对角的奇异值矩阵。左边的矩阵是左规范化的，右边的矩阵是右规范化的。}
+\label{fig:bothMPSbySVD}
+\end{figure}
+
+不仅如此，分成 A 与 B 的 Schmidt 分解——其中 A 覆盖格点 1 到 $\ell$，B 覆盖格点 $\ell+1$ 到 $L$——现在可以立即读出。如果我们引入矢量
+\begin{eqnarray}
+\ket{a_\ell}_A &=& \sum_{\sigma_1,\ldots,\sigma_\ell}
+(A^{\sigma_1} \ldots A^{\sigma_\ell})_{1,a_\ell}
+ \ket{\sigma_1,\ldots,\sigma_\ell} \\
+\ket{a_\ell}_B &=&  \sum_{\sigma_{\ell+1},\ldots,\sigma_L} 
+(B^{\sigma_{\ell+1}} \ldots B^{\sigma_L})_{a_\ell,1}
+\ket{\sigma_{\ell+1},\ldots,\sigma_L}
+\end{eqnarray}
+则态便取形式（$s_a = S_{a,a}$）
+\begin{equation}
+\ket{\psi} = \sum_{a_\ell} s_a \ket{a_\ell}_A \ket{a_\ell}_B ,
+\end{equation}
+这就是 Schmidt 分解，{\em 只要} A {\em 和} B {\em 上的态各自正交归一。}而按构造这确实成立。
+
+(iv) {\em 规范自由度。}至此，我们已有把任意量子态写成 MPS 的三种不同方式，它们各有优劣。虽然这三种可以说是书写 MPS 最重要的方式，但必须认识到非唯一性的程度远不止于此：MPS 不唯一，其意义在于存在规范自由度。考虑两个相邻的矩阵集合 $M^{\sigma_i}$ 和 $M^{\sigma_{i+1}}$，其共享的列/行维数为 $D$。那么对任意维数为 $(D\times D)$ 的可逆矩阵 $X$，MPS 在变换
+\begin{equation}
+M^{\sigma_i} \rightarrow M^{\sigma_i} X, \quad \quad M^{\sigma_{i+1}} \rightarrow X^{-1}M^{\sigma_{i+1}} .
+\end{equation}
+之下不变。这一规范自由度可用来极大地简化各种操作，我们的三种构造只是它的特例。
+ 
+由此产生几个问题。这种记法与多体物理中人们更熟悉的概念之间有联系吗？确实，它与重正化群方案中出现的迭代状态抽取过程有深刻的联系，我们将在第~\ref{subsubsec:MPSsinglesitedecimation} 节讨论这一点。
+
+这些矩阵的规模可能大到指数级，在计算机上我们必须把它们的大小限制在某个 $D$ 以内。这能否做到而不使对态的描述过于失真？在一维这确实可能：如果我们考虑混合规范表示，就会看到，对于约化密度算符指数衰减的本征值谱（因而指数衰减的奇异值 $s_a$），可以按照式~(\ref{eq:Schmidtapproximation}) 在最大的 $D$ 个奇异值处截断谱（就 2-范数意义下的最优近似而言），而没有可察觉的精度损失。这一论证可以从单次截断造成的近似推广到 $L-1$ 次截断（每个键一次）造成的近似，从而表明误差最坏为 \cite{Verstraete06}
+\begin{equation}
+\| \ket{\psi} - \ket{\psi_{{\rm trunc}}} \|_2^2 \leq 2 \sum_{i=1}^L \epsilon_i(D) ,
+\end{equation}
+其中 $\epsilon_i(D)$ 是键 $i$ 上截断到最大的 $D$ 个奇异值所造成的截断误差（被丢弃的奇异值平方之和）。因此，与 DMRG 中一样，可近似性问题与约化密度算符的本征值谱相关联，这预示它在二维会失效，并且（论证稍弱一些）与面积定律的存在相关联。
+
+\subsubsection{一维中的 MPS 与单格点状态抽取}
+\label{subsubsec:MPSsinglesitedecimation}
+
+为了把 MPS 与更传统的概念联系起来，让我们设想为自旋链建立一个迭代生长过程 $\ell \rightarrow \ell + 1$，如图~\ref{fig:BlockGrowth} 所示，使得相应的态空间每步增大 $d$ 倍。为了避免指数增长，我们现在要求态空间维数有一个上限 $D$。一旦态空间维数超过 $D$，就必须用某种{\em 目前尚未定义}的过程把态空间截断。
+
+假设我们以某种方式得到了长度为 $\ell-1$ 的系统（用 DMRG 的语言即左块 A）的这样一个 $D$ 维有效基 $\{ \ket{a_{\ell-1}}_A \}$。如果截断后长度为 $\ell$ 的（左）块 A 的 $D$ 个基态是 $\{ \ket{a_{\ell}}_A \}$，而新增格点的局域态是 $\{ \ket{\sigma_\ell} \}$，则必须有
+\begin{equation}
+\ket{a_\ell}_A = \sum_{a_{\ell-1}\sigma_\ell} \phantom\langle _A \braket{a_{\ell-1}\sigma_\ell}{a_\ell}_A \,\, \ket{a_{\ell-1}}_A\ket{\sigma_\ell}
+\label{eq:basistrafoblocksite}
+\end{equation}
+对这些态成立，其中 $\phantom\langle _A \braket{a_{\ell-1}\sigma_\ell}{a_\ell}_A$ 目前尚未指定。现在我们在格点 $\ell$ 引入 $d$ 个维数各为 $(D \times D)$ 的矩阵 $A^{[\ell]\sigma_\ell}$，每个可能的局域态 $\ket{\sigma_\ell}$ 对应一个。于是可以把式~(\ref{eq:basistrafoblocksite}) 改写为
+\begin{equation}
+\ket{a_\ell}_A = \sum_{a_{\ell-1}\sigma_\ell} A^{[\ell]\sigma_\ell}_{a_{\ell-1}, a_\ell} \ket{a_{\ell-1}}_A  \ket{\sigma_\ell} 
+\label{eq:matrixbyRG}
+\end{equation}
+其中矩阵 $A^{[\ell]\sigma_\ell}$ 的矩阵元由下式给出（见图~\ref{fig:ABulk}）
+\begin{equation}
+A^{[\ell]\sigma_\ell}_{a_{\ell-1}, a_\ell} \equiv \phantom\langle_A \braket{a_{\ell-1}\sigma_\ell}{a_\ell}_A. 
+\label{eq:Amatrixelements}
+\end{equation}
+这里让我们对{\em 记法}作一简短说明：在 $A^{[\ell]\sigma_\ell}$ 中，$[\ell]$ 标明考虑的是哪一组 $A$ 矩阵，而 $\sigma_\ell$ 标明具体是哪一个 $A$ 矩阵。在目前的情形，这种记法有些多余，因为局域态 $\ket{\sigma_\ell}$ 就取自引入这些矩阵的格点。在这类情形，我们略去两个 $\ell$ 中的一个，通常是 $[\ell]$：
+\begin{equation}
+A^{[\ell]\sigma_\ell} \rightarrow A^{\sigma_\ell} .
+\end{equation}
+不过，我们也会遇到矩阵 $A$ 由{\em 并非}其引入格点上的局域态来选取的情形。在这种情形下，显然必须恢复完整的记号！
+

@@ -1,0 +1,125 @@
+除以奇异值在数值上是个令人头疼的问题，因为奇异值可能而且常常会非常小，特别是在尝试高精度计算时，连非常小的奇异值也会被一路带着参与运算。数值上明智的做法是仿照计算近乎奇异矩阵的（伪）逆时的处理方式，把所有 $s_a < \epsilon$（比如取 $\epsilon=10^{-8}$）置为 0，并把它们从所有求和中排除（例如在 Schmidt 分解中）。由于我们按大小对 $s_a$ 排序，这意味着相应地收缩矩阵 $U$ 和 $V^\dagger$。这些小奇异值在约化密度算符（即它们的平方）中所占权重很小，因此与数值上的隐患相比，态描述精度的损失非常小。事实上，问题在于算法中有若干处我们隐含地依赖（正交）归一性假设，而在一次``野蛮''的除法之后这些假设可能不再成立。
+
+在本节（篇幅颇长）结束之际，让我用一幅图（图~\ref{fig:conversions}）总结各种转换与规范化过程，不过应当记住，有些转换只在理论上可行，在数值实践中并不可行。
+
+\begin{figure}
+\centering\includegraphics[scale=0.5]{PyMPS_MPSConversions.eps}
+\caption{各种表示之间的转换：$c$ 是由指数多的态系数给出的显式表示；$A$、$B$ 和 $\Gamma\Lambda$ 分别代表左规范、右规范和规范 MPS；$M$ 代表任意 MPS。实线表示计算上可行的转换，虚线表示较为假设性的转换。}
+\label{fig:conversions}
+\end{figure}
+
+\section{矩阵乘积算符（MPO）}
+\label{sec:MPO}
+如果我们考虑 MPS 的单个系数 $\braket{\fat{\sigma}}{\psi}$，
+\[
+\braket{\fat{\sigma}}{\psi} = M^{\sigma_1}M^{\sigma_2}\ldots M^{\sigma_{L-1}}M^{\sigma_L},
+\]
+一个自然的推广是尝试把算符的系数 $\bra{\fat{\sigma}} \hat{O} \ket{\fat{\sigma}'}$ 写成 \cite{VerstraeteRipoll04,McCulloch07,VerstraetePirvu08,Crosswhite08,Frowis10}
+\begin{equation}
+\bra{\fat{\sigma}} \hat{O} \ket{\fat{\sigma}'} = W^{\sigma_1\sigma'_1}W^{\sigma_2\sigma'_2} \ldots
+W^{\sigma_{L-1}\sigma'_{L-1}}W^{\sigma_L\sigma'_L}
+\end{equation}
+其中 $W^{\sigma\sigma'}$ 是与 $M^{\sigma}$ 类似的矩阵，唯一区别在于作为算符的表示，它们同时需要出射和入射的物理态：
+\begin{equation}
+\hat{O} = \sum_{\fat{\sigma},\fat{\sigma}'} W^{\sigma_1\sigma'_1}W^{\sigma_2\sigma'_2} \ldots
+W^{\sigma_{L-1}\sigma'_{L-1}}W^{\sigma_L\sigma'_L} \ket{\fat{\sigma}}\bra{\fat{\sigma}'} ,
+\label{eq:mpoform}
+\end{equation}
+与 MPS 一样，可以照同样方式推广到周期边界条件。为 MPS 引入的图示表示可以径直推广：在 $M$ 的表示中原来有一条代表物理态的竖线，现在 $W$ 中则有两条竖线，一向下、一向上，分别代表入射和出射的物理态（图~\ref{fig:singleMPO}）。完整的 MPO 本身则如图~\ref{fig:MPO} 所示。如果想利用好量子数，MPS 的那套方法可以直接搬过来：从顶部引入一个入射的局域态量子数，向底部引出一个出射的量子数，并从左侧引入一个入射量子数、向右侧引出一个出射量子数。规则与 MPS 相同：入射与出射量子数之总和必须相等，即 $M(\ket{\sigma_i}) + M(\ket{b_{i-1}}) = M(\ket{\sigma'_i}) + M(\ket{b_{i}})$，这里为记法方便我把键上的标记理解为态。与 MPS 中一样，我们也可以设想第一个格点之前和最后一个格点之后的哑指标，它们反映算符以何种（确定的！）方式改变总量子数。对于与相应算符对易的哈密顿量，这一改变量为零，可以忽略哑指标。我们要构建的 MPO 都可以证明在键上具有好量子数，因为它们要么源自 SVD（例如用于时间演化），要么源自涉及量子数改变明确的算符的构造规则（例如哈密顿量的 MPO）。
+
+事实上，{\em 任何}算符都可以化成式~(\ref{eq:mpoform}) 的形式，因为它可以写成
+\begin{eqnarray}
+\hat{O} &=& \sum_{\sigma_1,\ldots,\sigma_L,\sigma'_1,\ldots,\sigma'_L} c_{(\sigma_1\ldots\sigma_L)(\sigma'_1\ldots\sigma'_L)} \ket{\sigma_1,\ldots,\sigma_L} \bra{\sigma'_1,\ldots,\sigma'_L}  \nonumber \\ 
+&=& \sum_{\sigma_1,\ldots,\sigma_L,\sigma'_1,\ldots,\sigma'_L} c_{(\sigma_1\sigma'_1) \ldots (\sigma_L \sigma'_L)} \ket{\sigma_1,\ldots,\sigma_L} \bra{\sigma'_1,\ldots,\sigma'_L}
+\end{eqnarray}
+然后可以像对 MPS 那样对它作分解，让双指标 $\sigma_i \sigma'_i$ 扮演 MPS 中指标 $\sigma_i$ 的角色。
+
+\begin{figure}
+\centering\includegraphics[width=250pt]{PyMPS_MPOElements.eps}
+\caption{矩阵乘积算符的元素：(i) 链左端的角矩阵算符 $W^{[1]\sigma_1\sigma'_1}_{1,b_1}$；(ii) 体矩阵算符 $W^{[\ell]\sigma_\ell\sigma'_\ell}_{b_{\ell-1},b_{\ell}}$；(iii) 链右端的角算符 $W^{[L]\sigma_L\sigma'_L}_{b_{L-1},1}$：物理指标朝上和朝下，矩阵指标用水平横线表示。}
+\label{fig:singleMPO}
+\end{figure}
+
+\begin{figure}
+\centering\includegraphics[width=250pt]{PyMPS_MPO.eps}
+\caption{作用在整条链上的矩阵乘积算符：水平的矩阵指标已缩并，MPO 只需简单缩并竖直（物理）指标即可作用于一个 MPS。}
+\label{fig:MPO}
+\end{figure}
+
+与 MPS 一样，我们必须追问如何用它们进行操作以及它们在实践中如何构造，因为朴素的分解可能是指数复杂的。事实证明，大多数操作与 MPS 情形完全类似地运行。
+
+\subsection{将 MPO 作用于 MPS}
+矩阵乘积算符作用于矩阵乘积态的过程如下
+\begin{eqnarray*}
+\hat{O}\ket{\psi} &=& \sum_{\fat{\sigma},\fat{\sigma}'} (W^{\sigma_1,\sigma'_1} W^{\sigma_2,\sigma'_2}\ldots)(M^{\sigma'_1} M^{\sigma'_2}\ldots) \ket{\fat{\sigma}} \\
+&=&  \sum_{\fat{\sigma},\fat{\sigma}'}\sum_{\fat{a},\fat{b}} (W^{\sigma_1,\sigma'_1}_{1,b_1} W^{\sigma_2,\sigma'_2}_{b_1,b_2}\ldots)(M^{\sigma'_1}_{1,a_1} M^{\sigma'_2}_{a_1,a_2} \ldots) \ket{\fat{\sigma}} \\
+&=& \sum_{\fat{\sigma},\fat{\sigma}'}\sum_{\fat{a},\fat{b}} (W^{\sigma_1,\sigma'_1}_{1,b_1} M^{\sigma'_1}_{1,a_1})(W^{\sigma_2,\sigma'_2}_{b_1,b_2}M^{\sigma'_2}_{a_1,a_2}) \ldots \ket{\fat{\sigma}} \\
+&=& \sum_{\fat{\sigma}}\sum_{\fat{a},\fat{b}} N^{\sigma_1}_{(1,1),(b_1,a_1)} N^{\sigma_2}_{(b_1,a_1),(b_2,a_2)} \ldots \ket{\fat{\sigma}} \\
+&=& \sum_{\fat{\sigma}} N^{\sigma_1} N^{\sigma_2} \ldots \ket{\fat{\sigma}}
+\end{eqnarray*}
+
+MPO 的美妙之处在于它保持 MPS 的形式不变，代价是矩阵尺寸增大：新 MPS 的维数是原 MPS 维数与 MPO 维数的乘积（图~\ref{fig:MPOtimesMPS}）。
+
+\begin{figure}
+\centering\includegraphics[width=250pt]{PyMPS_MPOtimesMPS.eps}
+\caption{矩阵乘积算符作用于矩阵乘积态：相匹配的物理（竖直）指标被缩并，产生一个新的矩阵乘积态，其矩阵维数相乘并保持乘积结构。}
+\label{fig:MPOtimesMPS}
+\end{figure}
+
+结果可以概括为 $\ket{\phi}=\hat{O}\ket{\psi}$，其中 $\ket{\phi}$ 是由如下矩阵 $N^{\sigma_i}$ 构成的 MPS：
+\begin{equation}
+N^{\sigma_i}_{(b_{i-1},a_{i-1}),(b_i,a_i)} = \sum_{\sigma_i'} W^{\sigma_i\sigma_i'}_{b_{i-1}b_i} M^{\sigma_i'}_{a_{i-1}a_i} .
+\end{equation}
+如果使用（可加的）好量子数，则由每个张量处的求和规则可以证明，它们在入射和出射的水平键上是可加的。
+
+又一次，一个看似指数复杂的操作（对指数多个 $\fat{\sigma}$ 求和）被约化为低代价的操作：运算量为
+$Ld^2 D_W^2 D^2$ 的量级，其中 $D_W$ 是 MPO 的维数。
+
+\subsection{MPO 的加法与乘法}
+
+对 MPO 的操作大体上沿袭 MPS 的思路。考虑两个算符 $\hat{O}$ 与 $\hat{P}$ 的加法，它们分别有 MPO 表示 $W^{\sigma_i\sigma'_i}$ 与
+$\tilde{W}^{\sigma_i\sigma'_i}$，则所得 MPO 的构造与 MPS 情形完全一样：对所有格点 $1 < i < L$ 取直和 $W^{\sigma_i\sigma'_i} \oplus \tilde{W}^{\sigma_i\sigma'_i}$，格点 $1$ 与 $L$ 则适用同样的特殊规则。本质上，我们（又一次）只需把 $\sigma_i$ 与 $\sigma'_i$ 看成一个``大''的物理指标。
+
+两个算符的乘积 $\hat{P} \hat{O}$（更确切地说，随后的相继作用）也不难理解：把 $\hat{O}$ 作用到某个态 $\ket{\psi}$ 上得到一个新的 MPS，其
+矩阵为 $N^{\sigma_i}_{(b_{i-1}a_{i-1}),(b_i a_i)} = \sum_{\sigma'_i} W^{\sigma_i\sigma'_i}_{b_{i-1}b_i} M^{\sigma'_i}_{a_{i-1}a_i}$。随后再作用 $\hat{P}$，又给出一个新的 MPS，其 $K^{\sigma_i}_{(\tilde{b}_{i-1}b_{i-1}a_{i-1}),(\tilde{b}_i b_i a_i)} =  \sum_{\sigma'_i} \tilde{W}^{\sigma_i\sigma'_i}_{\tilde{b}_{i-1} \tilde{b}_i} N^{\sigma'_i}_{(b_{i-1}a_{i-1}),(b_i a_i)}$。但由此我们可以立即读出（从两个 MPO 相继作用于一个态的图示中也一目了然），新的 MPO（矩阵为 $V^{\sigma_i\sigma'_i}$）由下式给出
+\begin{equation}
+V^{\sigma_i\sigma'_i}_{(\tilde{b}_{i-1}b_{i-1}),(\tilde{b}_{i}b_{i})} = \sum_{\sigma''_i} 
+\tilde{W}^{\sigma_i\sigma''_i}_{\tilde{b}_{i-1} \tilde{b}_i} W^{\sigma''_i\sigma'_i}_{b_{i-1}b_i} .
+\end{equation}
+因此，MPO 的维数就像张量那样简单地相乘。如果把 MPS 看成在一个物理方向上带哑指标的 MPO，那么把 MPO 作用于 MPS 的规则便作为特例而得到。
+ 
+\subsection{压缩 MPO 与 MPO-MPS 乘积}
+
+与 MPS 一样，可能会出现压缩 MPO 的问题。这一点从上一节应当看得很清楚，那里 MPO 的维数被求和或相乘。如果无法把压缩问题推给 MPO 向 MPS 的作用（那时维数为 $D_W D$，是压缩的自然候选对象），我们就必须压缩 MPO 本身。一个典型例子是较程长的哈密顿量的 MPO 形式表示，它会很快导致很大的维数。
+
+但我们可以采用与压缩 MPS 相同的技巧，既可以用 SVD 也可以迭代进行，用一个 $D_W$ 更小的 MPO 来逼近精确的 MPO。唯一的改变是：现在不是单一物理指标 $\sigma$，而是两个物理指标 $\sigma,\sigma'$，我们可以把它们当作一个单一指标 $(\sigma,\sigma')$。逼近随后在 Frobenius 范数下进行，它自然地推广了我们用于 MPS 逼近的向量 2-范数。
+
+在此值得一提的是，文献 \cite{Stoudenmire10} 提出，在压缩 MPO-MPS 乘积这一特殊情形下，可以相对标准方法取得重要加速：如果必须先做归一化（代价为 $O(D_W^3 D^3)$），SVD 可能非常慢，而变分方法又亟需一个好的起点。不过，由 SVD 压缩给出的这个建议解也许并不差，只要块态接近正交归一；而在 MPO-MPS 乘积的情形，若 MPO 与 MPS 都处于规范形式（MPO 再次通过把双指标看成一个大指标而构成），这一点似乎基本成立，而且这种规范形式可以以低得多的代价（$O(d D^3)$ 与 $O(d^2 D_W^3)$，通常 $D_W \ll D$，对比 $O(d D^3 D_W^3)$）实现。即使所建议的压缩并不太好，它仍会为变分压缩提供一个好得多的起点。于是流程为：(i) 把 MPO 与 MPS 都化到同一规范形式；(ii) 做 SVD 压缩，当然只随算随乘 MPO 与 MPS 的矩阵；(iii) 如果对结果不太放心，就把它用作变分输入。
+
+
+ 
+\section{用 MPS 作基态计算}
+\label{sec:groundstates}
+假设我们想求某个哈密顿量 $\hat{H}$ 的基态。为了找到对它的最优逼近，我们必须找出某个维数 $D$ 的、使下式极小的 MPS $\ket{\psi}$：
+\begin{equation}
+E = \frac{\bra{\psi} \hat{H} \ket{\psi}}{\braket{\psi}{\psi}} .
+\end{equation} 
+做到这一点最有效率的方式（特别是与从某个随机态出发作虚时演化这一同样可行的做法相比）是在 MPS 空间中作变分搜索。为了让这个算法清晰透明，我们先把 $\hat{H}$ 表示成 MPO。
+
+\subsection{哈密顿量的 MPO 表示}
+由于 MPO 表示中固有的乘积结构，尽管其存在性有保证，要为如下这样的哈密顿量显式构造出紧致的 MPO 表示似乎仍是一项无望的任务
+\begin{equation}
+\hat{H} = \sum_{i=1}^{L-1} \frac{J}{2}\hat{S}^+_i \hat{S}^-_{i+1} + \frac{J}{2}\hat{S}^-_i \hat{S}^+_{i+1} + J^z \hat{S}^z_i \hat{S}^z_{i+1} - h\sum_{i} \hat{S}^z_i .
+\end{equation}
+这种常见记法当然是算符张量积之和的缩写：
+\begin{eqnarray*}
+\hat{H} &=& J^z\hat{S}^z_1 \otimes \hat{S}^z_2 \otimes \hat{I} \otimes \hat{I} \otimes \hat{I} \ldots + \\
+ & & \hat{I} \otimes J^z\hat{S}^z_2 \otimes \hat{S}^z_3 \otimes \hat{I} \otimes \hat{I} \ldots + \\
+ & & \ldots
+ \end{eqnarray*}
+然而，把这个张量积之和写成 MPO 形式出奇地容易 \cite{McCulloch07} -- 为此，方便的做法是重新考虑基本构件 $W^{\sigma\sigma'}_{bb'}$，把它与其相伴的投影算符 $\ket{\sigma}\bra{\sigma'}$ 合并成一个算符值矩阵 $\hat{W}_{bb'} = \sum_{\sigma\sigma'} W^{\sigma\sigma'}_{bb'} \ket{\sigma}\bra{\sigma'}$，于是 MPO 取如下简单形式
+\begin{equation}
+\hat{O} = \hat{W}^{[1]}\hat{W}^{[2]} \ldots \hat{W}^{[L]} .
+\end{equation}
+每个 $\hat{W}^{[i]}$ 作用在格点 $i$ 处不同的局域希尔伯特空间上，这些空间的张量积给出全局希尔伯特空间。把这样的算符值矩阵相乘就得到算符张量积之和，因此把 $\hat{H}$ 写成紧致形式看来是可行的。
+

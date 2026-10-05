@@ -1,0 +1,119 @@
+\begin{figure}
+\centering\includegraphics[scale=0.7]{PyMPS_InfiniteDMRG_MPS.eps}
+\caption{无限系统 DMRG 在第 $\ell$ 步生成的 MPS 结构：一串左规范的 $A$、一串右规范的 $B$，由对角奇异值矩阵 $\Lambda^{[\ell]}$ 连接起来。注意从结构上看，中央单元并不重复。}
+\label{fig:infiniteDMRG_AB}
+\end{figure}
+
+当然，一旦矩阵维数超过 $D$，我们在每一步都会丢弃最小的那些奇异值及其相应的奇异向量，这其实就是最初表述中基于密度矩阵的截断。
+在每一步（新链长）我们都可以把该长度下的 $\hat{H}$ 写成一个 MPO 并做能量最小化。其他算符也能像有限尺寸情形那样找到类似的表示。 
+
+让我简要过一遍这一算法在 $\Gamma\Lambda$ 记法下的重新表述。第一步我们只是把 $A$ 和 $B$ 改名为 $\Gamma$，与有限系统情形中边界格点的转换方式相一致：
+\begin{equation}
+\ket{\psi_1} =  \sum_{\sigma_1^A \sigma_1^B} \Gamma^{[1]\sigma_1^A} \Lambda^{[1]} \Gamma^{[1]\sigma_1^B} \ket{\sigma_1^A \sigma_1^B} .
+\end{equation}
+然后我们在下式中最小化 $\Psi^{\sigma_2^A \sigma_2^B}$：
+\begin{equation}
+\ket{\psi_2} = \sum_{\sigma_1^A \sigma_2^A \sigma_2^B \sigma_1^B} \Gamma^{[1]\sigma_1^A} 
+\Psi^{\sigma_2^A \sigma_2^B} 
+\Gamma^{[1]\sigma_1^B} \ket{\sigma_1^A \sigma_2^A \sigma_2^B \sigma_1^B},
+\end{equation}
+并像前面一样把它分解为 $A^{[2]\sigma_2^A} \Lambda^{[2]} B^{[2]\sigma_2^B}$。现在我们定义（由于标记方式的原因，$B$ 矩阵与有限系统设置相比略有变化）
+\begin{equation}
+\Lambda^{[1]}_a \Gamma^{\sigma_2^A}_{ab} = A^{[2]\sigma_2^A}_{ab} \quad\quad
+\Gamma^{\sigma_2^B}_{ab} \Lambda^{[1]}_b = B^{[2]\sigma_2^B}_{ab}
+\end{equation}
+从而得到
+\begin{equation}
+\ket{\psi_2} =  \sum_{\sigma_1^A \sigma_2^A \sigma_1^B \sigma_2^B} \Gamma^{[1]\sigma_1^A} \Lambda^{[1]} \Gamma^{[2]\sigma_2^A} \Lambda^{[2]} \Gamma^{[2]\sigma_2^B} \Lambda^{[1]} \Gamma^{[1]\sigma_1^B}   \ket{\sigma_1^A \sigma_2^A \sigma_2^B \sigma_1^B} ,
+\end{equation}
+如图~\ref{fig:infiniteDMRG_GL} 所示。 
+
+我们现在可以问两个问题：(i) 在 DMRG 中，用 Lanczos 这类迭代求解器求出基态是最耗时的部分。能否通过提供一个好的初始猜测来实现加速？在有限系统 DMRG 中，MPS 表述自动给出了 White 的预测方法；而对无限系统 DMRG 的加速尝试过去也有人做过，但成败参半\cite{Schollwoeck98,Sun02}。(ii) 我们能否利用链中心的信息，在热力学极限下构建一个（周期至多为 2 的）平移不变态，求出它的基态或让它做时间演化？
+
+两个问题的答案都是肯定的，而这建立在识别出态中两格点重复结构的基础上。  与 $A,B$ 记法相反——那里即使在热力学极限下中央单元也不自我重复——在 $\Gamma\Lambda$ 记法中很容易读出一个两格点重复单元，即
+\begin{equation}
+\Lambda^{[\ell-1]} \Gamma^{[\ell]\sigma_\ell^A} \Lambda^{[\ell]} \Gamma^{[\ell]\sigma_\ell^B} .
+\end{equation}
+利用转换规则可以把它翻译成 $A$、$B$ 的语言：
+\begin{equation}
+A^{[\ell]\sigma_\ell^A} \Lambda^{[\ell]} B^{[\ell]\sigma_\ell^B} (\Lambda^{[\ell-1]})^{-1} .
+\end{equation}
+这个结果也可以直接从 $A$、$B$ 记法得到，但论证要比在 $\Gamma\Lambda$ 记法中更复杂。当然应当理解：重复这些态片段并不会生成本来从中取出它们的那个态；这里只是断言，在热力学极限 $\ell\rightarrow\infty$ 下，当所有格点都彼此等价时，这种重复可以相当接近。无论如何，它们是对态的样貌的一种有依据的猜测！ 
+
+\begin{figure}
+\centering\includegraphics[scale=0.7]{PyMPS_InfiniteDMRG_TEBD.eps}
+\caption{在 $\Gamma\Lambda$ 记法下无限系统 DMRG 第 $\ell$ 步生成的 MPS 结构：$\Gamma$ 与 $\Lambda$ 矩阵交替出现，并给出（重复的）两格点砌块的一种可能认定。}
+\label{fig:infiniteDMRG_GL}
+\end{figure}
+
+我们现在要让这个态片段派上多重用场：先用于由无限系统 DMRG 生成的有限系统，再用于热力学极限态，两者都涵盖基态搜索与时间演化。在前一种情形，它将为下一个量子态提供一个极其高效的猜测；在此态上计算观测量则与其他有限系统中的做法完全相同。
+在后一种情形，可以构建基态与时间演化两种算法（iDMRG 与 iTEBD），但二者都需要对热力学极限下态的正交归一性问题做（相同的）分析。
+
+\subsection{无限系统 DMRG 中的态预测} 
+识别出态的``单元胞''，使我们能够为无限系统 DMRG 定义一个好的初始猜测\cite{McCulloch08}，它避免了前人遇到的所有问题，并且即使对短链也带来戏剧性的加速——尽管在这些短链上，``链中心可以代表热力学极限态的物理''这一隐含假设肯定是错的：为使链增长，我们只需插入一个单元胞，即便对短链来说``态不过是这些单元胞的重复''这一想法并未得到很好的验证——但即便如此，也要远胜于随机猜测。从
+\begin{equation}
+\ket{\psi_{\ell}} =  \sum_{\fat{\sigma}} A^{[1]\sigma_1^A} \ldots A^{[\ell-1]\sigma_{\ell-1}^A} (A^{[\ell]\sigma_\ell^A} \Lambda^{[\ell]} B^{[\ell]\sigma_\ell^B} [\Lambda^{[\ell-1]}]^{-1}) \Lambda^{[\ell-1]} B^{[\ell-1]\sigma_{\ell-1}^B} \ldots B^{[1]\sigma_1^B} \ket{\fat{\sigma}},
+\end{equation} 
+其中重复单元已被括出，该猜测便为
+\begin{eqnarray}
+\ket{\psi_{\ell+1}^{{\rm guess}}} &=& \sum_{\fat{\sigma}} A^{[1]\sigma_1^A} \ldots  A^{[\ell-1]\sigma_{\ell-1}^A} \times \nonumber \\
+& & ( A^{[\ell]\sigma_\ell^A} \Lambda^{[\ell]} B^{[\ell]\sigma_{\ell+1}^A} [\Lambda^{[\ell-1]}]^{-1} ) (A^{[\ell]\sigma_{\ell+1}^B} \Lambda^{[\ell]} B^{[\ell]\sigma_\ell^B}  
+[\Lambda^{[\ell-1]}]^{-1} ) \times \nonumber \\
+& &  \Lambda^{[\ell-1]} B^{[\ell-1]\sigma_{\ell-1}^B} \ldots B^{[1]\sigma_1^B} \ket{\fat{\sigma}} 
+\end{eqnarray}
+或者展开乘积，得 
+\begin{equation}
+\ket{\psi_{\ell+1}^{{\rm guess}}} = \sum_{\fat{\sigma}} A^{[1]\sigma_1^A} \ldots A^{[\ell]\sigma_\ell^A} \Lambda^{[\ell]} B^{[\ell]\sigma_{\ell+1}^A} [\Lambda^{[\ell-1]}]^{-1} A^{[\ell]\sigma_{\ell+1}^B} \Lambda^{[\ell]} B^{[\ell]\sigma_\ell^B} B^{[\ell-1]\sigma_{\ell-1}^B} \ldots B^{[1]\sigma_1^B} \ket{\fat{\sigma}} .
+\end{equation}
+在这个拟设中，我们现在可以把对 $\Psi^{\sigma_{\ell+1}^A\sigma_{\ell+1}^B}$ 的一个猜测认定为
+\begin{equation}
+\Psi^{\sigma_{\ell+1}^A\sigma_{\ell+1}^B}_{{\rm guess}} =
+\Lambda^{[\ell]} B^{[\ell]\sigma_{\ell+1}^A} [\Lambda^{[\ell-1]}]^{-1} A^{[\ell]\sigma_{\ell+1}^B} \Lambda^{[\ell]} .
+\label{eq:guess2sites}
+\end{equation}
+从这个拟设出发，接下来就可以在无限系统 DMRG 框架内迭代地求出使能量最小的 $\Psi^{\sigma_{\ell+1}^A\sigma_{\ell+1}^B}$，并由它生成 $A^{[\ell+1]\sigma_{\ell+1}^A}$、$\Lambda^{[\ell+1]}$ 和 $B^{[\ell+1]\sigma_{\ell+1}^B}$。
+
+另外，这个拟设也可以化成更优雅的形式。目前，$B$ 矩阵出现在晶格的 A 侧，反之亦然。但我们可以利用把 MPS 化为规范形式的能力，用 SVD 把 $\Lambda^{[\ell]} B^{[\ell]\sigma_{\ell+1}^A}$ 规范化为
+$A^{[\ell+1]\sigma_{\ell+1}^A} \Lambda_R^{[\ell]}$，其中 $A$ 由 $U$ 得出，$\Lambda$ 由 $DV^\dagger$ 得出，方法如前所述（$\Lambda_a B^\sigma_{ab} = M_{a\sigma,b} = \sum_k U_{a\sigma,k} D_k (V^\dagger)_{k,b} = A^\sigma_{ak} \Lambda_{kb}$）。类似地，我们从右侧对  $A^{[\ell]\sigma_{\ell+1}^B} \Lambda^{[\ell]}$ 做规范化，得到 $\Lambda_L^{[\ell]} B^{[\ell+1]\sigma_{\ell+1}^B}$，其中 $B$ 来自 $V^\dagger$。于是我们有拟设
+\begin{equation}
+\ket{\psi_{\ell+1}^{{\rm guess}}} = \sum_{\fat{\sigma}} A^{[1]\sigma_1} \ldots  A^{[\ell+1]\sigma_{\ell+1}} \Lambda^{[\ell+1]}_{{\rm guess}} B^{[\ell+1]\sigma_{\ell+1}}  \ldots B^{[1]\sigma_1} \ket{\fat{\sigma}} ,
+\end{equation}
+其中 
+\begin{equation}
+\Lambda^{[\ell+1]}_{{\rm guess}} =  \Lambda_R^{[\ell]} [\Lambda^{[\ell-1]}]^{-1} \Lambda^{[\ell]}_L .
+\end{equation}
+从这个拟设出发，接下来就可以迭代地求出使能量最小的 $\Lambda^{[\ell+1]}$，只需对单格点变分 MPS 的最小化部分稍作修改。一般而言，所得结果不会具有由 SVD 产生的对角形式，因为 $\Lambda_R$ 和 $\Lambda_L$ 本来就不是对角的。但对它做一次 SVD 会得到两个幺正矩阵，可以把它们吸收进相邻的 $A$ 和 $B$ 而不改变其归一化性质，使得最终的 $\Lambda^{[\ell+1]}$ 是对角的。在这种形式下，算法可表示为图~\ref{fig:infinitebuildup}。
+
+\begin{figure}
+\centering\includegraphics[scale=0.7]{PyMPS_InfiniteSystemDMRG.eps}
+\caption{包含预测步骤的无限系统算法的概括表示。每一步引入两个新格点，用上一次迭代算出的一个拟设（白色），从而得到一个新的奇异值分解（黑色）。}
+\label{fig:infinitebuildup}
+\end{figure}
+
+
+正如 McCulloch 所证明的\cite{McCulloch08}，这一预测使无限系统 DMRG 大幅提速，并与有限系统 DMRG 的预测算法相得益彰：预测态与计算所得态之间的重叠常常接近于 1，误差约在 $10^{-10}$ 的量级！
+
+\subsection{iDMRG：热力学极限下的变分基态搜索}
+利用前几节的思想，现在可以非常简单地把无限系统 DMRG 变成一个高效而精确的算法，称为 {\em iDMRG}，指的是 DMRG 的热力学极限版本：
+\begin{itemize}
+\item 搭建一个无限系统 DMRG 算法。
+\item 把上一节的预测步骤加进最小化算法。
+\item 运行修改后的算法直至达到收敛。波函数
+是否收敛到热力学极限，可以通过考察关系式 式~(\ref{eq:rhoarecursion}) 来判断
+\begin{equation}
+\sum_{\sigma_\ell} A^{[\ell]\sigma_\ell} \rho_A^{[\ell]} A^{[\ell]\sigma_\ell\dagger} = \rho_A^{[\ell-1]} ,
+\end{equation}
+其中 $\rho_A^{[\ell]} = \Lambda^{[\ell]}\Lambda^{[\ell]\dagger}$ 和 $\rho_A^{[\ell-1]} = \Lambda^{[\ell-1]}\Lambda^{[\ell-1]\dagger}$ 是系统左半部分的约化密度算符。注意，这一关系在同一个有限系统内的约化密度算符之间总是成立，但这里的算符来自长度为 $2(\ell-1)$ 和 $2\ell$ 的两个不同系统，因此预期这一关系只会在 $\ell\rightarrow\infty$ 时作为不动点关系成立。按照与为更大系统构造拟设时相同的论证，我们可以把 $A^{[\ell]\sigma_\ell}\Lambda^{[\ell]}$ 变换为 $\Lambda^{[\ell]}_L B^{[\ell+1]\sigma_\ell}$。于是，利用右归一化，不动点关系的左端可简化为 $\Lambda^{[\ell]}_L\Lambda^{[\ell]\dagger}_L \equiv \hat{\rho}^{[\ell]}_L$，关系式变为 $\hat{\rho}^{[\ell]}_L = \rho_A^{[\ell-1]}$。如果这一关系以高精度成立，就表明已到达热力学不动点。  
+衡量两个密度算符彼此接近程度的一种方式由保真度给出 \cite{McCulloch08}
+\begin{equation}
+F(\hat{\rho}^{[\ell]}_L, \hat{\rho}_A^{[\ell-1]}) = \tr \sqrt{\sqrt{\hat{\rho}^{[\ell]}_L}\hat{\rho}_A^{[\ell-1]} \sqrt{\hat{\rho}^{[\ell]}_L}} .
+\end{equation}
+代入定义并利用迹的循环性质，可以证明 $F(\hat{\rho}^{[\ell]}_L, \hat{\rho}^{[\ell-1]}_A) = \sum_i s_i$，其中 $s_i$ 是  $\Lambda^{[\ell]}_L \Lambda^{[\ell-1]\dagger}$ 的奇异值。 
+\end{itemize}
+当然，这个算法可以随时停下，但那样我们得到的只是有限系统结果，它肯定可以通过有限系统 DMRG 加以改进。上面给出的收敛判据确实使我们能够得到热力学极限态，我们可以把它形式上写为
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} \ldots A^{[\ell]\sigma_i}\Lambda^{[\ell]} B^{[\ell]\sigma_{i+1}} [\Lambda^{[\ell-1]}]^{-1}A^{[\ell]\sigma_{i+2}}\Lambda^{[\ell]} B^{[\ell]\sigma_{i+3}} [\Lambda^{[\ell-1]}]^{-1}A^{[\ell]\sigma_{i+4}}\Lambda^{[\ell]} B^{[\ell]\sigma_{i+5}} [\Lambda^{[\ell-1]}]^{-1} \ldots 
+ \ket{\fat{\sigma}} ,
+\end{equation}
+其中我们把 $\ell$ 取为收敛判据得到满足的那次迭代步。现在的问题是如何计算期望值。显然，我们无法像前面那样写出一个有限的网络收缩；这个网络将是无限大的，因此无法天真地收缩。收缩之所以可行，只有在我们能把收缩的数目约减为有限多个时才行。对于有限系统网络，我们看到左正交归一与右正交归一使我们能够消去大部分收缩：对于格点 $i$ 和 $j$ 上的观测量，只需考虑这两个格点上以及二者之间的收缩。然而，热力学极限态没有任何理由必须满足归一化判据；事实上，通常它并不满足。因此我们需要一个正交归一化手续。此后，期望值就可以像对具有左、右正交归一性的有限晶格那样来计算。由于这一手续对下一个算法也很重要，且在概念上稍微深入一些，我把它留到单独的一节。 
+

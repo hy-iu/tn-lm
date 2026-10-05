@@ -1,0 +1,118 @@
+The simulation of Lindblad equations is possible quite easily in the MPS formalism, in particular using MPOs \cite{VerstraeteRipoll04}, but also in the form of a superoperator formalism \cite{VidalZwolak04}. The problem with this approach is that it is numerically more costly compared to the Hamiltonian evolution of a state. A very attractive alternative, which allows maximal reusage of available pure state codes, has been proposed by \cite{Daley09}, which combines pure state time evolution with the method of quantum trajectories. 
+
+The method of quantum trajectories has been widely applied in quantum optics\cite{Plenio98}. Instead of using the Lindblad equation directly (which takes into account both the probabilistic distribution of initial states through $\hat{\rho}(0)$ and all possible sequences of quantum jumps), the quantum trajectory approach samples over the distribution of initial states, and for each of this sample states carries out a pure state time evolution where random quantum jumps occur at random times. They are chosen such that if one averages physical quantities over this distribution of time-evolving states, the result of the Lindblad equation is recovered. Let us ignore the sampling over initial states, assume that it is always the same, and instead focus on the conceptually more difficult averaging over quantum jumps.
+
+The algorithm then proceeds by generating ${\mathcal N}$ quantum trajectories in a time interval $[0,T]$ (where $T$ is the final time of the simulation) as follows: 
+\begin{itemize}
+\item Generate a starting state $\ket{\psi(0)}$; it either samples the $t=0$ density operator correctly or is simply always the same, depending on the physical problem.
+\item Choose a uniformly distributed random number $p_0$ in $[0,1]$.
+\item Carry out, using one of our pure state time evolution methods, the time evolution of $\ket{\psi(0)}$ under $\hat{H}_{{\rm eff}}$. As the effective Hamiltonian is non-hermitian, the norm of the state will decrease over time. Stop the time evolution at time $t_1$, which is defined by 
+$\braket{\psi(t_1)}{\psi(t_1)} = p_0$; this is the time of the first quantum jump. Note that if $T<t_1$, our simulation stops at $T$ and we have a trajectory without jump, and we normalize the final state.
+\item To carry out the quantum jump at $t_1$, we calculate
+\begin{equation}
+\tilde{p}_j = \bra{\psi(t_1)} \hat{L}^{j\dagger} \hat{L}^j \ket{\psi(t_1)} \quad\quad p_j = \frac{\tilde{p}_j}{\sum_{j>0} \tilde{p}_j} \quad (j>0)
+\end{equation}
+and choose a $j$ according to the normalized probability distribution $\{ p_j \}$.
+\item We carry out this jump and normalize the state,
+\begin{equation}
+\ket{\psi(t_1^+)} = \frac{\hat{L}^j \ket{\psi(t_1)}}{\| \hat{L}^j \ket{\psi(t_1)} \|} .
+\end{equation}
+\item After this, we continue with finding a new $p_0$, from which time evolution of $\ket{\psi(t_1^+)}$ with $\hat{H}_{{\rm eff}}$ generates $t_2$, the location of the second quantum jump, and so on, until $T$ is exceeded.
+\end{itemize}
+Physical quantities up to time $T$ are now averaged over the ${\mathcal N}$ quantum trajectories that have been generated. The correct probabilities are produced if all states are normalized at all times; as this is not the case in the algorithm, norms at say time $t$ have to be taken into account. Obviously, a careful analysis of convergence in ${\mathcal N} \rightarrow \infty$ has to be carried out, but it seems that for a small number of jump operators, even a few 100 trajectories may give highly reliable results \cite{Daley09}.
+
+The observation that this sampling reproduces the dynamics of the Lindblad equation is part of the standard literature on quantum trajactories. The proof can be done in two steps, which I just sketch here. In a first step, one considers fixed time steps $\diff t$, and calculates probabilities for no jump vs. jump $j$ in this time interval ($p_j = \diff t \bra{\psi(t)} \hat{L}^{j\dagger} \hat{L}^j \ket{\psi(t)}$, $p_0 = 1 - \sum_j p_j$). One then either time-evolves under $\hat{H}_{{\rm eff}}$ over $\diff t$ and normalizes, or does the jump and normalizes, according to the generated distribution. One can show that this reproduces the Lindblad equation. In a second step, one shows that the distributions of quantum jumps generated in this way and the one we use in the algorithm are identical.
+
+\section{DMRG and NRG}
+\subsection{Wilson's numerical renormalization group (NRG) and MPS}
+Wilson's Numerical Renormalization Group (NRG) \cite{Wilson75,Bulla08,Krishnamurthy80} originates in attempts to explain why metals with a small concentration of magnetic impurities exhibit a non-monotonic behaviour of resistivity.
+It was found that an adequate minimal model is provided by 
+\begin{equation}
+\hat{H}_A = \sum_{k\sigma} \epsilon_k \hat{c}^\dagger_{k\sigma} \hat{c}^{\phantom\dagger}_{k\sigma} + \sum_{k\sigma} V_k (\hat{f}^\dagger_\sigma \hat{c}^{\phantom\dagger}_{k\sigma} + {\rm h.c.}) + U (\hat{n}_{f\uparrow}-1/2) (\hat{n}_{f\downarrow}-1/2).
+\end{equation}
+This single-impurity Anderson model contains an impurity site that can be occupied by up to two electrons (operators $\hat{f}^\dagger_\sigma$) with on-site repulsion $U$ and which couples to a conduction band (operators $\hat{c}^\dagger_{k\sigma}$) with energy dispersion $\epsilon_k$ through some hybridization function $V_k$.
+
+In order to make it tractable, one changes from momentum to energy representation, assuming that only low-energy isotropic $s$-wave scattering matters, and introduces logarithmic discretization: the band is represented by band segments of an energy width that decreases exponentially close to the Fermi energy $\epsilon_F$. This accounts for the observation that the decisive feature of quantum impurity physics, namely the appearance of a very narrow resonance peak at the Fermi energy in the local impurity spectral function, is linked exponentially strongly to the states close to the Fermi energy. Logarithmic discretization is however also required to make NRG work at all on a technical level!
+
+After further manipulations, for which I refer to \cite{Wilson75,Bulla08}, the Anderson Hamiltonian is finally mapped to a semi-infinite chain of non-interacting sites with the exception of the first one:
+\begin{equation} 
+\hat{H}= U (\hat{n}_{f\uparrow}-1/2) (\hat{n}_{f\downarrow}-1/2) + t_{-1} \sum_\sigma (\hat{f}^\dagger_\sigma \hat{d}_{0\sigma} + {\rm h.c.}) + \sum_{\sigma,n=0}^\infty t_n (\hat{d}^\dagger_{n\sigma} \hat{d}_{n+1,\sigma} + {\rm h.c.}),
+\end{equation}
+where the $\hat{d}_{\sigma}$ are fermionic operators.  The crucial point is that the $t_n$ decay exponentially, $t_n \sim \Lambda^{-n}$, where $\Lambda$ is the shrinkage factor of the energy bands in the logarithmic discretization, usually a value of the order 1.5 to 2. This is obviously a model that is amenable to our methods, e.g. a ground state search -- as the hoppings decay exponentially, we will not have to consider a truly infinite chain. 
+
+NRG builds on the observation that the exponential decay leads to a separation of energy scales: assuming we know the spectrum of the partial chain up to some length, all remaining sites will only make exponentially small corrections to it because of the exponentially small energy scales further down the chain. Finding the ground state (and more generally the low lying spectrum) is now achieved by  iterative exact diagonalization: assume that we have an effective $D$-dimensional eigenspace for some left-end part of the chain. Then the next-larger chain has state space dimension $dD=4D$; in order to avoid exponential growth, we have to truncate down to $D$ states. The NRG prescription is to diagonalize that system and to retain the $D$ lowest-lying eigenstates. Starting out from very short chains that can still be done exactly, this procedure resolves the lowest-lying states exponentially well and is justified by the separation of energy scales: the decision which states to retain at some step would not be drastically changed with hindsight, as all further sites in the chain interact at much smaller energies. The obtained eigenspectra at different energy scales (chain lengths) can then be used to extract RG flow information or calculate thermodynamic or dynamic quantities for the impurity problem. 
+
+Given that the building block $A^\sigma$ of an MPS can be interpreted as encoding a decimation step upon growing a block by one site, irrespective of the decimation prescription, it is immediately obvious that NRG, like DMRG, can be seen as operating on MPS\cite{Weichselbaum09}. This closes a historical loop as in fact the analysis of failures of NRG  naively applied to Heisenberg and Hubbard models gave rise to the development of DMRG. A NRG  state would look like
+\begin{equation}
+\ket{a_\ell} = \sum_{\sigma_1,\ldots,\sigma_\ell} (A^{\sigma_1} \ldots  A^{\sigma_\ell})_{a_\ell} \ket{\sigma_1\ldots\sigma_\ell}.
+\end{equation}
+At each length $\ell$, we get a spectrum of $D$ states.
+
+Given that DMRG is variational over the MPS ansatz space, it is reasonable to expect that at least some improvement must be possible over the NRG method. In fact this is the case \cite{Weichselbaum09}; in the next section, I am going to discuss some improvements which are already firmly established and others which are more speculative, i.e.\ where benchmarking on relevant complex problems is still lacking. 
+
+\subsection{Going beyond the numerical renormalization group}
+In fact, considering an MPS formulation of NRG helps even without resorting to the connection to variational methods like DMRG, as exemplified by the strict enforcement of certain sum rules \cite{Weichselbaum07,Peters06}, but this is outside the topic of this review paper. 
+
+What we can do more, however, is to subject the final MPS construction generated by NRG to DMRG-like sweeping. This will somewhat improve the quality of the ground state, but above all, the truncation procedure for high energies (short chains) will learn about truncation at low energies and vice versa. As opposed to NRG, there is now a feedback between energy scales. In that sense, NRG for an impurity problem is a similar conceptual step as the warm-up procedure infinite-system DMRG provides for variational finite-system DMRG. 
+
+For logarithmic discretization, energy scale separation is big enough that this effect is minor and for a simple single impurity problem with a focus on the Abrikosov-Kondo-Suhl resonance the ultimate improvement is very limited, as NRG is geared to describe this feature optimally. The essential point is that energy scale separation can now be abandoned altogether due to feedback, hence also logarithmic discretization, and we may choose a more fine-grained resolution of the energy band wherever it is physically suitable. This could find a variety of applications.
+
+In one application, variational calculus over MPS was applied to an impurity problem in an external field. The external field leads to a splitting of the peak into two spin-dependent ones, shifted above and below the Fermi energy. In Figure \ref{fig:NRGDMRG} we consider one of these peaks, using three techniques, NRG, an analytical approach\cite{Rosch03,Garst05}, and variational MPS (DMRG) calculus. NRG due to logarithmic discretization focuses on $\epsilon_F$ and does not see the field-dependent peak at all. Relaxing logarithmic discretization and providing sufficiently fine energy intervals around the expected peak positions away from $\epsilon_F$ the shifted resonance can be resolved clearly and even in very good agreement with analytics.
+
+A second interesting application of this could be to replace NRG as an impurity solver in the context of the dynamical mean-field theory (DMFT) \cite{Georges96,Nishimoto04,Garcia04,Raas04,Raas05}. In that case, information beyond the metallic resonance at the Fermi energy is required such that improving spectral resolution on other energy scales would be highly desirable. 
+
+\begin{figure}
+\centering\includegraphics[height=200pt]{PyMPS_Spectral.eps}
+\caption{Impurity spectral function for a Kondo model in an external field. Thin vertical lines indicate the energy intervals: below a certain energy, logarithmic discretization is turned linear. Variational MPS calculations (with and without deconvolution) reveal a peak missed by NRG, where the peak position is in very good agreement with a calculation by Rosch {\em et al.} \cite{Rosch03} combined with a perturbatively found peak shift. Taken from \cite{Weichselbaum09}.}
+\label{fig:NRGDMRG}
+\end{figure}
+
+As the semi-infinite chain is non-interacting but on the first site, one can think about unfolding it into an infinite chain of spin-$1/2$, with the impurity at the center and the presence or absence of spin-up or spin-down fermions corresponding to the 2 spin states, the left half of the chain corresponding to the spin-up fermions and the right half to the spin-down fermions \cite{Raas04}. Similar energies are now no longer grouped together, but in a DMRG-like approach this does not matter anymore! The intuition that spins that interact only through the central impurity might be essentially unentangled is corroborated by actual calculations. This is important as this means we will not pay a strong price by increased matrix dimensions. On the contrary: if in the NRG approach we are essentially looking at two uncoupled spin chains parallel to each other, this means that the corresponding MPS has dimension $O(D^2)$ if the spin chain has dimension $D$. We can therefore expect that a NRG calculation with state number $D$ can be replaced by a faster DMRG calculation with a state number $O(\sqrt{D})$.  
+
+Beyond this speedup, unfolding can of course also be applied if the impurity couples to multiple bands, where NRG becomes exponentially complex\cite{Weichselbaum09}. The central site, of course, remains the same, and its numerical treatment can become extremely costly, such that new strategies have to be designed for that site. Much work remains to be done here, but first interesting follow-ups on these ideas have been made\cite{Saberi08,Holzner10}.
+
+\section{Infinite-size algorithms}
+\label{sec:infinite}
+
+\subsection{Reformulation of infinite-system DMRG in MPS language}
+
+After the extensive discussion of finite-system algorithms, let us now reformulate infinite-system DMRG entirely in MPS language. It is convenient to label local states a bit differently to account for the iterative insertion of sites; we call the states $\ket{\sigma_1^A} \ket{\sigma_2^A} \ldots \ket{\sigma_\ell^A}\ket{\sigma_\ell^B} \ldots \ket{\sigma_2^B}\ket{\sigma_1^B}$. Moreover, it will be very useful to give two labels to the matrices $A$ and $B$, 
+because the link between the matrices and the site on which they were generated will disappear.
+
+Starting from blocks of size 0 (i.e.\ a chain of 2 sites), the ground state wavefunction is $\ket{\psi_1}=\sum_{\sigma_1^A \sigma_1^B} \Psi^{\sigma_1^A \sigma_1^B} \ket{\sigma_1^A} \ket{\sigma_1^B}$. Reading $\Psi^{\sigma_1^A\sigma_1^B}$ as matrix $(\Psi^1)_{\sigma_1^A,\sigma_1^B}$, it is singular-value decomposed as  $\Psi^1=U_1 \Lambda^{[1]} V^\dagger_1$. From this we read off
+\begin{equation}
+A^{[1]\sigma_1^A}_{1,a_1} = (U_1)_{\sigma_1^A,a_1} \quad\quad B^{[1]\sigma_1^B}_{a_1,1} = (V^\dagger_1)_{a_1,\sigma_1^B} .
+\end{equation} 
+$A$ and $B$ inherit left and right-normalization properties from $U$ and $V^\dagger$, and the state takes the form
+\begin{equation}
+\ket{\psi_1} = \sum_{\sigma_1^A \sigma_1^B} A^{[1]\sigma_1^A} \Lambda^{[1]} B^{[1]\sigma_1^B} \ket{\sigma_1^A \sigma_1^B} .
+\end{equation}
+If we now insert two sites, and minimize the energy with respect to $\hat{H}$, we obtain
+\begin{equation}
+\ket{\psi_2} = \sum_{\sigma_1^A \sigma_2^A \sigma_2^B \sigma_1^B} A^{[1]\sigma_1^A} 
+\Psi^{\sigma_2^A \sigma_2^B} 
+B^{[1]\sigma_1^B} \ket{\sigma_1^A \sigma_2^A \sigma_2^B \sigma_1^B},
+\end{equation}
+where each $\Psi^{\sigma_2^A \sigma_2^B}$ is a matrix with dimensions to match those of $A$ and $B$, implicit matrix multiplications $A\Psi B$ assumed. Reshaping this set of $\Psi$-matrices into one,
+\begin{equation}
+(\Psi_2)_{(a_1^A \sigma_2^A),(a_1^B \sigma_2^B)} =  (\Psi^{\sigma_2^A \sigma_2^B})_{a_1^A,a_1^B},
+\end{equation}
+SVD gives $\Psi_2 = U_2 \Lambda^{[2]} V^\dagger_2$, from which we can form
+\begin{equation}
+A^{[2]\sigma_2^A}_{a_1^A,a_2^A} = U_{(a_1^A \sigma_2^A), a_2^A} \quad\quad  
+B^{[2]\sigma_2^B}_{a_2^B,a_1^B} = V^\dagger_{(a_1^B \sigma_2^B), a_2^B}
+\end{equation}
+such that 
+\begin{equation}
+\ket{\psi_2} = \sum_{\sigma_1^A \sigma_2^A \sigma_2^B \sigma_1^B} 
+A^{[1]\sigma_1^A}A^{[2]\sigma_2^A} \Lambda^{[2]} B^{[2]\sigma_2^B}B^{[1]\sigma_1^B} 
+\ket{\sigma_1^A \sigma_2^A \sigma_2^B \sigma_1^B}.
+\end{equation}
+At the $\ell$th step, the wavefunction will read
+\begin{equation}
+\ket{\psi_\ell} = \sum_{\sigma_1^A \ldots \sigma_\ell^A \sigma_\ell^B \ldots \sigma_1^B} 
+A^{[1]\sigma_1^A} \ldots A^{[\ell]\sigma_\ell^A} \Lambda^{[\ell]} B^{[\ell]\sigma_\ell^B} \ldots B^{[1]\sigma_1^B}  
+\ket{\sigma_1^A \ldots \sigma_\ell^A \sigma_\ell^B \ldots \sigma_1^B}
+\end{equation}
+and look like in Fig.~\ref{fig:infiniteDMRG_AB}.
+

@@ -1,0 +1,112 @@
+The new density matrix is diagonalized, and truncation according to the $D$ largest eigenvalues is carried out, yielding a $(dD \times D)$ matrix of orthonormal columns, $U_{(a_{\ell-1}\sigma_{\ell}), a_{\ell}} \rightarrow A^{\sigma_{\ell}}_{a_{\ell-1}, a_{\ell}}$, and we continue on the next site; as we are not using the eigenvalues of the modified density matrix beyond their relative ordering, it does not matter that they do not sum up to 1. For predicting the next $\Psi^{\sigma_{\ell+1}}$ for the large sparse matrix solver, we use the DMRG prediction formula derived in the next section,
+\begin{equation}
+\Psi^{\sigma_{\ell+1}}_{a_{\ell}a_{\ell+1}} = 
+\sum_{a_{\ell-1}\sigma_{\ell} a_{\ell}'} 
+A^{\sigma_{\ell} \dagger}_{a_{\ell},a_{\ell-1}} \Psi^{\sigma_{\ell}}_{a_{\ell-1}a_{\ell}'}  B^{\sigma_{\ell+1}}_{a_{\ell}', a_{\ell+1}} .
+\end{equation}
+Otherwise, everything remains the same. The additional numerical cost and programming effort is minimal for an algorithm that often converges much faster and is much less prone to getting stuck at a non-optimal result.
+
+\subsection{Conventional DMRG in MPS language: the subtle differences}   
+\label{subsec:conventionalDMRGinMPS}
+How can the previous approach be related to conventional DMRG? The essential answer is that the MPS approach is identical to finite-size DMRG for OBC, albeit only if we shift one site instead of two,
+i.e.\ consider ``single-site'' instead of ``two-site'' DMRG, where we consider a block-site-block configuration A$\bullet$B instead of a block-site-site-block configuration A$\bullet\bullet$B.
+
+Let us first remind ourselves of the key steps of the algorithms, assuming that we are sweeping to the right: (i) given some configuration A$\bullet$B (or corresponding configuration $AAAMBB$) and a Hamiltonian $\hat{H}$, the ground state is found by a large sparse matrix eigensolver looking for the optimal $\psi_{a_{\ell-1} \sigma_\ell a_\ell}$ (in DMRG) or $M^{\sigma_\ell}_{a_{\ell-1}, a_\ell}$ (in MPS) respectively; analogously for A$\bullet\bullet$B. (ii) Given the ground state, MPS derives a set of left-normalized $A$-matrices, whereas DMRG finds new block states whose structure can be encoded by left-normalized $A$-matrices. (iii) All algorithms switch to a new A$\bullet$B, A$\bullet\bullet$B or $AAAAMB$ configuration, where the active center is shifted by one site to the right and provide an initial guess for the calculation of the next ground state, taking us back to step (i).
+
+Step (i): Results must be identical if we use the same state configuration and the same Hamiltonian. As DMRG grows the blocks A and B from left and right, and as each block growth step A$\bullet \rightarrow$A can be encoded by $A$-matrices and similarly $\bullet$B $\rightarrow$ B, we conclude that all matrices on A are left-normalized and those on B right-normalized, hence the two-site DMRG state takes the form
+\begin{equation}
+\ket{\psi} = \sum_{a_{\ell-1} \sigma_\ell \sigma_{\ell+1} a_{\ell+1}} \Psi^{\sigma_\ell\sigma_{\ell+1}}_{a_{\ell-1}, a_{\ell+1}} \ket{a_{\ell-1}}_A \ket{\sigma_\ell} \ket{\sigma_{\ell+1}} \ket{a_{\ell+1}}_B = \sum_{\fat{\sigma}} A^{\sigma_1} \ldots A^{\sigma_{\ell-1}} 
+\Psi^{\sigma_\ell \sigma_{\ell+1}} B^{\sigma_{\ell+2}} \ldots B^{\sigma_L} \ket{\fat{\sigma}},
+\end{equation}
+with the obvious change for a single-site DMRG state, $\Psi^{\sigma_\ell\sigma_{\ell+1}} \rightarrow \Psi^{\sigma_\ell}$. This is in perfect agreement with the mixed-canonical states of the variational MPS approach and we are looking at the same state structure. 
+
+It remains to show that the Hamiltonians are identical, too. Strictly speaking, this is not the case: 
+The MPO representation of $\hat{H}$ we just used is clearly exact. On the other hand, the representation of $\hat{H}$ in DMRG contains a series of reduced basis transformations, hence is inherently inexact. So, the two representations seem unrelated, with an advantage on the MPO side because it is exact. But a more careful analysis reveals that  on the level of calculating expectation values $\bra{\psi} \hat{H} \ket{\psi}$ as they appear in MPS and DMRG ground state searches both representations give identical results (they are not identical for higher moments, such as  $\bra{\psi} \hat{H}^2 \ket{\psi}$, where the MPO representation is demonstrably more accurate at a numerical cost, see below).
+
+Both the DMRG and the MPO Hamiltonian contain all terms of the exact Hamiltonian. As we have already seen in the application of a Hamiltonian MPO to a mixed canonical state (Sec.~\ref{subsec:Hamiltonianmixedcanonical}), the evaluation of the $L$ and $R$-objects appearing in the large sparse eigenproblem Eq.~(\ref{eq:vMPSeigenequation}) is nothing but the sequence of reduced basis transformations occuring in DMRG up to the current A$\bullet$B configuration. Hence, for $\bra{\psi} \hat{H} \ket{\psi}$ (but in general only for this!), both approaches are identical.
+
+Moreover, the calculation $\hat{H}\ket{\psi}$ appearing in the eigenproblem does not have a worse operational count than in the corresponding DMRG procedure. To see this, let us focus on our example MPO for an anisotropic nearest-neighbour Heisenberg chain. There seems to be a difference in efficiency when we consider the double sum over $b_{\ell-1}, b_{\ell}$. From the structure of the $W$-matrix it is clear that for most of the $D_W^2$ (in the example 25) entries we find zeros, such that we can strongly restrict the sum. But this would still give the following count: setting the field 0, for the Heisenberg Hamiltonian there are 8 contributions in the DMRG setup: one each for $\hat{H}_A$ and $\hat{H}_B$, the parts of the Hamiltonian that act strictly on A and B, and three per block for the three operator combinations linking a block and the site. All of them are diagonal in the other block, so there are altogether 8 operations of cost $O(D^3)$. In the MPO calculation, the double matrix-matrix multiplication would naively suggest 16 operations of cost $O(D^3)$, for the 8 non-vanishing entries of $W^{\sigma_{\ell},\sigma'_{\ell}}$. But then we can exploit the following rules: if $b_{\ell-1}=d_W$, then there are no operations to the left, $L^{a_{\ell-1}, a'_{\ell-1}}_{d_W}= \delta_{a_{\ell-1}, a'_{\ell-1}}$, and one operation drops out. Similarly, if $b_{\ell}=1$, then there are no operations to the right and $R^{a_{\ell},a'_{\ell}}_{b_{\ell}}=\delta_{a_{\ell},a'_{\ell}}$, and again one operation drops out. Looking at the structure of $W$, all non-vanishing entries meet one or the other condition, and the count halves down to 8 operations. Only longer-ranged interactions do not fit this picture, but they would be of cost $2O(D^3)$ in DMRG as well.
+
+Step (ii): After energy minimization, variational MPS and DMRG produce (identical) $M^{\sigma_\ell}$ and $\Psi^{\sigma_\ell}$, or $\Psi^{\sigma_\ell \sigma_{\ell+1}}$. Both methods now seem to proceed differently with the result, but in fact do the same: in variational MPS one just shifts one site to the right after an SVD to ensure left-normalization, to continue minimizing on the next site. In DMRG one previously carries out a density matrix analysis to determine a new (truncated) block basis. But if one carries out the corresponding SVD, the number of non-zero singular values (hence non-zero density matrix eigenvalues) is limited by $D$, the matrix dimension: 
+\begin{equation}
+\Psi^{\sigma_\ell}_{a_{\ell-1},a_ \ell} \rightarrow \Psi_{(a_{\ell-1} \sigma_ \ell), a_ \ell} = \sum_{k=1}^{\min(dD,d)=D} A^{\sigma_ \ell}_{a_{\ell-1},k} S_{kk} (V^\dagger)_{k, a_ \ell} .
+\end{equation}
+Hence, no truncation happens, and we are just doing a unitary transformation to obtain orthonormal states for the new larger block A (which is just the left-normalization in the MPS because of the link between SVD and density matrix diagonalization). Both formalisms act identically; as no truncation occurs, thin QR would do, too.
+
+On the other hand, in two-site DMRG the same step reads
+\begin{equation}
+\Psi^{\sigma_ \ell\sigma_{\ell +1}}_{a_{\ell-1},a_{\ell +1}} \rightarrow \Psi_{(a_{\ell-1} \sigma_ \ell), (\sigma_{\ell +1} a_{\ell +1})} = \sum_{k=1}^{\min(dD,dD)=dD} A^{\sigma_ \ell}_{a_{\ell-1},k} S_{k,k} (V^\dagger)_{k,(\sigma_{\ell +1} a_{\ell +1})} .
+\end{equation}
+But we can only keep $D$ states in the new block, hence truncation has to occur! Here is the {\em only} difference between variational MPS and single-site DMRG on the one and two-site DMRG on the other hand.
+
+Step (iii): In DMRG, after completion of one iteration, the free site(s) are shifted by one, leading to block growth of A and shrinkage of B. Here, all methods agree again: in variational MPS, the shrinkage of B is simply reflected in the states being formed from a string of $B$-matrices where the leftmost one has dropped off. The growth of A is given by a similar string, where one $A$-matrix has been added. The matrix on the free sites is to be determined in all approaches, so nothing is to be said about its normalization.
+
+Minimization of ground state energy is, as we have seen, a costly large sparse matrix problem. As the methods are iterative, a good initial guess is desirable. DMRG has provided some ``state prediction'' for that \cite{White96}. In fact, it turns out that the result of the prediction is just what one gets naturally in variational MPS language without the intellectual effort involved to find state prediction. 
+
+Let us assume that for single-site DMRG we just optimized $\Psi^{\sigma_\ell}$, deriving a new $A^{\sigma_ \ell}$. Then in MPS language the next $\Psi^{\sigma_{\ell +1}}= SV^{\dagger} B^{\sigma_{\ell +1}}$, where $S$ and $V^\dagger$ are from the SVD. In DMRG language, we take
+\begin{equation}
+\ket{\psi} = \sum_{a_{\ell-1}\sigma_ \ell a_{\ell }'} \Psi^{\sigma_ \ell}_{a_{\ell-1}, a_{\ell }} \ket{a_{\ell-1}}_A \ket{\sigma_ \ell} \ket{a_{\ell}'}_B
+\end{equation}
+and insert twice approximate identities $I= \sum \ket{a_ \ell}_A\phantom\langle_A\bra{a_ \ell}$ and 
+$I= \sum \ket{\sigma_{\ell +1}}\ket{a_{\ell+1}}_B \phantom\langle_B\bra{a_{\ell +1}} \bra{\sigma_{\ell+1}}$. Expressing the matrix elements by $A$ and $B$ matrices, the state now reads
+\begin{equation}
+\ket{\psi} = \sum_{a_\ell\sigma_{\ell +1} a_{\ell +1}} \left( \sum_{a_{\ell-1}\sigma_ \ell  a_{\ell}'} 
+A^{\sigma_ \ell \dagger}_{a_ \ell,a_{\ell-1}} \Psi^{\sigma_ \ell}_{a_{\ell-1}, a_{\ell}'}  B^{\sigma_{\ell +1}}_{a_{\ell}' a_{\ell +1}} \right) 
+\ket{a_{\ell}}_A \ket{\sigma_{\ell +1}} \ket{a_{\ell +1}}_B
+\end{equation}
+So the  prediction reads
+\begin{equation}
+\Psi^{\sigma_{\ell +1}}_{a_{\ell}, a_{\ell+1}} = 
+\sum_{a_{\ell-1}\sigma_ \ell a_{\ell}'} 
+A^{\sigma_ \ell \dagger}_{a_ \ell,a_{\ell-1}} \Psi^{\sigma_ \ell}_{a_{\ell-1}, a_{\ell}'}  B^{\sigma_{\ell +1}}_{a_{\ell}' a_{\ell +1}} .
+\end{equation}
+But this is exactly the MPS ansatz for the next eigenproblem, as $ A^{\sigma_ \ell \dagger} \Psi^{\sigma_ \ell}  B^{\sigma_{\ell +1}} =
+A^{\sigma_ \ell \dagger} A^{\sigma_ \ell } S V^{\dagger} B^{\sigma_{\ell +1}}$. But this is just 
+$S V^{\dagger} B^{\sigma_{\ell +1}}$ because in the ansatz, $\sigma_ \ell $ is summed over and left-normalization holds. Two-site DMRG proceeds by analogy and is left as an exercise for the reader.
+
+While this clarifies the relationship between variational MPS, single-site DMRG (the same) and two-site DMRG (different), it is important to note that the different ways of storing information more implicitly or more explicitly implies differences even if the algorithms are strictly speaking identical -- the fact that in one formulation prediction is trivial and in the other is not already gave us an example. But there is more.
+
+(i) In DMRG, the effective bases for representing the states and the Hamiltonian or other operators are tied up. This is why concepts such as targetting multiple states arise, if we consider several different states like the ground state and the first excited state at the same time. One then considers mixed reduced density operators
+\begin{equation}
+\hat{\rho}_A = \sum_{i} \alpha_i \tr_B \ket{\psi_i}\bra{\psi_i}
+\end{equation}
+with $\ket{\psi_i}$ the target states and $0 < \alpha_i \leq 1$, $\sum_i \alpha_i =1$, to give a joint set of bases for all states of interest. This can of course only be done at a certain loss of accuracy for given numerical resources and for a few states only. At the price of calculating the contractions anew for each state, in the MPO/MPS formulation, the state bases are only tied up at the level of the exact full basis. MPO/MPS formulations therefore acquire their full potential versus conventional DMRG language once multiple states get involved.
+
+(ii) Another instance where the MPO/MPS formulation is superior, albeit at elevated numerical cost, is the calculation of the expression $\bra{\psi} \hat{H}^2 \ket{\psi}$, which is interesting e.g.\ in the context of estimating how accurately a ground state has been obtained. In the MPO formalism, it can be done exactly up to the inherent approximations to $\ket{\psi}$ by contracting the network shown in Fig.~\ref{fig:calculationH2}. It would of course be most economical for the programmer to calculate $\hat{H}\ket{\psi}$ and take the norm, two operations which at this stage he has at hand. The operational cost of this would be $O(LD^2D_W^2 d^2)$ for the action of the MPO and $O(LD^3 D_W^3 d)$ for the norm calculation. The latter is very costly, hence it is more efficient to do an iterative construction as done for $\bra{\psi} \hat{H} \ket{\psi}$. Let me make the important remark that dimension $D_W^2$ is only the worst case for $\hat{H}^2$\cite{Frowis10}: Writing out the square and introducing rules for the expression leads to more efficient MPOs, whose optimality can be checked numerically by doing an SVD compression and looking for singular values that are zero. Our anisotropic Heisenberg Hamiltonian takes $D_W=9$ instead of 25 for $\hat{H}^2 $. For higher powers, the gains are even more impressive, and can be obtained numerically by compressing an explicit MPO for $\hat{H}^n$ with discarding only zeros among the singular values. 
+
+\begin{figure}
+\centering\includegraphics[scale=0.7]{PyMPS_MPOCalculationHsquare.eps}
+\caption{``Exact'' calculation of the expectation value of $\hat{H}^2$: the Hamiltonian MPO is repeated twice and sandwiched between $\ket{\psi}$ at the bottom and $\bra{\psi}$ at the top.}
+\label{fig:calculationH2}
+\end{figure}
+ 
+In a DMRG calculation, there would be a sequence $\hat{H}(\hat{H} \ket{\psi})$, in the DMRG block-site basis as shown in Fig.~\ref{fig:DMRGcalculationH2}. The point is that before the second application of $\hat{H}$, a projection onto the reduced block bases happens, which is not the identity and loses information.
+
+\begin{figure}
+\centering\includegraphics[scale=0.7]{PyMPS_DMRGCalculationHsquare.eps}
+\caption{DMRG calculation of the expectation value of $\hat{H}^2$: the Hamiltonian MPO is applied once to $\ket{\psi}$ in step (1) in the DMRG basis, i.e. the result is projected onto the reduced bases, yielding some $\Phi^{\, \sigma_{\ell}}$. This in turn replaces $\Psi^{\, \sigma_{\ell}}$ in the second application of $\hat{H}$ in step (2). Ultimately, the result is projected on the block bases.}
+\label{fig:DMRGcalculationH2}
+\end{figure}
+
+What does the comparison MPS and DMRG imply algorithmically? First of all, the truncation error of conventional DMRG, which has emerged as a highly reliable tool for gauging the quality of results, is nothing but an artefact of the somewhat anomalous two-site setup. In variational MPS or single-site DMRG it has to be replaced by some other criterion, like the variance of the energy. Second, while all the approaches are variational in the sense that they are looking for the lowest energy that can be achieved in a given type of ansatz, it varies from site to site in two-site DMRG (because of the $\Psi^{\sigma\sigma}$ anomaly in the ansatz), the ansatz stays the same all the time in single-site DMRG, which is conceptually nicer. That this comes at the expense of potential trapping serves as a reminder that the mathematically most beautiful does not have to be the most practical.
+ 
+\section{Time evolutions (real and imaginary) with MPS}
+The calculation of the action of operators like $\eul^{-\imag \hat{H}t}$ or $\eul^{-\beta\hat{H}}$ on quantum states is of central interest in quantum mechanics, for real-time evolutions of quantum states and for quantum statistical mechanics; $\beta$ can be interpreted as an imaginary time. It is one of the most attractive features of MPS that such real or imaginary time evolutions can be encoded very neatly and efficiently. This holds both for pure and mixed states, important at finite temperature. In the following, I will focus on time evolution based on a Trotter decomposition of the evolution operators \cite{Vidal03a,Vidal04b,Daley04,WhiteFeiguin04,VerstraeteRipoll04}, explaining first the Trotter decomposition and the structure of the algorithm for pure states, then the representation of the Trotter decomposition by MPOs. After this, I will discuss the changes necessary for the simulation of the dynamics of mixed states.
+\subsection{Conventional time evolution: pure states}
+
+\subsubsection{Trotter decompositions of time evolution}
+Let us assume that $\hat{H}$ consists of nearest-neighbour interactions only, i.e.\ $\hat{H} = \sum_i \hat{h}_i$, where $\hat{h}_i$ contains the interaction between sites $i$ and $i+1$. We can then discretize time as $t = N \tau$ with $\tau\rightarrow 0$, $N \rightarrow \infty$ and (in the most naive approach) do a first-order Trotter decomposition as
+\begin{equation}
+\eul^{-\imag \hat{H}\tau} = \eul^{-\imag  \hat{h}_1 \tau}\eul^{-\imag  \hat{h}_2 \tau}\eul^{-\imag  \hat{h}_3 \tau} \ldots  \eul^{-\imag  \hat{h}_{L-3} \tau}\eul^{-\imag  \hat{h}_{L-2} \tau}\eul^{-\imag  \hat{h}_{L-1} \tau} + O(\tau^2),
+\end{equation}
+which contains an error due to the noncommutativity of bond Hamiltonians, $[ \hat{h}_i,\hat{h}_{i+1}] \neq 0$ in general; higher order decompositions will be discussed later in this section. All time evolutions on odd ($\eul^{-\imag \hat{H}_{{\rm odd}} \tau}$) and even ($\eul^{-\imag \hat{H}_{{\rm even}} \tau}$) bonds respectively commute among each other, and can be carried out at the same time. So we are looking for an MPO doing an infinitesimal time step on the odd bonds and for another MPO doing the same on the even bonds.
+
+As any operator is guaranteed to be MPO-representable, let us assume for a moment that indeed we can construct these representation of infinitesimal time steps efficiently (see next section for the explicit construction). As we will see, the maximum bond dimension of the infinitesimal time step MPOs is $d^2$ because the dimension of $\eul^{-\imag \hat{h} \tau}$ is $(d^2 \times d^2)$. The application of the infinitesimal time step MPOs thus increases the bond dimensions from $D$ up to $d^2 D$. Repeated applications of the infinitesimal time evolution MPOs leads to an exponential growth of the matrix dimensions, which therefore have to be truncated after time steps.
+
+The resulting time evolution algorithm takes a very simple form: starting from $\ket{\psi(t=0)}$, repeat the following steps:
+\begin{itemize}
+\item Apply the MPO of the odd bonds to $\ket{\psi(t)}$.
+\item Apply the MPO of the even bonds to $\eul^{-\imag \hat{H}_{{\rm odd}}\tau}\ket{\psi(t)}$.
+\item Compress the MPS $\ket{\psi(t+\tau)}=\eul^{-\imag \hat{H}_{{\rm even}}\tau}\eul^{-\imag \hat{H}_{{\rm odd}}\tau}\ket{\psi(t)}$ from dimensions $d^2 D$ to $D$, monitoring the error. Obviously, one may also allow for some compression error (state distance) $\epsilon$ and choose a time-dependent $D$: it will typically grow strongly with time, limiting the reachable timescale. By analogy to the ground state calculations, all results should be extrapolated in $D\rightarrow\infty$ or $\epsilon\rightarrow 0$.
+\end{itemize}
+

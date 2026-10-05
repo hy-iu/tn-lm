@@ -1,0 +1,115 @@
+Let us first consider building $L$ and $R$. In actual applications, we will never carry out the full network contraction that stands behind them, because in the spirit of DMRG we are looking at blocks that are growing and shrinking in size site by site. The construction of $L$ and $R$, however, is iterative in a way that directly matches block growth and shrinkage. I will illustrate it for $L$, using $A$-matrices; left-normalization will be exploited explicitly for further simplification at one point only such that the formulae are generic. We start by considering the block of size 1: we contract $A^{[1]}$ and $A^{[1]\dagger}$ with $W^{[1]}$.  The block basis representation is then given by 
+\begin{equation}
+F^{[1]}_{a_1,b_1;a'_1} = \sum_{\sigma_1,\sigma_1',a_0,b_0,a'_0} W^{[1]\sigma_1\sigma'_1}_{b_0,b_1} (A^{[1]\sigma_1\dagger})_{a_1,a_0} F^{[0]}_{a_0,b_0,a'_0} A^{[1]\sigma'_1}_{a'_0,a'_1}
+\end{equation}
+where we have introduced a dummy scalar $F^{[0]}_{a_0,b_0,a'_0}=1$, and where $a_0,b_0,a'_0$ can just take the value 1; this is just to make the first step more consistent with all that follow. The resulting object is a tensor $F^{[1]}_{a_1,b_1,a'_1}$, corresponding to the three legs sticking out. 
+
+We can now simply continue to contract $A$, $A^\dagger$ and $W$ on the next site, and the contraction update reads
+\begin{equation}
+F^{[i]}_{a_i,b_{i},a'_i} =  \sum_{\sigma_i,\sigma_i',a_{i-1},b_{i-1},a'_{i-1}} W^{[i]\sigma_i\sigma'_i}_{b_{i-1},b_{i}}  
+(A^{[i]\sigma_i\dagger})_{a_i,a_{i-1}} F^{[i-1]}_{a_{i-1},b_{i-1},a'_{i-1}} A^{[i]\sigma'_i}_{a'_{i-1},a'_i} 
+\end{equation}
+and can be represented pictorially as in Fig.~\ref{fig:constructionEmatrices}. 
+\begin{figure}
+\centering\includegraphics[scale=0.7]{PyMPS_EMatrixUpdate.eps}
+\caption{Update from $F^{[i-1]}$ to $F^{[i]}$ by contracting with $A^{[i]*}$, $W^{[i]}$ and $A^{[i]}$. While it makes sense mathematically to consider the three added tensors as one object, in numerical practice, they are contracted into the network sequentially for efficiency.}
+\label{fig:constructionEmatrices}
+\end{figure}
+
+This construction can be calculated most efficiently by optimal bracketing as 
+\begin{equation}
+F^{[i]}_{a_i,b_{i},a'_i} = \sum_{\sigma_i,a_{i-1}}
+(A^{[i]\sigma_i\dagger})_{a_i,a_{i-1}} 
+\left( \sum_{\sigma_i',b_{i-1}}
+W^{[i]\sigma_i\sigma'_i}_{b_{i-1},b_{i}}
+\left( \sum_{a'_{i-1}} F^{[i-1]}_{a_{i-1},b_{i-1},a'_{i-1}} A^{[i]\sigma'_i}_{a'_{i-1},a'_i}  \right) \right) .
+\end{equation}
+Here, we have contracted the three new tensors into the network one by one, at operational counts $O(dD^3 D_W)$ in the innermost bracket, then $O(d^2 D^2 D_W^2)$ and last $O(d D^3 D_W)$. In fact, the second operation is faster in practice, as we know that most operators in $\hat{W}$ are simply zero; the remaining ones also often have a simple structure. Another acceleration is possible in the case of building $L$ from left-normalized matrices for indices $b_i=D_W$, if we build $\hat{H}$ following the rules outlined in the previous section: we know that in this case only identities operate towards the left, implying that $F^{[i]}_{a_i,D_W,a'_i} = \delta_{a_i,a'_i}$, simplifying both the innermost bracket and the outermost operation. The same idea applies for indices $b_i=1$ on the right side for building $R$ from right-normalized matrices.
+
+Note that this construction is a generalization of the representation update explained for DMRG: a typical situation is the representation of $\hat{O}_i \hat{O}_j$, where the two operators act locally on sites $i$ and $j$ respectively. Then the MPOs are of dimension $(1\times 1)$ everywhere and $W^{\sigma\sigma'} = \delta_{\sigma,\sigma'}$ everywhere but on sites $i$ and $j$, where they read $W^{\sigma_i\sigma'_i} = O^{[i]\sigma_i,\sigma'_i}$ and similarly for $j$. Pushing forward the contractions, $F^{[i-1]}$ is still a scalar 1. Then
+\begin{equation}
+F^{[i]} =  \sum_{\sigma_i,\sigma_i'} O^{[i]\sigma_i,\sigma'_i} A^{[i]\sigma_i\dagger} A^{[i]\sigma'_i}
+\end{equation}
+where $F^{[i]}$, $A^{[i]\sigma_i\dagger}$ and $A^{[i]\sigma'_i}$ are matrices and a multiplication $A^{[i]\sigma_i\dagger} A^{[i]\sigma'_i}$ is implied. The $F^{[i]}$-matrix is just the operator representation in the block basis, comprising sites 1 through $i$. 
+
+The update up to site $j-1$ then simplifies to
+\begin{equation}
+F^{[k]} =  \sum_{\sigma_k} A^{[k]\sigma_k\dagger} F^{[k-1]} A^{[k]\sigma_k} ,\quad (i<k<j)
+\end{equation}
+matrix multiplications implied, and at site $j$ we get again a non-trivial step,
+\begin{equation}
+F^{[j]} = \sum_{\sigma_j,\sigma'_j} O^{[j]\sigma_j,\sigma'_j} A^{[j]\sigma_j\dagger} F^{[j-1]} A^{[j]\sigma'_j},
+\end{equation}
+after which updates continue as on the previous sites. Making the matrix multiplications explicit, one sees that this is just the construction discussed for the DMRG algorithm.
+  
+In the end, $\hat{H}\ket{\psi}$ can be bracketed advantageously as follows:
+\begin{equation}
+\hat{H}\ket{\psi} = \sum_{b_{\ell-1}, a'_{\ell-1}} 
+ L^{a_{\ell-1},a'_{\ell-1}}_{b_{\ell-1}} 
+\left( \sum_{b_{\ell} \sigma'_{\ell}} 
+W^{\sigma_{\ell},\sigma'_{\ell}}_{b_{\ell-1},b_{\ell}}
+ \left( \sum_{a'_{\ell}} R^{a_{\ell},a'_{\ell}}_{b_{\ell}} \Psi^{\sigma'_{\ell}}_{a'_{\ell-1},a'_{\ell}} \right) \right) \ket{a_{\ell-1}}_A \ket{\sigma_{\ell}} \ket{a_{\ell}}_B ,
+\end{equation}
+which scales at worst as $O(D^3)$. More precisely, the innermost operation is $O(D^3 D_W d)$; the next one is $O(D^2 D_W^2 d^2)$, after this we have a sum of cost $O(D^3 D_W^2 d^2)$. It is advantageous to keep track of the structure of $W$, namely exploiting for which $(b_{\ell-1},b_{\ell})$ configurations it is zero and nothing has to be calculated (usually, for most of them), and to use the simplifications for $L$ and $R$ just discussed if the state is in mixed-canonical form.
+ 
+\subsection{Iterative ground state search}
+
+Let us now turn to the algorithm. Assume $\hat{H}$ given in MPO form and consider a class of MPS with predefined matrix dimensions (simply think about a random MPS with matrices $M^\sigma$ of desired shape and size, but no normalization assumed for the moment). In order to find the optimal approximation to the ground state within this class, we have to find the MPS $\ket{\psi}$ that minimizes
+\begin{equation}
+E = \frac{\bra{\psi} \hat{H} \ket{\psi}}{\braket{\psi}{\psi}} .
+\end{equation} 
+It turns out that this can be turned into a ground state algorithm much more efficient than imaginary time evolution from some random state. In order to solve this problem, we introduce a Lagrangian multiplier $\lambda$, and extremize 
+\begin{equation}
+\bra{\psi} \hat{H} \ket{\psi} - \lambda {\braket{\psi}{\psi}} ;
+\label{eq:Lagrange}
+\end{equation}
+in the end, $\ket{\psi}$ will be the desired ground state and $\lambda$ the ground state energy. The MPS network that represents Eq.~(\ref{eq:Lagrange}) is shown in Fig.~\ref{fig:extremizationexpression}. 
+\begin{figure}
+\centering\includegraphics[scale=0.7]{PyMPS_MPSEnergyMinimization.eps}
+\caption{Network to be contracted to obtain the functional to be extremized to find the ground state and its energy. The left-hand side represents the term $\bra{\psi} \hat{H} \ket{\psi}$, the right-hand side the squared norm $\braket{\psi}{\psi}$.}
+\label{fig:extremizationexpression}
+\end{figure}
+
+The problem with this approach is that the variables (the matrix elements $M^\sigma_{aa'}$) appear in the form of products, making this a highly non-linear optimization problem. But it can be done iteratively, too, and this is the idea that also drives DMRG: while keeping the matrices on all sites but one ($\ell$) constant, consider only the matrix entries $M^{\sigma_\ell}_{a_{\ell-1}a_\ell}$ on site $\ell$ as variables. Then the variables appear in Eq.~(\ref{eq:Lagrange}) only in quadratic form, for which the determination of the extremum is a benign linear algebra problem. This will lower the energy, and find a variationally better state, but of course not the optimal one. Now one continues to vary the matrix elements on another site for finding a state again lower in energy, moving through all sites multiple times, until the energy does not improve anymore.
+
+Let us first consider the calculation of the overlap, while keeping the chosen $M^{\sigma_\ell}$ explicit. We find 
+\begin{equation}
+\braket{\psi}{\psi} = \sum_{\sigma_\ell} \sum_{a_{\ell-1}a_{\ell}} \sum_{a'_{\ell-1}a'_{\ell}} \Psi^A_{a_{\ell-1},a'_{\ell-1}} M^{\sigma_\ell*}_{a_{\ell-1}, a_{\ell}} M^{\sigma_\ell}_{a'_{\ell-1}, a'_{\ell}} \Psi^B_{a_\ell, a_\ell'},
+\end{equation}
+where 
+\begin{eqnarray}
+\Psi^A_{a_{\ell-1},a'_{\ell-1}} &=& \sum_{\sigma_1,\ldots,\sigma_{\ell-1}} (M^{\sigma_{\ell-1}\dagger} \ldots M^{\sigma_1\dagger} M^{\sigma_1} \ldots M^{\sigma_{\ell-1}})_{a_{\ell-1},a'_{\ell-1}} \\
+\Psi^B_{a_\ell, a'_\ell} &=& \sum_{\sigma_{\ell+1},\ldots,\sigma_L} (M^{\sigma_{\ell+1}} \ldots M^{\sigma_L} M^{\sigma_L\dagger} \ldots M^{\sigma_{\ell+1}\dagger})_{a'_\ell,a_\ell} .
+\end{eqnarray}
+As is particularly clear in the graphical representation, for obtaining the last two expressions the same rules about smart contracting apply as for overlaps; moreover, if we move through sites $\ell$ from neighbour to neighbour, they can be updated iteratively, minimizing computational cost. In the case where sites 1 through $\ell-1$ are left-normalized and sites $\ell+1$ through $L$ right-normalized, normalization conditions lead to a further simplification, namely
+\begin{equation} 
+\Psi^A_{a_{\ell-1},a'_{\ell-1}} = \delta_{a_{\ell-1},a'_{\ell-1}} \quad\quad  \Psi^B_{a_\ell a'_\ell} = \delta_{a_\ell a'_\ell} .
+\end{equation}
+
+Let us now consider $\bra{\psi} \hat{H} \ket{\psi}$, with $\hat{H}$ in MPO language. Taking into account the analysis of $\hat{H}\ket{\psi}$ in the last section, we can immediately write
+\begin{equation}
+\bra{\psi} \hat{H} \ket{\psi} = \sum_{\sigma_\ell,\sigma'_\ell} \sum_{a'_{\ell-1}a'_{\ell}}  \sum_{a_{\ell-1}a_{\ell}} \sum_{b_{\ell-1},b_\ell} L^{a_{\ell-1},a'_{\ell-1}}_{b_{\ell-1}} W^{\sigma_\ell,\sigma'_\ell}_{b_{\ell-1},b_\ell} R^{a_\ell,a'_\ell}_{b_\ell} M^{\sigma_\ell*}_{a_{\ell-1},a_\ell} M^{\sigma'_\ell}_{a'_{\ell-1},a'_\ell} 
+\end{equation}
+with $L$ and $R$ as defined before; how such an expression can be evaluated efficiently has been discussed previously.
+
+If we now take the extremum of Eq.~(\ref{eq:Lagrange}) with respect to $M^{\sigma_\ell*}_{a_{\ell-1},a_\ell}$ we find
+\begin{equation}
+\sum_{\sigma'_\ell}  \sum_{a'_{\ell-1}a'_{\ell}} \sum_{b_{\ell-1},b_\ell} L^{a_{\ell-1},a'_{\ell-1}}_{b_{\ell-1}} W^{\sigma_\ell,\sigma'_\ell}_{b_{\ell-1},b_\ell} R^{a_\ell,a'_\ell}_{b_\ell}  M^{\sigma'_\ell}_{a'_{\ell-1},a'_\ell} 
+ - \lambda  \sum_{a'_{\ell-1}a'_{\ell}} \Psi^A_{a_{\ell-1},a'_{\ell-1}} \Psi^B_{a_\ell a'_\ell} M^{\sigma_\ell}_{a'_{\ell-1}, a'_{\ell}} = 0.
+ \label{eq:vMPSeigenequation}
+\end{equation}
+This is in fact a very simple eigenvalue equation; if we introduce matrices $H$ and $N$ by reshaping $H_{(\sigma_\ell a_{\ell-1} a_\ell), (\sigma'_\ell a'_{\ell-1} a'_\ell)} = \sum_{b_{\ell-1},b_\ell} L^{a_{\ell-1},a'_{\ell-1}}_{b_{\ell-1}} W^{\sigma_\ell,\sigma'_\ell}_{b_{\ell-1},b_\ell} R^{a_\ell,a'_\ell}_{b_\ell} $ and 
+$N_{(\sigma_\ell a_{\ell-1} a_\ell), (\sigma'_\ell a'_{\ell-1} a'_\ell)} = \Psi^A_{a_{\ell-1},a'_{\ell-1}} \Psi^B_{a_\ell, a'_\ell} \delta_{\sigma_\ell,\sigma'_\ell}$ as well as a vector $v$ with $v_{\sigma_\ell a_{\ell-1} a_\ell} = M^{\sigma_\ell}_{a_{\ell-1}, a_{\ell}}$, we arrive at a {\em generalized eigenvalue problem}
+of matrix dimension $(dD^2 \times dD^2)$,
+\begin{equation}
+H v - \lambda N v = 0,
+\end{equation}
+represented in Fig.~\ref{fig:equationsystem}.
+Solving for the lowest eigenvalue $\lambda_0$ gives us a $v^0_{\sigma_\ell a_{\ell-1} a_\ell}$, which is reshaped back to $M^{\sigma_\ell}_{a_{\ell-1}a_{\ell}}$, $\lambda_0$ being the current ground state energy estimate. 
+
+\begin{figure}
+\centering\includegraphics[scale=0.7]{PyMPS_MPSEnergyEquationSystem.eps}
+\caption{Generalized eigenvalue problem for the optimization of $M^{\ \sigma_\ell}_{\ a_{\ell-1},a_\ell}$. The unknown matrix is circled on the left and right networks.}
+\label{fig:equationsystem}
+\end{figure}
+

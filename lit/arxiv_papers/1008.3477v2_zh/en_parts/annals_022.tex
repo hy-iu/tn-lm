@@ -1,0 +1,114 @@
+\begin{figure}
+\centering\includegraphics[scale=0.5]{PyMPS_LatticeFolding.eps}
+\caption{The rotated lattice is now folded on the ``space'' (former time) axis which has $2nN+3 \equiv L^{'}$ sites. Sites corresponding to same times come to cover each other (indicated by an ellipse); the line on which operators are evaluated at final time remains single at the bend.}
+\label{fig:latticefolding}
+\end{figure}
+
+If we assume that the original lattice and the Hamiltonian acting on it were translationally invariant, at least for translations by an even number of lattice sites, we can write the contractions conveniently using a transfer operator. If we call the state on the first line (first ``time'' slice) of the folded lattice $\ket{\psi_L}$ (corresponding to site $L$ of the original lattice) and the one on the bottom line (last ``time'' slice) $\bra{\psi_1}$, then ($i$ odd for simplicity)
+\begin{equation}
+\langle \hat{O}_i \rangle = \frac{\bra{\psi_L} E^{(i-3)/2} E_O E^{(L-i-1)/2} \ket{\psi_1}}{ \bra{\psi_L}  E^{(L-2)/2} \ket{\psi_1}} .
+\end{equation}
+Here, we have introduced the transfer operators $E$ and $E_O$ on stripes of length $\ell$ and width 2, as represented in Fig.~\ref{fig:bigtransferoperator} (in unfolded, unrotated form for simplicity of representation).  $E_O$ is derived from $E$ by inserting $\hat{O}$ instead of the identity at site $\ell+1$.
+
+\begin{figure}
+\centering\includegraphics[scale=0.5]{PyMPS_BigTransferOperator.eps}
+\caption{Representation of the transfer operator $E$ (dashed rectangle; note direction of action) in the unfolded, unrotated representation of the time evolution network. It repeats throughout the lattice by spatial translation by two sites, except on the sites with evaluation of an operator, where it is modified accordingly.}
+\label{fig:bigtransferoperator}
+\end{figure}
+
+This can be evaluated by iterative contractions and compressions for spatially finite lattices, but one can also take the thermodynamic limit. Let us assume an eigenvector decomposition of $E$ as
+\begin{equation}
+E = \sum_{i} \lambda_i \ket{i} \bra{i} .
+\end{equation}
+Note that $E$ is not hermitian, hence $\ket{i}$ and $\bra{i}$ are not adjoint, but distinct right and left eigenvectors. From the biorthonormality of those, 
+\begin{equation}
+\lim_{L\rightarrow\infty} E^L = \lim_{L\rightarrow\infty} 
+\sum_i \lambda_i^L \ket{i} \bra{i} = \lambda_0^L \ket{R}\bra{L},
+\end{equation}
+where I have assumed that the largest eigenvalue $\lambda_0$ is non-degenerate (which is usually the case) and changed notation to $\ket{R}$ and $\bra{L}$ for the associated right and left eigenvectors.
+
+We then obtain in the thermodynamic limit as expectation value
+\begin{equation}
+\langle \hat{O}_i \rangle =  \frac{\bra{L} E_O \ket{R}}{\lambda_0} ,
+\end{equation}
+where $\lambda_0 = \bra{L} E \ket{R}$. 2-point correlators would then be given by
+\begin{equation}
+\langle \hat{O}_i \hat{P}_j \rangle =  \frac{\bra{L} E_O E^r E_P \ket{R}}{\lambda_0^{r+2}},
+\end{equation}
+where $r$ is the number of transfer operators between the sites $i$ and $j$. 
+
+In order to evaluate such expressions, we obviously need $\lambda_0$, $\ket{R}$ and $\bra{L}$. As the components of $E$ are explicitly available, we can construct its transpose equally easily, hence reduce all to the determination of two right eigenvectors. As we are looking for the largest eigenvalue, the power method (iterative application of $E$ to a guess vector) will work. But one can equally read $E$ as the MPO representation of some non-hermitian operator, and reuse iterative ground state search techniques, with two modifications: the search for the lowest eigenvalue is replaced by the highest eigenvalue and the conventional Lanczos algorithm has to be replaced by non-hermitian methods, either the biorthogonal Lanczos algorithm or the Arnoldi method. 
+
+While the coding is more involved than for standard time evolution, the timescales reachable are extended substantially, factors 3 to 5 seem easily possible.
+  
+\subsection{Linear prediction and spectral functions}
+Spectral functions $S(k,\omega)$ are among the most important theoretical and experimental quantities in many-body physics. While there are very accurate ways of calculating them directly at $T=0$ \cite{Hallberg95,Ramasesha97,Kuhner99,Jeckelmann02}, there is also an indirect approach, pioneered in \cite{WhiteFeiguin04}, to calculate real-time real-space correlators like $\langle \hat{S}^+_i(t) \hat{S}^-_j(0) \rangle$, and to carry out a double Fourier transform to momentum and frequency space. This approach has the advantage to extend to finite $T$ seamlessly, but suffers from the limitations of reachable length and time scales.
+
+Of these, the limitations in time are much more serious, because of the rapid growth of entanglement in time. The time scales reachable are mostly so limited that a naive Fourier transform gives strong aliasing or that one has to introduce a windowing of the raw data that smears out spectral information quite strongly.  This limitation can be circumvented however at very low numerical cost by a linear prediction technique both at $T=0$\cite{Pereira08,White08} and $T>0$\cite{Barthel09b} that extends reachable $t$ and thereby greatly refines results in the frequency domain.
+
+For a time series of complex data $x_0, x_1, \ldots, x_n, \ldots, x_N$ at equidistant points in time $t_n=n\*\Delta t$ (and maximal time $t_\obs:= N \Delta t$) obtained by DMRG one makes a prediction of $x_{N+1}, x_{N+2}, \ldots$. 
+For the data points beyond $t=t_\obs$, linear prediction makes the ansatz
+\begin{equation}\label{eq:predictionAnsatz}
+\tilde{x}_n = - \sum_{i=1}^p a_i x_{n-i} .
+\end{equation}
+The (predicted) value $\tilde{x}_n$ at time step $n$ is assumed to be a linear combination of $p$ previous values $\{x_{n-1},\dots,x_{n-p}\}$. Once the $a_i$ are determined from known data, they are used to calculate (an approximation of) all $x_n$ with $n>N$.
+
+The coefficients $a_i$ are determined by minimizing the least square error in the predictions over a subinterval $t_n \in (t_\obs-t_\fit,t_\obs]$ of the known data (corresponding to a set $\Omega = \{ n\, |\, t_\obs - t_\fit < n\Delta t \leq t_\obs \}$), i.e.\ we minimize in the simplest approach $E\equiv\sum_{n\in\Omega} |\tilde x_n-x_n|^2$. $t_\fit=t_\obs/2$ is often a robust choice to have little short-time influence and enough data points. Minimization of $E$ with respect to $a_i$ yields the linear system
+\begin{equation}
+\label{eq:linPred:stationaryError}
+R \vec{a} = -\vec{r},
+\end{equation}
+where $R$ and $\vec{r}$ are the autocorrelations 
+$R_{ji} = \sum_{n\in\Omega} x^*_{n-j} x_{n-i}$ and $r_{j} = \sum_{n\in\Omega} x^*_{n-j} x_n$.
+Eq.~(\ref{eq:linPred:stationaryError}) is solved by $\vec{a}=-R^{-1}\vec{r}$.
+
+One may wonder why extrapolation towards infinite time is possible in this fashion. 
+As demonstrated below, linear prediction generates a superposition of oscillating and exponentially decaying (or growing) terms, a type of time-dependence that emerges naturally in many-body physics:
+Green's functions of the typical form $G(k,\omega) = (\omega - \epsilon_k - \Sigma(k,\omega))^{-1}$ are in time-momentum representation dominated by the poles; e.g.\ for a single simple pole at $\omega=\omega_1 -\imag \eta_1$ with residue $c_1$, Green's function will read
+$G(k,t) = c_1 \eul^{-\imag \omega_1 t - \eta_1 t}$, and similarly it will be a superposition of such terms for more complicated pole structures. Often only few poles matter, and the ansatz of the linear prediction is well suited for the typical properties of the response quantities we are interested in. Where such an ansatz does not hold, the method is probably inadequate.
+
+To see the special form of time-series generated by the prediction, 
+we introduce vectors $\vec{x}_n := [x_{n}, \ldots, x_{n-p+1}]^T$ such that (\ref{eq:predictionAnsatz}) takes the form
+\begin{equation}
+\tilde{\vec{x}}_{n+1} = A \* \vec{x}_n,	
+\end{equation}
+ with 
+\begin{equation}\label{eq:predictionMatrix}
+A\equiv
+\left[
+\begin{array}{ccccc}
+ -a_1&-a_2&-a_3&\cdots&-a_p\\
+  1  & 0  & 0  &\cdots& 0  \\
+  0  & 1  & 0  &\cdots& 0  \\
+\vdots&\ddots&\ddots&\ddots&\vdots\\
+  0   &\cdots& 0  & 1  & 0
+\end{array}  
+\right] ,
+\end{equation}
+with the $a_i$ as the elements of the vector $\vec{a}$ found above.
+Prediction therefore corresponds to applying powers of $A$ to the initial vector $\vec{x}_N$. A (non-hermitian) eigenvector decomposition of $A$ with eigenvalues $\alpha_i$ leads to 
+\begin{equation}
+\tilde x_{N+m} = [A^m \* \vec{x}_N]_1=\sum_{i=1}^p c_i \alpha_i^m,
+\end{equation}
+where coefficients $c_i$ are determined from $\vec{x}_N$ and the eigenvectors of $A$. The eigenvalues $\alpha_i$ encode the physical resonance frequencies and dampings. The connection is given as
+$\alpha_i = \eul^{\imag  \omega_i \Delta t - \eta_i \Delta t}$.
+Spurious $|\alpha_i|\geq 1$ may appear, but can be dealt with\cite{Barthel09b}.
+
+At $T=0$, critical one-dimensional systems exhibit power-law decays in their time-dependent correlators. The superposition of exponential decays is then taken to mimic these power-laws \cite{Pereira08}. At finite temperatures, time-dependent correlators $S(k,t)$ decay typically exponentially for large times (due to thermal broadening), making linear prediction especially well-suited for this situation. This is also close to typical experimental situations, like inelastic neutron scattering off one-dimensional magnetic chains.
+
+As example, let us consider a field-free Heisenberg antiferromagnet with $J^z=0$ ($XY$-chain) and $J^z=1$. The former case allows for an exact analytical solution. It turns out that prediction allows to extend time series $S(k,t)$ by over an order of magnitude without appreciable loss of precision. In frequency  space, this corresponds to extremely high-precision spectral lineshapes (Figure \ref{fig:xychain}). 
+
+\begin{figure}
+\centering\includegraphics[width=250pt]{PyMPS_TransIsing.eps}
+\caption{Lines and dots represent exact analytical and numerical solutions for the lineshape of the spectral function $S^{+-}(k,\omega)$ of an $XY$-chain at temperatures $\beta=10$ and $\beta=50$ (broad and narrow lineshapes) for (from the left) $k=\pi/8$, $k=\pi/3 $, $k=3\pi/4 $. The dashed lines are the shapes that would optimally be extracted from the $\beta=10$ simulation without prediction using some windowing of the raw data before Fourier transformation. Adapted from \cite{Barthel09b}.}
+\label{fig:xychain}
+\end{figure}
+
+As the dispersion relation of the $XY$-chain is just a simple magnon line, its self-energy structure is very simple, hence the prediction method easily applicable. As a more demanding example, we consider the spinon continuum of an isotropic $S=1/2$ chain; Fig.~\ref{fig:USHAFM}. In the zero-temperature limit, results agree extremely well with Bethe-ansatz results (where remaining differences are hard to attribute: the Bethe ansatz here can only be evaluated approximately \cite{Caux06}). At finite temperatures, simulations at different precision indicate that results are fully converged and essentially exact. This lets us expect that this method will be a powerful tool in e.g. simulating the results of neutron scattering experiments.
+
+\begin{figure}
+\centering\includegraphics[height=200pt]{PyMPS_HAFM.eps}
+\caption{Spectral function of the isotropic Heisenberg chain at two momenta, and four different temperatures. At $T=0$, Bethe ansatz (B.A.) and numerics agree extremely well. Adapted from \cite{Barthel09b}.}
+\label{fig:USHAFM}
+\end{figure}
+

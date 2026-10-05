@@ -1,0 +1,110 @@
+现在我们可以按照 tMPS 的思路继续进行下一个无穷小局域时间演化步骤。   
+\subsubsection{时间演化块消去（TEBD）}
+这里，我们假设已将 $\ket{\psi}$ 写成 $\Gamma\Lambda$ 记法，
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} 
+\Gamma^{\sigma_1} \Lambda^{[1]} \Gamma^{\sigma_2} \Lambda^{[2]} \ldots
+\Gamma^{\sigma_{\ell}} \Lambda^{[\ell]}  \Gamma^{\sigma_{\ell+1}} \Lambda^{[\ell+1]}
+\Gamma^{\sigma_{\ell+2}} \Lambda^{[\ell+2]}  \Gamma^{\sigma_{\ell+3}} \Lambda^{[\ell+3]} \ldots
+\Gamma^{\sigma_L}   
+\ket{\fat{\sigma}}.
+\label{eq:TEBDstart}
+\end{equation}
+这个态可以立即与两格点 DMRG 记法联系起来。特别地，
+\begin{equation}
+\Psi^{\sigma_{\ell+1} \sigma_{\ell+2}} = \Lambda^{[\ell]}  \Gamma^{\sigma_{\ell+1}} \Lambda^{[\ell+1]}
+\Gamma^{\sigma_{\ell+2}} \Lambda^{[\ell+2]}  .
+\end{equation}
+这与 DMRG 的 $\Psi$ 完全相同，演化算符 $U^{(\sigma_{\ell+1} \sigma_{\ell+2}), (\sigma'_{\ell+1} \sigma'_{\ell+2})}$ 也一样，因而  
+\begin{equation}
+\Phi^{\sigma_{\ell+1}\sigma_{\ell+2}}_{a_\ell, a_{\ell+2}} = \sum_{\sigma'_{\ell+1} \sigma'_{\ell+2}}
+U^{(\sigma_{\ell+1} \sigma_{\ell+2}), (\sigma'_{\ell+1} \sigma'_{\ell+2})}  \Psi^{\sigma_{\ell+1}'\sigma_{\ell+2}'}_{a_\ell, a_{\ell+2}} . 
+\end{equation} 
+为了继续推进，必须在两个活动格点上恢复 $\Gamma\Lambda$ 记法。与 tDMRG 完全类似，通过 SVD 得到
+\begin{equation}
+\Phi_{(a_\ell \sigma_{\ell+1}), (\sigma_{\ell+2} a_{\ell+2})} = \sum_{a_{\ell+1}} U_{(a_\ell \sigma_{\ell+1}),a_{\ell+1}} \Lambda^{[\ell+1]}_{a_{\ell+1},a_{\ell+1}} (V^\dagger)_{a_{\ell+1}, (\sigma_{\ell+2} a_{\ell+2})} ,
+\end{equation}
+所缺的是 $\Lambda^{[\ell]}$ 和 $\Lambda^{[\ell+2]}$。于是我们写成（把 $U$ 和 $V^\dagger$ 重塑形状并省略 $a$ 指标）
+\begin{equation}
+\Phi^{\sigma_{\ell+1}\sigma_{\ell+2}} = \Lambda^{[\ell]} (\Lambda^{[\ell]})^{-1} U^{\sigma_{\ell+1}} 
+ \Lambda^{[\ell+1]} V^{\sigma_{\ell+2}\dagger} ( \Lambda^{[\ell+2]})^{-1}  \Lambda^{[\ell+2]} .
+\end{equation}
+现在，与 tDMRG 中一样，$ \Lambda^{[\ell+1]}$ 中有多达 $dD$ 个奇异值，我们将其截断到最大的 $D$ 个，同样如 tDMRG 那样，也相应地截断相邻的矩阵。现在我们引入
+\begin{equation}
+\Gamma^{\sigma_{\ell+1}}_{a_\ell,a_{\ell+1}} =  (\Lambda^{[\ell]})^{-1}_{a_\ell,a_\ell} U^{\sigma_{\ell+1}}_{a_\ell,a_{\ell+1}} \quad 
+\Gamma^{\sigma_{\ell+2}}_{a_{\ell+1},a_{\ell+2}} =  V^{\sigma_{\ell+2}\dagger}_{a_{\ell+1},a_{\ell+2}} ( \Lambda^{[\ell+2]})^{-1}_{a_{\ell+2},a_{\ell+2}} 
+\end{equation}
+并得到
+\begin{equation}
+\Phi^{\sigma_{\ell+1}\sigma_{\ell+2}} = \Lambda^{[\ell]}  \Gamma^{\sigma_{\ell+1}} 
+ \Lambda^{[\ell+1]} \Gamma^{\sigma_{\ell+2}}  \Lambda^{[\ell+2]} ,
+\end{equation}
+回到了规范形式。为了考虑下一个键上的时间演化，我们无需做任何 SVD，只需把
+\begin{equation}
+\Psi^{\sigma_{\ell+3} \sigma_{\ell+4}} = \Lambda^{[\ell+2]}  \Gamma^{\sigma_{\ell+3}} \Lambda^{[\ell+3]}
+\Gamma^{\sigma_{\ell+4}} \Lambda^{[\ell+4]}  
+\end{equation}
+组合起来然后继续。与 tDMRG 中一样，这一步不损失任何信息，只是在这里更为显式。
+
+在高精度计算中当 $D$ 变得非常大时，奇异值往往会非常小，而如前所述，除以它们是数值不稳定性的一处来源。在热力学极限 iTEBD 方法（我们稍后讨论）的背景下，Hastings 提出了一种优雅的变通办法，其数值代价极低\cite{Hastings09}，但它也容易推广到有限系统 TEBD。假设我们从一个以表示式 (\ref{eq:TEBDstart}) 给出的态出发。然后我们把所有配对组合成右规范的 $B$ 矩阵，
+\begin{equation}
+B^{\sigma_i} = \Gamma^{\sigma_i} \Lambda^{[i]} ,
+\end{equation}
+但记住各个 $\Lambda^{[i]}$ 以备后用。然后我们构造
+\begin{equation}
+\overline{\Psi}^{\sigma_{\ell+1} \sigma_{\ell+2}} = B^{\sigma_{\ell+1}} B^{\sigma_{\ell+2}} =  \Gamma^{\sigma_{\ell+1}} \Lambda^{[\ell+1]}
+\Gamma^{\sigma_{\ell+2}} \Lambda^{[\ell+2]} ,
+\end{equation}
+于是 $\Psi^{\sigma_{\ell+1} \sigma_{\ell+2}} = \Lambda^{[\ell]} \overline{\Psi}^{\sigma_{\ell+1} \sigma_{\ell+2}}$。我们对 $\overline{\Psi}^{\sigma_{\ell+1} \sigma_{\ell+2}}$ 施行时间演化，得到
+\begin{equation}
+\overline{\Phi}^{\sigma_{\ell+1}\sigma_{\ell+2}}_{a_\ell, a_{\ell+2}} = \sum_{\sigma'_{\ell+1} \sigma'_{\ell+2}}
+U^{(\sigma_{\ell+1} \sigma_{\ell+2}), (\sigma'_{\ell+1} \sigma'_{\ell+2})}  \overline{\Psi}^{\sigma_{\ell+1}'\sigma_{\ell+2}'}_{a_\ell, a_{\ell+2}} .
+\end{equation} 
+然后 $\Phi^{\sigma_{\ell+1} \sigma_{\ell+2}} = \Lambda^{[\ell]} \overline{\Phi}^{\sigma_{\ell+1} \sigma_{\ell+2}}$。如前所述，我们对 $\Phi^{\sigma_{\ell+1} \sigma_{\ell+2}}$ 做 SVD，得到 
+\begin{equation}
+\Phi_{(a_\ell \sigma_{\ell+1}), (\sigma_{\ell+2} a_{\ell+2})} = \sum_{a_{\ell+1}} U_{(a_\ell \sigma_{\ell+1}),a_{\ell+1}} \Lambda^{[\ell+1]}_{a_{\ell+1},a_{\ell+1}} (V^\dagger)_{a_{\ell+1}, (\sigma_{\ell+2} a_{\ell+2})} = A^{\sigma_{\ell+1}} \Lambda^{[\ell+1]} B^{\sigma_{\ell+2}} .
+\end{equation}
+截断到最大的 $D$ 个奇异值后，我们就得到了新的 $\Lambda^{[\ell+1]}$（保留下来供后续使用）以及新的 $B^{\sigma_{\ell+2}}$。新的 $B^{\sigma_{\ell+1}}$
+由下式给出
+\begin{equation}
+B^{\sigma_{\ell+1}} = \sum_{\sigma_{\ell+2}}  \overline{\Phi}^{\sigma_{\ell+1}\sigma_{\ell+2}}
+B^{\sigma_{\ell+2}\dagger},
+\end{equation}
+因而只需一个简单的矩阵乘法；避免了除法。对于最后一个等式，我们利用 $B^{\sigma_{\ell+2}}$ 的右规范性，即 $\sum_{\sigma_{\ell+2}} \Phi^{\sigma_{\ell+1}\sigma_{\ell+2}} B^{\sigma_{\ell+2}\dagger} =  A^{\sigma_{\ell+1}} \Lambda^{[\ell+1]}$。同时，$B^{\sigma_{\ell+1}} = \Gamma^{\sigma_{\ell+1}} \Lambda^{[\ell+1]} = (\Lambda^{[\ell]})^{-1} A^{\sigma_{\ell+1}}  \Lambda^{[\ell+1]}$。把这两个恒等式与 $\Phi^{\sigma_{\ell+1} \sigma_{\ell+2}} = \Lambda^{[\ell]} \overline{\Phi}^{\sigma_{\ell+1} \sigma_{\ell+2}}$ 结合起来即得结果。
+
+\subsubsection{算法比较}
+将 TEBD 与 tDMRG 逐步比较，立刻就能看出两种方法在数学上完全等价。tDMRG 中的第二次 SVD 只不过是移动左规范矩阵与右规范矩阵之间的分界，而在 TEBD 中这只需对 $\Gamma$ 与 $\Lambda$ 重新加括号即可简单实现。尽管如此，两者仍有差别：每演化一个键，tDMRG 要做两次代价高昂的 SVD 分解（或等价的密度矩阵分析），而 TEBD 只做一次。另一方面，TEBD 会遇到除以可能非常小的奇异值的情况，这是潜在数值不精确性的一个重要来源；不过这些可以\cite{Hastings09}以低数值代价消除。从数值的角度看，tDMRG 并非先出现的 TEBD 的简单翻译，而是有其自身强弱之处的独立算法。
+
+两种方法共享一个核心特征：时间演化与截断交织在一起——每次键演化之后都进行一次 SVD 截断。相比之下，tMPS 先演化所有键，然后通过 SVD 或迭代方式把矩阵维数从 $d^2 D \rightarrow D$ 压缩，从而截断整个态。 
+
+tMPS 是更整洁的方法，而且还可以证明它更为精确。事实上，对于实时演化，它之于 tDMRG 或 TEBD，恰如迭代变分压缩之于 SVD 压缩，这意味着当态的改变很小时（例如时间步长非常小），差异会减小，因为截断之间的相互依赖变得不那么严重，只剩下非常温和的截断。上述关系确实存在，这一点可以通过不用变分、而仅用 SVD 来压缩一个 tMPS 态看出： 
+
+取 $\ket{\psi}$ 为右规范的，在第一个键上做一步 tDMRG/TEBD 演化，或在所有奇数键上做 tMPS 步骤。截断现在要用 SVD 来进行，我的论断是：SVD 察觉不到这两个截然不同的时间演化后的态之间的差别。在第一个键本身上，所有方法产生相同的结构，但在所有其他格点上二者不同。这就是说，
+\begin{equation}
+\ket{\phi}_{{\rm tDMRG}} = \sum_{\fat{\sigma}} \Psi^{\sigma_1\sigma_2} B^{\sigma_3} B^{\sigma_4} \ldots \ket{\fat{\sigma}}  
+\end{equation}
+等于 
+\begin{equation}
+\ket{\phi}_{{\rm tMPS}} = \sum_{\fat{\sigma}} \Psi^{\sigma_1\sigma_2} \overline{B}^{\sigma_3} \overline{B}^{\sigma_4} \ldots \ket{\fat{\sigma}}  ,
+\end{equation}
+其中 $\overline{B}$ 矩阵来自与时间演化键算符的收缩。只要集合 $\{ B \}$ 与 $\{ \overline{B} \}$ 都生成正交归一的态集合，对第一个键的 SVD 对两个态就是等价的。情况确实如此：$B$ 矩阵按定义就生成这样的集合，而 $\overline{B}$ 矩阵生成的态与第一组正交归一态之间只差一个幺正变换（实时演化！）。这一方法等价的观察对链上更远的键同样成立。
+
+因此，三种算法的差别只有在变分压缩的层面才显现出来。
+ 
+\subsection{我们能走多远？} 
+在这一节中，我描述了纯态与混合态时间演化的基本算法。误差有两个来源。其一是 Trotter 分解：对于 $n$ 阶分解，每个时间步 $\tau$ 产生 $O(\tau^{n+1})$ 的误差。由于共有 $t/\tau$ 个时间步，误差最终为 $O(\tau^n t)$，即随时间线性增长。这意味着它随时间的增长只是适度的，并且可以通过更小的时间步和/或更高阶的分解来压低。这一点为当前所有方法所共有\cite{Vidal03a,Vidal04b,Daley04,WhiteFeiguin04,VerstraeteRipoll04}。事实上，还有其他计算矩阵指数的方法，例如 Krylov 方法\cite{Schmitteckert04}，或如 \cite{Feiguin05} 中的前瞻（lookahead）步骤，它们能进一步减小这一误差。无论如何，从长远看它并不十分令人担心。 
+
+另一方面，还有每个时间步之后对 MPS 膨胀起来的键维数做截断所带来的误差。这个误差是严重的；早已有工作表明它会导致随时间指数式爆增的误差\cite{Gobert05}。然而截断误差只是症状，并非根本问题：真正的原因是——遵照 Lieb-Robertson 定理——对于量子态的非平衡演化，纠缠 $S$ 可以随时间线性增长：$S(t) \leq S(0) + c t$，其中 $c$ 是与晶格中激发传播速度有关的某个常数\cite{Calabrese06}。对于许多量子淬火，这一线性界实际上会达到，此时哈密顿量的某个参数被突然改变，使得总能量发生广延量级的变化。
+无论从 $D \sim 2^S$ 还是从严格的分析\cite{Osborne06}都可得出：在这种情形下，矩阵维数必须随时间指数增长，$D(t) \sim 2^t$；或者说，在矩阵维数固定时精度将指数式恶化。 
+
+尽管如此，在许多情形下矩阵尺寸的增长足够缓慢，数值资源仍足以观察所关心的含时现象：含时 DMRG 从那时起已被广泛使用，并被发现为强关联一维系统的非平衡行为开辟了全新的视角（仅举几例：\cite{WhiteFeiguin04,Feiguin05a,Feiguin05,Gobert05,Kollath05,Trebst06,Cramer08,Barthel09a,Kollath06}）。
+ 
+\section{含时模拟：扩展适用范围}
+\label{sec:beyondtime}
+
+时间演化——按历史先后次序，无论它是用 TEBD、tDMRG 还是 tMPS 实现的——从根本上受限于所能达到的时间。深层原因在于非平衡量子态中纠缠随时间（至多）线性累积，若要维持给定精度，这会转化为键维数 $D(t)$（至多）随时间指数式增长。我们会以指数的速度撞上“时间之墙”。能否把它推向更远的未来？有限温度计算也面临类似问题。虽然它们未必涉及动力学，但作为虚时演化来看，它们提出了自己的问题：静态或热力学计算中 $T\rightarrow 0$ 极限的问题，以及动力学方面——尤其是高温下的动力学——的问题。
+
+我们尚未讨论的第二个问题涉及{\em 耗散}时间演化：我们关注的不再是纯哈密顿动力学中那样的封闭量子系统，而是开放量子系统。如果动力学是马尔可夫的（即环境没有记忆，这在许多情形下是一个极不平凡的假设），那么最一般的动力学由 Lindblad 方程给出。虽然形式上容易证明用 MPS 可以相当容易地模拟它，但在实际操作中这在数值上相当棘手，因此非常需要有更简单的方案。 
+
+在本节中，我们将首先考虑通过评估时间演化张量网络的不同方案来扩展模拟时间范围的尝试。正如我们在波函数重叠的计算这类简单例子中已经看到的，收缩的次序可能极大地改变计算量。第二步，我们将考察一种预测方法：它拾取数值原始数据，并在数据满足某种数学形式的前提下，非常成功地把它们外推一个数量级，以有限温度的情形为例。第三步，我们将考察一种截然不同的有限温度模拟方法。最后，我将处理耗散动力学问题，并展示该领域取得的出色进展。
+

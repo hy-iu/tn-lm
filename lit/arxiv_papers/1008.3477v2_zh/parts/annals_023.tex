@@ -1,0 +1,137 @@
+\subsection{最小纠缠典型热态}
+为计算静态与动态性质而模拟热密度算符的效果非常好。理论上，这一方法不存在任何限制。但在实践中会遇到若干局限。一方面，在极低温度 $T\rightarrow 0$ 下模拟变得困难。在此极限下，物理系统 P 上的混合态将演化趋向于基态上的纯态投影算符 $\hat{\rho}^P_\infty = \ket{\psi_\infty}_P \phantom{\,}_P\bra{\psi_\infty}$（这里我用 $\ket{\psi_\infty}_P$ 表示物理哈密顿量 $\hat{H}$ 的基态，与纯化一节一样指 $\beta=\infty$）。但在此极限下 P 不再与辅助系统 Q 纠缠，我们模拟的是两个纯态的乘积：为简单起见，设基态能量为零。现在考虑辅助系统的约化密度算符。在不计无关紧要的范数的意义下，
+\begin{equation}
+\hat{\rho}^Q_{\beta\rightarrow\infty} = \lim_{\beta\rightarrow\infty} \tr_P \eul^{-\beta\hat{H}/2} \ket{\psi_0} \bra{\psi_0} \eul^{-\beta\hat{H}/2} = \phantom{\,}_P\braket{\psi_\infty}{\psi_0} \braket{\psi_0}{\psi_\infty}_P ,
+\end{equation}
+因为在 $\beta\rightarrow\infty$ 的极限下，迹化简为基态的贡献，
+$\tr_P \rightarrow \phantom{\,}_P\bra{\psi_\infty} \cdot \ket{\psi_\infty}_P$。利用密度算符的 $\beta=0$ 纯化 $\ket{\psi_0} = d^{-L/2} \sum_{\fat{\sigma}} \ket{\fat{\sigma}}_P \ket{\fat{\sigma}}_Q$，最后一个表达式（同样不计无关紧要的范数）化简为
+\begin{equation}
+\hat{\rho}^Q_{\beta\rightarrow\infty} = \sum_{\fat{\sigma}\fat{\sigma}'} \psi^{\fat{\sigma}*}_\infty \ket{\fat{\sigma}}_Q \phantom{\,}_Q \bra{\fat{\sigma}'} \psi^{\fat{\sigma}'}_\infty =
+\ket{\psi_\infty}_Q \phantom{\,}_Q \bra{\psi_\infty} ,
+\end{equation}
+其中 $\psi^{\fat{\sigma}}_\infty$ 是基态的展开系数。因此，零温纯化是一个乘积态
+\begin{equation}
+\ket{\psi_\infty} = \ket{\psi_\infty}_P \ket{\psi_\infty}_Q,
+\end{equation}
+其中后一个态正是在辅助态空间上定义的物理基态。
+假设用矩阵维数 $D$ 就足以足够精确地描述该态，那么这个乘积将需要维数为 $D^2$ 的矩阵来描述。这实际上意味着，对所研究的问题，我们算法的标度是特征矩阵维数的六次方而非三次方。另一方面——这正是预测方法试图解决的问题——我们在高温 $T\rightarrow\infty$ 时尤其会遇到长时间模拟的困难：许多态以相近但不完全相同的权重作出贡献，而 MPS 在编码如此众多的贡献态方面效率不高。
+
+正如 White \cite{Stoudenmire10,White09} 所指出的，可以完全避开纯化方法，转而在一组精心挑选的热态——即所谓{\em 最小纠缠典型热态}（METTS）——上作抽样。已有工作表明，这一方法能大大缓解第一个局限，而对第二个局限目前所知尚不多。
+
+热平均由下式给出
+\begin{equation}
+\langle \hat{A} \rangle = \frac{1}{Z} \tr \eul^{-\beta \hat{H}} \hat{A} = \frac{1}{Z} \sum_n \eul^{-\beta E_n} \bra{n} \hat{A} \ket{n} ,
+\end{equation}
+其中与所有教科书一样，我选用了热密度算符的能量表象。正如 Schr\"{o}dinger 许多年前就已指出的，这在数学上是正确的，却不合物理实际，因为有限温度下的真实系统通常并不处于本征态的统计混合之中——本征态在与环境耦合时是极为脆弱的。但取迹所用基的选择是任意的，也可以写成
+\begin{equation}
+\langle A \rangle = \frac{1}{Z} \sum_i \bra{i} \eul^{-\beta\hat{H}/2} \hat{A} \eul^{-\beta\hat{H}/2} \ket{i}
+= \frac{1}{Z} \sum_i P(i) \bra{\phi(i)} \hat{A} \ket{\phi(i)}
+\end{equation}
+其中 $\{ \ket{i} \}$ 是任意一组正交归一基，而 $\ket{\phi(i)} = P(i)^{-1/2} \eul^{-\beta\hat{H}/2} \ket{i}$。由 $P(i) = \bra{i} \eul^{-\beta \hat{H}} \ket{i}$ 可知 $\ket{\phi_{i}}$ 是归一化的。容易看出 $\sum_i P(i) = Z$，故 $P(i)/Z$ 是概率。于是，可以以概率 $P(i)/Z$ 对 $\ket{\phi(i)}$ 进行{\em 抽样}，并对 $\bra{\phi(i)} \hat{A} \ket{\phi(i)}$ 求平均，从而对 $\langle \hat{A}\rangle$ 作统计估计。
+
+要把这一切变成实际可行的算法，还有几个问题。既然我们并不知道那个复杂的概率分布，怎样才能正确抽样？能否选出一组态，使得平均值收敛最快？考虑到虚时演化将是算法的一部分，能否找到低纠缠的基 $\{ \ket{i} \}$，使得时间演化可以用适中的 $D$ 完成，即运行得很快？
+
+为解决这些问题，White 选取由乘积态构成的计算基作为正交归一基，
+\begin{equation}
+\ket{i} = \ket{i_1}\ket{i_2}\ket{i_3} \ldots \ket{i_L} ,
+\end{equation}
+即经典（无纠缠）乘积态（CPS），它们可以精确地用 $D=1$ 表示。相应的态
+\begin{equation}
+\ket{\phi(i)} = \frac{1}{\sqrt{P(i)}} \eul^{-\beta \hat{H}/2} \ket{i}
+\end{equation}
+就是所谓的{\em 最小纠缠典型热态}（METTS）：我们的希望是，虽然虚时演化会因哈密顿量的作用而引入纠缠，但可以合理地预期，最终的纠缠会低于对已经纠缠的态作类似演化所得的纠缠。虽然从严格的数学意义上讲这并不完全成立，但从实用的角度看似乎确实如此！与纯化相比，这将是快得多的计算，尤其是因为纯化的因子化问题不会出现。
+
+为了以正确的概率分布（我们无法算出它）对 $\ket{\phi(i)}$ 抽样，人们使用与蒙特卡罗相同的技巧，生成一个由态构成的马尔可夫链，
+$\ket{i_1} \rightarrow \ket{i_2} \rightarrow \ket{i_3} \rightarrow \ldots$，使其复现正确的概率分布。从这一分布我们可以生成 $\ket{\phi(i_1)}$、$\ket{\phi(i_2)}$、$\ket{\phi(i_3)}$、$\ldots$，用以计算平均值。
+
+算法运行如下：从一个随机的 CPS $\ket{i}$ 出发，重复以下三个步骤，直到结果的统计性足够好：
+\begin{itemize}  
+\item 通过虚时演化计算 $\eul^{-\beta\hat{H}/2} \ket{i}$ 并将态归一化（其模方为 $P(i)$，但算法中用不到它）。
+\item 按形如 $\bra{\phi(i)} \hat{A} \ket{\phi(i)}$ 的方式计算所需的量，以供平均。
+\item 通过量子测量把态 $\ket{\phi(i)}$ 坍缩为一个新的 CPS $\ket{i'}$，其概率为 $p(i\rightarrow i') = |\braket{i'}{\phi(i)}|^2$，然后从这个新态重新开始。
+\end{itemize}
+
+按照 \cite{Stoudenmire10}，我们来确认这种做法确实给出正确的抽样。由于 $\ket{\phi(i)}$ 与 $\ket{i}$ 服从相同的分布，只需证明后者被正确抽样。设前一个 CPS $\ket{i}$ 已按正确概率 $P(i)/Z$ 被抽取，问此时以多大的概率坍缩到某个 $\ket{j}$，可以发现
+\begin{equation}
+\sum_i \frac{P(i)}{Z} p(i\rightarrow j) = \sum_i \frac{P(i)}{Z} | \braket{j}{\phi(i)} |^2 = \sum_i
+\frac{1}{Z} | \bra{j} \eul^{-\beta \hat{H}/2} \ket{i}|^2 = \frac{1}{Z} \bra{j} \eul^{-\beta\hat{H}} \ket{j} = \frac{P(j)}{Z}.
+\end{equation}
+这表明所期望的分布是更新过程的不动点。因此这一做法是有效的；不过，与蒙特卡罗中一样，明智的做法是舍弃最初的若干数据点，以消除初始 CPS 带来的偏差。事实证明——在舍弃最初几个 METTS 以消除初选的影响之后——只需对一百个左右的态求平均，就能以很高的精度计算局域静态量（磁化强度、键能）。
+
+虽然我们已经知道如何做虚时演化，但还须讨论坍缩步骤。事实证明，利用 MPS 的结构，可以使算法这一部分比虚时演化快得多。
+
+对每个格点 $i$，我们选取一个{\em 任意}的 $d$ 维正交归一基 $\{ \ket{\tilde{\sigma}_i} \}$，以区别于计算基 $\{ \ket{\sigma_i} \}$。由此可以构造投影算符 $\hat{P}^{\tilde{\sigma}_i} = \ket{\tilde{\sigma}_i} \bra{\tilde{\sigma}_i}$，局域坍缩到态 $\ket{\tilde{\sigma}_i}$ 的概率按标准量子力学给出为
+$p_{\tilde{\sigma}_i} =\bra{\psi} \hat{P}^{\tilde{\sigma}_i} \ket{\psi}$。若把 $\ket{\psi}$ 坍缩为 CPS
+$\ket{\psi'} = \ket{ \tilde{\sigma}_1} \ket{ \tilde{\sigma}_2} \ldots \ket{ \tilde{\sigma}_L}$，则概率为  $\bra{\psi} \hat{P}^{\tilde{\sigma}_1} \ldots \hat{P}^{\tilde{\sigma}_L} \ket{\psi} = | \braket{\psi'}{\psi} |^2$，正如算法所要求的。单格点坍缩之后，波函数变为
+\begin{equation}
+\ket{\psi} \rightarrow  p_{\tilde{\sigma}_i}^{-1/2} \hat{P}^{\tilde{\sigma}_i}\ket{\psi} ,
+\end{equation}
+其中前置因子保证坍缩后态的正确归一化，与初等量子力学中一样。举例来说，对于沿任意轴 ${\mathbf n}$ 测量的 $S=\frac{1}{2}$ 自旋，投影算符为
+\begin{equation}
+\hat{P}^{\uparrow_n,\downarrow_n} = \frac{1}{2} \pm {\mathbf n} \cdot \hat{{\mathbf S}}_i .
+\end{equation}
+
+正如 \cite{Stoudenmire10} 所指出的，如果利用 MPS 与 CPS 的两个特点，对所有格点依次进行局域测量和坍缩可以非常高效地完成：(i) 局域期望值若位于显式格点上（用 DMRG 的语言），或位于混合规范形式中左规范与右规范格点之间的格点上（用 MPS 的语言），就可以非常高效地求值；(ii) 坍缩之后，所得的态是所有已坍缩格点上的局域态与未坍缩的其余部分构成的乘积态。
+
+设 $\ket{\psi}$ 是右规范的（放宽一点：格点 1 上的归一化无关紧要）。于是 $p_{\tilde{\sigma}_1} =\bra{\psi} \hat{P}^{\tilde{\sigma}_1} \ket{\psi}$ 的计算变得平凡，因为格点 2 到 $L$ 上期望值网络的收缩恰好给出 $\delta_{a_1,a'_1}$。于是
+\begin{equation}
+\bra{\psi} \hat{P}^{\tilde{\sigma}_i} \ket{\psi} = \sum_{a_1,\sigma_1,\sigma'_1} B^{\sigma_1 *}_{a_1} \bra{\sigma_1} \hat{P}^{\tilde{\sigma}_1} \ket{\sigma'_1} B^{\sigma'_1}_{a_1} = 
+\sum_{a_1} \left[ \sum_{\sigma_1} B^{\sigma_1*}_{a_1} \braket{\sigma_1}{\tilde{\sigma}_1} \right]
+\left[ \sum_{\sigma'_1} B^{\sigma'_1}_{a_1} \braket{\tilde{\sigma}_1}{\sigma'_1} \right] .
+\label{eq:probsinmetts}
+\end{equation}
+这个表达式看起来非常特殊地依赖于第一个格点（因为开边界），但正如我们将看到的，其实不然！
+
+算出格点 1 上坍缩的概率之后，按刚才生成的分布随机抽取一个具体的坍缩 $\ket{\tilde{\sigma}_1}$。坍缩后的态将形如 $\ket{\tilde{\sigma}_1} \ket{\psi_{{\rm rest}}}$，因而是一个乘积态。因此，格点 1 上的新矩阵（我们记作 $A^{\sigma_1}$）必定都是标量，即 $D=1$ 的矩阵。由
+$\ket{\tilde{\sigma}} = \sum_{\sigma} \ket{\sigma} \braket{\sigma}{\tilde{\sigma}} = \sum_\sigma \ket{\sigma} A^{\sigma}$ 可知它们为
+\begin{equation}
+A^{\sigma_1}_{1,1} = \braket{\sigma_1}{\tilde{\sigma}_1} ;
+\end{equation}
+容易看出左规范自动得到满足，因此用字母 $A$ 标记。但 $A^{\sigma_1}$ 维数的这一改变意味着 $B^{\sigma_2}$ 也必须改变，即
+\begin{equation}
+B^{\sigma_2}_{a_1,a_2} \rightarrow M^{\sigma_2}_{\tilde{\sigma}_1,a_2} =
+p_{\tilde{\sigma}_1}^{-1/2} \sum_{\sigma_1,a_1} \braket{\tilde{\sigma}_1}{\sigma_1} B^{\sigma_1}_{a_1} B^{\sigma_2}_{a_1 a_2} .
+\end{equation}
+由于标记 $\tilde{\sigma}_1$ 取确定值，它只是一个哑指标，$M^{\sigma_2}$ 的行维数也只是 1，与第一个格点上的矩阵一样。因此，式~(\ref{eq:probsinmetts}) 可以推广到所有格点，而代价最高的步骤是 $B^{\sigma_2}$ 的更新，其标度为 $D^2 d^2$，而不是像时间演化那样的 $D^3$。
+
+为看清这一代换，我们把 $\hat{P}^{\tilde{\sigma}_1}$ 写成 MPO：$W^{\sigma_1 \sigma'_1} = \braket{\sigma_1}{\tilde{\sigma}_1} \braket{\tilde{\sigma}_1}{\sigma'_1}$。于是坍缩后的 $\ket{\psi}$ 为
+\begin{eqnarray*}
+& & p_{\tilde{\sigma}_1}^{-1/2} \sum_{\fat{\sigma}} \sum_{\sigma'_1} \braket{\sigma_1}{\tilde{\sigma}_1} \braket{\tilde{\sigma}_1}{\sigma'_1} B^{\sigma'_1} B^{\sigma_2} \ldots \ket{\fat{\sigma}} = \\
+& & \sum_{\fat{\sigma}} \sum_{a_2} A^{\sigma_1}_{1,1} \left( \sum_{\sigma'_1 a_1}  p_{\tilde{\sigma}_1}^{-1/2}  \braket{\tilde{\sigma}_1}{\sigma'_1} B^{\sigma'_1}_{1,a_1} B^{\sigma_2}_{a_1,a_2} \right) (B^{\sigma_3} \ldots B^{\sigma_L})_{a_2,1} \ket{\fat{\sigma}} ,
+\end{eqnarray*}
+由此即得上述代换。
+
+再作几点评论。每个格点上的测量基都可以随机选取；为了获得马尔可夫链较短的自关联``时间''（即高质量的抽样），这样做当然很好，但比总是坍缩到同一个基要昂贵得多，而后者却会产生遍历性问题。建议在两个基之间交替切换，使得对每个基而言，其投影算符在另一个基中都是最大程度混合的（例如，沿 $x$ 轴与 $z$ 轴（或 $y$ 轴）交替测量自旋）。这样自关联时间可以降到 5 步左右 \cite{Stoudenmire10}。至于统计误差的估计，在最简单的情形下，只需对长度大于自关联时间的分箱求平均，再考察这些分箱平均值的统计分布，即可得到误差棒。
+
+仍有一些耐人寻味的问题，既涉及这一算法的潜力，也涉及其理论基础：对于结构函数所需的更长程的关联子，它表现如何？动力学量不难得到，因为弱纠缠的 METTS 的时间演化代价并不高——但对少数几个``典型"态求平均的高效率是否仍会保持？
+\subsection{耗散动力学：量子跳跃}
+当物理系统 A 与某个环境 B 相耦合、从而使 A 成为{\em 开放}量子系统时，就会出现耗散（即非哈密顿的）动力学。这是一个内容非常丰富的物理学领域，这里只回顾几条在此有用的核心结果。系统密度算符的时间演化总可以写成 Kraus 表示
+\begin{equation}
+\hat{\rho}_A (t) = \sum_j \hat{E}_A^j(t) \hat{\rho}_A (0) \hat{E}_A^{j\dagger}(t),
+\end{equation}
+其中 Kraus 算符满足条件
+\begin{equation}
+\sum_j \hat{E}_A^{j\dagger}(t) \hat{E}_A^j(t) = \hat{I}_A .
+\end{equation}
+如果动力学是无记忆的（马尔可夫型），它只依赖于无穷小时间之前的密度算符，这时可以导出一个主方程，即 Lindblad 方程。在 $\diff t\rightarrow 0$ 的极限下，环境以 $p_0 \rightarrow 1$ 的概率保持不变，而以正比于 $\diff t$ 的概率发生改变（量子跳跃）。若把 Kraus 算符 $\hat{E}_A^0(t)$ 与"无改变"对应起来，一个合理的按时间标度的拟设是
+\begin{equation}
+\hat{E}_A^0(\diff t) = \hat{I}_A + O(\diff t) \quad\quad \hat{E}_A^j(\diff t) = \sqrt{\diff t} \hat{L}_A^j  \quad (j>0)
+\end{equation}
+或更精确地
+\begin{equation}
+\hat{E}_A^0(\diff t) = \hat{I}_A + (\hat{K}_A - \imag \hat{H}_A) \diff t ,
+\end{equation}
+其中 $\hat{K}_A$ 和 $\hat{H}_A$ 是两个厄米算符。Kraus 算符的归一化条件给出
+\begin{equation}
+\hat{K}_A = -\frac{1}{2} \sum_{j>0} \hat{L}_A^{j\dagger} \hat{L}_A^j .
+\end{equation}
+由这些拟设可以从 Kraus 演化公式导出一个微分方程，即 Lindblad 方程
+\begin{equation}
+\frac{\diff \hat{\rho}}{\diff t} = - \imag [\hat{H},\hat{\rho}] + \sum_{j>0} \left( \hat{L}^j \hat{\rho} \hat{L}^{j\dagger} - \frac{1}{2} \{ \hat{L}^{j\dagger} \hat{L}^j, \hat{\rho} \} \right) ,
+\end{equation} 
+其中我略去了指标 A。的确，在没有量子跳跃时（只有 $j=0$），就回到 von Neumann 方程。以非厄米性为代价，此方程可以化简。若引入 $\hat{H}_{{\rm eff}} := \hat{H} + \imag \hat{K}$，则最后一项消失，得到
+\begin{equation}
+\frac{\diff \hat{\rho}}{\diff t} = - \imag [\hat{H}_{{\rm eff}}\hat{\rho}-\hat{\rho}\hat{H}_{{\rm eff}}^\dagger] + \sum_{j>0} \hat{L}^j \hat{\rho} \hat{L}^{j\dagger} .
+\label{eq:Lindblad2}
+\end{equation} 
+

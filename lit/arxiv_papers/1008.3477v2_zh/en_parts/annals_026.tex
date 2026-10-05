@@ -1,0 +1,117 @@
+At this point it should be mentioned that iDMRG can be related to earlier algorithmic approaches under the name of PWFRG (product wave function renormalization group) \cite{NishinoOkunishi95,Hieida97,Ueda06} which already contain part of the above ideas; iDMRG takes them to their natural completion \cite{Ueda08,Ueda10}.
+
+\subsection{iTEBD: time evolution in the thermodynamic limit}
+In this section, I switch to the $\Gamma\Lambda$ notation, although the formulae can be easily translated into the $A,B$-formulation. Using our state fragment $\Lambda^{[\ell-1]} \Gamma^{[\ell]\sigma_\ell^A} \Lambda^{[\ell]} \Gamma^{[\ell]\sigma_\ell^B}$, we can set up an infinite chain
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} \ldots (\Lambda^A \Gamma^{A \sigma_i} \Lambda^B \Gamma^{B \sigma_{i+1}})(\Lambda^A \Gamma^{A \sigma_{i+2}} \Lambda^B \Gamma^{B \sigma_{i+3}}) \ldots \ket{\fat{\sigma}} ,
+\end{equation}
+just like in the previous section, where $\Gamma^{A\sigma}= \Gamma^{[\ell]\sigma_\ell^A}$,
+$\Gamma^{B\sigma}= \Gamma^{[\ell]\sigma_\ell^B}$, $\Lambda^A=\Lambda^{[\ell-1]}$ and 
+$\Lambda^B=\Lambda^{[\ell]}$. The fragment may be the result of a converged ground state calculation or from some simple starting state that one can construct exactly. 
+
+We can now write down a time evolution in the Trotter form by applying an infinitesimal time step to all odd bonds (which I will refer to as AB) and then on all even bonds (which I will refer to as BA). The bond evolution operators will be exactly as in the tMPS/tDMRG/TEBD cases, I will refer to them as $U_{AB} = \sum_{\sigma_A\sigma_B\sigma'_A\sigma'_B} U_{AB}^ {\sigma_A\sigma_B, \sigma'_A\sigma'_B} \ket{\sigma_A\sigma_B} \bra{\sigma'_A\sigma'_B}$ and similarly $U_{BA}$.
+
+As we have already seen [cf.\ Eq.~(\ref{eq:guess2sites})], a full two-site fragment consists of a product of five matrices, 
+$\Lambda^A \Gamma^{A \sigma_A} \Lambda^B \Gamma^{B \sigma_{B}} \Lambda^A$. Then time evolution on bond AB yields a set of matrices
+\begin{equation}
+M^{\sigma_A\sigma_{B}} = \sum_{\sigma'_A\sigma'_{B}} U_{AB}^ {\sigma_A\sigma_{B}, \sigma'_A\sigma'_{B}}  \Lambda^A \Gamma^{A \sigma'_A} \Lambda^B \Gamma^{B \sigma'_{B}} \Lambda^A .
+\end{equation}
+Upon the by now standard reshaping we obtain by SVD 
+\begin{equation}
+M^{\sigma_A\sigma_{B}}=A^{\sigma_A} \Lambda^B B^{\sigma_{B}} ,
+\end{equation}
+where the new $\Lambda^B$ (and correspondingly $A^{\sigma_A}$ and $B^{\sigma_{B}}$) are truncated as in tDMRG or TEBD, to replace the old one. Using $\Lambda^A$ (still from the last iteration), we can define new $\Gamma^{A \sigma_A}$ and $\Gamma^{B \sigma_{B}} $ (via $A^{\sigma_A} = \Lambda^A \Gamma^{A \sigma_A}$ and
+$B^{\sigma_{B}} = \Gamma^{B \sigma_{B}} \Lambda^A$). This defines a new ``unit cell''. 
+
+If we write it down and attach another one, we can read off the bond BA in the center of the two AB unit cells as
+$ \Lambda^B \Gamma^{B \sigma_{B}} \Lambda^A \Gamma^{A \sigma_{A}} \Lambda^B$, for which time evolution gives
+\begin{equation}
+N^{\sigma_{B}\sigma_{A}} = \sum_{\sigma'_{B}\sigma'_{A}} U_{BA}^ {\sigma_{B}\sigma_{A}, \sigma'_{B}\sigma'_{A}}  \Lambda^B \Gamma^{B \sigma'_{B}} \Lambda^A \Gamma^{A \sigma'_{A}} \Lambda^B .
+\end{equation}
+Reshaping and SVD gives us
+\begin{equation}
+N^{\sigma_{B}\sigma_{A}}=A^{\sigma_{B}} \Lambda^A B^{\sigma_{A}} ,
+\end{equation}
+where again $\Lambda^A$ (and correspondingly the other matrices) are truncated and replace the old ones. Using $\Lambda^B$ (still from the last iteration), we can define new $\Gamma^{B \sigma_{B}}$ and $\Gamma^{A \sigma_{A}} $ (via $B^{\sigma_{A}} =   \Gamma^{A \sigma_{A}} \Lambda^B$ and $A^{\sigma_{B}} =\Lambda^B \Gamma^{B \sigma_{B}}$). The problematic division by small singular values can be avoided by the simple modification already discussed for TEBD \cite{Hastings09}.
+
+By applying sequences of infinitesimal bond evolution operators we can therefore set up a real or imaginary time evolution for the thermodynamic limit. This algorithm is referred to as {\em iTEBD}, because it provides the infinite-size generalization of TEBD \cite{Vidal07}.
+
+Again, the question of orthonormality arises \cite{Orus08}. Let us assume that the initial state was meeting orthonormality criteria. A pure real-time evolution generates a sequence of unitaries acting on the state, which preserves orthonormality properties. But the inevitable truncation after each time step spoils this property, even though truncation may only be small. To turn this method into a viable algorithm, we have to address the issue of orthogonalization in the thermodynamic limit, as for iDMRG, after each step.
+
+Let me mention here that McCulloch\cite{McCulloch08} has shown that iDMRG can be turned into iTEBD  by replacing the minimization on the central bond by a time-evolution on the central bond, with some conceptual advantages over the original iTEBD algorithm.
+
+Let me conclude this section by a few words on extrapolation. In finite-system DMRG (or MPS), the recipe was to extrapolate for each finite length $L$ results in $D$ to maximize accuracy, and then to extrapolate these results in $L$ to the thermodynamic limit. Here, we are working directly in the thermodynamic limit (assuming that iDMRG has been taken to convergence), and the extrapolation in $D$ remains. Interestingly, at criticality, this extrapolation in $D$ has profound and useful connections to entanglement entropy scaling and critical exponents \cite{Tagliacozzo08}. Effectively, the finite matrix dimension introduces a finite correlation length into the critical system, not unlike the finite-system DMRG case, where the length scale on which the MPS-typical superposition of exponentials mimicks a power-law properly also scales with some power of $D$ \cite{Andersson99}.
+
+\subsection{Orthogonalization of thermodynamic limit states}
+
+Within iDMRG on a finite system, $A$- and $B$-matrices retain left- and right-normalization; this implies that the left and right block states are orthogonal among each other, as shown previously. We will call a state with this property {\em orthogonal} in a slight abuse of conventional usage. As we have seen in the previous section, we may use a fragment 
+\begin{equation}
+A^{[\ell]\sigma_\ell^A}\Lambda^{[\ell]} B^{[\ell]\sigma_\ell^B} (\Lambda^{[\ell-1]})^{-1}
+\end{equation}
+that we can repeat to build up an infinitely long chain,
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} \ldots A^{\sigma_i}\Lambda^{[\ell]} B^{\sigma_{i+1}} (\Lambda^{[\ell-1]})^{-1}A^{\sigma_{i+2}}\Lambda^{[\ell]} B^{\sigma_{i+3}} (\Lambda^{[\ell-1]})^{-1}A^{\sigma_{i+4}}\Lambda^{[\ell]} B^{\sigma_{i+5}} (\Lambda^{[\ell-1]})^{-1} \ldots \ket{\fat{\sigma}} ,
+\end{equation}
+where I have simplified the notation of $A$, $B$. The problem with these states is that, for an arbitrary bipartition into two blocks, the states on the left and right blocks will in general {\em not be orthogonal}: if we transform $\Lambda^{[\ell]} B$ into $\tilde{A} \Lambda_R^{[\ell]}$ as described above, the chain will read
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} \ldots A^{\sigma_1}\tilde{A}^{\sigma_{2}} P
+A^{\sigma_{3}} \tilde{A}^{\sigma_{4}} P A^{\sigma_{5}}\tilde{A}^{\sigma_{6}} P \ldots \ket{\fat{\sigma}} ,
+\end{equation}
+where $P= \Lambda_R^{[\ell]} (\Lambda^{[\ell-1]})^{-1}$. If we absorb $P$ into the $\tilde{A}$ to its left, $\tilde{A}P \rightarrow \overline{A}$, the normalization condition becomes
+\begin{equation}
+\sum_\sigma \overline{A}^{\sigma\dagger} \overline{A}^{\sigma} = P^\dagger \sum_\sigma \tilde{A}^{\sigma\dagger} \tilde{A}^\sigma P = P^\dagger P.
+\end{equation}
+In general, however, $P^\dagger P \neq I$. This is not only the case if $\ell$ is small and we are far from the infinite-system fixed point. It is also the case at the fixed point as long as the discarded state weight is finite, which is usually the case in DMRG calculations, even if it is very small.
+
+As pointed out by Orus and Vidal\cite{Orus08} -- in the presentation I follow \cite{McCulloch08} --, a condition to detect orthonormality is to check whether the expectation value of the unit operator between two block states $\ket{a}$, $\ket{a'}$ is $\delta_{a,a'}$ (see Fig.~\ref{fig:infiniteorthogonalization}). Let us consider an expectation value contraction as for a finite system and assume we have carried it out up to site $0$, coming from the left, $-\infty$. The result will be a matrix-like object $C_{a'a}$, corresponding to the open legs. Let us now consider the operation $E_L(C)$, which carries the contraction two steps further, i.e. over sites 1 and 2. This {\em transfer operator} reads [cf.\ Sec.~\ref{subsubsec:transferoperator}]
+\begin{equation}
+E_L(C) = \sum_{\sigma_1\sigma_2} P^\dagger \tilde{A}^{\sigma_2\dagger} A^{\sigma_1\dagger} C A^{\sigma_1} \tilde{A}^{\sigma_2} P.
+\end{equation}
+For an orthonormal state, we want that $E_L(I) = I$, which is just the expectation value matrix the unit operator produces for orthonormal block states. What we get, however, is, using the left-normalization condition, $E_L(I)=P^\dagger P$. As the system extends to infinity, $E_L(I) = I$ must be associated with the largest eigenvalue; normalizability of the entire state implies that the largest eigenvalue must be 1. The ``quadratic'' form of $E_L$ implies that the associated eigenmatrix $V_L$ is hermitian and non-negative. An eigenvalue or singular value decomposition allows to decompose $V_L = X^\dagger X$, where $X$ is invertible. We can insert $X^{-1}X$ after each $P$, such that the unit cell becomes $X A^{\sigma_1} \tilde{A}^{\sigma_2} P X^{-1}$ and the new transfer operator reads
+\begin{equation}
+E'_L(C) = \sum_{\sigma_1\sigma_2} X^{-1\dagger}P^\dagger \tilde{A}^{\sigma_2\dagger} A^{\sigma_1\dagger} X^\dagger C X A^{\sigma_1} \tilde{A}^{\sigma_2} P X^{-1}.
+\end{equation}
+Then 
+\begin{equation}
+E'_L(I) = X^{-1\dagger} V_L X^{-1} = I
+\end{equation}
+from the eigenmatrix properties of $V_L$ with respect to $E_L$.
+(If the largest eigenvalue of $E_L$ happens not to be 1, $X$ must be suitably scaled.)
+
+Inserting the definition of $P$ in $X A^{\sigma_1}\tilde{A}^{\sigma_2}P X^{-1}$, undoing the transformation to $\tilde{A}$, and transforming $A^{\sigma_1} \Lambda^{[\ell]} \rightarrow \Lambda^{[\ell]}_L \tilde{B}^{\sigma_1}$, the unit cell becomes $X \Lambda^{[\ell]}_L \tilde{B}^{\sigma_1} B^{\sigma_2} (\Lambda^{[\ell-1]})^{-1} X^{-1}$. Shifting the starting point of the unit cell it becomes $(\Lambda^{[\ell-1]})^{-1} X^{-1} X \Lambda^{[\ell]}_L \tilde{B}^{\sigma_1} B^{\sigma_2} = Q \tilde{B}^{\sigma_1} B^{\sigma_2}$, where $Q = (\Lambda^{[\ell-1]})^{-1} X^{-1} X \Lambda_L^{[\ell]} = (\Lambda^{[\ell-1]})^{-1} \Lambda_L^{[\ell]}$, independent of $X$. Calculating a contraction from the right leads to a transfer operator
+\begin{equation}
+E_R(C) = \sum_{\sigma_1\sigma_2} Q \tilde{B}^{\sigma_1} B^{\sigma_2} C B^{\sigma_2\dagger} \tilde{B}^{\sigma_1\dagger} Q^\dagger .
+\end{equation}
+The same eigenvalue/eigenmatrix argument as before leads to the dominant eigenmatrix $V_R = YY^\dagger$, $Y$ invertible, and a unit cell $Y^{-1}Q \tilde{B}^{\sigma_1} B^{\sigma_2} Y$.
+This in turn leads to $E'_R(C)$ with $E'_R(I)=I$. 
+
+If we insert the definition of $Q$ into the unit cell, return from $\tilde{B}^{\sigma_1}$ to $A^{\sigma_1}$ and make $Q$ explicit, the unit cell reads 
+$Y^{-1}  (\Lambda^{[\ell-1]})^{-1} X^{-1} X A^{\sigma_1} \Lambda^{[\ell]} B^{\sigma_2} Y$, shifting its origin we obtain
+\begin{equation}
+X A^{\sigma_1} \Lambda^{[\ell]} B^{\sigma_2} Y Y^{-1}  (\Lambda^{[\ell-1]})^{-1} X^{-1} ,
+\end{equation}
+which can be brought back to the original form of the unit cell by setting 
+$A^{\sigma_1} \leftarrow XA^{\sigma_1}$, $B^{\sigma_2} \leftarrow B^{\sigma_2}Y$ and $\Lambda^{[\ell-1]} \leftarrow X\Lambda^{[\ell-1]}Y$, but now with {\em proper left- and right-normalization ensured.} 
+
+More precisely, the new unit cell leads to $E_L(I)=I$ and $E_R(I)=I$. But note that $E_L$ and $E_R$ are constructed from slightly shifted unit cells, namely $A^{\sigma_1} \Lambda^{[\ell]} B^{\sigma_2} (\Lambda^{[\ell-1]})^{-1}$ for $E_L$ and $(\Lambda^{[\ell-1]})^{-1} A^{\sigma_1} \Lambda^{[\ell]} B^{\sigma_2}$ for $E_R$, as shown in the pictorial representation. We can lump together the first and second unit cells into left- and right-normalized two-site matrices $A^{\sigma_1\sigma_2}$ and $B^{\sigma_1\sigma_2}$. These can now be decomposed into left- and right-normalized matrices in the standard way, giving $A^{[1]\sigma_1}A^{[2]\sigma_2}$ and $B^{[1]\sigma_1}B^{[2]\sigma_2}$. Note that these matrices are of course different from those we had originally.
+
+\begin{figure}
+\centering\includegraphics[scale=0.7]{PyMPS_InfiniteSystemOrthogonalization.eps}
+\caption{If matrices are properly normalized, the thermodynamic limit ansatz generates both a left- and right-normalization condition. Note that the two transfer operators are defined on two differing two-site unit cells of the thermodynamic limit state.}
+\label{fig:infiniteorthogonalization}
+\end{figure}
+
+The thermodynamic limit state can now be written as 
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} \ldots A^{[1]\sigma_1} A^{[2]\sigma_2} A^{[1]\sigma_3} A^{[2]\sigma_4} \ldots \ket{\fat{\sigma}}
+\end{equation}
+or analogously using $B^{[1,2]}$, for left- and right-canonical form. Of particular interest for expectation values is the mixed-canonical form, with $A$-matrices on the left and $B$-matrices on the right. If we consider the two underlying unit cells, we see that at the boundary, both want to incorporate the same $(\Lambda^{[\ell-1]})^{-1}$ to generate $A$ and $B$-matrices. This problem can be solved by inserting the identity $I = \Lambda^{[\ell-1]} (\Lambda^{[\ell-1]})^{-1}$ after the problematic $(\Lambda^{[\ell-1]})^{-1}$. Then we can immediately write down a mixed-canonical form as 
+\begin{equation}
+\ket{\psi} = \sum_{\fat{\sigma}} \ldots A^{[1]\sigma_1} A^{[2]\sigma_2} A^{[1]\sigma_3} A^{[2]\sigma_4} \Lambda^{[\ell-1]} 
+B^{[1]\sigma_5} B^{[2]\sigma_6} B^{[1]\sigma_7} B^{[2]\sigma_8}
+\ldots \ket{\fat{\sigma}} .
+\label{eq:infinitemixedcanonical}
+\end{equation}
+\subsubsection{Calculation of expectation values in the thermodynamic limit}
+In finite systems, we have seen how an expectation value can be calculated by transferring an object $C^{[i]}$, starting as a dummy scalar $C^{[0]}=1$ from $C^{[i]}$ to $C^{[i+1]}$ by means of a transfer operator $E^{[i]}_O$, where $hat{O}$ is the locally acting operator in the expectation value structure (mostly the identity, except, say, two sites if we are looking at a two-point correlator). In the case of the identity operator, for left-normalized matrices, the transfer operator mapping from left to right maps the identity to the identity; similarly, the transfer operator mapping from right to left maps the identity to the identity if formed from right-normalized matrices. 
+

@@ -1,0 +1,115 @@
+This approach is very useful for book-keeping, because in DMRG we need operator matrix elements for left and right blocks, which is just the content of the $C$- and $D$-matrices for blocks A and B. As blocks grow iteratively, the above sequence of matrices will be conveniently generated along with block growth. 
+
+\subsubsection{Transfer operator and correlation structures}
+\label{subsubsec:transferoperator}
+Let us formalize the iterative construction of $C^{[\ell]}$-matrices of the last section a bit more, because it is useful for the understanding of the nature of correlations in MPS to introduce a transfer (super)operator $\hat{E}^{[\ell]}$,  which is a mapping from operators defined on block A with length $\ell-1$ to operators defined on block A with length $\ell$,
+\begin{equation}
+\{ \ket{a_{\ell-1}} \bra{a'_{\ell-1}} \} \rightarrow \{ \ket{a_{\ell}} \bra{a'_{\ell}} \}, 
+\end{equation}
+and defined as
+\begin{equation}
+\hat{E}^{[\ell]} = \sum_{a_{\ell-1},a'_{\ell-1}} \sum_{a_\ell,a'_\ell} \left( \sum_{\sigma_\ell} M^{[\ell]\sigma_\ell *} \otimes M^{[\ell]\sigma_\ell} \right)_{(a_{\ell-1}a'_{\ell-1}),(a_\ell,a'_\ell)} (\ket{a_{\ell-1}} \bra{a'_{\ell-1}}) (\ket{a_{\ell}} \bra{a'_{\ell}}),
+\end{equation}
+where we read off the expression in brackets as the matrix elements of $E^{[\ell]}$ of dimension $(D^2_{\ell-1} \times D^2_{\ell})$, the $M$-matrix dimensions at the respective bonds. It generalizes to the contraction with an interposed operator at site $\ell$ as
+\begin{equation}
+E^{[\ell]}_O = \sum_{\sigma_\ell,\sigma'_\ell} O^{\sigma_\ell,\sigma'_\ell} M^{[\ell]\sigma_\ell *} \otimes M^{[\ell]\sigma'_\ell} .
+\end{equation}
+How does $\hat{E}^{[\ell]} $ act? From the explicit notation
+\begin{equation}
+E^{[\ell]}_{(a_{\ell-1}a'_{\ell-1}),(a_{\ell}a'_{\ell})} = \sum_{\sigma_\ell} M^{[\ell]\sigma_\ell *}_{a_{\ell-1},a_\ell} \cdot M^{[\ell]\sigma_\ell}_{a'_{\ell-1},a'_\ell}
+\end{equation}
+we can read $\hat{E}^{[\ell]}[ \hat{O}^{[\ell-1]}]$ as an operation on a matrix $O^{[\ell-1]}_{a,a'}$ as 
+\begin{equation}
+E^{[\ell]} [O^{[\ell-1]}]  = \sum_{\sigma_\ell} M^{\sigma_\ell\dagger} O^{[\ell-1]} M^{\sigma_\ell}
+\end{equation} 
+or on a row vector of length $D_{\ell-1}^2$ with coefficients $v_{aa'} = O^{[\ell-1]}_{a,a'}$ multiplied from the left,
+\begin{equation}
+\sum_{\sigma_\ell} \sum_{a_{\ell-1},a'_{\ell-1}} v_{a_{\ell-1}a'_{\ell-1}} M^{\sigma_\ell*}_{a_{\ell-1},a_\ell} M^{\sigma_\ell}_{a'_{\ell-1},a'_\ell} .
+\end{equation} 
+The $C$-matrices of the last section are then related as
+\begin{equation}
+C^{[\ell]} = E^{[\ell]} [C^{[\ell-1]}]  ,
+\end{equation}
+but we will now take this result beyond numerical convenience: If $D_{\ell-1}=D_\ell$, we can also ask for eigenvalues, eigenmatrices and (left or right) eigenvectors interchangeably. In this context we obtain the most important property of $E$, namely that if it is constructed from left-normalized matrices $A$ or right-normalized matrices $B$, all eigenvalues $|\lambda_k| \leq 1$. 
+
+In fact, for $\lambda_1=1$ and left-normalized $A$-matrices, the associated left eigenvector $v_{aa'}=\delta_{aa'}$, as can be seen by direct calculation or trivially if we translate it to the identity matrix:
+\begin{equation}
+E[I] = \sum_\sigma A^{\sigma\dagger} \cdot I \cdot A^{\sigma} = 1 \cdot I .
+\end{equation}
+The right eigenvector for $E$ constructed from left-normalized $A$ matrices is non-trivial, but we will ignore it for the moment. For right-normalized $B$ matrices, the situation is reversed: explicit calculation shows that $v_{aa'}=\delta_{aa'}$ is now right eigenvector with $\lambda_1=1$, and the left eigenvector is non-trivial. 
+
+To show that 1 is the largest eigenvalue\cite{Weichselbaum05}, we consider $C' = E[C]$. The idea is that then one can show that $s'_1 \leq s_1$ for the largest singular values of $C'$ and $C$, if $E$ is constructed from either left- or right-normalized matrices. This immediately implies that all eigenvalues of $E$, $|\lambda_i| \leq 1$: $C'=\lambda_i C$ implies $s'_1 = |\lambda_i| s_1$, such that $|\lambda_i|>1$ would contradict the previous statement. The existence of several $|\lambda_i|=1$ cannot be excluded.
+The proof runs as follows (here for left-normalized matrices): consider the SVD $C = U^\dagger S V$. $C$ is square, hence $U^\dagger U = UU^\dagger = V^\dagger V = VV^\dagger = I$. We can then write 
+\begin{equation}
+C' = \sum_\sigma A^{\sigma\dagger} U^\dagger S V A^{\sigma} = 
+\left[ \begin{array}{ccc} (UA^1)^\dagger & \ldots  & (UA^d)^\dagger \end{array} \right]
+\left[ \begin{array}{ccc} S & & \\ & S & \\ & & S \end{array} \right]
+\left[ \begin{array}{c} VA^1 \\ \vdots \\ VA^d \end{array} \right] = P^\dagger \left[ \begin{array}{ccc} S & & \\ & S & \\ & & S \end{array} \right] Q .
+\end{equation}
+We have $P^\dagger P = I$ and $Q^\dagger Q = I$ (however $PP^\dagger \neq I$, $QQ^\dagger \neq I$), if the $A^\sigma$ are left-normalized: $P^\dagger P =\sum_\sigma A^{\sigma\dagger} U^\dagger U A^\sigma = \sum_\sigma A^{\sigma\dagger} A^\sigma = I$ and similarly for $Q$; they therefore are reduced basis transformations to orthonormal subspaces, hence the largest singular value of $C'$ must be less or equal to that of $S$, which is $s_1$.
+
+Independent of normalization, the overlap calculation becomes
+\begin{equation}
+\braket{\psi}{\psi} = E^{[1]} E^{[2]} E^{[3]} \ldots E^{[L-2]} E^{[L-1]} E^{[L]}  ,
+\end{equation}
+and expectation value calculations before proper normalization by $\braket{\psi}{\psi}$ would read
+\begin{equation}
+\bra{\psi} \hat{O}^{[1]} \hat{O}^{[2]} \ldots \hat{O}^{[L-1]} \hat{O}^{[L]}\ket{\psi} = E^{[1]}_{O_1} E^{[2]}_{O_2} E^{[3]}_{O_3} \ldots E^{[L-2]}_{O_{L-2}} E^{[L-1]}_{O_{L-1}} E^{[L]}_{O_L}  .
+\end{equation}
+Numerically, this notation naively taken is not very useful, as it implies $O(D^6)$ operations; of course, if its internal product structure is accounted for, we return to $O(D^3)$ operations as previously discussed. But analytically, it reveals very interesting insights. Let us assume a translationally invariant state with left-normalized site-independent $A$-matrices (hence also site-independent $E$) with periodic boundary conditions. Then we obtain in the limit $L\rightarrow\infty$
+\begin{eqnarray*}
+\bra{\psi} \hat{O}^{[i]}\hat{O}^{[j]} \ket{\psi} &=& \tr E^{[1]} \ldots E^{[i-1]} E^{[i]}_O E^{[i+1]} \ldots E^{[j-1]} 
+E^{[j]}_O E^{[j+1]} \ldots E^{[L]} \\
+&=& \tr E^{[i]}_O E^{j-i-1} E^{[j]}_O E^{L-j+i-1} \\
+&=& \sum_{l,k} \bra{l} E^{[i]}_O \ket{k} \lambda_k^{j-i-1} \bra{k} E^{[j]}_O \ket{l} \lambda_l^{L-j+i-1}\\
+&=& \sum_k \bra{1} E^{[i]}_O \ket{k} \lambda_k^{j-i-1} \bra{k} E^{[j]}_O \ket{1} \quad (L\rightarrow\infty)
+\end{eqnarray*}
+where $\lambda_k$ are the eigenvalues of $E$. We have used $|\lambda_k|\leq 1$ for $E$ from normalized matrices and that $\lambda_1=1$ is the only eigenvalue of modulus 1; but relaxing the latter (not necessarily true) assumption would only introduce a minor modification. $\ket{k}$ and $\bra{k}$ are the right and left eigenvectors of (non-hermitian) $E$ for eigenvalues $\lambda_k$. $\bra{1}$ corresponds to the eigenoperator $I$ for $E$ from left-normalized $A$.
+
+The decisive observation is that correlators can be long-ranged (if the matrix elements  $ \bra{1} E^{[i]}_O \ket{1}$ are finite) or are a superposition of exponentials with decay length $\xi_k = -1/ \ln \lambda_k$, such that MPS two-point correlators take the generic form
+\begin{equation}
+\frac{\bra{\psi} \hat{O}^{[i]} \hat{O}^{[j]} \ket{\psi}}{\braket{\psi}{\psi}} = c_1 + \sum_{k=2}^{D^2} c_k \eul^{-r/\xi_k} ,
+\end{equation}
+where $r=|j-i-1|$ and $c_k = \bra{1} E^{[i]}_O \ket{k} \bra{k} E^{[j]}_O \ket{1}$ for $i<j$. 
+
+A simple example can be extracted from the AKLT state of the previous section. The eigenvalues of $E$ were already found to be $1,-1/3,-1/3,-1/3$.  For the spin-operators, the matrix elements for long-range order vanish, such that the correlation $\langle \hat{S}_i^z \hat{S}_j^z \rangle = (12/9)(-1)^{j-i} \eul^{-(j-i)\ln 3}$ for $j>i$, a purely exponential decay with correlation length $\xi = 1/\ln 3= 0.9102$. On the other hand, for the string correlator, the long-range matrix elements are finite, and long-range order emerges in the string correlator.
+
+The form of correlators of MPS has important consequences: the usual form correlators take in one dimensional quantum systems in the thermodynamic limit is either the Ornstein-Zernike form
+\begin{equation}
+\langle O_0 O_x \rangle \sim \frac{\eul^{-x/\xi}}{\sqrt{x}}
+\end{equation}
+or the critical power-law form (maybe with logarithmic corrections),
+\begin{equation}
+\langle O_0 O_x \rangle \sim x^{-\alpha} .
+\end{equation}
+The AKLT state belongs to a very special state class whose correlation functions mimic a quantum system in a lower spatial dimension (so-called dimensional reduction), which removes the $\sqrt{x}$-term; the AKLT state sits on a so-called disorder line, where such phenomena occur \cite{Garel96}. 
+
+Any finite-dimensional MPS therefore will only approximate the true correlator by a superposition of exponentials. It turns out that this works very well on short distances, even for power laws. What one observes numerically is that the true correlation function will be represented accurately on increasingly long length scales as $D$ is increased. Eventually, the slowest exponential decay will survive, turning the correlation into a pure exponential decay with $\xi =  -1/\ln \lambda$, where $\lambda$ is the largest eigenvalue of $E$ that contributes to the correlator. The comparison of curves for various $D$ is therefore an excellent tool to gauge the convergence of correlation functions and the length scale on which it has been achieved.  
+
+\subsubsection{MPS and reduced density operators}
+As we have already seen for DMRG, the concept of reduced density operators is of importance in various ways. Let us express them using the MPS notation. We have
+\begin{equation}
+\ket{\psi}\bra{\psi} = \sum_{\fat{\sigma},\fat{\sigma}'} A^{\sigma_1} \ldots A^{\sigma_L} A^{\sigma'_1*} \ldots A^{\sigma'_L*} \ket{\fat{\sigma}} \bra{\fat{\sigma}'} = 
+\sum_{\fat{\sigma},\fat{\sigma}'} A^{\sigma_1} \ldots A^{\sigma_L} A^{\sigma'_L\dagger} \ldots A^{\sigma'_1\dagger} \ket{\fat{\sigma}} \bra{\fat{\sigma}'} .
+\label{eq:fullstateprojector}
+\end{equation}
+We now bipartition into AB, where A contains sites 1 through $\ell$ and B sites $\ell+1$ through $L$. Tracing out the degrees of freedom of B in the last expression we obtain
+\begin{equation}
+\hat{\rho}_A^{[\ell]} = \tr_B \ket{\psi}\bra{\psi} = \sum_{\fat{\sigma},\fat{\sigma}'\in A} 
+A^{\sigma_1} \ldots A^{\sigma_\ell} \rho_A^{[\ell]} A^{\sigma'_\ell\dagger} \ldots A^{\sigma'_1\dagger} \ket{\fat{\sigma}} \bra{\fat{\sigma}'} ,
+\end{equation}
+where
+\begin{equation}
+\rho_A^{[\ell]} =  \sum_{\fat{\sigma}\in B} A^{\sigma_{\ell+1}} \ldots A^{\sigma_L} A^{\sigma_L\dagger} \ldots A^{\sigma_{\ell+1}\dagger} .
+\end{equation}
+This equation immediately implies a recursion relation between different reduced density matrices, namely
+\begin{equation}
+\rho_A^{[\ell-1]} = \sum_{\sigma_\ell} A^{\sigma_\ell} \rho_A^{[\ell]} A^{\sigma_\ell\dagger} .
+\label{eq:rhoarecursion}
+\end{equation}
+In the thermodynamic limit $L\rightarrow\infty$, $\ell\rightarrow\infty$ of a translationally invariant system, we may therefore ask whether a fixed point relationship
+\begin{equation}
+\rho_A^f = \sum_{\sigma} A^{\sigma} \rho_A^{f} A^{\sigma\dagger} 
+\end{equation}
+is fulfilled.
+
